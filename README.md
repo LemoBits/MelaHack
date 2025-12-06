@@ -7,9 +7,9 @@
 
 <div align="center">
 
-[![Discord Mine](https://img.shields.io/discord/1140266441082404924?label=ThunderHack%20Recode%20Discord&logo=discord&logoColor=white)](https://discord.gg/bJajFP3kCX)
-[![Discord Mine](https://img.shields.io/discord/1138007062333366393?label=ulybaka1337's%20Discord&logo=discord&logoColor=white)](https://discord.gg/7radMBMnNZ)
-
+[![Badge](https://img.shields.io/discord/1140266441082404924?label=thunderhack%20recode&logo=discord&logoColor=white&color=%235865F2)](https://discord.gg/bJajFP3kCX)
+[![Badge](https://img.shields.io/badge/my_telegram-it's_cool_here!-26A5E4?logo=telegram&logoColor=white)](https://t.me/hvhdarknet)
+[![Badge](https://img.shields.io/discord/1302923378662838292?logo=discord&logoColor=white&label=catlean&color=%235865F2)]([https://t.me/hvhdarknet](https://discord.gg/7hP6xDHwHZ))
 
 </div>
 
