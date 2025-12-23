@@ -6,10 +6,13 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.network.OtherClientPlayerEntity;
+import net.minecraft.client.gl.ShaderProgramKeys;
 import net.minecraft.client.render.*;
+import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.render.entity.model.EntityModelLayers;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
+import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -111,10 +114,10 @@ public class LogoutSpots extends Module {
                 if (renderMode.is(RenderMode.Box)) {
                     Render3DEngine.OUTLINE_QUEUE.add(new Render3DEngine.OutlineAction(data.getBoundingBox(), color.getValue().getColorObject(), 2));
                 } else {
-                    PlayerEntityModel<PlayerEntity> modelPlayer = new PlayerEntityModel<>(new EntityRendererFactory.Context(
-                            mc.getEntityRenderDispatcher(), mc.getItemRenderer(),
-                            mc.getBlockRenderManager(), mc.getEntityRenderDispatcher().getHeldItemRenderer(),
-                            mc.getResourceManager(), mc.getEntityModelLoader(), mc.textRenderer).getPart(EntityModelLayers.PLAYER), false);
+                    PlayerEntityModel modelPlayer = new PlayerEntityModel(new EntityRendererFactory.Context(
+                            mc.getEntityRenderDispatcher(), mc.getItemRenderer(), mc.getMapRenderer(),
+                            mc.getBlockRenderManager(), mc.getResourceManager(), mc.getEntityModelLoader(),
+                            mc.getEquipmentModelLoader(), mc.textRenderer).getPart(EntityModelLayers.PLAYER), false);
                     modelPlayer.getHead().scale(new Vector3f(-0.3f, -0.3f, -0.3f));
 
                     renderEntity(s, data, modelPlayer, ((OtherClientPlayerEntity)data).getSkinTextures().texture(), color.getValue().getAlpha());
@@ -154,7 +157,7 @@ public class LogoutSpots extends Module {
         }
     }
 
-    private void renderEntity(@NotNull MatrixStack matrices, @NotNull LivingEntity entity, @NotNull PlayerEntityModel<PlayerEntity> modelBase, Identifier texture, int alpha) {
+    private void renderEntity(@NotNull MatrixStack matrices, @NotNull LivingEntity entity, @NotNull PlayerEntityModel modelBase, Identifier texture, int alpha) {
         modelBase.leftPants.visible = true;
         modelBase.rightPants.visible = true;
         modelBase.leftSleeve.visible = true;
@@ -170,16 +173,18 @@ public class LogoutSpots extends Module {
         matrices.translate((float) x, (float) y, (float) z);
         matrices.multiply(RotationAxis.POSITIVE_Y.rotation(MathUtility.rad(180 - entity.bodyYaw)));
         prepareScale(matrices);
-        modelBase.animateModel((PlayerEntity) entity, entity.limbAnimator.getPos(), entity.limbAnimator.getSpeed(), Render3DEngine.getTickDelta());
-        float limbSpeed = Math.min(entity.limbAnimator.getSpeed(), 1f);
-        modelBase.setAngles((PlayerEntity) entity, entity.limbAnimator.getPos(), limbSpeed, entity.age, entity.headYaw - entity.bodyYaw, entity.getPitch());
+        @SuppressWarnings("unchecked")
+        PlayerEntityRenderState renderState = ((EntityRenderer<PlayerEntity, PlayerEntityRenderState>) mc.getEntityRenderDispatcher()
+                .getRenderer((PlayerEntity) entity))
+                .getAndUpdateRenderState((PlayerEntity) entity, Render3DEngine.getTickDelta());
+        modelBase.setAngles(renderState);
         BufferBuilder buffer;
         if (renderMode.is(RenderMode.TexturedChams)) {
             RenderSystem.setShaderTexture(0, texture);
-            RenderSystem.setShader(GameRenderer::getPositionTexProgram);
+            RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX);
             buffer = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
         } else {
-            RenderSystem.setShader(GameRenderer::getPositionProgram);
+            RenderSystem.setShader(ShaderProgramKeys.POSITION);
             buffer = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION);
         }
         RenderSystem.setShaderColor(color.getValue().getGlRed(), color.getValue().getGlGreen(), color.getValue().getGlBlue(), alpha / 255f);

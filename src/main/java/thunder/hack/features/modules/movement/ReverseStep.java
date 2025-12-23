@@ -35,7 +35,7 @@ public class ReverseStep extends Module {
             return;
         }
 
-        if (mc.player.isTouchingWater() || mc.player.isSubmergedInWater() || mc.player.isInLava() || mc.player.isFallFlying() || mc.player.getAbilities().flying || mc.world.getBlockState(playerPos).getBlock() == Blocks.COBWEB) {
+        if (mc.player.isTouchingWater() || mc.player.isSubmergedInWater() || mc.player.isInLava() || mc.player.isGliding() || mc.player.getAbilities().flying || mc.world.getBlockState(playerPos).getBlock() == Blocks.COBWEB) {
             disableTimer();
             return;
         }

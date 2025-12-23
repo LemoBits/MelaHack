@@ -37,7 +37,7 @@ public class AntiVoid extends Module {
                 e.cancel();
                 e.setY(0);
                 if (sendPacket.getValue())
-                    sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(mc.player.getX(), mc.player.getY(), mc.player.getZ(), true));
+                    sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(mc.player.getX(), mc.player.getY(), mc.player.getZ(), true, mc.player.horizontalCollision));
             } else {
                 ThunderHack.TICK_TIMER = 0.2f;
                 timerFlag = true;

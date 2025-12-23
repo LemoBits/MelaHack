@@ -23,7 +23,7 @@ public class HClipCommand extends Command {
             final double z = MathHelper.cos(mc.player.getYaw() * MathHelper.RADIANS_PER_DEGREE) * 0.8;
 
             for (int i = 0; i < 10; i++) {
-                mc.player.networkHandler.sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(mc.player.getX() + x, mc.player.getY(), mc.player.getZ() + z, false));
+                mc.player.networkHandler.sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(mc.player.getX() + x, mc.player.getY(), mc.player.getZ() + z, false, mc.player.horizontalCollision));
             }
 
             mc.player.setPosition(mc.player.getX() + x, mc.player.getY(), mc.player.getZ() + z);

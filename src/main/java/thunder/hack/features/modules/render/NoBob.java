@@ -17,7 +17,7 @@ public class NoBob extends Module {
         if (!(mc.getCameraEntity() instanceof PlayerEntity))
             return;
 
-        float g = -(mc.player.horizontalSpeed + (mc.player.horizontalSpeed - mc.player.prevHorizontalSpeed) * tickDelta);
+        float g = -(float) mc.player.getVelocity().horizontalLength();
         float h = MathHelper.lerp(tickDelta, mc.player.prevStrideDistance, mc.player.strideDistance);
         matrices.translate(0, -Math.abs(g * h * (mode.is(Mode.Sexy) ? 0.00035 : 0.)), 0);
     }

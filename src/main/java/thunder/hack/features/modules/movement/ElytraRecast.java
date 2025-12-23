@@ -3,8 +3,8 @@ package thunder.hack.features.modules.movement;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.item.ElytraItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
@@ -81,7 +81,7 @@ public class ElytraRecast extends Module {
         if (autoJump.getValue()) mc.options.jumpKey.setPressed(true);
         if (autoWalk.getValue()) mc.options.forwardKey.setPressed(true);
 
-        if (!mc.player.isFallFlying() && mc.player.fallDistance > 0 && checkElytra() && !mc.player.isFallFlying())
+        if (!mc.player.isGliding() && mc.player.fallDistance > 0 && checkElytra() && !mc.player.isGliding())
             castElytra();
 
         jitter = (20 * MathUtility.sin((System.currentTimeMillis() - ThunderHack.initTime) / 50f));
@@ -98,9 +98,9 @@ public class ElytraRecast extends Module {
     }
 
     private boolean checkElytra() {
-        if (mc.player.input.jumping && !mc.player.getAbilities().flying && !mc.player.hasVehicle() && !mc.player.isClimbing()) {
+        if (mc.player.input.playerInput.jump() && !mc.player.getAbilities().flying && !mc.player.hasVehicle() && !mc.player.isClimbing()) {
             ItemStack is = mc.player.getEquippedStack(EquipmentSlot.CHEST);
-            return is.isOf(Items.ELYTRA) && (ElytraItem.isUsable(is) || allowBroken.getValue());
+            return isUsableElytra(is);
         }
         return false;
     }
@@ -108,11 +108,18 @@ public class ElytraRecast extends Module {
     private boolean check() {
         if (!mc.player.isTouchingWater() && !mc.player.hasStatusEffect(StatusEffects.LEVITATION)) {
             ItemStack is = mc.player.getEquippedStack(EquipmentSlot.CHEST);
-            if (is.isOf(Items.ELYTRA) && (ElytraItem.isUsable(is) || allowBroken.getValue())) {
-                mc.player.startFallFlying();
+            if (isUsableElytra(is)) {
+                mc.player.startGliding();
                 return true;
             }
         }
         return false;
+    }
+
+    private boolean isUsableElytra(ItemStack stack) {
+        if (!stack.isOf(Items.ELYTRA)) {
+            return false;
+        }
+        return allowBroken.getValue() || LivingEntity.canGlideWith(stack, EquipmentSlot.CHEST);
     }
 }

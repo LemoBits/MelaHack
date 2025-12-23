@@ -2,6 +2,7 @@ package thunder.hack.features.modules.player;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ArmorItem;
 import net.minecraft.item.ItemStack;
@@ -60,7 +61,7 @@ public class DurabilityAlert extends Module {
 
             Color c1 = new Color(0xFFDF00);
             RenderSystem.setShaderColor(c1.getRed() / 255f, c1.getGreen() / 255f, c1.getBlue() / 255f, 1f);
-            context.drawTexture(TextureStorage.brokenShield, (int) (mc.getWindow().getScaledWidth() / 2f - 40), (int) (mc.getWindow().getScaledHeight() / 3f - 120), 80, 80, 0, 0, 80, 80, 80, 80);
+            context.drawTexture(RenderLayer::getGuiTextured, TextureStorage.brokenShield, (int) (mc.getWindow().getScaledWidth() / 2f - 40), (int) (mc.getWindow().getScaledHeight() / 3f - 120), 80, 80, 0, 0, 80, 80, 80, 80);
             RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
         }
     }

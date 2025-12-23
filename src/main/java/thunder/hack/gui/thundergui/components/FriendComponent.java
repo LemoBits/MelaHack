@@ -2,6 +2,7 @@ package thunder.hack.gui.thundergui.components;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.util.Identifier;
@@ -95,7 +96,7 @@ public class FriendComponent {
         NativeImage imgNew = new NativeImage(imageWidth, imageHeight, true);
         for (int x = 0; x < imageSrcWidth; x++) {
             for (int y = 0; y < srcHeight; y++) {
-                imgNew.setColor(x, y, image.getColor(x, y));
+                imgNew.setColorArgb(x, y, image.getColorArgb(x, y));
             }
         }
         image.close();
@@ -136,7 +137,7 @@ public class FriendComponent {
         FontRenderers.icons.drawString(context.getMatrices(), "w", posX + 268, posY + 13, Render2DEngine.applyOpacity(-1, getFadeFactor()));
 
 
-        context.drawTexture(Objects.requireNonNullElse(head, TextureStorage.crackedSkin), posX + 10, posY + 3, 0, 0, 22, 22, 22, 22);
+        context.drawTexture(RenderLayer::getGuiTextured, Objects.requireNonNullElse(head, TextureStorage.crackedSkin), posX + 10, posY + 3, 0, 0, 22, 22, 22, 22);
 
         FontRenderers.modules.drawString(context.getMatrices(), name, posX + 37, posY + 6, Render2DEngine.applyOpacity(-1, getFadeFactor()));
 

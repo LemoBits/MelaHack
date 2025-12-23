@@ -42,7 +42,7 @@ public class NoSlow extends Module {
             returnSneak = false;
         }
 
-        if (mc.player.isUsingItem() && !mc.player.isRiding() && !mc.player.isFallFlying()) {
+        if (mc.player.isUsingItem() && !mc.player.isRiding() && !mc.player.isGliding()) {
             switch (mode.getValue()) {
                 case StrictNCP -> sendPacket(new UpdateSelectedSlotC2SPacket(mc.player.getInventory().selectedSlot));
                 case MusteryGrief -> {
@@ -93,7 +93,7 @@ public class NoSlow extends Module {
 
     @EventHandler
     public void onKeyboardInput(EventKeyboardInput e) {
-        if (mode.getValue() == Mode.Matrix3 && mc.player.isUsingItem() && !mc.player.isFallFlying()) {
+        if (mode.getValue() == Mode.Matrix3 && mc.player.isUsingItem() && !mc.player.isGliding()) {
             mc.player.input.movementForward *= 5f;
             mc.player.input.movementSideways *= 5f;
             float mult = 1f;

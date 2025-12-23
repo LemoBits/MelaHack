@@ -2,6 +2,7 @@ package thunder.hack.core;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import meteordevelopment.orbit.EventHandler;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.math.MatrixStack;
@@ -53,6 +54,8 @@ public final class Core {
     private final Timer lastPacket = new Timer();
     private final Timer autoSave = new Timer();
     private final Timer setBackTimer = new Timer();
+    private float prevHorizontalSpeed;
+    private float horizontalSpeed;
 
     @EventHandler
     @SuppressWarnings("unused")
@@ -89,6 +92,9 @@ public final class Core {
             Managers.MACRO.saveMacro();
             Managers.NOTIFICATION.publicity("AutoSave", isRu() ? "Сохраняю конфиг.." : "Saving config..", 3, Notification.Type.INFO);
         }
+
+        prevHorizontalSpeed = horizontalSpeed;
+        horizontalSpeed = (float) mc.player.getVelocity().horizontalLength();
     }
 
     @EventHandler
@@ -161,7 +167,7 @@ public final class Core {
             int yPos = (int) (mc.getWindow().getScaledHeight() / 2f - 150);
             float alpha = (1f - (skullTimer.getPassedTimeMs() / 3000f));
             RenderSystem.setShaderColor(1f, 1f, 1f, alpha);
-            e.drawTexture(TextureStorage.skull, xPos, yPos, 0, 0, 300, 300, 300, 300);
+            e.drawTexture(RenderLayer::getGuiTextured, TextureStorage.skull, xPos, yPos, 0, 0, 300, 300, 300, 300);
             RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
         } else showSkull = false;
     }
@@ -223,7 +229,7 @@ public final class Core {
             return;
         }
 
-        float g = -(playerEntity.horizontalSpeed + (playerEntity.horizontalSpeed - playerEntity.prevHorizontalSpeed) * tickDelta);
+        float g = -MathHelper.lerp(tickDelta, prevHorizontalSpeed, horizontalSpeed);
         float h = MathHelper.lerp(tickDelta, playerEntity.prevStrideDistance, playerEntity.strideDistance);
         matrices.translate(MathHelper.sin(g * (float) Math.PI) * h * 0.1f, -Math.abs(MathHelper.cos(g * (float) Math.PI) * h) * 0.3, 0.0f);
         matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(MathHelper.sin(g * (float) Math.PI) * h * 3.0f));

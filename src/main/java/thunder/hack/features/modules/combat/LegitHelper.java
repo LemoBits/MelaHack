@@ -219,7 +219,7 @@ public class LegitHelper extends Module {
         if (crystalOptimizer.getValue() && event.getPacket() instanceof PlayerInteractEntityC2SPacket
                 && getInteractType(event.getPacket()) == Criticals.InteractType.ATTACK && getEntity(event.getPacket()) instanceof EndCrystalEntity c
                 && !ModuleManager.autoCrystal.isEnabled()) {
-            c.kill();
+            c.discard();
             c.setRemoved(Entity.RemovalReason.KILLED);
             c.onRemoved();
         }

@@ -9,12 +9,16 @@ import net.minecraft.client.gui.screen.recipebook.RecipeResultCollection;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BedItem;
+import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.recipe.RecipeEntry;
+import net.minecraft.recipe.NetworkRecipeId;
+import net.minecraft.recipe.RecipeDisplayEntry;
 import net.minecraft.screen.CraftingScreenHandler;
 import net.minecraft.screen.slot.SlotActionType;
+import net.minecraft.util.context.ContextParameterMap;
+import net.minecraft.util.context.ContextType;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
@@ -157,7 +161,7 @@ public final class AutoBed extends Module {
 
         if (bestPos != null && placeTimer.passedMs(placeDelay.getValue()) && !(mc.world.getBlockState(bestPos.hitResult().getBlockPos().up()).getBlock() instanceof BedBlock)) {
             final float angle2 = InteractionUtility.calculateAngle(bestPos.hitResult.getBlockPos().toCenterPos(), bestPos.hitResult.getBlockPos().offset(bestPos.dir).toCenterPos())[0];
-            sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(angle2, 0, mc.player.isOnGround()));
+            sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(angle2, 0, mc.player.isOnGround(), mc.player.horizontalCollision));
             float prevYaw = mc.player.getYaw();
             mc.player.setYaw(angle2);
             mc.player.prevYaw = angle2;
@@ -308,11 +312,14 @@ public final class AutoBed extends Module {
                 if (result != null) {
                     if (mc.player.currentScreenHandler instanceof CraftingScreenHandler craft) {
                         mc.player.getRecipeBook().setGuiOpen(craft.getCategory(), true);
+                        ContextParameterMap context = new ContextParameterMap.Builder().build(new ContextType.Builder().build());
                         for (RecipeResultCollection results : mc.player.getRecipeBook().getOrderedResults()) {
-                            for (RecipeEntry<?> recipe : results.getRecipes(true)) {
-                                if (recipe.value().getResult(results.getRegistryManager()).getItem() instanceof BedItem) {
+                            for (RecipeDisplayEntry recipe : results.getAllRecipes()) {
+                                ItemStack resultStack = recipe.display().result().getFirst(context);
+                                if (resultStack.getItem() instanceof BedItem) {
+                                    NetworkRecipeId recipeId = recipe.id();
                                     for (int i = 0; i < bedsPerCraft.getValue(); i++)
-                                        mc.interactionManager.clickRecipe(mc.player.currentScreenHandler.syncId, recipe, false);
+                                        mc.interactionManager.clickRecipe(mc.player.currentScreenHandler.syncId, recipeId, false);
                                     mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, 0, 0, SlotActionType.QUICK_MOVE, mc.player);
                                     break;
                                 }
@@ -386,4 +393,3 @@ public final class AutoBed extends Module {
     }
 
 }
-

@@ -137,7 +137,7 @@ public class Speed extends Module {
 
             prevSlot = mc.player.getInventory().selectedSlot;
             result.switchTo();
-            sendPacket(new PlayerMoveC2SPacket.Full(mc.player.getX(), mc.player.getY(), mc.player.getZ(), mc.player.getYaw(), 90, mc.player.isOnGround()));
+            sendPacket(new PlayerMoveC2SPacket.Full(mc.player.getX(), mc.player.getY(), mc.player.getZ(), mc.player.getYaw(), 90, mc.player.isOnGround(), mc.player.horizontalCollision));
 
             if (strict.getValue()) {
                 sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, pos, Direction.UP));
@@ -245,7 +245,7 @@ public class Speed extends Module {
         }
         if (mode.getValue() != Mode.NCP && mode.getValue() != Mode.StrictStrafe) return;
         if (mc.player.getAbilities().flying) return;
-        if (mc.player.isFallFlying()) return;
+        if (mc.player.isGliding()) return;
         if (mc.player.getHungerManager().getFoodLevel() <= 6) return;
         if (event.isCancelled()) return;
         event.cancel();

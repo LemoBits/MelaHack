@@ -6,6 +6,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BeaconBlockEntity;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gl.ShaderProgramKeys;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.AreaEffectCloudEntity;
@@ -101,7 +102,7 @@ public class ESP extends Module {
 
                     Render3DEngine.setupRender();
                     RenderSystem.disableDepthTest();
-                    RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+                    RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
                     BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.TRIANGLE_STRIP, VertexFormats.POSITION_COLOR);
 
                     for (int i = 0; i <= 360; i += 6) {
@@ -112,7 +113,7 @@ public class ESP extends Module {
                     }
                     Render2DEngine.endBuilding(bufferBuilder);
 
-                    RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+                    RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
                     bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.TRIANGLE_STRIP, VertexFormats.POSITION_COLOR);
                     for (int i = 0; i <= 360; i += 6) {
                         double v = Math.sin(Math.toRadians(i));
@@ -160,7 +161,7 @@ public class ESP extends Module {
 
                 Render3DEngine.setupRender();
                 RenderSystem.disableDepthTest();
-                RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+                RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
                 BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.TRIANGLE_STRIP, VertexFormats.POSITION_COLOR);
 
                 for (int i = 0; i <= 360; i += 6) {
@@ -171,7 +172,7 @@ public class ESP extends Module {
                 }
                 Render2DEngine.endBuilding(bufferBuilder);
 
-                RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+                RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
                 bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.TRIANGLE_STRIP, VertexFormats.POSITION_COLOR);
                 for (int i = 0; i <= 360; i += 6) {
                     double v = Math.sin(Math.toRadians(i));
@@ -314,7 +315,7 @@ public class ESP extends Module {
 
         Matrix4f matrix = context.getMatrices().peek().getPositionMatrix();
         Render2DEngine.setupRender();
-        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
         BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
 
         for (Entity ent : mc.world.getEntities())

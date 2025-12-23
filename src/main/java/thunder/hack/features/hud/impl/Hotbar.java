@@ -90,24 +90,20 @@ public class Hotbar extends HudElement {
             context.getMatrices().scale(0.9f, 0.9f, 1.0F);
             context.getMatrices().translate((float) (-(i + 8)), (float) (-(j + 12)), 0.0F);
             context.drawItem(itemStack, i, j);
-            context.drawItemInSlot(mc.textRenderer, itemStack, i, j);
+            context.drawStackOverlay(mc.textRenderer, itemStack, i, j);
             context.getMatrices().pop();
         }
     }
 
     public static void renderXpBar(int x, MatrixStack matrices) {
-        mc.getProfiler().push("expBar");
         int k;
         int l;
-        mc.getProfiler().pop();
 
         if (mc.player.experienceLevel > 0) {
-            mc.getProfiler().push("expLevel");
             String string = "" + mc.player.experienceLevel;
             k = (int) ((mc.getWindow().getScaledWidth() - FontRenderers.sf_bold_mini.getStringWidth(string)) / 2);
             l = mc.getWindow().getScaledHeight() - 31 - 4;
             FontRenderers.sf_bold_mini.drawString(matrices, string, k, l, 8453920);
-            mc.getProfiler().pop();
         }
     }
 }

@@ -7,6 +7,7 @@ import net.minecraft.item.BowItem;
 import net.minecraft.item.CrossbowItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.TridentItem;
+import net.minecraft.registry.RegistryKeys;
 import thunder.hack.core.manager.client.ModuleManager;
 import thunder.hack.injection.accesors.IClientPlayerEntity;
 import thunder.hack.features.modules.Module;
@@ -23,7 +24,7 @@ public class PerfectDelay extends Module {
     private final Setting<Boolean> trident = new Setting<>("Trident", true);
 
     private float getEnchantLevel(ItemStack stack) {
-        return EnchantmentHelper.getLevel(mc.world.getRegistryManager().get(Enchantments.PROTECTION.getRegistryRef()).getEntry(Enchantments.QUICK_CHARGE).get(), stack);
+        return EnchantmentHelper.getLevel(mc.world.getRegistryManager().getOrThrow(RegistryKeys.ENCHANTMENT).getOrThrow(Enchantments.QUICK_CHARGE), stack);
     }
 
     @Override

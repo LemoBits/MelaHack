@@ -29,10 +29,10 @@ public class TickTimer {
     }
 
     public void reset() {
-        time = mc.player == null ? 0 : mc.player.age;
+        time = mc == null || mc.player == null ? 0 : mc.player.age;
     }
 
     private int getPassedTicks() {
-        return mc.player == null ? 0 : mc.player.age - time;
+        return mc == null || mc.player == null ? 0 : mc.player.age - time;
     }
 }

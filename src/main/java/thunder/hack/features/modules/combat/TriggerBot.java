@@ -65,7 +65,7 @@ public final class TriggerBot extends Module {
         boolean reasonForSkipCrit =
                 !smartCrit.getValue().isEnabled()
                         || mc.player.getAbilities().flying
-                        || (mc.player.isFallFlying() || ModuleManager.elytraPlus.isEnabled())
+                        || (mc.player.isGliding() || ModuleManager.elytraPlus.isEnabled())
                         || mc.player.hasStatusEffect(StatusEffects.BLINDNESS)
                         || mc.player.isHoldingOntoLadder()
                         || mc.world.getBlockState(BlockPos.ofFloored(mc.player.getPos())).getBlock() == Blocks.COBWEB;
@@ -93,4 +93,3 @@ public final class TriggerBot extends Module {
         return true;
     }
 }
-

@@ -141,7 +141,7 @@ public class ClickGUI extends Screen {
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         if (ModuleManager.clickGui.blur.getValue())
-            applyBlur(delta);
+            applyBlur();
 
         anyHovered = false;
 

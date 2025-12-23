@@ -66,7 +66,7 @@ public final class OptifineCapes {
         NativeImage imgNew = new NativeImage(imageWidth, imageHeight, true);
         for (int x = 0; x < imageSrcWidth; x++) {
             for (int y = 0; y < srcHeight; y++) {
-                imgNew.setColor(x, y, image.getColor(x, y));
+                imgNew.setColorArgb(x, y, image.getColorArgb(x, y));
             }
         }
         image.close();

@@ -5,12 +5,15 @@ import net.minecraft.component.type.ItemEnchantmentsComponent;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.item.ArmorItem;
-import net.minecraft.item.ElytraItem;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket;
+import net.minecraft.registry.RegistryKeys;
 import net.minecraft.util.Hand;
 import thunder.hack.core.manager.client.ModuleManager;
 import thunder.hack.gui.clickui.ClickGUI;
@@ -64,7 +67,7 @@ public class AutoArmor extends Module {
             int prot = getProtection(stack);
             if (prot > 0)
                 for (ArmorData e : armorList) {
-                    if (e.getEquipmentSlot() == (stack.getItem() instanceof ArmorItem ai ? ai.getSlotType() : EquipmentSlot.CHEST))
+                    if (e.getEquipmentSlot() == mc.player.getPreferredEquipmentSlot(stack))
                         if (prot > e.getPrevProt() && prot > e.getNewProtection()) {
                             e.setNewSlot(i);
                             e.setNewProtection(prot);
@@ -103,17 +106,17 @@ public class AutoArmor extends Module {
     }
 
     private int getProtection(ItemStack is) {
-        if (is.getItem() instanceof ArmorItem || is.getItem() instanceof ElytraItem) {
+        if (is.getItem() instanceof ArmorItem || is.isOf(Items.ELYTRA)) {
             int prot = 0;
 
-            EquipmentSlot slot = is.getItem() instanceof ArmorItem ai ? ai.getSlotType() : EquipmentSlot.BODY;
+            EquipmentSlot slot = mc.player.getPreferredEquipmentSlot(is);
 
-            if (is.getItem() instanceof ElytraItem) {
-                if (!ElytraItem.isUsable(is))
+            if (is.isOf(Items.ELYTRA)) {
+                if (!isUsableElytra(is))
                     return 0;
 
                 boolean ePlus = elytraPriority.is(ElytraPriority.ElytraPlus) && (ModuleManager.elytraRecast.isEnabled() || ModuleManager.elytraPlus.isEnabled());
-                boolean ignore = elytraPriority.is(ElytraPriority.Ignore) && mc.player.getInventory().getStack(38).getItem() instanceof ElytraItem;
+                boolean ignore = elytraPriority.is(ElytraPriority.Ignore) && mc.player.getInventory().getStack(38).isOf(Items.ELYTRA);
 
                 if (ePlus || ignore || elytraPriority.is(ElytraPriority.Always))
                     prot = 999;
@@ -144,20 +147,40 @@ public class AutoArmor extends Module {
             if (is.hasEnchantments()) {
                 ItemEnchantmentsComponent enchants = EnchantmentHelper.getEnchantments(is);
 
-                //mc.world.getRegistryManager().get(Enchantments.BLAST_PROTECTION.getRegistryRef()).getEntry(Enchantments.BLAST_PROTECTION).get()
-                if (enchants.getEnchantments().contains(mc.world.getRegistryManager().get(Enchantments.PROTECTION.getRegistryRef()).getEntry(Enchantments.PROTECTION).get()))
-                    prot += enchants.getLevel(mc.world.getRegistryManager().get(Enchantments.PROTECTION.getRegistryRef()).getEntry(Enchantments.PROTECTION).get()) * protectionMultiplier;
+                var enchantments = mc.world.getRegistryManager().getOrThrow(RegistryKeys.ENCHANTMENT);
+                var protection = enchantments.getOrThrow(Enchantments.PROTECTION);
+                var blastProtection = enchantments.getOrThrow(Enchantments.BLAST_PROTECTION);
+                var bindingCurse = enchantments.getOrThrow(Enchantments.BINDING_CURSE);
 
-                if (enchants.getEnchantments().contains(mc.world.getRegistryManager().get(Enchantments.BLAST_PROTECTION.getRegistryRef()).getEntry(Enchantments.BLAST_PROTECTION).get()))
-                    prot += enchants.getLevel(mc.world.getRegistryManager().get(Enchantments.BLAST_PROTECTION.getRegistryRef()).getEntry(Enchantments.BLAST_PROTECTION).get()) * blastMultiplier;
+                if (enchants.getEnchantments().contains(protection))
+                    prot += enchants.getLevel(protection) * protectionMultiplier;
 
-                if (enchants.getEnchantments().contains(mc.world.getRegistryManager().get(Enchantments.BLAST_PROTECTION.getRegistryRef()).getEntry(Enchantments.BINDING_CURSE).get()) && ignoreCurse.getValue())
+                if (enchants.getEnchantments().contains(blastProtection))
+                    prot += enchants.getLevel(blastProtection) * blastMultiplier;
+
+                if (enchants.getEnchantments().contains(bindingCurse) && ignoreCurse.getValue())
                     prot = -999;
             }
 
-            return (is.getItem() instanceof ArmorItem armorItem ? (armorItem.getProtection() + (int) Math.ceil(armorItem.getToughness())) * 10 : 0) + prot;
+            if (is.getItem() instanceof ArmorItem) {
+                final double[] armorValues = new double[2];
+                is.applyAttributeModifiers(slot, (attribute, modifier) -> {
+                    if (attribute.matches(EntityAttributes.ARMOR)) {
+                        armorValues[0] += modifier.value();
+                    } else if (attribute.matches(EntityAttributes.ARMOR_TOUGHNESS)) {
+                        armorValues[1] += modifier.value();
+                    }
+                });
+                int base = (int) Math.ceil(armorValues[0] + armorValues[1]);
+                return base * 10 + prot;
+            }
+            return prot;
         } else if (!is.isEmpty()) return 0;
         return -1;
+    }
+
+    private boolean isUsableElytra(ItemStack stack) {
+        return LivingEntity.canGlideWith(stack, EquipmentSlot.CHEST);
     }
 
     public class ArmorData {

@@ -1,6 +1,7 @@
 package thunder.hack.features.modules.client;
 
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
@@ -59,7 +60,7 @@ public final class WayPoints extends Module {
 
                 context.getMatrices().push();
                 context.getMatrices().translate(posX - 10, (posY - 35), 0);
-                context.drawTexture(TextureStorage.waypoint, 0, 0, 20, 20, 0, 0, 20, 20, 20, 20);
+                context.drawTexture(RenderLayer::getGuiTextured, TextureStorage.waypoint, 0, 0, 20, 20, 0, 0, 20, 20, 20, 20);
                 context.getMatrices().pop();
 
                 FontRenderers.sf_bold_mini.drawString(context.getMatrices(), wp.getName(), tagX, (float) posY - 10, -1);

@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
+import net.minecraft.client.gl.ShaderProgramKeys;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
@@ -84,7 +85,7 @@ public class Trails extends Module {
                     RenderSystem.enableDepthTest();
                     RenderSystem.depthFunc(GL11.GL_LEQUAL);
 
-                    RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+                    RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
                     BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.TRIANGLE_STRIP, VertexFormats.POSITION_COLOR);
 
                     for (int i = 0; i < ((IEntity) entity).getTrails().size(); i++) {
@@ -114,7 +115,7 @@ public class Trails extends Module {
                 RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE);
                 RenderSystem.enableDepthTest();
                 RenderSystem.depthMask(false);
-                RenderSystem.setShader(GameRenderer::getPositionTexColorProgram);
+                RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX_COLOR);
                 BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR);
 
                 int size = ((IEntity) entity).getTrails().size();
@@ -169,7 +170,7 @@ public class Trails extends Module {
 
                     float step = (float) (mc.player.getBoundingBox().getLengthY() / 5f);
 
-                    RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+                    RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
                     BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.TRIANGLE_STRIP, VertexFormats.POSITION_COLOR);
 
 
@@ -181,7 +182,7 @@ public class Trails extends Module {
                     }
                     Render2DEngine.endBuilding(bufferBuilder);
 
-                    RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+                    RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
                     bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.TRIANGLE_STRIP, VertexFormats.POSITION_COLOR);
                     for (int i = 0; i < ((IEntity) entity).getTrails().size(); i++) {
                         Trail ctx = ((IEntity) entity).getTrails().get(i);
@@ -191,7 +192,7 @@ public class Trails extends Module {
                     }
                     Render2DEngine.endBuilding(bufferBuilder);
 
-                    RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+                    RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
                     bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.TRIANGLE_STRIP, VertexFormats.POSITION_COLOR);
                     for (int i = 0; i < ((IEntity) entity).getTrails().size(); i++) {
                         Trail ctx = ((IEntity) entity).getTrails().get(i);
@@ -201,7 +202,7 @@ public class Trails extends Module {
                     }
                     Render2DEngine.endBuilding(bufferBuilder);
 
-                    RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+                    RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
                     bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.TRIANGLE_STRIP, VertexFormats.POSITION_COLOR);
                     for (int i = 0; i < ((IEntity) entity).getTrails().size(); i++) {
                         Trail ctx = ((IEntity) entity).getTrails().get(i);
@@ -211,7 +212,7 @@ public class Trails extends Module {
                     }
                     Render2DEngine.endBuilding(bufferBuilder);
 
-                    RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+                    RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
                     bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.TRIANGLE_STRIP, VertexFormats.POSITION_COLOR);
                     for (int i = 0; i < ((IEntity) entity).getTrails().size(); i++) {
                         Trail ctx = ((IEntity) entity).getTrails().get(i);
@@ -245,7 +246,7 @@ public class Trails extends Module {
                 }
             }
 
-            RenderSystem.setShader(GameRenderer::getPositionTexColorProgram);
+            RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX_COLOR);
             BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR);
 
             if (mc.player != null && mc.world != null)

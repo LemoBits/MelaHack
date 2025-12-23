@@ -139,7 +139,7 @@ public final class PistonPush extends Module {
                 return;
             }
             if (onSync) {
-                sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(angle[0], angle[1], mc.player.isOnGround()));
+                sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(angle[0], angle[1], mc.player.isOnGround(), mc.player.horizontalCollision));
             } else {
                 mc.player.setYaw(angle[0]);
                 mc.player.setPitch(angle[1]);
@@ -170,7 +170,7 @@ public final class PistonPush extends Module {
             if (angle == null)
                 return;
 
-            if (extra) sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(angle[0], angle[1], mc.player.isOnGround()));
+            if (extra) sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(angle[0], angle[1], mc.player.isOnGround(), mc.player.horizontalCollision));
             else {
                 mc.player.setYaw(angle[0]);
                 mc.player.setPitch(angle[1]);
@@ -179,7 +179,7 @@ public final class PistonPush extends Module {
 
         placeRunnable = () -> {
             final float angle = InteractionUtility.calculateAngle(target.getEyePos(), pistonPos.toCenterPos())[0];
-            sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(angle, 0, mc.player.isOnGround()));
+            sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(angle, 0, mc.player.isOnGround(), mc.player.horizontalCollision));
             float prevYaw = mc.player.getYaw();
             mc.player.setYaw(angle);
             mc.player.prevYaw = angle;

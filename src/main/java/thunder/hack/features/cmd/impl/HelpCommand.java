@@ -35,7 +35,7 @@ public class HelpCommand extends Command {
                                         + Formatting.DARK_GRAY + " -> "
                                         + (flip.get() ? Formatting.WHITE : Formatting.GRAY)
                                         + command.getDescription()
-                        ));
+                        ), false);
                         flip.set(!flip.get());
                     }
             );

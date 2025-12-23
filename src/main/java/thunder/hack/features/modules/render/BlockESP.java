@@ -7,6 +7,7 @@ import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.Heightmap;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.features.modules.Module;
 import thunder.hack.setting.Setting;
@@ -65,7 +66,7 @@ public class BlockESP extends Module {
         int startX = (int) Math.floor(mc.player.getX() - range.getValue());
         int endX = (int) Math.ceil(mc.player.getX() + range.getValue());
         int startY = mc.world.getBottomY() + 1;
-        int endY = mc.world.getTopY();
+        int endY = mc.world.getTopY(Heightmap.Type.WORLD_SURFACE, (int) mc.player.getX(), (int) mc.player.getZ());
         int startZ = (int) Math.floor(mc.player.getZ() - range.getValue());
         int endZ = (int) Math.ceil(mc.player.getZ() + range.getValue());
 

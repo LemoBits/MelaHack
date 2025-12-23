@@ -21,24 +21,30 @@ public class AntiCrash extends Module { //https://github.com/Bram1903/MinecraftP
 
     @EventHandler
     public void onPacketReceive(PacketEvent.@NotNull Receive receive) {
-        if (receive.getPacket() instanceof ExplosionS2CPacket exp && (exp.getX() > 1E9 || exp.getY() > 1E9 || exp.getZ() > 1E9 || exp.getRadius() > 1E9)) {
-            if (debug.getValue() && debugTimer.passedMs(1000)) {
-                sendMessage("ExplosionS2CPacket canceled");
-                debugTimer.reset();
+        if (receive.getPacket() instanceof ExplosionS2CPacket exp) {
+            if (exp.center().x > 1E9 || exp.center().y > 1E9 || exp.center().z > 1E9
+                || exp.playerKnockback().map(vec -> Math.abs(vec.x) > 1E9 || Math.abs(vec.y) > 1E9 || Math.abs(vec.z) > 1E9).orElse(false)) {
+                if (debug.getValue() && debugTimer.passedMs(1000)) {
+                    sendMessage("ExplosionS2CPacket canceled");
+                    debugTimer.reset();
+                }
+                receive.cancel();
             }
-            receive.cancel();
         } else if (receive.getPacket() instanceof ParticleS2CPacket p && (p.getX() > 1E9 || p.getY() > 1E9 || p.getZ() > 1E9 || p.getSpeed() > 1E9 || p.getOffsetX() > 1E9 || p.getOffsetY() > 1E9 || p.getOffsetZ() > 1E9)) {
             if (debug.getValue() && debugTimer.passedMs(1000)) {
                 sendMessage("ParticleS2CPacket canceled");
                 debugTimer.reset();
             }
             receive.cancel();
-        } else if (receive.getPacket() instanceof PlayerPositionLookS2CPacket pos && (pos.getX() > 1E9 || pos.getY() > 1E9 || pos.getZ() > 1E9 || pos.getYaw() > 1E9 || pos.getPitch() > 1E9)) {
-            if (debug.getValue() && debugTimer.passedMs(1000)) {
-                sendMessage("PlayerPositionLookS2CPacket canceled");
-                debugTimer.reset();
+        } else if (receive.getPacket() instanceof PlayerPositionLookS2CPacket pos) {
+            if (pos.change().position().x > 1E9 || pos.change().position().y > 1E9 || pos.change().position().z > 1E9
+                || pos.change().yaw() > 1E9 || pos.change().pitch() > 1E9) {
+                if (debug.getValue() && debugTimer.passedMs(1000)) {
+                    sendMessage("PlayerPositionLookS2CPacket canceled");
+                    debugTimer.reset();
+                }
+                receive.cancel();
             }
-            receive.cancel();
         }
     }
 }

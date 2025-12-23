@@ -325,7 +325,7 @@ public final class AutoTotem extends Module {
                         else if (gapple.found() || offHandItem == Items.ENCHANTED_GOLDEN_APPLE)
                             item = Items.ENCHANTED_GOLDEN_APPLE;
                     } else {
-                        if (!mc.player.getItemCooldownManager().isCoolingDown(Items.SHIELD)) item = Items.SHIELD;
+                        if (!mc.player.getItemCooldownManager().isCoolingDown(new ItemStack(Items.SHIELD))) item = Items.SHIELD;
                         else {
                             if (crapple.found() || offHandItem == Items.GOLDEN_APPLE)
                                 item = Items.GOLDEN_APPLE;
@@ -354,7 +354,7 @@ public final class AutoTotem extends Module {
         if (onFall.getValue() && (getTriggerHealth()) - (((mc.player.fallDistance - 3) / 2F) + 3.5F) < 0.5)
             item = Items.TOTEM_OF_UNDYING;
 
-        if (onElytra.getValue() && mc.player.isFallFlying())
+        if (onElytra.getValue() && mc.player.isGliding())
             item = Items.TOTEM_OF_UNDYING;
 
         if (onCrystalInHand.getValue()) {

@@ -35,7 +35,7 @@ public class ClickTP extends Module {
             if (ray instanceof BlockHitResult bhr && !mc.world.isAir(bhr.getBlockPos())) {
                 Vec3d pos = bhr.getBlockPos().toCenterPos();
                 for (int i = 0; i < spoofs.getValue(); ++i)
-                    sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(pos.getX(), pos.getY() + blockOffset.getValue(), pos.getZ(), ground.getValue()));
+                    sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(pos.getX(), pos.getY() + blockOffset.getValue(), pos.getZ(), ground.getValue(), mc.player.horizontalCollision));
                 mc.player.setPosition(pos.getX(), pos.getY() + blockOffset.getValue(), pos.getZ());
                 delay = 5;
             }

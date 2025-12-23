@@ -79,9 +79,9 @@ public class Step extends Module {
                     timer = true;
                 }
                 for (double offset : offsets)
-                    sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(mc.player.prevX, mc.player.prevY + offset, mc.player.prevZ, false));
+                    sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(mc.player.prevX, mc.player.prevY + offset, mc.player.prevZ, false, mc.player.horizontalCollision));
                 if (strict.getValue())
-                    sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(mc.player.prevX, mc.player.prevY + stepHeight, mc.player.prevZ, false));
+                    sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(mc.player.prevX, mc.player.prevY + stepHeight, mc.player.prevZ, false, mc.player.horizontalCollision));
             }
             stepTimer.reset();
         }
@@ -99,7 +99,7 @@ public class Step extends Module {
     }
 
     private void setStepHeight(float v) {
-        mc.player.getAttributeInstance(EntityAttributes.GENERIC_STEP_HEIGHT).setBaseValue(v);
+        mc.player.getAttributeInstance(EntityAttributes.STEP_HEIGHT).setBaseValue(v);
     }
 
     public enum Mode {NCP, VANILLA}

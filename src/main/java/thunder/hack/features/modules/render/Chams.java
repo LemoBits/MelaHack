@@ -3,17 +3,20 @@ package thunder.hack.features.modules.render;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
+import net.minecraft.client.gl.ShaderProgramKeys;
 import net.minecraft.client.render.*;
-import net.minecraft.client.render.entity.EndCrystalEntityRenderer;
+import net.minecraft.client.render.entity.EntityRenderer;
+import net.minecraft.client.render.entity.model.EndCrystalEntityModel;
+import net.minecraft.client.render.entity.state.EndCrystalEntityRenderState;
 import net.minecraft.client.render.entity.LivingEntityRenderer;
 import net.minecraft.client.render.entity.model.EntityModel;
+import net.minecraft.client.render.entity.state.EntityRenderState;
+import net.minecraft.client.render.entity.state.LivingEntityRenderState;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.decoration.EndCrystalEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Direction;
@@ -59,53 +62,31 @@ public class Chams extends Module {
     }
 
     private final Identifier crystalTexture = Identifier.of("textures/entity/end_crystal/end_crystal.png");
-    private static final float SINE_45_DEGREES = (float) Math.sin(0.7853981633974483);
-
-    public void renderCrystal(EndCrystalEntity endCrystalEntity, float f, float g, MatrixStack matrixStack, int i, ModelPart core, ModelPart frame) {
+    public void renderCrystal(EndCrystalEntityRenderState state, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int light, EndCrystalEntityModel model) {
         RenderSystem.enableBlend();
         if (alternativeBlending.getValue())
             RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE);
         else RenderSystem.defaultBlendFunc();
         RenderSystem.disableCull();
         RenderSystem.disableDepthTest();
-        BufferBuilder buffer;
 
-        if (crystalMode.getValue() != CMode.One) {
-            if (crystalMode.getValue() == CMode.Three) {
-                RenderSystem.setShaderTexture(0, crystalTexture);
-            } else {
-                RenderSystem.setShaderTexture(0, TextureStorage.crystalTexture2);
-            }
-            RenderSystem.setShader(GameRenderer::getPositionTexProgram);
-            buffer = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
-        } else {
-            RenderSystem.setShader(GameRenderer::getPositionProgram);
-            buffer = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION);
+        RenderSystem.setShaderColor(crystalColor.getValue().getGlRed(), crystalColor.getValue().getGlGreen(), crystalColor.getValue().getGlBlue(), crystalColor.getValue().getGlAlpha());
+        float originalAge = state.age;
+        if (staticCrystal.getValue()) {
+            state.age = 0.0f;
         }
 
+        Identifier texture = crystalMode.getValue() == CMode.Two ? TextureStorage.crystalTexture2 : crystalTexture;
+        RenderLayer layer = RenderLayer.getEntityCutoutNoCull(texture);
+
         matrixStack.push();
-        float h = staticCrystal.getValue() ? -1.4f : EndCrystalEntityRenderer.getYOffset(endCrystalEntity, g);
-        float j = ((float) endCrystalEntity.endCrystalAge + g) * 3.0f;
-        matrixStack.push();
-        RenderSystem.setShaderColor(crystalColor.getValue().getGlRed(), crystalColor.getValue().getGlGreen(), crystalColor.getValue().getGlBlue(), crystalColor.getValue().getGlAlpha());
         matrixStack.scale(2.0f, 2.0f, 2.0f);
         matrixStack.translate(0.0f, -0.5f, 0.0f);
-        int k = OverlayTexture.DEFAULT_UV;
-        matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(j));
-        matrixStack.translate(0.0f, 1.5f + h / 2.0f, 0.0f);
-        matrixStack.multiply(new Quaternionf().setAngleAxis(1.0471976f, SINE_45_DEGREES, 0.0f, SINE_45_DEGREES));
-        frame.render(matrixStack, buffer, i, k);
-        matrixStack.scale(0.875f, 0.875f, 0.875f);
-        matrixStack.multiply(new Quaternionf().setAngleAxis(1.0471976f, SINE_45_DEGREES, 0.0f, SINE_45_DEGREES));
-        matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(j));
-        frame.render(matrixStack, buffer, i, k);
-        matrixStack.scale(0.875f, 0.875f, 0.875f);
-        matrixStack.multiply(new Quaternionf().setAngleAxis(1.0471976f, SINE_45_DEGREES, 0.0f, SINE_45_DEGREES));
-        matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(j));
-        core.render(matrixStack, buffer, i, k);
+        model.setAngles(state);
+        model.render(matrixStack, vertexConsumerProvider.getBuffer(layer), light, OverlayTexture.DEFAULT_UV);
         matrixStack.pop();
-        matrixStack.pop();
-        Render2DEngine.endBuilding(buffer);
+
+        state.age = originalAge;
         RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
         RenderSystem.disableBlend();
         RenderSystem.enableDepthTest();
@@ -123,10 +104,10 @@ public class Chams extends Module {
 
         if (!simple.getValue()) {
             RenderSystem.setShaderTexture(0, ((AbstractClientPlayerEntity) pe).getSkinTextures().texture());
-            RenderSystem.setShader(GameRenderer::getPositionTexProgram);
+            RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX);
             buffer = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
         } else {
-            RenderSystem.setShader(GameRenderer::getPositionProgram);
+            RenderSystem.setShader(ShaderProgramKeys.POSITION);
             buffer = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION);
         }
 
@@ -141,9 +122,6 @@ public class Chams extends Module {
             RenderSystem.setShaderColor(playerColor.getValue().getGlRed(), playerColor.getValue().getGlGreen(), playerColor.getValue().getGlBlue(), playerColor.getValue().getGlAlpha());
         }
 
-        model.handSwingProgress = pe.getHandSwingProgress(g);
-        model.riding = pe.hasVehicle();
-        model.child = false;
         float h = MathHelper.lerpAngleDegrees(g, pe.prevBodyYaw, pe.bodyYaw);
         float j = MathHelper.lerpAngleDegrees(g, pe.prevHeadYaw, pe.headYaw);
         float k = j - h;
@@ -192,10 +170,19 @@ public class Chams extends Module {
             if (n > 1.0f)
                 n = 1.0f;
         }
-        model.animateModel(pe, o, n, g);
-        model.setAngles(pe, o, n, l, k, m);
-        int p = LivingEntityRenderer.getOverlay(pe, 0);
-        model.render(matrixStack, buffer, i, p);
+        LivingEntityRenderState renderState = null;
+        EntityRenderer<? super PlayerEntity, ? extends EntityRenderState> renderer = mc.getEntityRenderDispatcher().getRenderer(pe);
+        EntityRenderState state = renderer.getAndUpdateRenderState(pe, g);
+        if (state instanceof LivingEntityRenderState livingState) {
+            renderState = livingState;
+        }
+        if (renderState != null) {
+            @SuppressWarnings("unchecked")
+            EntityModel<LivingEntityRenderState> typedModel = (EntityModel<LivingEntityRenderState>) model;
+            typedModel.setAngles(renderState);
+            int p = LivingEntityRenderer.getOverlay(renderState, 0);
+            typedModel.render(matrixStack, buffer, i, p);
+        }
         Render2DEngine.endBuilding(buffer);
         RenderSystem.disableBlend();
         RenderSystem.disableCull();
@@ -213,9 +200,9 @@ public class Chams extends Module {
         float k = abstractClientPlayerEntity.getPitch(h);
         float l;
         float m;
-        if (abstractClientPlayerEntity.isFallFlying()) {
+        if (abstractClientPlayerEntity.isGliding()) {
             setupTransforms(abstractClientPlayerEntity, matrixStack, f, g, h);
-            l = (float) abstractClientPlayerEntity.getFallFlyingTicks() + h;
+            l = abstractClientPlayerEntity.age + h;
             m = MathHelper.clamp(l * l / 100.0F, 0.0F, 1.0F);
             if (!abstractClientPlayerEntity.isUsingRiptide()) {
                 matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(m * (-90.0F - k)));

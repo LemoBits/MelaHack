@@ -1,6 +1,7 @@
 package thunder.hack.gui.misc;
 
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
@@ -53,7 +54,7 @@ public class DialogScreen extends Screen {
         Render2DEngine.drawHudBase(context.getMatrices(), mainX + 125, mainY + 95, 110, 40, 15, false);
         FontRenderers.sf_medium.drawCenteredString(context.getMatrices(), noText, mainX + 180f, mainY + 112, noHovered(mouseX, mouseY) ? -1 : new Color(0xABFFFFFF, true).getRGB());
 
-        context.drawTexture(pic, (int) (mainX + (mainWidth / 2f) - 35), (int) mainY + 25, 0, 0, 70, 65, 70, 65);
+        context.drawTexture(RenderLayer::getGuiTextured, pic, (int) (mainX + (mainWidth / 2f) - 35), (int) mainY + 25, 0, 0, 70, 65, 70, 65);
     }
 
     private boolean isHovered(int mouseX, int mouseY, int x, int y, int width, int height) {

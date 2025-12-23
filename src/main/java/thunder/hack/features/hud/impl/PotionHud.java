@@ -2,6 +2,7 @@ package thunder.hack.features.hud.impl;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.util.Formatting;
@@ -122,7 +123,7 @@ public class PotionHud extends HudElement {
 
             context.getMatrices().push();
             context.getMatrices().translate(getPosX() + 2, getPosY() + 16 + y_offset, 0);
-            context.drawSprite(0, 0, 0, 8, 8, mc.getStatusEffectSpriteManager().getSprite(potionEffect.getEffectType()));
+            context.drawSpriteStretched(RenderLayer::getGuiTextured, mc.getStatusEffectSpriteManager().getSprite(potionEffect.getEffectType()), 0, 0, 8, 8);
             context.getMatrices().pop();
 
             // Position offsets for each language

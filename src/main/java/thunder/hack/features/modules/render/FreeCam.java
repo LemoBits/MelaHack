@@ -107,8 +107,8 @@ public class FreeCam extends Module {
 
         mc.player.input.movementForward = 0;
         mc.player.input.movementSideways = 0;
-        mc.player.input.jumping = false;
-        mc.player.input.sneaking = false;
+        mc.options.jumpKey.setPressed(false);
+        mc.options.sneakKey.setPressed(false);
     }
 
     @EventHandler(priority = EventPriority.LOW)

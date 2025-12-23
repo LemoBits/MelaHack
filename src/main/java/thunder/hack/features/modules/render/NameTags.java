@@ -7,6 +7,7 @@ import net.minecraft.block.ShulkerBoxBlock;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.MobSpawnerBlockEntity;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.render.DiffuseLighting;
 import net.minecraft.component.DataComponentTypes;
@@ -26,6 +27,7 @@ import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.RegistryKey;
+import net.minecraft.registry.RegistryKeys;
 import net.minecraft.scoreboard.ReadableScoreboardScore;
 import net.minecraft.scoreboard.ScoreboardDisplaySlot;
 import net.minecraft.scoreboard.ScoreboardObjective;
@@ -181,7 +183,7 @@ public class NameTags extends Module {
                             context.getMatrices().scale(1.1f, 1.1f, 1.1f);
                             DiffuseLighting.disableGuiDepthLighting();
                             context.drawItem(armorComponent, 0, 0);
-                            context.drawItemInSlot(mc.textRenderer, armorComponent, 0, 0);
+                            context.drawStackOverlay(mc.textRenderer, armorComponent, 0, 0);
                             context.getMatrices().pop();
                         } else {
                             context.getMatrices().push();
@@ -210,10 +212,11 @@ public class NameTags extends Module {
 
                         if (enchantss.getValue()) {
                             if (!onlyHands.getValue() || (armorComponent == ent.getOffHandStack() || armorComponent == ent.getMainHandStack())) {
+                                var enchantments = mc.world.getRegistryManager().getOrThrow(RegistryKeys.ENCHANTMENT);
                                 for (RegistryKey<Enchantment> enchantment : encMap.keySet()) {
-                                    if (enchants.getEnchantments().contains(mc.world.getRegistryManager().get(Enchantments.PROTECTION.getRegistryRef()).getEntry(enchantment).get())) {
+                                    if (enchants.getEnchantments().contains(enchantments.getOrThrow(enchantment))) {
                                         String id = encMap.get(enchantment);
-                                        int level = enchants.getLevel(mc.world.getRegistryManager().get(Enchantments.PROTECTION.getRegistryRef()).getEntry(enchantment).get());
+                                        int level = enchants.getLevel(enchantments.getOrThrow(enchantment));
                                         String encName = id + level;
 
                                         if (font.getValue() == Font.Fancy) {
@@ -286,7 +289,7 @@ public class NameTags extends Module {
 
                 if (!health.is(Health.Number)) {
                     int i = MathHelper.ceil(ent.getHealth());
-                    float f = (float) ent.getAttributeValue(EntityAttributes.GENERIC_MAX_HEALTH);
+                    float f = (float) ent.getAttributeValue(EntityAttributes.MAX_HEALTH);
                     int p = MathHelper.ceil(ent.getAbsorptionAmount());
                     context.getMatrices().push();
                     context.getMatrices().translate(posX - 44, posY, 0);
@@ -516,7 +519,7 @@ public class NameTags extends Module {
                     Render2DEngine.drawRect(context.getMatrices(), x, 0, 7, 3, getHealthColor2(player.getHealth() + player.getAbsorptionAmount()));
                 }
             }
-        } else context.drawGuiTexture(type.getTexture(half), x, 0, 9, 9);
+        } else context.drawGuiTexture(RenderLayer::getGuiTextured, type.getTexture(half), x, 0, 9, 9);
     }
 
     private enum HeartType {
@@ -579,7 +582,7 @@ public class NameTags extends Module {
 
             context.getMatrices().push();
             context.getMatrices().translate(x, y, 0);
-            context.drawSprite(0, 0, 0, 18, 18, mc.getStatusEffectSpriteManager().getSprite(statusEffectInstance.getEffectType()));
+            context.drawSpriteStretched(RenderLayer::getGuiTextured, mc.getStatusEffectSpriteManager().getSprite(statusEffectInstance.getEffectType()), 0, 0, 18, 18);
             FontRenderers.sf_bold_mini.drawCenteredString(context.getMatrices(), PotionHud.getDuration(statusEffectInstance), 9, -8, -1);
             FontRenderers.categories.drawCenteredString(context.getMatrices(), power, 9, -16, -1);
             context.getMatrices().pop();
@@ -627,7 +630,7 @@ public class NameTags extends Module {
         int i = 0;
         for (ItemStack itemStack : itemStacks) {
             context.drawItem(itemStack, offsetX + 8 + i * 18, offsetY + 7 + row * 18);
-            context.drawItemInSlot(mc.textRenderer, itemStack, offsetX + 8 + i * 18, offsetY + 7 + row * 18);
+            context.drawStackOverlay(mc.textRenderer, itemStack, offsetX + 8 + i * 18, offsetY + 7 + row * 18);
             i++;
             if (i >= 9) {
                 i = 0;
@@ -643,7 +646,7 @@ public class NameTags extends Module {
         RenderSystem.setShaderColor(colors[0], colors[1], colors[2], 1F);
         RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
         RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR_MIPMAP_LINEAR);
-        context.drawTexture(TextureStorage.container, x, y, 0, 0, 176, 67, 176, 67);
+        context.drawTexture(RenderLayer::getGuiTextured, TextureStorage.container, x, y, 0, 0, 176, 67, 176, 67);
         RenderSystem.enableBlend();
     }
 

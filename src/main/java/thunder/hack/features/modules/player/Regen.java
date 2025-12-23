@@ -19,6 +19,6 @@ public class Regen extends Module {
     public void onSync(EventSync e) {
         if (mc.player.getHealth() + mc.player.getAbsorptionAmount() <= health.getValue())
             for (int i = 0; i < packetsPerTick.getValue(); i++)
-                sendPacket(new PlayerMoveC2SPacket.Full(mc.player.getX(), mc.player.getY(), mc.player.getZ(), mc.player.getYaw(), mc.player.getPitch(), mc.player.isOnGround()));
+                sendPacket(new PlayerMoveC2SPacket.Full(mc.player.getX(), mc.player.getY(), mc.player.getZ(), mc.player.getYaw(), mc.player.getPitch(), mc.player.isOnGround(), mc.player.horizontalCollision));
     }
 }

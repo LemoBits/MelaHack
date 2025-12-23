@@ -202,7 +202,7 @@ public final class PistonAura extends Module {
         final float[] angle = InteractionUtility.getPlaceAngle(redStonePos, interact.getValue(), false);
         if (angle == null) return;
         if (extra) {
-            sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(angle[0], angle[1], mc.player.isOnGround()));
+            sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(angle[0], angle[1], mc.player.isOnGround(), mc.player.horizontalCollision));
         } else {
             mc.player.setYaw(angle[0]);
             mc.player.setPitch(angle[1]);
@@ -239,7 +239,7 @@ public final class PistonAura extends Module {
         if (result == null) return;
         float[] angle = InteractionUtility.calculateAngle(rotations);
         if (extra) {
-            sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(angle[0] + MathUtility.random(-0.2f, 0.2f), angle[1], mc.player.isOnGround()));
+            sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(angle[0] + MathUtility.random(-0.2f, 0.2f), angle[1], mc.player.isOnGround(), mc.player.horizontalCollision));
         } else {
             mc.player.setYaw(angle[0] + MathUtility.random(-0.2f, 0.2f));
             mc.player.setPitch(angle[1]);
@@ -285,7 +285,7 @@ public final class PistonAura extends Module {
         float[] angle = InteractionUtility.getPlaceAngle(firePos, interact.getValue(), false);
         if (angle == null) return;
         if (extra) {
-            sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(angle[0], angle[1], mc.player.isOnGround()));
+            sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(angle[0], angle[1], mc.player.isOnGround(), mc.player.horizontalCollision));
         } else {
             mc.player.setYaw(angle[0]);
             mc.player.setPitch(angle[1]);
@@ -352,7 +352,7 @@ public final class PistonAura extends Module {
         final float[] angle = InteractionUtility.getPlaceAngle(pistonPos, interact.getValue(), false);
         if (angle == null) return;
         if (extra) {
-            sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(angle[0], angle[1], mc.player.isOnGround()));
+            sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(angle[0], angle[1], mc.player.isOnGround(), mc.player.horizontalCollision));
         } else {
             mc.player.setYaw(angle[0]);
             mc.player.setPitch(angle[1]);
@@ -375,7 +375,7 @@ public final class PistonAura extends Module {
 
             final float angle2 = InteractionUtility.calculateAngle(pistonHeadPos.toCenterPos(), pistonPos.toCenterPos())[0];
 
-            sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(angle2, 0, mc.player.isOnGround()));
+            sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(angle2, 0, mc.player.isOnGround(), mc.player.horizontalCollision));
             float prevYaw = mc.player.getYaw();
             mc.player.setYaw(angle2);
             mc.player.prevYaw = angle2;

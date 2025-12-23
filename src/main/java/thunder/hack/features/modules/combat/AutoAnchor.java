@@ -507,7 +507,7 @@ public final class AutoAnchor extends Module {
         if (rotate.getValue()) {
             if (instant) {
                 float[] angle = InteractionUtility.calculateAngle(data.bhr().getPos());
-                sendPacket(new PlayerMoveC2SPacket.Full(mc.player.getX(), mc.player.getY(), mc.player.getZ(), angle[0], angle[1], mc.player.isOnGround()));
+                sendPacket(new PlayerMoveC2SPacket.Full(mc.player.getX(), mc.player.getY(), mc.player.getZ(), angle[0], angle[1], mc.player.isOnGround(), mc.player.horizontalCollision));
             } else if (!rotated)
                 return;
         }

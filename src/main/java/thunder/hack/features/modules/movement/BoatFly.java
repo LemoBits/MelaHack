@@ -3,7 +3,9 @@ package thunder.hack.features.modules.movement;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.vehicle.BoatEntity;
+import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.PlayerInputC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
@@ -215,7 +217,8 @@ public class BoatFly extends Module {
 
         if (spoofpackets.getValue()) {
             Vec3d vec3d = entity.getPos().add(0.0, randomizeYOffset(), 0.0);
-            BoatEntity entityBoat = new BoatEntity(mc.world, vec3d.x, vec3d.y, vec3d.z);
+            BoatEntity entityBoat = new BoatEntity(EntityType.OAK_BOAT, mc.world, () -> Items.OAK_BOAT);
+            entityBoat.setPosition(vec3d);
             entityBoat.setYaw(entity.getYaw());
             entityBoat.setPitch(entity.getPitch());
             sendMovePacket(new VehicleMoveC2SPacket(entityBoat));

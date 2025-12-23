@@ -351,8 +351,9 @@ public class AutoCrystal extends Module {
             processSpawnPacket(spawn.getEntityId());
 
         if (e.getPacket() instanceof ExplosionS2CPacket explosion) {
+            Vec3d center = explosion.center();
             for (Entity ent : Lists.newArrayList(mc.world.getEntities()))
-                if (ent instanceof EndCrystalEntity crystal && crystal.squaredDistanceTo(explosion.getX(), explosion.getY(), explosion.getZ()) <= 144 && !crystalManager.isDead(crystal.getId()))
+                if (ent instanceof EndCrystalEntity crystal && crystal.squaredDistanceTo(center.x, center.y, center.z) <= 144 && !crystalManager.isDead(crystal.getId()))
                     crystalManager.setDead(crystal.getId(), System.currentTimeMillis());
         }
     }
@@ -687,7 +688,7 @@ public class AutoCrystal extends Module {
             rotationVec = new RotationVec(bhr.getPos(), bhr, true);
             if (packetRotate) {
                 float[] angle = InteractionUtility.calculateAngle(bhr.getPos());
-                sendPacket(new PlayerMoveC2SPacket.Full(mc.player.getX(), mc.player.getY(), mc.player.getZ(), angle[0], angle[1], mc.player.isOnGround()));
+                sendPacket(new PlayerMoveC2SPacket.Full(mc.player.getX(), mc.player.getY(), mc.player.getZ(), angle[0], angle[1], mc.player.isOnGround(), mc.player.horizontalCollision));
             } else if (!rotated && !rotate.getValue().needSeparate()) // TODO check ray trace
                 return;
         }

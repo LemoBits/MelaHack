@@ -10,6 +10,7 @@ import thunder.hack.injection.accesors.IPlayerPositionLookS2CPacket;
 import thunder.hack.features.modules.Module;
 import thunder.hack.setting.Setting;
 import net.minecraft.client.gui.screen.DownloadingTerrainScreen;
+import net.minecraft.entity.player.PlayerPosition;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.network.packet.c2s.play.TeleportConfirmC2SPacket;
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
@@ -98,11 +99,11 @@ public class PacketFly extends Module {
         Vec3d motion = mc.player.getPos().add(vec3d);
         Vec3d rubberBand = getVectorByMode(vec3d, motion);
 
-        PlayerMoveC2SPacket motionPacket =  new PlayerMoveC2SPacket.PositionAndOnGround(motion.x, motion.y, motion.z, mc.player.isOnGround());
+        PlayerMoveC2SPacket motionPacket =  new PlayerMoveC2SPacket.PositionAndOnGround(motion.x, motion.y, motion.z, mc.player.isOnGround(), mc.player.horizontalCollision);
         movePackets.add(motionPacket);
         sendPacket(motionPacket);
 
-        PlayerMoveC2SPacket rubberBandPacket = new PlayerMoveC2SPacket.PositionAndOnGround(rubberBand.x, rubberBand.y, rubberBand.z, mc.player.isOnGround());
+        PlayerMoveC2SPacket rubberBandPacket = new PlayerMoveC2SPacket.PositionAndOnGround(rubberBand.x, rubberBand.y, rubberBand.z, mc.player.isOnGround(), mc.player.horizontalCollision);
         movePackets.add(rubberBandPacket);
         sendPacket(rubberBandPacket);
 
@@ -116,23 +117,25 @@ public class PacketFly extends Module {
     public void onPacketReceive(PacketEvent.Receive event) {
         if (fullNullCheck()) return;
         if (mc.player != null && event.getPacket() instanceof PlayerPositionLookS2CPacket pac) {
-            Teleport teleport = teleports.remove(pac.getTeleportId());
+            Teleport teleport = teleports.remove(pac.teleportId());
+            Vec3d pos = pac.change().position();
             if (
                     mc.player.isAlive()
                     && mc.world.isChunkLoaded((int) mc.player.getX() >> 4, (int) mc.player.getZ() >> 4)
                     && !(mc.currentScreen instanceof DownloadingTerrainScreen)
                     && mode.getValue() != Mode.Rubber
                     && teleport != null
-                    && teleport.x == pac.getX()
-                    && teleport.y == pac.getY()
-                    && teleport.z == pac.getZ()
+                    && teleport.x == pos.x
+                    && teleport.y == pos.y
+                    && teleport.z == pos.z
             ) {
                 event.cancel();
                 return;
             }
-            ((IPlayerPositionLookS2CPacket) pac).setYaw(mc.player.getYaw());
-            ((IPlayerPositionLookS2CPacket) pac).setPitch(mc.player.getPitch());
-            teleportId = pac.getTeleportId();
+            PlayerPosition change = pac.change();
+            PlayerPosition updated = new PlayerPosition(change.position(), change.deltaMovement(), mc.player.getYaw(), mc.player.getPitch());
+            ((IPlayerPositionLookS2CPacket) (Object) pac).setChange(updated);
+            teleportId = pac.teleportId();
         }
     }
 

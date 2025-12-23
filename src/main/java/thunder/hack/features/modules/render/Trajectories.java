@@ -7,6 +7,7 @@ import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.projectile.ArrowEntity;
 import net.minecraft.item.*;
+import net.minecraft.registry.RegistryKeys;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
@@ -72,8 +73,9 @@ public class Trajectories extends Module {
         boolean prev_bob = mc.options.getBobView().getValue();
         mc.options.getBobView().setValue(false);
 
-        if ((offHand.getItem() instanceof CrossbowItem && EnchantmentHelper.getLevel(mc.world.getRegistryManager().get(Enchantments.MULTISHOT.getRegistryRef()).getEntry(Enchantments.MULTISHOT).get(), offHand) != 0) ||
-                (mainHand.getItem() instanceof CrossbowItem && EnchantmentHelper.getLevel(mc.world.getRegistryManager().get(Enchantments.MULTISHOT.getRegistryRef()).getEntry(Enchantments.MULTISHOT).get(), mainHand) != 0)) {
+        var enchantments = mc.world.getRegistryManager().getOrThrow(RegistryKeys.ENCHANTMENT);
+        if ((offHand.getItem() instanceof CrossbowItem && EnchantmentHelper.getLevel(enchantments.getOrThrow(Enchantments.MULTISHOT), offHand) != 0) ||
+                (mainHand.getItem() instanceof CrossbowItem && EnchantmentHelper.getLevel(enchantments.getOrThrow(Enchantments.MULTISHOT), mainHand) != 0)) {
 
             calcTrajectory(hand == Hand.OFF_HAND ? offHand.getItem() : mainHand.getItem(), mc.player.getYaw() - 10);
             calcTrajectory(hand == Hand.OFF_HAND ? offHand.getItem() : mainHand.getItem(), mc.player.getYaw());

@@ -9,6 +9,7 @@ import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
 import thunder.hack.core.manager.client.ModuleManager;
 import thunder.hack.events.impl.PacketEvent;
 import thunder.hack.features.modules.Module;
@@ -18,6 +19,7 @@ import thunder.hack.injection.accesors.ISPacketEntityVelocity;
 import thunder.hack.setting.Setting;
 import thunder.hack.utility.player.MovementUtility;
 
+import java.util.Optional;
 //TY <3
 //https://github.com/SkidderMC/FDPClient/blob/main/src/main/java/net/ccbluex/liquidbounce/features/module/modules/combat/velocitys/vanilla/JumpVelocity.kt
 
@@ -89,7 +91,7 @@ public class Velocity extends Module {
                     }
                     case Sunrise -> {
                         e.cancel();
-                        sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(mc.player.getX(), -999.0, mc.player.getZ(), true));
+                        sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(mc.player.getX(), -999.0, mc.player.getZ(), true, mc.player.horizontalCollision));
                     }
                     case Cancel -> e.cancel();
                     case Jump -> {
@@ -110,21 +112,25 @@ public class Velocity extends Module {
 
         // EXPLOSION
         if (e.getPacket() instanceof ExplosionS2CPacket explosion && explosions.getValue()) {
+            Optional<Vec3d> knockback = ((IExplosionS2CPacket) (Object) explosion).getPlayerKnockback();
+            if (knockback.isEmpty()) {
+                return;
+            }
+            Vec3d playerKnockback = knockback.get();
             switch (mode.getValue()) {
                 case Cancel -> {
-                    ((IExplosionS2CPacket) explosion).setMotionX(0);
-                    ((IExplosionS2CPacket) explosion).setMotionY(0);
-                    ((IExplosionS2CPacket) explosion).setMotionZ(0);
+                    ((IExplosionS2CPacket) (Object) explosion).setPlayerKnockback(Optional.of(Vec3d.ZERO));
                 }
                 case Custom -> {
-                    ((IExplosionS2CPacket) explosion).setMotionX(((IExplosionS2CPacket) explosion).getMotionX() * horizontal.getValue() / 100f);
-                    ((IExplosionS2CPacket) explosion).setMotionZ(((IExplosionS2CPacket) explosion).getMotionZ() * horizontal.getValue() / 100f);
-                    ((IExplosionS2CPacket) explosion).setMotionY(((IExplosionS2CPacket) explosion).getMotionY() * vertical.getValue() / 100f);
+                    Vec3d scaled = new Vec3d(
+                        playerKnockback.x * horizontal.getValue() / 100f,
+                        playerKnockback.y * vertical.getValue() / 100f,
+                        playerKnockback.z * horizontal.getValue() / 100f
+                    );
+                    ((IExplosionS2CPacket) (Object) explosion).setPlayerKnockback(Optional.of(scaled));
                 }
                 case GrimNew -> {
-                    ((IExplosionS2CPacket) explosion).setMotionX(0);
-                    ((IExplosionS2CPacket) explosion).setMotionY(0);
-                    ((IExplosionS2CPacket) explosion).setMotionZ(0);
+                    ((IExplosionS2CPacket) (Object) explosion).setPlayerKnockback(Optional.of(Vec3d.ZERO));
                     flag = true;
                 }
             }
@@ -194,7 +200,7 @@ public class Velocity extends Module {
             case GrimNew -> {
                 if (flag) {
                     if (ccCooldown <= 0) {
-                        sendPacket(new PlayerMoveC2SPacket.Full(mc.player.getX(), mc.player.getY(), mc.player.getZ(), ((IClientPlayerEntity) mc.player).getLastYaw(), ((IClientPlayerEntity) mc.player).getLastPitch(), mc.player.isOnGround()));
+                        sendPacket(new PlayerMoveC2SPacket.Full(mc.player.getX(), mc.player.getY(), mc.player.getZ(), ((IClientPlayerEntity) mc.player).getLastYaw(), ((IClientPlayerEntity) mc.player).getLastPitch(), mc.player.isOnGround(), mc.player.horizontalCollision));
                         sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, BlockPos.ofFloored(mc.player.getPos()), Direction.DOWN));
                     }
                     flag = false;

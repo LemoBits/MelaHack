@@ -57,7 +57,7 @@ public class ElytraSwap extends Module {
             if (switchButton.getValue().getKey() != -1 && isKeyPressed(switchButton.getValue().getKey()) && switchTimer.every(500))
                 swapChest(false);
 
-            if (fireWorkButton.getValue().getKey() != -1 && isKeyPressed(fireWorkButton.getValue().getKey()) && fireworkTimer.every(500) && mc.player.isFallFlying())
+            if (fireWorkButton.getValue().getKey() != -1 && isKeyPressed(fireWorkButton.getValue().getKey()) && fireworkTimer.every(500) && mc.player.isGliding())
                 useFireWork();
         }
     }

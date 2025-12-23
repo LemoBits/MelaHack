@@ -3,6 +3,7 @@ package thunder.hack.gui.mainmenu;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
@@ -84,7 +85,7 @@ public class CreditsScreen extends Screen {
             FontRenderers.sf_medium.drawString(context.getMatrices(), contributor.description, cX + 10, cY + 108, new Color(0x818182).getRGB());
 
             if (contributor.avatar != null)
-                context.drawTexture(contributor.avatar, (int) (cX + 70 - 24), (int) (halfOfHeight - 110), 48, 48, 0, 0, 96, 96, 96, 96);
+                context.drawTexture(RenderLayer::getGuiTextured, contributor.avatar, (int) (cX + 70 - 24), (int) (halfOfHeight - 110), 48, 48, 0, 0, 96, 96, 96, 96);
 
             if (Render2DEngine.isHovered(mouseX, mouseY, cX, cY, 140, 240) && !Objects.equals(contributor.clickAction, ""))
                 Render2DEngine.drawRound(context.getMatrices(), cX, cY, 140, 240, 8, new Color(0x5FFFFFF, true));
@@ -94,7 +95,7 @@ public class CreditsScreen extends Screen {
         RenderSystem.disableBlend();
         Render2DEngine.drawHudBase(context.getMatrices(), mc.getWindow().getScaledWidth() - 40, mc.getWindow().getScaledHeight() - 40, 30, 30, 5, Render2DEngine.isHovered(mouseX, mouseY, mc.getWindow().getScaledWidth() - 60, mc.getWindow().getScaledHeight() - 60, 40, 40) ? 0.7f : 1f);
         RenderSystem.setShaderColor(1f, 1f, 1f, Render2DEngine.isHovered(mouseX, mouseY, mc.getWindow().getScaledWidth() - 40, mc.getWindow().getScaledHeight() - 40, 30, 30) ? 0.7f : 1f);
-        context.drawTexture(TextureStorage.thTeam, mc.getWindow().getScaledWidth() - 40, mc.getWindow().getScaledHeight() - 40, 30, 30, 0, 0, 30, 30, 30, 30);
+        context.drawTexture(RenderLayer::getGuiTextured, TextureStorage.thTeam, mc.getWindow().getScaledWidth() - 40, mc.getWindow().getScaledHeight() - 40, 30, 30, 0, 0, 30, 30, 30, 30);
         RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
     }
 
@@ -164,8 +165,8 @@ public class CreditsScreen extends Screen {
         for (int x = 0; x < 96; x++) {
             for (int y = 0; y < 96; y++) {
                 if (Math.hypot(x - 48, y - 48) > 45)
-                    imgNew.setColor(x, y, Render2DEngine.injectAlpha(new Color(image.getColor(x, y)), (int) ((float) (48 - Math.hypot(x - 48, y - 48)) / 3f * 255f)).getRGB());
-                else imgNew.setColor(x, y, image.getColor(x, y));
+                    imgNew.setColorArgb(x, y, Render2DEngine.injectAlpha(new Color(image.getColorArgb(x, y)), (int) ((float) (48 - Math.hypot(x - 48, y - 48)) / 3f * 255f)).getRGB());
+                else imgNew.setColorArgb(x, y, image.getColorArgb(x, y));
             }
         }
         image.close();

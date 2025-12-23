@@ -52,7 +52,7 @@ public class AutoFlyme extends Module {
     @Override
     public void onUpdate() {
         if (useTimer.getValue()) ThunderHack.TICK_TIMER = 1.088f;
-        if (!mc.player.getAbilities().flying && timer.passedMs(1000) && !mc.player.isOnGround() && mc.player.input.jumping) {
+        if (!mc.player.getAbilities().flying && timer.passedMs(1000) && !mc.player.isOnGround() && mc.options.jumpKey.isPressed()) {
             mc.player.networkHandler.sendChatCommand("flyme");
             timer.reset();
         }

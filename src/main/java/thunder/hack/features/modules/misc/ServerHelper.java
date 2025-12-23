@@ -242,7 +242,7 @@ public class ServerHelper extends Module {
         if (groupBy.is(GroupBy.Name)) {
             return stack.getName().getString();
         } else {
-            return stack.getTranslationKey();
+            return stack.getItem().getTranslationKey();
         }
     }
 

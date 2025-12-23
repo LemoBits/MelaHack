@@ -58,7 +58,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import static net.minecraft.util.UseAction.BLOCK;
+import static net.minecraft.item.consume.UseAction.BLOCK;
 import static net.minecraft.util.math.MathHelper.wrapDegrees;
 import static thunder.hack.features.modules.client.ClientSettings.isRu;
 import static thunder.hack.utility.math.MathUtility.random;
@@ -170,10 +170,10 @@ public class Aura extends Module {
     }
 
     private float getRange(){
-        return elytra.getValue() && mc.player.isFallFlying() ? elytraAttackRange.getValue() : attackRange.getValue();
+        return elytra.getValue() && mc.player.isGliding() ? elytraAttackRange.getValue() : attackRange.getValue();
     }
     private float getWallRange(){
-        return elytra.getValue() && mc.player != null && mc.player.isFallFlying() ? elytraWallRange.getValue() : wallRange.getValue();
+        return elytra.getValue() && mc.player != null && mc.player.isGliding() ? elytraWallRange.getValue() : wallRange.getValue();
     }
 
     public void auraLogic() {
@@ -255,7 +255,7 @@ public class Aura extends Module {
             disableSprint();
 
         if (rotationMode.is(Mode.Grim))
-            sendPacket(new PlayerMoveC2SPacket.Full(mc.player.getX(), mc.player.getY(), mc.player.getZ(), rotationYaw, rotationPitch, mc.player.isOnGround()));
+            sendPacket(new PlayerMoveC2SPacket.Full(mc.player.getX(), mc.player.getY(), mc.player.getZ(), rotationYaw, rotationPitch, mc.player.isOnGround(), mc.player.horizontalCollision));
 
         return new boolean[]{blocking, sprint};
     }
@@ -268,7 +268,7 @@ public class Aura extends Module {
             sendSequencedPacket(id -> new PlayerInteractItemC2SPacket(Hand.OFF_HAND, id, rotationYaw, rotationPitch));
 
         if (rotationMode.is(Mode.Grim))
-            sendPacket(new PlayerMoveC2SPacket.Full(mc.player.getX(), mc.player.getY(), mc.player.getZ(), mc.player.getYaw(), mc.player.getPitch(), mc.player.isOnGround()));
+            sendPacket(new PlayerMoveC2SPacket.Full(mc.player.getX(), mc.player.getY(), mc.player.getZ(), mc.player.getYaw(), mc.player.getPitch(), mc.player.isOnGround(), mc.player.horizontalCollision));
     }
 
     private void disableSprint() {
@@ -409,7 +409,7 @@ public class Aura extends Module {
         boolean reasonForSkipCrit =
                 !smartCrit.getValue().isEnabled()
                         || mc.player.getAbilities().flying
-                        || (mc.player.isFallFlying() || ModuleManager.elytraPlus.isEnabled())
+                        || (mc.player.isGliding() || ModuleManager.elytraPlus.isEnabled())
                         || mc.player.hasStatusEffect(StatusEffects.BLINDNESS)
                         || mc.player.hasStatusEffect(StatusEffects.SLOW_FALLING)
                         || Managers.PLAYER.isInWeb();
@@ -485,7 +485,7 @@ public class Aura extends Module {
     }
 
     public float getAttackCooldownProgressPerTick() {
-        return (float) (1.0 / mc.player.getAttributeValue(EntityAttributes.GENERIC_ATTACK_SPEED) * (20.0 * ThunderHack.TICK_TIMER * (tpsSync.getValue() ? Managers.SERVER.getTPSFactor() : 1f)));
+        return (float) (1.0 / mc.player.getAttributeValue(EntityAttributes.ATTACK_SPEED) * (20.0 * ThunderHack.TICK_TIMER * (tpsSync.getValue() ? Managers.SERVER.getTPSFactor() : 1f)));
     }
 
     public float getAttackCooldown() {
@@ -523,7 +523,7 @@ public class Aura extends Module {
 
         Vec3d targetVec;
 
-        if (mc.player.isFallFlying() || ModuleManager.elytraPlus.isEnabled()) targetVec = target.getEyePos();
+        if (mc.player.isGliding() || ModuleManager.elytraPlus.isEnabled()) targetVec = target.getEyePos();
         else targetVec = getLegitLook(target);
 
         if (targetVec == null)
@@ -601,7 +601,7 @@ public class Aura extends Module {
     public float getSquaredRotateDistance() {
         float dst = getRange();
         dst += aimRange.getValue();
-        if ((mc.player.isFallFlying() || ModuleManager.elytraPlus.isEnabled()) && target != null) dst += 4f;
+        if ((mc.player.isGliding() || ModuleManager.elytraPlus.isEnabled()) && target != null) dst += 4f;
         if (ModuleManager.strafe.isEnabled()) dst += 4f;
         if (rotationMode.getValue() != Mode.Track || rayTrace.getValue() == RayTrace.OFF)
             dst = getRange();
@@ -826,7 +826,7 @@ public class Aura extends Module {
                 return true;
 
             if (onlyAngry.getValue())
-                return !he.isAngryAt(mc.player);
+                return he.getTarget() != mc.player;
         }
 
         if (entity instanceof PlayerEntity && !Players.getValue()) return true;
@@ -847,7 +847,7 @@ public class Aura extends Module {
     }
 
     private boolean shouldRandomizeDelay() {
-        return randomHitDelay.getValue() && (mc.player.isOnGround() || mc.player.fallDistance < 0.12f || mc.player.isSwimming() || mc.player.isFallFlying());
+        return randomHitDelay.getValue() && (mc.player.isOnGround() || mc.player.fallDistance < 0.12f || mc.player.isSwimming() || mc.player.isGliding());
     }
 
     private boolean shouldRandomizeFallDistance() {
