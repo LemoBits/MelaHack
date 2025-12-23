@@ -4,6 +4,8 @@ import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
+import net.minecraft.registry.Registries;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -60,7 +62,9 @@ public class MixinClientWorld {
 
     @Inject(method = "playSound(DDDLnet/minecraft/sound/SoundEvent;Lnet/minecraft/sound/SoundCategory;FFZJ)V", at = @At("HEAD"))
     private void playSoundHoof(double x, double y, double z, SoundEvent event, SoundCategory category, float volume, float pitch, boolean useDistance, long seed, CallbackInfo ci) {
-        if(ModuleManager.soundESP.isEnabled())
-            ModuleManager.soundESP.add(x, y, z, event.getId().toTranslationKey());
+        if (ModuleManager.soundESP.isEnabled()) {
+            Identifier id = Registries.SOUND_EVENT.getId(event);
+            ModuleManager.soundESP.add(x, y, z, id != null ? id.toTranslationKey() : "unknown");
+        }
     }
 }

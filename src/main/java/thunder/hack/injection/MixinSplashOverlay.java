@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.gui.screen.SplashOverlay;
 import net.minecraft.resource.ResourceReload;
 import net.minecraft.util.Util;
@@ -74,7 +75,7 @@ public abstract class MixinSplashOverlay {
             float n = (float) (k >> 8 & 255) / 255.0F;
             float o = (float) (k & 255) / 255.0F;
             GlStateManager._clearColor(m, n, o, 1.0F);
-            GlStateManager._clear(16384, MinecraftClient.IS_SYSTEM_MAC);
+            GlStateManager._clear(16384);
             h = 1.0F;
         }
 
@@ -85,10 +86,10 @@ public abstract class MixinSplashOverlay {
         RenderSystem.blendFunc(770, 1);
 
         RenderSystem.setShaderColor(0.1F, 0.1F, 0.1F, h);
-        context.drawTexture(TextureStorage.thLogo, k - 150, p - 35, 0, 0, 300, 70, 300, 70);
+        context.drawTexture(RenderLayer::getGuiTextured, TextureStorage.thLogo, k - 150, p - 35, 0, 0, 300, 70, 300, 70);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, h);
         Render2DEngine.addWindow(context.getMatrices(),k - 150, p - 35, k - 150 + (300 * progress), p + 35, 1f);
-        context.drawTexture(TextureStorage.thLogo, k - 150, p - 35, 0, 0, 300, 70, 300, 70);
+        context.drawTexture(RenderLayer::getGuiTextured, TextureStorage.thLogo, k - 150, p - 35, 0, 0, 300, 70, 300, 70);
         Render2DEngine.popWindow();
 
         float t = this.reload.getProgress();

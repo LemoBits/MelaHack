@@ -3,6 +3,8 @@ package thunder.hack.injection;
 import net.minecraft.block.FluidBlock;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MovementType;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Mixin;
@@ -16,6 +18,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import thunder.hack.ThunderHack;
 import thunder.hack.core.manager.client.ModuleManager;
 import thunder.hack.events.impl.EventTravel;
+import thunder.hack.events.impl.EventEatFood;
+import thunder.hack.events.impl.EventPlayerJump;
 import thunder.hack.features.modules.Module;
 import thunder.hack.features.modules.combat.Aura;
 import thunder.hack.features.modules.render.Animations;
@@ -28,13 +32,19 @@ import static thunder.hack.features.modules.Module.mc;
 import static thunder.hack.features.modules.movement.WaterSpeed.Mode.CancelResurface;
 
 @Mixin(LivingEntity.class)
-public class MixinEntityLiving implements IEntityLiving {
+public abstract class MixinEntityLiving implements IEntityLiving {
     @Shadow
     protected double serverX;
     @Shadow
     protected double serverY;
     @Shadow
     protected double serverZ;
+
+    @Shadow
+    public abstract Hand getActiveHand();
+
+    @Shadow
+    public abstract ItemStack getStackInHand(Hand hand);
 
     @Unique
     double prevServerX, prevServerY, prevServerZ;
@@ -81,8 +91,11 @@ public class MixinEntityLiving implements IEntityLiving {
     @Unique
     private boolean prevFlying = false;
 
-    @Inject(method = "isFallFlying", at = @At("TAIL"), cancellable = true)
-    public void isFallFlyingHook(CallbackInfoReturnable<Boolean> cir) {
+    @Unique
+    private Hand lastConsumeHand;
+
+    @Inject(method = "isGliding", at = @At("TAIL"), cancellable = true)
+    public void isGlidingHook(CallbackInfoReturnable<Boolean> cir) {
         if (ModuleManager.elytraRecast.isEnabled()) {
             boolean elytra = cir.getReturnValue();
             if (prevFlying && !cir.getReturnValue()) {
@@ -113,6 +126,36 @@ public class MixinEntityLiving implements IEntityLiving {
         if (event.isCancelled()) {
             mc.player.move(MovementType.SELF, mc.player.getVelocity());
             ci.cancel();
+        }
+    }
+
+    @Inject(method = "jump", at = @At("HEAD"))
+    private void onJumpPre(CallbackInfo ci) {
+        if ((LivingEntity) (Object) this == mc.player) {
+            ThunderHack.EVENT_BUS.post(new EventPlayerJump(true));
+        }
+    }
+
+    @Inject(method = "jump", at = @At("RETURN"))
+    private void onJumpPost(CallbackInfo ci) {
+        if ((LivingEntity) (Object) this == mc.player) {
+            ThunderHack.EVENT_BUS.post(new EventPlayerJump(false));
+        }
+    }
+
+    @Inject(method = "consumeItem", at = @At("HEAD"))
+    private void onConsumeItemStart(CallbackInfo ci) {
+        if ((LivingEntity) (Object) this == mc.player) {
+            lastConsumeHand = this.getActiveHand();
+        }
+    }
+
+    @Inject(method = "consumeItem", at = @At("RETURN"))
+    private void onConsumeItemEnd(CallbackInfo ci) {
+        if ((LivingEntity) (Object) this == mc.player && lastConsumeHand != null) {
+            ItemStack stack = this.getStackInHand(lastConsumeHand);
+            ThunderHack.EVENT_BUS.post(new EventEatFood(stack));
+            lastConsumeHand = null;
         }
     }
 

@@ -10,7 +10,6 @@
     "MixinBlockCollisionSpliterator",
     "MixinBossBarHud",
     "MixinCamera",
-    "MixinCapeFeatureRenderer",
     "MixinChatInputSuggestor",
     "MixinClientBrandRetriever",
     "MixinClientConnection",
@@ -42,7 +41,6 @@
     "MixinPlayerListEntry",
     "MixinPlayerListHud",
     "MixinScreen",
-    "MixinShaderEffect",
     "MixinSignBlockEntityRenderer",
     "MixinTextVisitFactory",
     "MixinTitleScreen",
@@ -55,11 +53,9 @@
     "accesors.IInteractionManager",
     "accesors.IMinecraftClient",
     "accesors.INativeImage",
-    "accesors.IPostProcessShader",
     "accesors.IRenderPhaseMixin",
     "accesors.ISignEditScreen",
-    "accesors.IWorldRenderer",
-    "accesors.ShaderProgramAccessor"
+    "accesors.IWorldRenderer"
   ],
   "injectors": {
     "defaultRequire": 1
@@ -93,7 +89,6 @@
     "accesors.IAreaEffectCloudEntity",
     "accesors.IBeaconBlockEntity",
     "accesors.IEntity",
-    "accesors.IExplosion",
     "accesors.IExplosionS2CPacket",
     "accesors.IGameMessageS2CPacket",
     "accesors.IHeldItemRenderer",
@@ -101,7 +96,6 @@
     "accesors.IPlayerInteractBlockC2SPacket",
     "accesors.IPlayerMoveC2SPacket",
     "accesors.IPlayerPositionLookS2CPacket",
-    "accesors.ISPacketEntityVelocity",
-    "accesors.ISPacketPlayerPosLook"
+    "accesors.ISPacketEntityVelocity"
   ]
 }

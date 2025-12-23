@@ -7,6 +7,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.registry.RegistryKeys;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.BlockView;
 import org.spongepowered.asm.mixin.Mixin;
@@ -35,7 +36,7 @@ public abstract class MixinAbstractBlock {
     public float getDigSpeed(BlockState state, ItemStack stack)
     {
         double str = stack.getMiningSpeedMultiplier(state);
-        int effect = EnchantmentHelper.getLevel(mc.world.getRegistryManager().get(EFFICIENCY.getRegistryRef()).getEntry(EFFICIENCY).get(), stack);
+        int effect = EnchantmentHelper.getLevel(mc.world.getRegistryManager().getOrThrow(RegistryKeys.ENCHANTMENT).getOrThrow(EFFICIENCY), stack);
         return (float) Math.max(str + (str > 1.0 ? (effect * effect + 1.0) : 0.0), 0.0);
     }
 }

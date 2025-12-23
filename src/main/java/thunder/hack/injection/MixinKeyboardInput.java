@@ -11,7 +11,7 @@ import thunder.hack.features.modules.Module;
 
 @Mixin(KeyboardInput.class)
 public class MixinKeyboardInput {
-    @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/KeyboardInput;sneaking:Z", shift = At.Shift.BEFORE), cancellable = true)
+    @Inject(method = "tick", at = @At("HEAD"), cancellable = true)
     private void onSneak(boolean slowDown, float slowDownFactor, CallbackInfo ci) {
         if(Module.fullNullCheck()) return;
         EventKeyboardInput event = new EventKeyboardInput();

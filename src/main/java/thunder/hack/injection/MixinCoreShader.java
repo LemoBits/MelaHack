@@ -17,7 +17,9 @@
  */
 package thunder.hack.injection;
 
+import it.unimi.dsi.fastutil.ints.IntList;
 import net.minecraft.client.gl.ShaderProgram;
+import net.minecraft.client.gl.ShaderProgramDefinition;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -25,22 +27,31 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 import thunder.hack.utility.render.shaders.satin.impl.SamplerAccess;
 
 import java.util.List;
-import java.util.Map;
 
 @Mixin(ShaderProgram.class)
 public abstract class MixinCoreShader implements SamplerAccess {
-    @Shadow @Final private Map<String, Object> samplers;
+    @Shadow @Final private List<ShaderProgramDefinition.Sampler> samplers;
+
+    @Accessor("samplerLocations")
+    protected abstract IntList getSamplerLocations();
 
     @Override
     public boolean hasSampler(String name) {
-        return this.samplers.containsKey(name);
+        for (ShaderProgramDefinition.Sampler sampler : samplers) {
+            if (sampler.name().equals(name)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
-    @Accessor("samplerNames")
-    public abstract List<String> getSamplerNames();
+    public List<String> getSamplerNames() {
+        return samplers.stream().map(ShaderProgramDefinition.Sampler::name).toList();
+    }
 
     @Override
-    @Accessor("loadedSamplerIds")
-    public abstract List<Integer> getSamplerShaderLocs();
+    public List<Integer> getSamplerShaderLocs() {
+        return (List<Integer>)(Object)this.getSamplerLocations();
+    }
 }

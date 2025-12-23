@@ -1,7 +1,7 @@
 package thunder.hack.injection;
 
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.vehicle.BoatEntity;
+import net.minecraft.entity.vehicle.AbstractBoatEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import thunder.hack.core.manager.client.ModuleManager;
 
-@Mixin(BoatEntity.class)
+@Mixin(AbstractBoatEntity.class)
 public class MixinBoatEntity {
 
     @Unique

@@ -3,9 +3,8 @@ package thunder.hack.injection;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.LivingEntityRenderer;
-import net.minecraft.client.render.entity.feature.FeatureRenderer;
 import net.minecraft.client.render.entity.model.EntityModel;
-import net.minecraft.client.render.entity.model.ParrotEntityModel;
+import net.minecraft.client.render.entity.state.LivingEntityRenderState;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityPose;
@@ -13,7 +12,6 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.MathHelper;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -32,27 +30,28 @@ import thunder.hack.utility.math.MathUtility;
 import thunder.hack.utility.render.Render2DEngine;
 import thunder.hack.utility.render.Render3DEngine;
 
-import java.util.List;
-
 import static thunder.hack.features.modules.Module.mc;
 
 @Mixin(LivingEntityRenderer.class)
-public abstract class MixinLivingEntityRenderer<T extends LivingEntity, M extends EntityModel<T>> {
+public abstract class MixinLivingEntityRenderer {
     private LivingEntity lastEntity;
 
     private float originalHeadYaw, originalPrevHeadYaw, originalPrevHeadPitch, originalHeadPitch;
 
     @Shadow
-    protected M model;
+    protected EntityModel<LivingEntityRenderState> model;
 
-    @Shadow
-    @Final
-    protected List<FeatureRenderer<T, M>> features;
-
+    @Inject(method = "updateRenderState", at = @At("HEAD"))
+    private void onUpdateRenderState(LivingEntity entity, LivingEntityRenderState state, float tickDelta, CallbackInfo ci) {
+        lastEntity = entity;
+    }
 
     @Inject(method = "render", at = @At("HEAD"), cancellable = true)
-    public void onRenderPre(T livingEntity, float f, float g, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo ci) {
+    public void onRenderPre(LivingEntityRenderState state, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo ci) {
         if (Module.fullNullCheck()) return;
+        if (lastEntity == null) return;
+
+        LivingEntity livingEntity = lastEntity;
         if (mc.player != null && livingEntity == mc.player && mc.player.getControllingVehicle() == null && ClientSettings.renderRotations.getValue() && !ThunderHack.isFuturePresent()) {
             originalHeadYaw = livingEntity.headYaw;
             originalPrevHeadYaw = livingEntity.prevHeadYaw;
@@ -72,11 +71,11 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, M extend
             return;
         }
 
-        lastEntity = livingEntity;
-
         if (livingEntity instanceof PlayerEntity pe && ModuleManager.chams.isEnabled() && ModuleManager.chams.players.getValue()) {
-            ModuleManager.chams.renderPlayer(pe, f, g, matrixStack, i, model, ci, () -> postRender(livingEntity));
+            ModuleManager.chams.renderPlayer(pe, state.bodyYaw, Render3DEngine.getTickDelta(), matrixStack, i, model, ci, () -> postRender(livingEntity));
+
             if (!pe.isSpectator()) {
+                float g = Render3DEngine.getTickDelta();
                 float n;
                 Direction direction;
                 Entity entity;
@@ -126,17 +125,13 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, M extend
                     if (n > 1.0f)
                         n = 1.0f;
                 }
-
-                for (FeatureRenderer<T, M> featureRenderer : features) {
-                    featureRenderer.render(matrixStack, vertexConsumerProvider, i, livingEntity, o, n, g, l, k, m);
-                }
                 matrixStack.pop();
             }
         }
     }
 
     @Unique
-    public void postRender(T livingEntity) {
+    public void postRender(LivingEntity livingEntity) {
         if (Module.fullNullCheck()) return;
         if (mc.player != null && livingEntity == mc.player && mc.player.getControllingVehicle() == null && ClientSettings.renderRotations.getValue() && !ThunderHack.isFuturePresent()) {
             livingEntity.prevPitch = originalPrevHeadPitch;
@@ -147,9 +142,11 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, M extend
     }
 
     @Inject(method = "render", at = @At("TAIL"))
-    public void onRenderPost(T livingEntity, float f, float g, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo ci) {
+    public void onRenderPost(LivingEntityRenderState state, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo ci) {
         if (Module.fullNullCheck()) return;
-        postRender(livingEntity);
+        if (lastEntity != null) {
+            postRender(lastEntity);
+        }
     }
 
     @ModifyArgs(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/entity/model/EntityModel;render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumer;III)V"))

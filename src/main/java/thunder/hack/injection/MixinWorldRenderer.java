@@ -1,7 +1,11 @@
 package thunder.hack.injection;
 
 import net.minecraft.client.gl.PostEffectProcessor;
-import net.minecraft.client.render.*;
+import net.minecraft.client.render.Fog;
+import net.minecraft.client.render.FrameGraphBuilder;
+import net.minecraft.client.render.LightmapTextureManager;
+import net.minecraft.client.render.WorldRenderer;
+import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -19,19 +23,19 @@ public abstract class MixinWorldRenderer {
         return ModuleManager.freeCam.isEnabled() || spectator;
     }
 
-    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gl/PostEffectProcessor;render(F)V", ordinal = 0))
-    private void replaceShaderHook(PostEffectProcessor instance, float tickDelta) {
+    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gl/PostEffectProcessor;render(Lnet/minecraft/client/render/FrameGraphBuilder;IILnet/minecraft/client/gl/PostEffectProcessor$FramebufferSet;)V", ordinal = 0))
+    private void replaceShaderHook(PostEffectProcessor instance, FrameGraphBuilder frameGraphBuilder, int width, int height, PostEffectProcessor.FramebufferSet framebufferSet) {
         ShaderManager.Shader shaders = ModuleManager.shaders.mode.getValue();
         if (ModuleManager.shaders.isEnabled() && mc.world != null) {
             if (Managers.SHADER.fullNullCheck()) return;
             Managers.SHADER.setupShader(shaders, Managers.SHADER.getShaderOutline(shaders));
         } else {
-            instance.render(tickDelta);
+            instance.render(frameGraphBuilder, width, height, framebufferSet);
         }
     }
 
     @Inject(method = "renderWeather", at = @At("HEAD"), cancellable = true)
-    private void renderWeatherHook(LightmapTextureManager manager, float tickDelta, double cameraX, double cameraY, double cameraZ, CallbackInfo ci) {
+    private void renderWeatherHook(FrameGraphBuilder frameGraphBuilder, LightmapTextureManager manager, Vec3d cameraPos, float tickDelta, Fog fog, CallbackInfo ci) {
         if (ModuleManager.noRender.isEnabled() && ModuleManager.noRender.noWeather.getValue()) {
             ci.cancel();
         }

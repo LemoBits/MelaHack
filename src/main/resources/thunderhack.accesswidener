@@ -4,8 +4,6 @@ accessible   class   net/minecraft/network/packet/c2s/play/PlayerInteractEntityC
 accessible   class   net/minecraft/network/packet/c2s/play/PlayerInteractEntityC2SPacket$InteractType
 accessible class net/minecraft/network/packet/c2s/play/PlayerInteractEntityC2SPacket
 accessible field net/minecraft/client/network/ClientPlayerEntity lastSprinting Z
-accessible field net/minecraft/network/packet/s2c/play/PlayerPositionLookS2CPacket pitch F
-accessible field net/minecraft/network/packet/s2c/play/PlayerPositionLookS2CPacket yaw F
 accessible    field    net/minecraft/client/render/chunk/ChunkBuilder$ChunkData    nonEmptyLayers    Ljava/util/Set;
 accessible    field    net/minecraft/client/render/chunk/ChunkBuilder$ChunkData    occlusionGraph    Lnet/minecraft/client/render/chunk/ChunkOcclusionData;
 accessible field net/minecraft/entity/projectile/FishingBobberEntity CAUGHT_FISH Lnet/minecraft/entity/data/TrackedData;
@@ -19,7 +17,6 @@ accessible field net/minecraft/client/Mouse cursorDeltaY D
 accessible field net/minecraft/client/Mouse cursorDeltaX D
 accessible field net/minecraft/entity/Entity hasVisualFire Z
 accessible field net/minecraft/network/packet/s2c/play/GameMessageS2CPacket content Lnet/minecraft/text/Text;
-accessible method net/minecraft/entity/LivingEntity tryUseTotem (Lnet/minecraft/entity/damage/DamageSource;)Z
 accessible field net/minecraft/block/spawner/MobSpawnerLogic spawnDelay I
 accessible class net/minecraft/client/gui/hud/InGameHud$HeartType
 accessible method net/minecraft/network/packet/c2s/play/PlayerInteractEntityC2SPacket write (Lnet/minecraft/network/PacketByteBuf;)V
