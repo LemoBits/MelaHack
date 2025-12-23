@@ -60,7 +60,7 @@ public final class ManagedUniform extends ManagedUniformBase implements
     public boolean findUniformTargets(List<PostEffectPass> shaders) {
         List<GlUniform> list = new ArrayList<>();
         for (PostEffectPass shader : shaders) {
-            GlUniform uniform = shader.getProgram().getUniformByName(this.name);
+            GlUniform uniform = shader.getProgram().getUniform(this.name);
 
             if (uniform != null) {
                 if (uniform.getCount() != this.count) {

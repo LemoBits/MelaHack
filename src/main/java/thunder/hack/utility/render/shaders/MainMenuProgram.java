@@ -19,7 +19,7 @@ public class MainMenuProgram {
     public static float time_ = 10000f;
 
     public static final ManagedCoreShader MAIN_MENU = ShaderEffectManager.getInstance()
-            .manageCoreShader(Identifier.of("thunderhack", "mainmenu"), VertexFormats.POSITION);
+            .manageCoreShader(Identifier.of("minecraft", "mainmenu"), VertexFormats.POSITION);
 
     public MainMenuProgram() {
         setup();
@@ -34,7 +34,7 @@ public class MainMenuProgram {
     }
 
     public void use() {
-        RenderSystem.setShader(MAIN_MENU::getProgram);
+        RenderSystem.setShader(MAIN_MENU.getProgram());
     }
 
     protected void setup() {

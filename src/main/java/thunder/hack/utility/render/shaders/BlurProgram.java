@@ -32,7 +32,7 @@ public class BlurProgram {
     private Framebuffer input;
 
     public static final ManagedCoreShader BLUR = ShaderEffectManager.getInstance()
-            .manageCoreShader(Identifier.of("thunderhack", "blur"), VertexFormats.POSITION);
+            .manageCoreShader(Identifier.of("minecraft", "blur"), VertexFormats.POSITION);
 
     public BlurProgram() {
         setup();
@@ -40,7 +40,7 @@ public class BlurProgram {
 
     public void setParameters(float x, float y, float width, float height, float r, Color c1, float blurStrenth, float blurOpacity) {
         if (input == null)
-            input = new SimpleFramebuffer(mc.getWindow().getScaledWidth(), mc.getWindow().getScaledHeight(), false, MinecraftClient.IS_SYSTEM_MAC);
+            input = new SimpleFramebuffer(mc.getWindow().getScaledWidth(), mc.getWindow().getScaledHeight(), false);
 
         float i = (float) mc.getWindow().getScaleFactor();
         radius.set(r * i);
@@ -60,12 +60,12 @@ public class BlurProgram {
         buffer.beginWrite(false);
 
         if (input != null && (input.textureWidth != mc.getWindow().getFramebufferWidth() || input.textureHeight != mc.getWindow().getFramebufferHeight()))
-            input.resize(mc.getWindow().getFramebufferWidth(), mc.getWindow().getFramebufferHeight(), MinecraftClient.IS_SYSTEM_MAC);
+            input.resize(mc.getWindow().getFramebufferWidth(), mc.getWindow().getFramebufferHeight());
 
         inputResolution.set((float) buffer.textureWidth, (float) buffer.textureHeight);
         sampler.set(input.getColorAttachment());
 
-        RenderSystem.setShader(BLUR::getProgram);
+        RenderSystem.setShader(BLUR.getProgram());
     }
 
     protected void setup() {
@@ -79,7 +79,7 @@ public class BlurProgram {
         sampler = BLUR.findSampler("InputSampler");
         WindowResizeCallback.EVENT.register((client, window) -> {
             if (input != null)
-                input.resize(window.getFramebufferWidth(), window.getFramebufferHeight(), MinecraftClient.IS_SYSTEM_MAC);
+                input.resize(window.getFramebufferWidth(), window.getFramebufferHeight());
         });
     }
 }

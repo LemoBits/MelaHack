@@ -25,7 +25,7 @@ public class ArcShader {
     private Uniform1f end;
 
     public static final ManagedCoreShader ARC = ShaderEffectManager.getInstance()
-            .manageCoreShader(Identifier.of("thunderhack", "arc"), VertexFormats.POSITION);
+            .manageCoreShader(Identifier.of("minecraft", "arc"), VertexFormats.POSITION);
 
     public ArcShader() {
         setup();
@@ -47,7 +47,7 @@ public class ArcShader {
     }
 
     public void use() {
-        RenderSystem.setShader(ARC::getProgram);
+        RenderSystem.setShader(ARC.getProgram());
     }
 
     protected void setup() {

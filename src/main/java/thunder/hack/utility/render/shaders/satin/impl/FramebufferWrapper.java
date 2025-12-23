@@ -17,7 +17,6 @@
  */
 package thunder.hack.utility.render.shaders.satin.impl;
 
-import com.mojang.logging.LogUtils;
 import thunder.hack.utility.render.shaders.satin.api.managed.ManagedFramebuffer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
@@ -33,14 +32,7 @@ public final class FramebufferWrapper implements ManagedFramebuffer {
     }
 
     void findTarget(PostEffectProcessor shaderEffect) {
-        if (shaderEffect == null) {
-            this.wrapped = null;
-        } else {
-            this.wrapped = shaderEffect.getSecondaryTarget(this.name);
-            if (this.wrapped == null) {
-                LogUtils.getLogger().warn("No target framebuffer found with name {} in shader {}", this.name, shaderEffect.getName());
-            }
-        }
+        this.wrapped = null;
     }
 
     public String getName() {
@@ -68,19 +60,21 @@ public final class FramebufferWrapper implements ManagedFramebuffer {
     @Override
     public void draw(int width, int height, boolean disableBlend) {
         if (this.wrapped != null) {
-            this.wrapped.draw(width, height, disableBlend);
+            this.wrapped.draw(width, height);
         }
     }
 
     @Override
     public void clear() {
-        clear(MinecraftClient.IS_SYSTEM_MAC);
+        if (this.wrapped != null) {
+            this.wrapped.clear();
+        }
     }
 
     @Override
     public void clear(boolean swallowErrors) {
         if (this.wrapped != null) {
-            this.wrapped.clear(swallowErrors);
+            this.wrapped.clear();
         }
     }
 }

@@ -4,9 +4,14 @@ import com.mojang.logging.LogUtils;
 import meteordevelopment.orbit.EventBus;
 import meteordevelopment.orbit.IEventBus;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
+import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.metadata.ModMetadata;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.resource.ResourceManager;
+import net.minecraft.resource.ResourceType;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import org.slf4j.Logger;
 import thunder.hack.core.Core;
@@ -16,6 +21,7 @@ import thunder.hack.core.hooks.ModuleShutdownHook;
 import thunder.hack.core.manager.client.ModuleManager;
 import thunder.hack.utility.ThunderUtility;
 import thunder.hack.utility.render.Render2DEngine;
+import thunder.hack.utility.render.shaders.satin.impl.ReloadableShaderEffectManager;
 
 import java.awt.*;
 import java.lang.invoke.MethodHandles;
@@ -65,6 +71,18 @@ public class ThunderHack implements ModInitializer {
 
         Managers.init();
         Managers.subscribe();
+
+        ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
+            @Override
+            public Identifier getFabricId() {
+                return Identifier.of(MOD_ID, "satin_shaders");
+            }
+
+            @Override
+            public void reload(ResourceManager manager) {
+                ReloadableShaderEffectManager.INSTANCE.reload(manager);
+            }
+        });
 
         Render2DEngine.initShaders();
         ModuleManager.rpc.startRpc();

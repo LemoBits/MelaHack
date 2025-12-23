@@ -45,8 +45,18 @@ public final class ManagedSamplerUniformV1 extends ManagedSamplerUniformBase {
     protected void set(Object value) {
         SamplerAccess[] targets = this.targets;
         if (targets.length > 0 && this.cachedValue != value) {
+            int textureId;
+            if (value instanceof AbstractTexture texture) {
+                textureId = texture.getGlId();
+            } else if (value instanceof Framebuffer framebuffer) {
+                textureId = framebuffer.getColorAttachment();
+            } else if (value instanceof Integer id) {
+                textureId = id;
+            } else {
+                return;
+            }
             for (SamplerAccess target : targets) {
-                ((ShaderProgram) target).addSampler(this.name, value);
+                ((ShaderProgram) target).addSamplerTexture(this.name, textureId);
             }
             this.cachedValue = value;
         }

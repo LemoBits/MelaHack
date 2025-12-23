@@ -28,7 +28,7 @@ public class HudShader {
     private Uniform4f color4;
 
     public static final ManagedCoreShader HUD_SHADER = ShaderEffectManager.getInstance()
-            .manageCoreShader(Identifier.of("thunderhack", "hudshader"), VertexFormats.POSITION);
+            .manageCoreShader(Identifier.of("minecraft", "hudshader"), VertexFormats.POSITION);
 
     public HudShader() {
         setup();
@@ -56,7 +56,7 @@ public class HudShader {
     }
 
     public void use() {
-        RenderSystem.setShader(HUD_SHADER::getProgram);
+        RenderSystem.setShader(HUD_SHADER.getProgram());
     }
 
     public void setup() {

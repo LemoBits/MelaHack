@@ -9,18 +9,25 @@ import thunder.hack.utility.render.shaders.satin.api.managed.uniform.SamplerUnif
 import thunder.hack.injection.accesors.AccessiblePassesShaderEffect;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.PostEffectProcessor;
+import net.minecraft.client.gl.ShaderLoader;
+import net.minecraft.client.util.ObjectAllocator;
 import net.minecraft.resource.ResourceFactory;
 import net.minecraft.util.Identifier;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import static org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA;
 import static org.lwjgl.opengl.GL11.GL_SRC_ALPHA;
 
 public final class ResettableManagedShaderEffect extends ResettableManagedShaderBase<PostEffectProcessor> implements ManagedShaderEffect {
+
+    private static final Identifier BUF_IN = Identifier.of("thunderhack", "buf_in");
+    private static final Identifier BUF_OUT = Identifier.of("thunderhack", "buf_out");
+    private static final Set<Identifier> EXTERNAL_TARGETS = Set.of(PostEffectProcessor.MAIN, BUF_IN, BUF_OUT);
 
     private final Consumer<ManagedShaderEffect> initCallback;
     private final Map<String, FramebufferWrapper> managedTargets;
@@ -39,14 +46,13 @@ public final class ResettableManagedShaderEffect extends ResettableManagedShader
 
     @Override
     protected PostEffectProcessor parseShader(ResourceFactory resourceFactory, MinecraftClient mc, Identifier location) throws IOException {
-        return new PostEffectProcessor(mc.getTextureManager(), mc.getResourceManager(), mc.getFramebuffer(), location);
+        ShaderLoader loader = mc.getShaderLoader();
+        return loader.loadPostEffect(location, EXTERNAL_TARGETS);
     }
 
     @Override
     public void setup(int windowWidth, int windowHeight) {
         Preconditions.checkNotNull(shader);
-        this.shader.setupDimensions(windowWidth, windowHeight);
-
         for (ManagedUniformBase uniform : this.getManagedUniforms()) {
             setupUniform(uniform, shader);
         }
@@ -65,7 +71,13 @@ public final class ResettableManagedShaderEffect extends ResettableManagedShader
             RenderSystem.disableBlend();
             RenderSystem.disableDepthTest();
             RenderSystem.resetTextureMatrix();
-            sg.render(tickDelta);
+            MinecraftClient client = MinecraftClient.getInstance();
+            Map<Identifier, net.minecraft.client.gl.Framebuffer> externalTargets = Map.of(
+                PostEffectProcessor.MAIN, client.getFramebuffer(),
+                BUF_IN, client.getFramebuffer(),
+                BUF_OUT, client.getFramebuffer()
+            );
+            PostEffectRenderUtil.render(sg, client.getFramebuffer().textureWidth, client.getFramebuffer().textureHeight, externalTargets, ObjectAllocator.TRIVIAL);
             MinecraftClient.getInstance().getFramebuffer().beginWrite(true);
             RenderSystem.disableBlend();
             RenderSystem.blendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

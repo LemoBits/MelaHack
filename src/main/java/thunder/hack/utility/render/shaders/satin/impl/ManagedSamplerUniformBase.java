@@ -17,13 +17,11 @@
  */
 package thunder.hack.utility.render.shaders.satin.impl;
 
-import com.mojang.logging.LogUtils;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import thunder.hack.features.cmd.Command;
 import thunder.hack.utility.render.shaders.satin.api.managed.uniform.SamplerUniform;
 import net.minecraft.client.gl.GlUniform;
-import net.minecraft.client.gl.JsonEffectShaderProgram;
 import net.minecraft.client.gl.PostEffectPass;
 import net.minecraft.client.gl.ShaderProgram;
 
@@ -45,7 +43,7 @@ public abstract class ManagedSamplerUniformBase extends ManagedUniformBase imple
         List<SamplerAccess> targets = new ArrayList<>(shaders.size());
         IntList rawTargets = new IntArrayList(shaders.size());
         for (PostEffectPass shader : shaders) {
-            JsonEffectShaderProgram program = shader.getProgram();
+            ShaderProgram program = shader.getProgram();
             SamplerAccess access = (SamplerAccess) program;
             if (access.hasSampler(this.name)) {
                 targets.add(access);
@@ -64,7 +62,6 @@ public abstract class ManagedSamplerUniformBase extends ManagedUniformBase imple
 
     @Override
     public boolean findUniformTarget(ShaderProgram shader) {
-        LogUtils.getLogger().warn(shader.getName());
         return findUniformTarget1(((SamplerAccess) shader));
     }
 

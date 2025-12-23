@@ -27,7 +27,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.function.Function;
 
-public abstract class ResettableManagedShaderBase<S extends AutoCloseable> implements UniformFinder {
+public abstract class ResettableManagedShaderBase<S> implements UniformFinder {
 
     private final Identifier location;
     private final Map<String, ManagedUniform> managedUniforms = new HashMap<>();
@@ -63,7 +63,9 @@ public abstract class ResettableManagedShaderBase<S extends AutoCloseable> imple
         if (this.isInitialized()) {
             try {
                 assert this.shader != null;
-                this.shader.close();
+                if (this.shader instanceof AutoCloseable closeable) {
+                    closeable.close();
+                }
                 this.shader = null;
             } catch (Exception e) {
                 throw new RuntimeException("Failed to release shader " + this.location, e);

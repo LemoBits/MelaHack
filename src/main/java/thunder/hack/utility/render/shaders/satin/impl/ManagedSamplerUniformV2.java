@@ -19,7 +19,7 @@ package thunder.hack.utility.render.shaders.satin.impl;
 
 import thunder.hack.utility.render.shaders.satin.api.managed.uniform.SamplerUniformV2;
 import net.minecraft.client.gl.Framebuffer;
-import net.minecraft.client.gl.JsonEffectShaderProgram;
+import net.minecraft.client.gl.ShaderProgram;
 import net.minecraft.client.texture.AbstractTexture;
 
 import java.util.function.IntSupplier;
@@ -54,7 +54,7 @@ public final class ManagedSamplerUniformV2 extends ManagedSamplerUniformBase imp
         SamplerAccess[] targets = this.targets;
         if (targets.length > 0 && this.cachedValue != value) {
             for (SamplerAccess target : targets) {
-                ((JsonEffectShaderProgram) target).bindSampler(this.name, value);
+                ((ShaderProgram) target).addSamplerTexture(this.name, value.getAsInt());
             }
             this.cachedValue = value;
         }
