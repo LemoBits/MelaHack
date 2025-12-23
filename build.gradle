@@ -13,12 +13,9 @@ base {
 loom {
 	accessWidenerPath = file("src/main/resources/thunderhack.accesswidener")
 
-	splitEnvironmentSourceSets()
-
 	mods {
 		"melahack" {
 			sourceSet sourceSets.main
-			sourceSet sourceSets.client
 		}
 	}
 }
