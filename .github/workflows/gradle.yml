@@ -1,19 +1,19 @@
-name: Build and Release dev build
+name: Build and Release
 
 on:
-  workflow_dispatch:
   push:
-    paths:
-      - 'gradle.properties'
+    tags:
+      - '*'
 
 concurrency:
-  group: "latest"
+  group: "release-${{ github.ref_name }}"
   cancel-in-progress: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions: write-all
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -29,7 +29,7 @@ jobs:
 
       - name: Read Minecraft Version
         id: read_version
-        run: echo "::set-output name=minecraft_version::$(grep minecraft_version gradle.properties | cut -d'=' -f2)"
+        run: echo "minecraft_version=$(grep minecraft_version gradle.properties | cut -d'=' -f2)" >> "$GITHUB_OUTPUT"
 
       - name: Build
         run: ./gradlew build
@@ -37,11 +37,11 @@ jobs:
       - name: Remove *-sources.jar
         run: rm ./build/libs/*-sources.jar || true
 
-      - uses: "0xDylan/action-auto-releases-n20@v1.1"
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "latest"
+          tag_name: ${{ github.ref_name }}
+          name: "Release ${{ github.ref_name }} (MC ${{ steps.read_version.outputs.minecraft_version }})"
           prerelease: false
-          title: "Latest Build (${{ steps.read_version.outputs.minecraft_version }})"
-          files: |
-            ./build/libs/*.jar
+          generate_release_notes: true
+          files: ./build/libs/*.jar

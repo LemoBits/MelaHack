@@ -1,0 +1,86 @@
+name: Build and Release Dev Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - '**'
+
+concurrency:
+  group: "dev-release"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'zulu'
+          java-package: 'jdk'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Read Minecraft Version
+        id: read_version
+        run: echo "minecraft_version=$(grep minecraft_version gradle.properties | cut -d'=' -f2)" >> "$GITHUB_OUTPUT"
+
+      - name: Build
+        run: ./gradlew build
+
+      - name: Remove *-sources.jar
+        run: rm ./build/libs/*-sources.jar || true
+
+      - name: Resolve previous tag
+        id: prev_tag
+        run: |
+          git fetch --tags --force
+          previous_tag=$(git describe --tags --abbrev=0 --exclude dev --exclude latest 2>/dev/null || true)
+          echo "previous_tag=$previous_tag" >> "$GITHUB_OUTPUT"
+
+      - name: Generate release notes
+        id: notes
+        run: |
+          if [ -n "${{ steps.prev_tag.outputs.previous_tag }}" ]; then
+            body=$(gh api "repos/${{ github.repository }}/releases/generate-notes" \
+              -f tag_name="dev" \
+              -f target_commitish="${{ github.sha }}" \
+              -f previous_tag_name="${{ steps.prev_tag.outputs.previous_tag }}" \
+              --jq .body)
+          else
+            body=$(gh api "repos/${{ github.repository }}/releases/generate-notes" \
+              -f tag_name="dev" \
+              -f target_commitish="${{ github.sha }}" \
+              --jq .body)
+          fi
+          {
+            echo "body<<EOF"
+            echo "$body"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create or Update Dev Release
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          tag: dev
+          name: "Dev Build (MC ${{ steps.read_version.outputs.minecraft_version }})"
+          body: ${{ steps.notes.outputs.body }}
+          artifacts: ./build/libs/*.jar
+          artifactContentType: application/java-archive
+
+      - name: Pin Dev Release
+        run: |
+          release_id=$(gh api "repos/${{ github.repository }}/releases/tags/dev" --jq .node_id)
+          gh api graphql -f query='mutation($id:ID!){pinRelease(input:{releaseId:$id}){clientMutationId}}' -f id="$release_id"
