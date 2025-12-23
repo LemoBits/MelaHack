@@ -1,6 +1,6 @@
 #version 150
 
-uniform sampler2D DiffuseSampler;
+uniform sampler2D InSampler;
 in vec2 texCoord;
 in vec2 oneTexel;
 uniform vec4 color;
@@ -14,7 +14,7 @@ uniform float alpha0;
 
 
 void main() {
-    vec4 centerCol = texture(DiffuseSampler, texCoord);
+    vec4 centerCol = texture(InSampler, texCoord);
 
     if(centerCol.a != 0) {
         fragColor = color;
@@ -25,7 +25,7 @@ void main() {
             for (int y = -quality; y < quality; y++) {
                 vec2 offset = vec2(x, y);
                 vec2 coord = texCoord + offset * oneTexel;
-                vec4 t = texture(DiffuseSampler, coord);
+                vec4 t = texture(InSampler, coord);
                 if (t.a != 0){
                     if (alpha0 == -1.0) {
                         if (colorFinal[0] == -1) {

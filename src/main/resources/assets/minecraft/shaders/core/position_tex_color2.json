@@ -4,8 +4,8 @@
     "srcrgb": "srcalpha",
     "dstrgb": "1-srcalpha"
   },
-  "vertex": "thunderhack:position_tex_color2",
-  "fragment": "thunderhack:position_tex_color2",
+  "vertex": "minecraft:core/position_tex_color2",
+  "fragment": "minecraft:core/position_tex_color2",
   "attributes": [
     "Position",
     "UV0",

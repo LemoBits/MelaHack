@@ -2,7 +2,7 @@
 
 uniform float time;
 uniform vec2 resolution;
-uniform sampler2D DiffuseSampler;
+uniform sampler2D InSampler;
 in vec2 texCoord;
 uniform int quality;
 uniform vec4 color;
@@ -28,7 +28,7 @@ float glowShader() {
 
     for (float x = -quality; x < quality; x++) {
         for (float y = -quality; y < quality; y++) {
-            vec4 currentColor = texture(DiffuseSampler, texCoord + vec2(texelSize.x * x, texelSize.y * y));
+            vec4 currentColor = texture(InSampler, texCoord + vec2(texelSize.x * x, texelSize.y * y));
 
             if (currentColor.a != 0)
             alpha += divider > 0 ? max(0.0, (maxSample - distance(vec2(x, y), vec2(0))) / divider) : 1;
@@ -39,7 +39,7 @@ float glowShader() {
 }
 
 void main(){
-    vec4 centerCol = texture(DiffuseSampler, texCoord);
+    vec4 centerCol = texture(InSampler, texCoord);
 
     vec2 uv=(gl_FragCoord.xy*2.-resolution.xy) / min(resolution.x, resolution.y);
     vec3 finalColor=vec3(0);

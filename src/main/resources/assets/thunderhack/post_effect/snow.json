@@ -1,0 +1,29 @@
+{
+  "targets": {
+    "swap": {}
+  },
+  "passes": [
+    {
+      "program": "thunderhack:program/snow",
+      "inputs": [
+        {
+          "sampler_name": "In",
+          "target": "thunderhack:buf_in"
+        }
+      ],
+      "output": "swap",
+      "uniforms": []
+    },
+    {
+      "program": "minecraft:post/blit",
+      "inputs": [
+        {
+          "sampler_name": "In",
+          "target": "swap"
+        }
+      ],
+      "output": "thunderhack:buf_out",
+      "uniforms": []
+    }
+  ]
+}

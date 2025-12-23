@@ -3,7 +3,7 @@
 in vec2 texCoord;
 out vec4 fragColor;
 
-uniform sampler2D DiffuseSampler;
+uniform sampler2D InSampler;
 uniform vec4 primaryColor;
 uniform vec4 secondaryColor;
 uniform float time;
@@ -23,7 +23,7 @@ vec3 wave(vec2 pos)
 
 void main()
 {
-    vec4 centerCol = texture(DiffuseSampler, texCoord);
+    vec4 centerCol = texture(InSampler, texCoord);
 
     if (centerCol.a != 0) {
         fragColor = vec4(wave(gl_FragCoord.xy), fillAlpha);
@@ -34,7 +34,7 @@ void main()
             for (int y = -quality; y < quality; y++) {
                 vec2 offset = vec2(x, y);
                 vec2 coord = texCoord + offset * oneTexel;
-                vec4 t = texture(DiffuseSampler, coord);
+                vec4 t = texture(InSampler, coord);
                 if (t.a != 0){
                     if (alpha0 == -1.0) {
                         if (colorFinal[0] == -1) {

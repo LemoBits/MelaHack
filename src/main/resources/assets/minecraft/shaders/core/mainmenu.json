@@ -4,8 +4,8 @@
     "srcrgb": "srcalpha",
     "dstrgb": "1-srcalpha"
   },
-  "vertex": "position",
-  "fragment": "thunderhack:mainmenu",
+  "vertex": "minecraft:core/position_only",
+  "fragment": "minecraft:core/mainmenu",
   "attributes": [],
   "samplers": [
   ],
