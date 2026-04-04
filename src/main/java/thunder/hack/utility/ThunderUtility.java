@@ -15,6 +15,7 @@ import thunder.hack.utility.math.MathUtility;
 import java.io.*;
 import java.net.URI;
 import java.net.URL;
+import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -57,10 +58,21 @@ public final class ThunderUtility {
 
     public static void syncVersion() {
         try {
-            if (!new BufferedReader(new InputStreamReader(URI.create("https://raw.githubusercontent.com/Pan4ur/THRecodeUtil/main/syncVersion121.txt").toURL().openStream())).readLine().equals(ThunderHack.VERSION))
-                ThunderHack.isOutdated = true;
+            try (BufferedReader reader = openRemoteReader("https://raw.githubusercontent.com/Pan4ur/THRecodeUtil/main/syncVersion121.txt")) {
+                if (!reader.readLine().equals(ThunderHack.VERSION))
+                    ThunderHack.isOutdated = true;
+            }
         } catch (Exception ignored) {
         }
+    }
+
+    private static BufferedReader openRemoteReader(String url) throws IOException {
+        URLConnection connection = URI.create(url).toURL().openConnection();
+        connection.setConnectTimeout(5000);
+        connection.setReadTimeout(5000);
+        connection.setUseCaches(false);
+        connection.setRequestProperty("User-Agent", "MelaHack/" + ThunderHack.VERSION);
+        return new BufferedReader(new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8));
     }
 
     public static void parseStarGazer() {
@@ -68,15 +80,14 @@ public final class ThunderUtility {
 
         try {
             for (int page = 1; page <= 3; page++) {
-                URL url = URI.create("https://api.github.com/repos/Pan4ur/ThunderHack-Recode/stargazers?per_page=100&page=" + page).toURL();
-                BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
                 StringBuilder response = new StringBuilder();
                 String inputLine;
 
-                while ((inputLine = in.readLine()) != null) {
-                    response.append(inputLine);
+                try (BufferedReader in = openRemoteReader("https://api.github.com/repos/Pan4ur/ThunderHack-Recode/stargazers?per_page=100&page=" + page)) {
+                    while ((inputLine = in.readLine()) != null) {
+                        response.append(inputLine);
+                    }
                 }
-                in.close();
 
                 JsonArray jsonArray = JsonParser.parseString(response.toString()).getAsJsonArray();
                 for (int i = 0; i < jsonArray.size(); i++) {
@@ -86,24 +97,21 @@ public final class ThunderUtility {
 
                 Thread.sleep(1500);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+
+            starGazer = starGazers;
+        } catch (Exception ignored) {
         }
     }
 
     public static void syncContributors() {
-        try {
-            URL list = URI.create("https://raw.githubusercontent.com/Pan4ur/THRecodeUtil/main/thTeam.txt").toURL();
-            BufferedReader in = new BufferedReader(new InputStreamReader(list.openStream(), StandardCharsets.UTF_8));
+        try (BufferedReader in = openRemoteReader("https://raw.githubusercontent.com/Pan4ur/THRecodeUtil/main/thTeam.txt")) {
             String inputLine;
             int i = 0;
             while ((inputLine = in.readLine()) != null) {
                 ThunderHack.contributors[i] = inputLine.trim();
                 i++;
             }
-            in.close();
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception ignored) {
         }
     }
 
@@ -129,10 +137,7 @@ public final class ThunderUtility {
 
 
     public static void parseCommits() {
-        try {
-            URL url = URI.create("https://api.github.com/repos/Pan4ur/ThunderHack-Recode/commits?per_page=50").toURL();
-            BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream(), StandardCharsets.UTF_8));
-
+        try (BufferedReader in = openRemoteReader("https://api.github.com/repos/Pan4ur/ThunderHack-Recode/commits?per_page=50")) {
             changeLog.add("Changelog [Recode; Date: " + ThunderHack.BUILD_DATE + "; GitHash:" + ThunderHack.GITHUB_HASH + "]");
             changeLog.add("\n");
 
@@ -159,9 +164,7 @@ public final class ThunderUtility {
                     changeLog.add("- " + info + " [" + formattedDate + "]  (" + formattedName + ")");
                 }
             }
-            in.close();
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception ignored) {
         }
     }
 }
