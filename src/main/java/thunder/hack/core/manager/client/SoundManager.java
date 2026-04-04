@@ -52,8 +52,6 @@ public class SoundManager implements IManager {
     public SoundEvent SWIPEIN_SOUNDEVENT = SoundEvent.of(SWIPEIN_SOUND);
     public final Identifier SWIPEOUT_SOUND = Identifier.of("thunderhack:swipeout");
     public SoundEvent SWIPEOUT_SOUNDEVENT = SoundEvent.of(SWIPEOUT_SOUND);
-    public final Identifier ALERT_SOUND = Identifier.of("thunderhack:alert");
-    public SoundEvent ALERT_SOUNDEVENT = SoundEvent.of(ALERT_SOUND);
     public final Identifier PM_SOUND = Identifier.of("thunderhack:pmsound");
     public SoundEvent PM_SOUNDEVENT = SoundEvent.of(PM_SOUND);
     public final Identifier RIFK_SOUND = Identifier.of("thunderhack:rifk");
@@ -81,7 +79,6 @@ public class SoundManager implements IManager {
         Registry.register(Registries.SOUND_EVENT, BOOLEAN_SOUND, BOOLEAN_SOUNDEVENT);
         Registry.register(Registries.SOUND_EVENT, SWIPEIN_SOUND, SWIPEIN_SOUNDEVENT);
         Registry.register(Registries.SOUND_EVENT, SWIPEOUT_SOUND, SWIPEOUT_SOUNDEVENT);
-        Registry.register(Registries.SOUND_EVENT, ALERT_SOUND, ALERT_SOUNDEVENT);
         Registry.register(Registries.SOUND_EVENT, PM_SOUND, PM_SOUNDEVENT);
         Registry.register(Registries.SOUND_EVENT, RIFK_SOUND, RIFK_SOUNDEVENT);
         Registry.register(Registries.SOUND_EVENT, CUTIE_SOUND, CUTIE_SOUNDEVENT);
