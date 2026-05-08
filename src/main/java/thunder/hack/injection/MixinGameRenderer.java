@@ -34,6 +34,7 @@ import thunder.hack.features.modules.client.ClientSettings;
 import thunder.hack.features.modules.player.NoEntityTrace;
 import thunder.hack.utility.math.FrameRateCounter;
 import thunder.hack.utility.render.BlockAnimationUtility;
+import thunder.hack.utility.render.Render2DEngine;
 import thunder.hack.utility.render.Render3DEngine;
 
 import static thunder.hack.features.modules.Module.mc;
@@ -59,6 +60,7 @@ public abstract class MixinGameRenderer {
     @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/util/profiler/Profiler;pop()V", ordinal = 1, shift = At.Shift.BEFORE), method = "render")
     void postHudRenderHook(RenderTickCounter tickCounter, boolean tick, CallbackInfo ci) {
         FrameRateCounter.INSTANCE.recordFrame();
+        Render2DEngine.BLUR_PROGRAM.invalidateCapture();
     }
 
     @Inject(at = @At(value = "FIELD", target = "Lnet/minecraft/client/render/GameRenderer;renderHand:Z", opcode = Opcodes.GETFIELD, ordinal = 0), method = "renderWorld")

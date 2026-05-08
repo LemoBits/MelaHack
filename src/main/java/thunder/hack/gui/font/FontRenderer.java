@@ -179,13 +179,10 @@ public class FontRenderer implements Closeable {
         stack.translate(roundToDecimal(x, 1), roundToDecimal(y, 1), 0);
         stack.scale(1f / this.scaleMul, 1f / this.scaleMul, 1f);
 
+        RenderSystem.setShader(GameRenderer::getPositionTexColorProgram);
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.disableCull();
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
-
-        RenderSystem.setShader(GameRenderer::getPositionTexColorProgram);
         BufferBuilder bb;
         Matrix4f mat = stack.peek().getPositionMatrix();
         char[] chars = s.toCharArray();
@@ -242,6 +239,8 @@ public class FontRenderer implements Closeable {
             }
             for (Identifier identifier : GLYPH_PAGE_CACHE.keySet()) {
                 RenderSystem.setShaderTexture(0, identifier);
+                GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+                GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
                 List<DrawEntry> objects = GLYPH_PAGE_CACHE.get(identifier);
 
                 bb = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR);
@@ -271,6 +270,8 @@ public class FontRenderer implements Closeable {
 
             GLYPH_PAGE_CACHE.clear();
         }
+        RenderSystem.enableCull();
+        RenderSystem.disableBlend();
         stack.pop();
     }
 
