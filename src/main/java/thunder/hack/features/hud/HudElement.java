@@ -23,6 +23,8 @@ public class HudElement extends Module {
     private float x, y, dragX, dragY, hitX, hitY;
     private float height, width;
     public static boolean anyHovered = false;
+    private static long HAND_CURSOR;
+    private static long CROSSHAIR_CURSOR;
 
     public HudElement(String name, int width, int height) {
         super(name, Category.HUD);
@@ -84,7 +86,15 @@ public class HudElement extends Module {
 
         if (isHovering() && (mc.currentScreen instanceof ChatScreen || mc.currentScreen instanceof HudEditorGui)) {
             if (GLFW.glfwGetPlatform() != GLFW.GLFW_PLATFORM_WAYLAND) {
-                GLFW.glfwSetCursor(mc.getWindow().getHandle(), mouseState ? GLFW.glfwCreateStandardCursor(GLFW.GLFW_CROSSHAIR_CURSOR) : GLFW.glfwCreateStandardCursor(GLFW.GLFW_HAND_CURSOR));
+                if (mouseState) {
+                    if (CROSSHAIR_CURSOR == 0)
+                        CROSSHAIR_CURSOR = GLFW.glfwCreateStandardCursor(GLFW.GLFW_CROSSHAIR_CURSOR);
+                    GLFW.glfwSetCursor(mc.getWindow().getHandle(), CROSSHAIR_CURSOR);
+                } else {
+                    if (HAND_CURSOR == 0)
+                        HAND_CURSOR = GLFW.glfwCreateStandardCursor(GLFW.GLFW_HAND_CURSOR);
+                    GLFW.glfwSetCursor(mc.getWindow().getHandle(), HAND_CURSOR);
+                }
             }
             anyHovered = true;
         }

@@ -58,7 +58,7 @@ public final class ThunderUtility {
 
     public static void syncVersion() {
         try {
-            try (BufferedReader reader = openRemoteReader("https://raw.githubusercontent.com/Pan4ur/THRecodeUtil/main/syncVersion121.txt")) {
+            try (BufferedReader reader = openRemoteReader("https://raw.githubusercontent.com/ulybaka1337/THRecodeImprovedUtil/main/syncVersion121.txt")) {
                 if (!reader.readLine().equals(ThunderHack.VERSION))
                     ThunderHack.isOutdated = true;
             }
@@ -104,7 +104,7 @@ public final class ThunderUtility {
     }
 
     public static void syncContributors() {
-        try (BufferedReader in = openRemoteReader("https://raw.githubusercontent.com/Pan4ur/THRecodeUtil/main/thTeam.txt")) {
+        try (BufferedReader in = openRemoteReader("https://raw.githubusercontent.com/ulybaka1337/THRecodeImprovedUtil/main/thTeam.txt")) {
             String inputLine;
             int i = 0;
             while ((inputLine = in.readLine()) != null) {
@@ -137,8 +137,8 @@ public final class ThunderUtility {
 
 
     public static void parseCommits() {
-        try (BufferedReader in = openRemoteReader("https://api.github.com/repos/Pan4ur/ThunderHack-Recode/commits?per_page=50")) {
-            changeLog.add("Changelog [Recode; Date: " + ThunderHack.BUILD_DATE + "; GitHash:" + ThunderHack.GITHUB_HASH + "]");
+        try (BufferedReader in = openRemoteReader("https://api.github.com/repos/ulybaka1337/ThunderHack-Recode-Improved/commits?per_page=50")) {
+            changeLog.add("Latest Commits [Recode Improved; Date: " + ThunderHack.BUILD_DATE + "; GitHash:" + ThunderHack.GITHUB_HASH + "]");
             changeLog.add("\n");
 
             String inputLine;

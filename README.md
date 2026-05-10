@@ -19,13 +19,15 @@ This fork is mainly focused on anarchy and hvh features. Won't update bypasses o
 
 - [x] Bad Unicode character rendering
 - [x] Simplified Chinese translation
+- [x] Sync changes from ThunderHack Recode Improved
+- [x] Linux X11 frame lock mitigation
 - [ ] ThunderHack Addon Docs
 - [ ] Supports of meteor addons
 - [ ] Scripting system
 
 ## Information
 
-- Minecraft version: ```Fabric``` 1.21.1
+- Minecraft version: ```Fabric``` 1.21.3
 - Default ClickGui keybind - **```P```**
 - Default prefix - **```@```**
 - Middle click the module to bind it.
@@ -42,11 +44,17 @@ This fork is mainly focused on anarchy and hvh features. Won't update bypasses o
 
 ## Credits
 
+### ThunderHack Recode
+
 - [Ai_24](https://www.youtube.com/@Ai_24) for cool showcase
 - [KiLAB Gaming](https://www.youtube.com/@KiLABGaming) for complete overview
 - [@meteordevelopment](https://github.com/meteordevelopment) for orbit
 - [@ladysnake](https://github.com/ladysnake) for satin
 - [@0x3C50](https://github.com/0x3C50/Renderer) for the renderer
+
+### ThunderHack Recode Improved
+- [@Coderx-Gamer](https://github.com/Coderx-Gamer/) for UI-Utils mod (I took a look at his code for GUI move -> Close without packet)
+- [@crazymoose77756](https://github.com/crazymoose77756) and leftys for Meteor Paper Dupe (I added it into PastedPaperDupe module)
 
 ## Screenshots
 <details>

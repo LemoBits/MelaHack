@@ -30,6 +30,7 @@ public class BlurProgram {
     private SamplerUniform sampler;
 
     private Framebuffer input;
+    private boolean captureValid = false;
 
     public static final ManagedCoreShader BLUR = ShaderEffectManager.getInstance()
             .manageCoreShader(Identifier.of("minecraft", "blur"), VertexFormats.POSITION);
@@ -54,10 +55,14 @@ public class BlurProgram {
 
     public void use() {
         var buffer = MinecraftClient.getInstance().getFramebuffer();
-        input.beginWrite(false);
-        GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, buffer.fbo);
-        GL30.glBlitFramebuffer(0, 0, buffer.textureWidth, buffer.textureHeight, 0, 0, buffer.textureWidth, buffer.textureHeight, GL30.GL_COLOR_BUFFER_BIT, GL30.GL_LINEAR);
-        buffer.beginWrite(false);
+
+        if (!captureValid) {
+            input.beginWrite(false);
+            GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, buffer.fbo);
+            GL30.glBlitFramebuffer(0, 0, buffer.textureWidth, buffer.textureHeight, 0, 0, buffer.textureWidth, buffer.textureHeight, GL30.GL_COLOR_BUFFER_BIT, GL30.GL_LINEAR);
+            buffer.beginWrite(false);
+            captureValid = true;
+        }
 
         if (input != null && (input.textureWidth != mc.getWindow().getFramebufferWidth() || input.textureHeight != mc.getWindow().getFramebufferHeight()))
             input.resize(mc.getWindow().getFramebufferWidth(), mc.getWindow().getFramebufferHeight());
@@ -66,6 +71,10 @@ public class BlurProgram {
         sampler.set(input.getColorAttachment());
 
         RenderSystem.setShader(BLUR.getProgram());
+    }
+
+    public void invalidateCapture() {
+        captureValid = false;
     }
 
     protected void setup() {

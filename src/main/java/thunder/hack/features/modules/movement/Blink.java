@@ -8,11 +8,13 @@ import net.minecraft.network.packet.c2s.common.CommonPongC2SPacket;
 import net.minecraft.network.packet.c2s.common.KeepAliveC2SPacket;
 import net.minecraft.network.packet.c2s.play.*;
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import org.lwjgl.glfw.GLFW;
 import thunder.hack.events.impl.EventTick;
 import thunder.hack.events.impl.PacketEvent;
 import thunder.hack.features.modules.Module;
+import thunder.hack.features.modules.client.HudEditor;
 import thunder.hack.setting.Setting;
 import thunder.hack.setting.impl.Bind;
 import thunder.hack.setting.impl.ColorSetting;
@@ -33,19 +35,22 @@ public class Blink extends Module {
     }
 
     private final Setting<Boolean> pulse = new Setting<>("Pulse", false);
+    private final Setting<Integer> pulsePackets = new Setting<>("PulsePackets", 20, 1, 1000, v -> pulse.getValue());
     private final Setting<Boolean> autoDisable = new Setting<>("AutoDisable", false);
     private final Setting<Boolean> disableOnVelocity = new Setting<>("DisableOnVelocity", false);
+    private final Setting<Boolean> clearOnVelocity = new Setting<>("ClearOnVelocity", true, v -> false);
+    private final Setting<Boolean> stopOnInteraction = new Setting<>("StopOnInteraction", true);
     private final Setting<Integer> disablePackets = new Setting<>("DisablePackets", 17, 1, 1000, v -> autoDisable.getValue());
-    private final Setting<Integer> pulsePackets = new Setting<>("PulsePackets", 20, 1, 1000, v -> pulse.getValue());
     private final Setting<Boolean> render = new Setting<>("Render", true);
     private final Setting<RenderMode> renderMode = new Setting<>("Render Mode", RenderMode.Circle, value -> render.getValue());
-    private final Setting<ColorSetting> circleColor = new Setting<>("Color", new ColorSetting(0xFFda6464), value -> render.getValue() && renderMode.getValue() == RenderMode.Circle || renderMode.getValue() == RenderMode.Both);
+    private final Setting<ColorSetting> circleColor = new Setting<>("Color", new ColorSetting(0xFFda6464), value -> render.getValue() && renderMode.getValue() == RenderMode.Circle || renderMode.getValue() == RenderMode.CircleAndModel || renderMode.getValue() == RenderMode.Box);
     private final Setting<Bind> cancel = new Setting<>("Cancel", new Bind(GLFW.GLFW_KEY_LEFT_SHIFT, false, false));
 
     private enum RenderMode {
         Circle,
         Model,
-        Both
+        CircleAndModel,
+        Box
     }
 
     private PlayerEntityCopy blinkPlayer;
@@ -56,6 +61,9 @@ public class Blink extends Module {
     private final Queue<Packet<?>> storedPackets = new LinkedList<>();
     private final Queue<Packet<?>> storedTransactions = new LinkedList<>();
     private final AtomicBoolean sending = new AtomicBoolean(false);
+    private boolean need2SendBsAsap = false;
+    private boolean need2CancelBsAsap = false;
+    private Box renderbox;
 
     @Override
     public void onEnable() {
@@ -86,6 +94,8 @@ public class Blink extends Module {
 
         if (blinkPlayer != null) blinkPlayer.deSpawn();
         blinkPlayer = null;
+
+        storedPackets.clear(); // доверяй, но проверяй
     }
 
     @Override
@@ -109,6 +119,10 @@ public class Blink extends Module {
             return;
         }
 
+        if (need2CancelBsAsap) {
+            storedPackets.clear();
+        }
+
         if (packet instanceof CommonPongC2SPacket) {
             storedTransactions.add(packet);
         }
@@ -122,11 +136,18 @@ public class Blink extends Module {
             event.cancel();
             storedPackets.add(packet);
         }
+
+        if (stopOnInteraction.getValue() && packet instanceof PlayerInteractEntityC2SPacket)
+            need2SendBsAsap = true;
     }
 
     @EventHandler
     public void onUpdate(EventTick event) {
         if (fullNullCheck()) return;
+
+        if (clearOnVelocity.getValue()) clearOnVelocity.setValue(false);
+
+        if (need2CancelBsAsap) storedPackets.clear();
 
         if (isKeyPressed(cancel)) {
             storedPackets.clear();
@@ -155,6 +176,12 @@ public class Blink extends Module {
                 disable();
             }
         }
+
+        if (need2SendBsAsap) {
+            sendPackets();
+            need2SendBsAsap = false;
+        }
+
     }
 
     private void sendPackets() {
@@ -167,11 +194,13 @@ public class Blink extends Module {
             if (packet instanceof PlayerMoveC2SPacket && !(packet instanceof PlayerMoveC2SPacket.LookAndOnGround)) {
                 lastPos = new Vec3d(((PlayerMoveC2SPacket) packet).getX(mc.player.getX()), ((PlayerMoveC2SPacket) packet).getY(mc.player.getY()), ((PlayerMoveC2SPacket) packet).getZ(mc.player.getZ()));
 
-                if (renderMode.getValue() == RenderMode.Model || renderMode.getValue() == RenderMode.Both) {
+                if (renderMode.getValue() == RenderMode.Model || renderMode.getValue() == RenderMode.CircleAndModel) {
                     blinkPlayer.deSpawn();
                     blinkPlayer = new PlayerEntityCopy();
                     blinkPlayer.spawn();
                 }
+
+                if (renderMode.getValue() == RenderMode.Box) renderbox = mc.player.getBoundingBox();
             }
         }
 
@@ -182,7 +211,7 @@ public class Blink extends Module {
     public void onRender3D(MatrixStack stack) {
         if (mc.player == null || mc.world == null) return;
         if (render.getValue() && lastPos != null) {
-            if (renderMode.getValue() == RenderMode.Circle || renderMode.getValue() == RenderMode.Both) {
+            if (renderMode.getValue() == RenderMode.Circle || renderMode.getValue() == RenderMode.CircleAndModel) {
                 float[] hsb = Color.RGBtoHSB(circleColor.getValue().getRed(), circleColor.getValue().getGreen(), circleColor.getValue().getBlue(), null);
                 float hue = (float) (System.currentTimeMillis() % 7200L) / 7200F;
                 int rgb = Color.getHSBColor(hue, hsb[1], hsb[2]).getRGB();
@@ -202,13 +231,15 @@ public class Blink extends Module {
                     rgb = Color.getHSBColor(hue, hsb[1], hsb[2]).getRGB();
                 }
             }
-            if (renderMode.getValue() == RenderMode.Model || renderMode.getValue() == RenderMode.Both) {
+            if (renderMode.getValue() == RenderMode.Model || renderMode.getValue() == RenderMode.CircleAndModel) {
                 if (blinkPlayer == null) {
                     blinkPlayer = new PlayerEntityCopy();
                     blinkPlayer.spawn();
                 }
             }
+            if (renderMode.getValue() == RenderMode.Box && renderbox != null) {
+                 Render3DEngine.OUTLINE_QUEUE.add(new Render3DEngine.OutlineAction(renderbox, circleColor.getValue().getColorObject(), 1));
+            }
         }
     }
 }
-

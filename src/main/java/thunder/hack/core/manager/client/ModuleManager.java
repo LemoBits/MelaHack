@@ -7,6 +7,7 @@ import thunder.hack.ThunderHack;
 import thunder.hack.core.manager.IManager;
 import thunder.hack.gui.clickui.ClickGUI;
 import thunder.hack.gui.font.FontRenderers;
+import thunder.hack.utility.render.Render2DEngine;
 import thunder.hack.features.hud.HudElement;
 import thunder.hack.features.hud.impl.*;
 import thunder.hack.features.modules.Module;
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
 public class ModuleManager implements IManager {
     public ArrayList<Module> modules = new ArrayList<>();
     public List<Module> sortedModules = new ArrayList<>();
+    private static long DEFAULT_CURSOR;
     public List<Integer> activeMouseKeys = new ArrayList<>();
 
     public static PenisESP penisESP = new PenisESP();
@@ -57,7 +59,7 @@ public class ModuleManager implements IManager {
     public static MouseElytraFix mouseElytraFix = new MouseElytraFix();
     public static TotemAnimation totemAnimation = new TotemAnimation();
     public static PortalGodMode portalGodMode = new PortalGodMode();
-    public static OptifineCapes optifineCapes = new OptifineCapes();
+    public static Capes capes = new Capes();
     public static Notifications notifications = new Notifications();
     public static NoEntityTrace noEntityTrace = new NoEntityTrace();
     public static MessageAppend messageAppend = new MessageAppend();
@@ -260,6 +262,9 @@ public class ModuleManager implements IManager {
     public static FOV fov = new FOV();
     public static ESP esp = new ESP();
     public static RPC rpc = new RPC();
+    public static PastedPaperDupe paperdupe = new PastedPaperDupe();
+    public static Religion religion = new Religion();
+    public static Freeze freeze = new Freeze();
 
     public ModuleManager() {
         for (Field field : getClass().getDeclaredFields()) {
@@ -333,11 +338,14 @@ public class ModuleManager implements IManager {
 
     public void onRender2D(DrawContext context) {
         if (mc.getDebugHud().shouldShowDebugHud() || mc.options.hudHidden) return;
+        Render2DEngine.BLUR_PROGRAM.invalidateCapture();
         HudElement.anyHovered = false;
         modules.stream().filter(Module::isEnabled).forEach(module -> module.onRender2D(context));
         if (!HudElement.anyHovered && !ClickGUI.anyHovered)
             if (GLFW.glfwGetPlatform() != GLFW.GLFW_PLATFORM_WAYLAND) {
-                GLFW.glfwSetCursor(mc.getWindow().getHandle(), GLFW.glfwCreateStandardCursor(GLFW.GLFW_ARROW_CURSOR));
+                if (DEFAULT_CURSOR == 0)
+                    DEFAULT_CURSOR = GLFW.glfwCreateStandardCursor(GLFW.GLFW_ARROW_CURSOR);
+                GLFW.glfwSetCursor(mc.getWindow().getHandle(), DEFAULT_CURSOR);
             }
         ThunderHack.core.onRender2D(context);
     }

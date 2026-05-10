@@ -119,7 +119,7 @@ public class ConfigManager implements IManager {
 
     public void loadCloud(String name) {
         Command.sendMessage(isRu() ? "Загружаю.." : "Downloading..");
-        try (BufferedInputStream in = new BufferedInputStream(URI.create("https://raw.githubusercontent.com/Pan4ur/THRecodeUtil/main/configs/" + name + ".th").toURL().openStream());
+        try (BufferedInputStream in = new BufferedInputStream(URI.create("https://raw.githubusercontent.com/ulybaka1337/THRecodeImprovedUtil/main/configs/" + name + ".th").toURL().openStream());
              FileOutputStream fileOutputStream = new FileOutputStream(new File(CONFIGS_FOLDER, name + ".th"))) {
             byte[] dataBuffer = new byte[1024];
             int bytesRead;
@@ -401,7 +401,7 @@ public class ConfigManager implements IManager {
     public List<String> getCloudConfigs() {
         List<String> list = new ArrayList<>();
         try {
-            URL url = URI.create("https://raw.githubusercontent.com/Pan4ur/THRecodeUtil/main/cloudConfigs.txt").toURL();
+            URL url = URI.create("https://raw.githubusercontent.com/ulybaka1337/THRecodeImprovedUtil/main/cloudConfigs.txt").toURL();
             BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
             String inputLine;
             while ((inputLine = in.readLine()) != null)

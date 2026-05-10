@@ -44,6 +44,7 @@ import thunder.hack.utility.world.ExplosionUtility;
 public final class AutoTotem extends Module {
     private final Setting<Mode> mode = new Setting<>("Mode", Mode.Matrix);
     private final Setting<OffHand> offhand = new Setting<>("Item", OffHand.Totem);
+    private final Setting<Boolean> pomoyka = new Setting<>("DoNotSwapBack", false, v -> offhand.is(OffHand.Totem));
     private final Setting<BooleanSettingGroup> bindSwap = new Setting<>("BindSwap", new BooleanSettingGroup(false), v -> offhand.is(OffHand.Totem));
     private final Setting<Bind> swapButton = new Setting<>("SwapButton", new Bind(GLFW.GLFW_KEY_CAPS_LOCK, false, false)).addToGroup(bindSwap);
     private final Setting<Swap> swapMode = new Setting<>("Swap", Swap.GappleShield).addToGroup(bindSwap);
@@ -95,7 +96,7 @@ public final class AutoTotem extends Module {
             BlockPos pos = blockHitResult.getBlockPos();
             if (rcGap.not(RCGap.Off)) {
                 ClientPlayerEntity clientPlayer = mc.player;
-                if (clientPlayer != null && clientPlayer.getMainHandStack().getItem() instanceof SwordItem && mc.options.useKey.isPressed() && !clientPlayer.isUsingItem()) {
+                if (clientPlayer != null && clientPlayer.getMainHandStack().getItem() instanceof SwordItem && mc.options.useKey.isPressed() && !clientPlayer.isUsingItem() && !pomoyka.getValue()) {
                     assert mc.world != null;
                     if (!(mc.world.getBlockState(pos).getBlock() instanceof DoorBlock ||
                             mc.world.getBlockState(pos).getBlock() instanceof BedBlock ||
@@ -264,7 +265,8 @@ public final class AutoTotem extends Module {
                 if (offHandItem != Items.TOTEM_OF_UNDYING && !mc.player.getOffHandStack().isEmpty())
                     prevItem = offHandItem;
 
-                item = prevItem;
+                if (!pomoyka.getValue())
+                    item = prevItem;
 
                 if (bindSwap.getValue().isEnabled())
                     if (isKeyPressed(swapButton) && bindDelay.every(250)) {
@@ -290,7 +292,9 @@ public final class AutoTotem extends Module {
                                 else item = Items.TOTEM_OF_UNDYING;
                             }
                         }
-                        prevItem = item;
+
+                            prevItem = item;
+
                     }
             }
 
@@ -419,7 +423,7 @@ public final class AutoTotem extends Module {
         }
 
         for (int i = 9; i < 45; i++) {
-            if (mc.player.getOffHandStack().getItem() == item) return -1;
+            if (item != null && mc.player.getOffHandStack().getItem() == item) return -1;
             if (mc.player.getInventory().getStack(i >= 36 ? i - 36 : i).getItem().equals(item)) {
                 itemSlot = i >= 36 ? i - 36 : i;
                 break;

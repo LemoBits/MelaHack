@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "melahack",
-  "version": "1.7",
+  "version": "1.7.1",
   "icon": "icon.png",
   "name": "MelaHack",
   "description": "Player Assistance Mod",
@@ -23,6 +23,12 @@
       "name": "06ED",
       "contact": {
         "discord": "dinner_enjoyer"
+      }
+    },
+    {
+      "name": "ulybaka1337",
+      "contact": {
+        "discord": "ulybaka"
       }
     }
   ],
