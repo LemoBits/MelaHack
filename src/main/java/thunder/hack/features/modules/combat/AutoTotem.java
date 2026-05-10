@@ -161,7 +161,7 @@ public final class AutoTotem extends Module {
         } else if (invResult.found()) {
             int slot = invResult.slot() >= 36 ? invResult.slot() - 36 : invResult.slot();
             if (!hotbarFallBack.getValue()) swapTo(slot);
-            else mc.interactionManager.pickFromInventory(slot);
+            else mc.interactionManager.clickCreativeStack(mc.player.getInventory().getStack(slot), slot);
             delay = 20;
         }
     }
@@ -218,7 +218,7 @@ public final class AutoTotem extends Module {
                     }
                     case MatrixPick -> {
                         debug(slot + " pick");
-                        sendPacket(new PickFromInventoryC2SPacket(slot));
+                        mc.interactionManager.clickCreativeStack(mc.player.getInventory().getStack(slot), slot);
                         sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.SWAP_ITEM_WITH_OFFHAND, BlockPos.ORIGIN, Direction.DOWN));
                         int prevSlot = mc.player.getInventory().selectedSlot;
                         Managers.ASYNC.run(() -> mc.player.getInventory().selectedSlot = prevSlot, 300);

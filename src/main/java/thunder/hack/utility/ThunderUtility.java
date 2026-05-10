@@ -10,6 +10,7 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.ThunderHack;
+import thunder.hack.gui.font.Texture;
 import thunder.hack.utility.math.MathUtility;
 
 import java.io.*;
@@ -52,8 +53,20 @@ public final class ThunderUtility {
         return mb.get();
     }
 
+    public static Identifier registerDynamicTexture(String path, NativeImageBackedTexture texture) {
+        if (texture == null) {
+            return null;
+        }
+
+        Identifier id = new Texture(path).getId();
+        mc.execute(() -> mc.getTextureManager().registerTexture(id, texture));
+        return id;
+    }
+
     public static Identifier getCustomImg(String name) throws IOException {
-        return mc.getTextureManager().registerDynamicTexture("th-" + name + "-" + (int) MathUtility.random(0, 1000), new NativeImageBackedTexture(NativeImage.read(new FileInputStream(IMAGES_FOLDER + "/" + name + ".png"))));
+        try (FileInputStream stream = new FileInputStream(IMAGES_FOLDER + "/" + name + ".png")) {
+            return registerDynamicTexture("th-" + name + "-" + (int) MathUtility.random(0, 1000), new NativeImageBackedTexture(NativeImage.read(stream)));
+        }
     }
 
     public static void syncVersion() {

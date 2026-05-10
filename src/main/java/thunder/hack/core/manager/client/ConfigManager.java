@@ -246,6 +246,8 @@ public class ConfigManager implements IManager {
 
         for (Setting setting : module.getSettings()) {
             try {
+                if (!mobject.has(setting.getName())) continue;
+
                 if (setting.getValue() instanceof SettingGroup) {
                 } else if (setting.getValue() instanceof Boolean) {
                     setting.setValue(mobject.getAsJsonPrimitive(setting.getName()).getAsBoolean());
@@ -302,6 +304,8 @@ public class ConfigManager implements IManager {
 
         for (Setting setting : module.getSettings()) {
             try {
+                if (!mobject.has(setting.getName())) continue;
+
                 if (setting.getValue() instanceof Bind) {
                     JsonArray array = mobject.getAsJsonArray(setting.getName());
                     if (array.get(0).getAsString().contains("M")) {

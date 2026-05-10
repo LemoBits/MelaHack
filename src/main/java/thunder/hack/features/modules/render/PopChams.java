@@ -23,6 +23,7 @@ import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 import thunder.hack.events.impl.TotemPopEvent;
 import thunder.hack.injection.accesors.IEntity;
+import thunder.hack.injection.accesors.IEntityRenderDispatcher;
 import thunder.hack.features.modules.Module;
 import thunder.hack.setting.Setting;
 import thunder.hack.setting.impl.ColorSetting;
@@ -147,7 +148,7 @@ public final class PopChams extends Module {
 
         public Person(PlayerEntity player, Identifier texture) {
             this.player = player;
-            modelPlayer = new PlayerEntityModel(new EntityRendererFactory.Context(mc.getEntityRenderDispatcher(), mc.getItemRenderer(), mc.getMapRenderer(), mc.getBlockRenderManager(), mc.getResourceManager(), mc.getEntityModelLoader(), mc.getEquipmentModelLoader(), mc.textRenderer).getPart(EntityModelLayers.PLAYER), false);
+            modelPlayer = new PlayerEntityModel(new EntityRendererFactory.Context(mc.getEntityRenderDispatcher(), mc.getItemModelManager(), mc.getMapRenderer(), mc.getBlockRenderManager(), mc.getResourceManager(), mc.getLoadedEntityModels(), ((IEntityRenderDispatcher) mc.getEntityRenderDispatcher()).getEquipmentModelLoader(), mc.textRenderer).getPart(EntityModelLayers.PLAYER), false);
             modelPlayer.getHead().scale(new Vector3f(-0.3f, -0.3f, -0.3f));
             alpha = color.getValue().getAlpha();
             this.texture = texture;

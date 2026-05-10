@@ -13,6 +13,7 @@ import net.minecraft.util.Util;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.ThunderHack;
 import thunder.hack.gui.font.FontRenderers;
+import thunder.hack.utility.ThunderUtility;
 import thunder.hack.utility.math.MathUtility;
 import thunder.hack.utility.render.Render2DEngine;
 import thunder.hack.utility.render.Render3DEngine;
@@ -128,7 +129,7 @@ public class CreditsScreen extends Screen {
             NativeImageBackedTexture nIBT = getAvatarFromURL("https://cdn.discordapp.com/avatars/" + name + ".png?size=96");
 
             if (nIBT != null) {
-                return MinecraftClient.getInstance().getTextureManager().registerDynamicTexture("th-contributors-" + (int) MathUtility.random(0, 1000000), nIBT);
+                return ThunderUtility.registerDynamicTexture("th-contributors-" + (int) MathUtility.random(0, 1000000), nIBT);
             } else {
                 return null;
             }

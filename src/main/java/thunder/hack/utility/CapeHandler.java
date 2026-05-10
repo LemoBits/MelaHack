@@ -7,6 +7,7 @@ import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.util.Identifier;
 import thunder.hack.core.manager.client.ModuleManager;
 import thunder.hack.features.modules.client.Capes;
+import thunder.hack.utility.ThunderUtility;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedReader;
@@ -37,26 +38,26 @@ public final class CapeHandler {
             switch (ModuleManager.capes.priority.getValue()) {
                 case Capes.capePriority.Optifine:
                     if (optifineCape != null && ModuleManager.capes.optifineCapes.getValue()) {
-                        Identifier capeTexture = MinecraftClient.getInstance().getTextureManager().registerDynamicTexture("th-cape-" + uuid, optifineCape);
-                        response.response(capeTexture);
+                        Identifier capeTexture = ThunderUtility.registerDynamicTexture("th-cape-" + uuid, optifineCape);
+                        if (capeTexture != null) response.response(capeTexture);
                     } else if (ModuleManager.capes.minecraftcapesCapes.getValue() && minecraftcapesCape != null) {
-                        Identifier capeTexture = MinecraftClient.getInstance().getTextureManager().registerDynamicTexture("th-cape-" + uuid, minecraftcapesCape);
-                        response.response(capeTexture);
+                        Identifier capeTexture = ThunderUtility.registerDynamicTexture("th-cape-" + uuid, minecraftcapesCape);
+                        if (capeTexture != null) response.response(capeTexture);
                     } else if(ModuleManager.capes.minecraftcapesCapes.getValue()) {
-                        Identifier capeTexture = MinecraftClient.getInstance().getTextureManager().registerDynamicTexture("th-cape-" + uuid, minecraftcapesCapeCrack);
-                        response.response(capeTexture);
+                        Identifier capeTexture = ThunderUtility.registerDynamicTexture("th-cape-" + uuid, minecraftcapesCapeCrack);
+                        if (capeTexture != null) response.response(capeTexture);
                     }
                     break;
                 case Capes.capePriority.Minecraftcapes:
                     if (minecraftcapesCape != null && ModuleManager.capes.minecraftcapesCapes.getValue()) {
-                        Identifier capeTexture = MinecraftClient.getInstance().getTextureManager().registerDynamicTexture("th-cape-" + uuid, minecraftcapesCape);
-                        response.response(capeTexture);
+                        Identifier capeTexture = ThunderUtility.registerDynamicTexture("th-cape-" + uuid, minecraftcapesCape);
+                        if (capeTexture != null) response.response(capeTexture);
                     } else if (minecraftcapesCapeCrack != null && ModuleManager.capes.minecraftcapesCapes.getValue()) {
-                        Identifier capeTexture = MinecraftClient.getInstance().getTextureManager().registerDynamicTexture("th-cape-" + uuid, minecraftcapesCapeCrack);
-                        response.response(capeTexture);
+                        Identifier capeTexture = ThunderUtility.registerDynamicTexture("th-cape-" + uuid, minecraftcapesCapeCrack);
+                        if (capeTexture != null) response.response(capeTexture);
                     } else if (ModuleManager.capes.optifineCapes.getValue()) {
-                        Identifier capeTexture = MinecraftClient.getInstance().getTextureManager().registerDynamicTexture("th-cape-" + uuid, optifineCape);
-                        response.response(capeTexture);
+                        Identifier capeTexture = ThunderUtility.registerDynamicTexture("th-cape-" + uuid, optifineCape);
+                        if (capeTexture != null) response.response(capeTexture);
                     }
                     break;
             }

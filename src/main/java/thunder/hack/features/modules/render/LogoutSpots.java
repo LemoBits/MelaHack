@@ -27,6 +27,7 @@ import org.joml.Vector4d;
 import thunder.hack.events.impl.PacketEvent;
 import thunder.hack.gui.font.FontRenderers;
 import thunder.hack.injection.accesors.IEntity;
+import thunder.hack.injection.accesors.IEntityRenderDispatcher;
 import thunder.hack.features.modules.Module;
 import thunder.hack.features.modules.misc.FakePlayer;
 import thunder.hack.setting.Setting;
@@ -115,9 +116,9 @@ public class LogoutSpots extends Module {
                     Render3DEngine.OUTLINE_QUEUE.add(new Render3DEngine.OutlineAction(data.getBoundingBox(), color.getValue().getColorObject(), 2));
                 } else {
                     PlayerEntityModel modelPlayer = new PlayerEntityModel(new EntityRendererFactory.Context(
-                            mc.getEntityRenderDispatcher(), mc.getItemRenderer(), mc.getMapRenderer(),
-                            mc.getBlockRenderManager(), mc.getResourceManager(), mc.getEntityModelLoader(),
-                            mc.getEquipmentModelLoader(), mc.textRenderer).getPart(EntityModelLayers.PLAYER), false);
+                            mc.getEntityRenderDispatcher(), mc.getItemModelManager(), mc.getMapRenderer(),
+                            mc.getBlockRenderManager(), mc.getResourceManager(), mc.getLoadedEntityModels(),
+                            ((IEntityRenderDispatcher) mc.getEntityRenderDispatcher()).getEquipmentModelLoader(), mc.textRenderer).getPart(EntityModelLayers.PLAYER), false);
                     modelPlayer.getHead().scale(new Vector3f(-0.3f, -0.3f, -0.3f));
 
                     renderEntity(s, data, modelPlayer, ((OtherClientPlayerEntity)data).getSkinTextures().texture(), color.getValue().getAlpha());

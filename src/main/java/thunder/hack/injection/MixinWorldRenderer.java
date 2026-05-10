@@ -3,7 +3,6 @@ package thunder.hack.injection;
 import net.minecraft.client.gl.PostEffectProcessor;
 import net.minecraft.client.render.Fog;
 import net.minecraft.client.render.FrameGraphBuilder;
-import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Mixin;
@@ -35,7 +34,7 @@ public abstract class MixinWorldRenderer {
     }
 
     @Inject(method = "renderWeather", at = @At("HEAD"), cancellable = true)
-    private void renderWeatherHook(FrameGraphBuilder frameGraphBuilder, LightmapTextureManager manager, Vec3d cameraPos, float tickDelta, Fog fog, CallbackInfo ci) {
+    private void renderWeatherHook(FrameGraphBuilder frameGraphBuilder, Vec3d cameraPos, float tickDelta, Fog fog, CallbackInfo ci) {
         if (ModuleManager.noRender.isEnabled() && ModuleManager.noRender.noWeather.getValue()) {
             ci.cancel();
         }

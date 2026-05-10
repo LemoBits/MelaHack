@@ -10,6 +10,7 @@ import thunder.hack.core.Core;
 import thunder.hack.core.Managers;
 import thunder.hack.gui.font.FontRenderers;
 import thunder.hack.gui.thundergui.ThunderGui;
+import thunder.hack.utility.ThunderUtility;
 import thunder.hack.utility.render.Render2DEngine;
 import thunder.hack.utility.render.TextureStorage;
 import thunder.hack.utility.render.animation.AnimationUtility;
@@ -52,8 +53,8 @@ public class FriendComponent {
         net.minecraft.util.Util.getMainWorkerExecutor().execute(() -> {
             try {
                 NativeImageBackedTexture nIBT = getHeadFromURL("https://minotar.net/helm/" + name + "/22.png");
-                head = MinecraftClient.getInstance().getTextureManager().registerDynamicTexture("th-heads-" + name, nIBT);
-                Core.HEADS.put(name, head);
+                head = ThunderUtility.registerDynamicTexture("th-heads-" + name, nIBT);
+                if (head != null) Core.HEADS.put(name, head);
             } catch (Exception e) {
                 head = null;
             }

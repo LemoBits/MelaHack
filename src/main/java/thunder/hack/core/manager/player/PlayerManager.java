@@ -132,7 +132,7 @@ public class PlayerManager implements IManager {
     public void onPacketReceive(PacketEvent.@NotNull Receive event) {
         if (event.getPacket() instanceof UpdateSelectedSlotS2CPacket slot) {
             switchTimer.reset();
-            serverSideSlot = slot.getSlot();
+            serverSideSlot = slot.slot();
         }
     }
 
