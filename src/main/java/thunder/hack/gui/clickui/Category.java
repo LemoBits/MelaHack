@@ -142,20 +142,30 @@ public class Category extends AbstractCategory {
         super.mouseClicked(mouseX, mouseY, button);
 
         if (isOpen() && scrollHover)
-            buttons.forEach(b -> b.mouseClicked(mouseX, mouseY, button));
+            for (AbstractButton b : buttons) {
+                if (b instanceof ModuleButton mb && SearchBar.listening && !mb.module.getName().toLowerCase().contains(SearchBar.moduleName.toLowerCase()))
+                    continue;
+                b.mouseClicked(mouseX, mouseY, button);
+            }
     }
 
     @Override
     public void mouseReleased(int mouseX, int mouseY, int button) {
         super.mouseReleased(mouseX, mouseY, button);
         if (isOpen())
-            buttons.forEach(b -> b.mouseReleased(mouseX, mouseY, button));
+            for (AbstractButton b : buttons) {
+                if (b instanceof ModuleButton mb && SearchBar.listening && !mb.module.getName().toLowerCase().contains(SearchBar.moduleName.toLowerCase()))
+                    continue;
+                b.mouseReleased(mouseX, mouseY, button);
+            }
     }
 
     @Override
     public boolean keyTyped(int keyCode) {
         if (isOpen()) {
             for (AbstractButton button : buttons) {
+                if (button instanceof ModuleButton mb && SearchBar.listening && !mb.module.getName().toLowerCase().contains(SearchBar.moduleName.toLowerCase()))
+                    continue;
                 button.keyTyped(keyCode);
             }
         }
@@ -166,6 +176,8 @@ public class Category extends AbstractCategory {
     public void charTyped(char key, int keyCode) {
         if (isOpen()) {
             for (AbstractButton button : buttons) {
+                if (button instanceof ModuleButton mb && SearchBar.listening && !mb.module.getName().toLowerCase().contains(SearchBar.moduleName.toLowerCase()))
+                    continue;
                 button.charTyped(key, keyCode);
             }
         }
