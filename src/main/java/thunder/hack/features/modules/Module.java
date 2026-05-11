@@ -86,7 +86,7 @@ public abstract class Module {
     }
 
     protected void onClientTick(MinecraftClient client) {
-        if (mc.player != null && mc.world != null) {
+        if (mc.player != null && mc.world != null && isEnabled()) {
             onSync();
         }
     }
