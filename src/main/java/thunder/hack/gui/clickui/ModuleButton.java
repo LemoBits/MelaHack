@@ -122,6 +122,7 @@ public class ModuleButton extends AbstractButton {
                         Render2DEngine.injectAlpha(HudEditor.getColor(0).darker(), 110),
                         Render2DEngine.injectAlpha(HudEditor.getColor(180).darker(), 110),
                         Render2DEngine.injectAlpha(HudEditor.getColor(90).darker(), 110));
+                RenderSystem.defaultBlendFunc();
                 RenderSystem.disableBlend();
                 context.getMatrices().translate(px, py, 0.0F);
                 context.getMatrices().multiply(RotationAxis.POSITIVE_Z.rotationDegrees((float) Render2DEngine.interpolate(mc.player.age - 1, mc.player.age, Render3DEngine.getTickDelta()) * -4f));

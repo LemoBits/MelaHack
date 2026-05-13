@@ -140,6 +140,8 @@ public class ClickGUI extends Screen {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+        Render2DEngine.resetScissorStack();
+
         if (ModuleManager.clickGui.blur.getValue())
             applyBlur();
 
@@ -173,7 +175,10 @@ public class ClickGUI extends Screen {
 
         if (Module.fullNullCheck())
             renderBackground(context, mouseX, mouseY, delta);
-        //   Render2DEngine.drawMainMenuShader(context.getMatrices(), 0, 0, mc.getWindow().getScaledWidth(), mc.getWindow().getScaledHeight());
+
+        // Flush batched background so it renders behind ClickGUI elements,
+        // not on top of them (which would double-dim the UI)
+        context.draw();
 
         if (ModuleManager.clickGui.scrollMode.getValue() == ClickGui.scrollModeEn.Old) {
             for (AbstractCategory window : windows) {

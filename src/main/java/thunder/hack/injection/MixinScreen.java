@@ -121,7 +121,14 @@ public abstract class MixinScreen {
 
     @Inject(method = "renderInGameBackground", at = @At("HEAD"), cancellable = true)
     private void renderInGameBackground(CallbackInfo info) {
+        Render2DEngine.resetScissorStack();
         if (ModuleManager.noRender.isEnabled() && ModuleManager.noRender.disableGuiBackGround.getValue()) {
+            info.cancel();
+        }
+        // Custom GUIs render their own background — skip vanilla to avoid double dark gradient
+        if (mc.currentScreen instanceof thunder.hack.gui.clickui.ClickGUI
+            || mc.currentScreen instanceof thunder.hack.gui.thundergui.ThunderGui
+            || mc.currentScreen instanceof thunder.hack.gui.windows.WindowsScreen) {
             info.cancel();
         }
     }

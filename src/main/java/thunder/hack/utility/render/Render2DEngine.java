@@ -94,6 +94,13 @@ public class Render2DEngine {
         RenderSystem.disableScissor();
     }
 
+    public static void resetScissorStack() {
+        if (!clipStack.empty()) {
+            clipStack.clear();
+            endScissor();
+        }
+    }
+
     public static void addWindow(MatrixStack stack, float x, float y, float x1, float y1, double animation_factor) {
         float h = y + y1;
         float h2 = (float) (h * (1d - MathUtility.clamp(animation_factor, 0, 1.0025f)));

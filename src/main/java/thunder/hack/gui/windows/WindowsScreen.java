@@ -40,6 +40,7 @@ public class WindowsScreen extends Screen {
         //   super.render(context, mouseX, mouseY, delta);
         if (Module.fullNullCheck())
             renderBackground(context, mouseX, mouseY, delta);
+        context.draw();
 
         MatrixStack matrices = context.getMatrices();
         int i = mc.getWindow().getScaledWidth() / 2;

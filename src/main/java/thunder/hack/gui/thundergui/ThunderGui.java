@@ -163,6 +163,7 @@ public class ThunderGui extends Screen {
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         if (Module.fullNullCheck())
             renderBackground(context, mouseX, mouseY, delta);
+        context.draw();
         context.getMatrices().push();
         mouse_x = mouseX;
         mouse_y = mouseY;

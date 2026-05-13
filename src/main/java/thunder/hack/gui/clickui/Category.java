@@ -121,6 +121,7 @@ public class Category extends AbstractCategory {
             Render2DEngine.renderGradientTextureInternal(b, context.getMatrices(), getX() + 15, (getY() + (height - 22) / 2), 12, 12, 0, 0, 12, 12, 12, 12, m1.darker().darker().darker(), m2.darker().darker().darker(), m3.darker().darker().darker(), m4.darker().darker().darker());
             Render2DEngine.renderGradientTextureInternal(b, context.getMatrices(), getX() + 5, (getY() + (height - 28) / 2), 20, 20, 0, 0, 20, 20, 20, 20, m1, m2, m3, m4);
             BufferRenderer.drawWithGlobalProgram(b.end());
+            RenderSystem.defaultBlendFunc();
             RenderSystem.disableBlend();
             Render2DEngine.popWindow();
         }
