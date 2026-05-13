@@ -67,6 +67,11 @@ public class PredictUtility {
             public boolean isCreative() {
                 return false;
             }
+
+            @Override
+            public net.minecraft.world.GameMode getGameMode() {
+                return original.getGameMode();
+            }
         };
 
         copyEntity.setPosition(posVec);

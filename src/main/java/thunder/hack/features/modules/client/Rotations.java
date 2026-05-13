@@ -11,6 +11,7 @@ import thunder.hack.events.impl.EventPlayerTravel;
 import thunder.hack.features.modules.Module;
 import thunder.hack.features.modules.combat.Aura;
 import thunder.hack.setting.Setting;
+import thunder.hack.utility.player.MovementUtility;
 
 public class Rotations extends Module {
     public Rotations() {
@@ -81,8 +82,7 @@ public class Rotations extends Module {
             float delta = (mc.player.getYaw() - fixRotation) * MathHelper.RADIANS_PER_DEGREE;
             float cos = MathHelper.cos(delta);
             float sin = MathHelper.sin(delta);
-            mc.player.input.getMovementInput().x = Math.round(mS * cos - mF * sin);
-            mc.player.input.getMovementInput().y = Math.round(mF * cos + mS * sin);
+            MovementUtility.setMovementInput((float) Math.round(mS * cos - mF * sin), (float) Math.round(mF * cos + mS * sin));
         }
     }
 

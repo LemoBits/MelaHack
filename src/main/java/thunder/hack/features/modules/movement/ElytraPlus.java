@@ -871,9 +871,9 @@ public class ElytraPlus extends Module {
                 acceleration = 0;
 
             if (mc.player.input.getMovementInput().x > 0) {
-                mc.player.input.getMovementInput().x = 1;
+                MovementUtility.setMovementInputX(1f);
             } else if (mc.player.input.getMovementInput().x < 0) {
-                mc.player.input.getMovementInput().x = -1;
+                MovementUtility.setMovementInputX(-1f);
             }
 
             MovementUtility.modifyEventSpeed(e, xzSpeed.getValue() * Math.min((acceleration += 9) / 100.0f, 1.0f));

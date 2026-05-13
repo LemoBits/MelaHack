@@ -113,7 +113,7 @@ public final class CapeHandler {
             e.printStackTrace();
         }
         if (cape != null) {
-            return new NativeImageBackedTexture(parseCape(cape));
+            return new NativeImageBackedTexture(() -> "cape_texture", parseCape(cape));
         }
         return null;
     }

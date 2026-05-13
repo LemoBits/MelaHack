@@ -12,6 +12,7 @@ import thunder.hack.events.impl.EventKeyboardInput;
 import thunder.hack.features.modules.Module;
 import thunder.hack.setting.Setting;
 import thunder.hack.setting.impl.SettingGroup;
+import thunder.hack.utility.player.MovementUtility;
 
 public class NoSlow extends Module {
     public NoSlow() {
@@ -94,17 +95,14 @@ public class NoSlow extends Module {
     @EventHandler
     public void onKeyboardInput(EventKeyboardInput e) {
         if (mode.getValue() == Mode.Matrix3 && mc.player.isUsingItem() && !mc.player.isGliding()) {
-            mc.player.input.getMovementInput().y *= 5f;
-            mc.player.input.getMovementInput().x *= 5f;
+            MovementUtility.scaleMovementInput(5f, 5f);
             float mult = 1f;
 
             if (mc.player.isOnGround()) {
                 if (mc.player.input.getMovementInput().y != 0 && mc.player.input.getMovementInput().x != 0) {
-                    mc.player.input.getMovementInput().y *= 0.35f;
-                    mc.player.input.getMovementInput().x *= 0.35f;
+                    MovementUtility.scaleMovementInput(0.35f, 0.35f);
                 } else {
-                    mc.player.input.getMovementInput().y *= 0.5f;
-                    mc.player.input.getMovementInput().x *= 0.5f;
+                    MovementUtility.scaleMovementInput(0.5f, 0.5f);
                 }
             } else {
                 if (mc.player.input.getMovementInput().y != 0 && mc.player.input.getMovementInput().x != 0) {
@@ -113,8 +111,7 @@ public class NoSlow extends Module {
                     mult = 0.67f;
                 }
             }
-            mc.player.input.getMovementInput().y *= mult;
-            mc.player.input.getMovementInput().x *= mult;
+            MovementUtility.scaleMovementInput(mult, mult);
         }
     }
 

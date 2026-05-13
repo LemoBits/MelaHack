@@ -4,6 +4,7 @@ import meteordevelopment.orbit.EventHandler;
 import thunder.hack.events.impl.EventKeyboardInput;
 import thunder.hack.features.modules.Module;
 import thunder.hack.setting.Setting;
+import thunder.hack.utility.player.MovementUtility;
 
 public class AutoWalk extends Module {
     public AutoWalk() {
@@ -32,6 +33,6 @@ public class AutoWalk extends Module {
     @EventHandler
     public void onKey(EventKeyboardInput e) {
         if (mode.getValue() == Mode.Simple)
-            mc.player.input.getMovementInput().y = 1f;
+            MovementUtility.setMovementInputY(1f);
     }
 }

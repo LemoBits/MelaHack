@@ -222,7 +222,7 @@ public final class AutoTotem extends Module {
                         mc.interactionManager.clickCreativeStack(mc.player.getInventory().getStack(slot), slot);
                         sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.SWAP_ITEM_WITH_OFFHAND, BlockPos.ORIGIN, Direction.DOWN));
                         int prevSlot = mc.player.getInventory().getSelectedSlot();
-                        Managers.ASYNC.run(() -> mc.player.getInventory().setSelectedSlot(prevSlot, 300));
+                        Managers.ASYNC.run(() -> mc.player.getInventory().setSelectedSlot(prevSlot), 300);
                     }
                     case NewVersion -> {
                         debug(slot + " swap");

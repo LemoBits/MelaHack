@@ -65,7 +65,7 @@ public final class ThunderUtility {
 
     public static Identifier getCustomImg(String name) throws IOException {
         try (FileInputStream stream = new FileInputStream(IMAGES_FOLDER + "/" + name + ".png")) {
-            return registerDynamicTexture("th-" + name + "-" + (int) MathUtility.random(0, 1000), new NativeImageBackedTexture(NativeImage.read(stream)));
+            return registerDynamicTexture("th-" + name + "-" + (int) MathUtility.random(0, 1000), new NativeImageBackedTexture(() -> "th_" + name, NativeImage.read(stream)));
         }
     }
 

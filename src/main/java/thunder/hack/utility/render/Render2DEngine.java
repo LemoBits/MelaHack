@@ -310,7 +310,7 @@ public class Render2DEngine {
         try {
             ByteBuffer data = BufferUtils.createByteBuffer(content.length).put(content);
             data.flip();
-            NativeImageBackedTexture tex = new NativeImageBackedTexture(NativeImage.read(data));
+            NativeImageBackedTexture tex = new NativeImageBackedTexture(() -> i.getId().toString(), NativeImage.read(data));
             mc.execute(() -> mc.getTextureManager().registerTexture(i.getId(), tex));
         } catch (Exception ignored) {
         }

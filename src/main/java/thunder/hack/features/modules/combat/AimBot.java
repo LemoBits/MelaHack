@@ -171,8 +171,8 @@ public final class AimBot extends Module {
 
         if (target != null && (mc.player.canSee(target) || ignoreWalls.getValue())) {
             if (rotation.getValue() == Rotation.Client) {
-                mc.player.setYaw((float) Render2DEngine.interpolate(mc.player.prevYaw, rotationYaw, Render3DEngine.getTickDelta()));
-                mc.player.setPitch((float) Render2DEngine.interpolate(mc.player.prevPitch, rotationPitch, Render3DEngine.getTickDelta()));
+                mc.player.setYaw((float) Render2DEngine.interpolate(((thunder.hack.injection.accesors.IClientPlayerEntity) mc.player).getLastYaw(), rotationYaw, Render3DEngine.getTickDelta()));
+                mc.player.setPitch((float) Render2DEngine.interpolate(((thunder.hack.injection.accesors.IClientPlayerEntity) mc.player).getLastPitch(), rotationPitch, Render3DEngine.getTickDelta()));
             }
         } else {
             if (mode.getValue() == Mode.CSAim) {
@@ -182,8 +182,8 @@ public final class AimBot extends Module {
         }
 
         if (rotation.getValue() == Rotation.Client && mode.getValue() == Mode.BowAim && mc.player.getActiveItem().getItem() instanceof BowItem) {
-            mc.player.setYaw((float) Render2DEngine.interpolate(mc.player.prevYaw, rotationYaw, Render3DEngine.getTickDelta()));
-            mc.player.setPitch((float) Render2DEngine.interpolate(mc.player.prevPitch, rotationPitch, Render3DEngine.getTickDelta()));
+            mc.player.setYaw((float) Render2DEngine.interpolate(((thunder.hack.injection.accesors.IClientPlayerEntity) mc.player).getLastYaw(), rotationYaw, Render3DEngine.getTickDelta()));
+            mc.player.setPitch((float) Render2DEngine.interpolate(((thunder.hack.injection.accesors.IClientPlayerEntity) mc.player).getLastPitch(), rotationPitch, Render3DEngine.getTickDelta()));
         }
     }
 

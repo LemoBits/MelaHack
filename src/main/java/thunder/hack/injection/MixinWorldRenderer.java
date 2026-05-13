@@ -12,6 +12,8 @@ import thunder.hack.core.Managers;
 import thunder.hack.core.manager.client.ModuleManager;
 import thunder.hack.core.manager.client.ShaderManager;
 
+import java.util.function.Consumer;
+
 import static thunder.hack.features.modules.Module.mc;
 
 @Mixin(WorldRenderer.class)
@@ -29,7 +31,7 @@ public abstract class MixinWorldRenderer {
             if (Managers.SHADER.fullNullCheck()) return;
             Managers.SHADER.setupShader(shaders, Managers.SHADER.getShaderOutline(shaders));
         } else {
-            instance.render(frameGraphBuilder, width, height, framebufferSet);
+            instance.render(frameGraphBuilder, width, height, framebufferSet, pass -> {});
         }
     }
 

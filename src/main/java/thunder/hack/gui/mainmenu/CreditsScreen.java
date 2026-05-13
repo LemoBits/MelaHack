@@ -156,7 +156,7 @@ public class CreditsScreen extends Screen {
             e.printStackTrace();
         }
         if (pic != null) {
-            return new NativeImageBackedTexture(parseAvatar(pic));
+            return new NativeImageBackedTexture(() -> "credits_avatar", parseAvatar(pic));
         }
         return null;
     }

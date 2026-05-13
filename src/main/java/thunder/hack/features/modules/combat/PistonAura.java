@@ -378,7 +378,7 @@ public final class PistonAura extends Module {
             sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(angle2, 0, mc.player.isOnGround(), mc.player.horizontalCollision));
             float prevYaw = mc.player.getYaw();
             mc.player.setYaw(angle2);
-            mc.player.prevYaw = angle2;
+            ((thunder.hack.injection.accesors.IClientPlayerEntity) mc.player).setLastYaw(angle2);
             ((IClientPlayerEntity) mc.player).setLastYaw(angle2);
             int prevSlot = mc.player.getInventory().getSelectedSlot();
             InteractionUtility.placeBlock(pistonPos, InteractionUtility.Rotate.None, interact.getValue(), placeMode.getValue(), piston_slot, false, false);

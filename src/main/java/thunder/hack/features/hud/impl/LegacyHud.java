@@ -19,6 +19,7 @@ import thunder.hack.gui.font.FontRenderers;
 import thunder.hack.features.modules.Module;
 import thunder.hack.setting.Setting;
 import thunder.hack.setting.impl.ColorSetting;
+import thunder.hack.utility.player.InventoryUtility;
 import thunder.hack.utility.math.FrameRateCounter;
 import thunder.hack.utility.math.MathUtility;
 
@@ -269,7 +270,7 @@ public class LegacyHud extends Module {
     public void renderTotemHUD(DrawContext context) {
         int width = mc.getWindow().getScaledWidth();
         int height = mc.getWindow().getScaledHeight();
-        int totems = mc.player.getInventory().main.stream().filter(itemStack -> (itemStack.getItem() == Items.TOTEM_OF_UNDYING)).mapToInt(ItemStack::getCount).sum();
+        int totems = InventoryUtility.getItemCount(Items.TOTEM_OF_UNDYING);
         int u = mc.player.getMaxAir();
         int v = Math.min(mc.player.getAir(), u);
         if (mc.player.getOffHandStack().getItem() == Items.TOTEM_OF_UNDYING)

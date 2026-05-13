@@ -8,6 +8,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.sound.SoundCategory;
+import net.minecraft.world.World;
 import thunder.hack.core.Managers;
 import thunder.hack.features.modules.Module;
 import thunder.hack.setting.Setting;
@@ -57,7 +58,7 @@ public class KillEffect extends Module {
                 for (int i = 0; i < entity.getHeight() * 10; i++) {
                     for (int j = 0; j < entity.getWidth() * 10; j++) {
                         for (int k = 0; k < entity.getWidth() * 10; k++) {
-                            mc.world.addParticle(ParticleTypes.FALLING_LAVA, entity.getX() + j * 0.1, entity.getY() + i * 0.1, entity.getZ() + k * 0.1, 0, 0, 0);
+                            mc.world.addParticleClient(ParticleTypes.FALLING_LAVA, entity.getX() + j * 0.1, entity.getY() + i * 0.1, entity.getZ() + k * 0.1, 0, 0, 0);
                         }
                     }
                 }

@@ -182,7 +182,7 @@ public final class PistonPush extends Module {
             sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(angle, 0, mc.player.isOnGround(), mc.player.horizontalCollision));
             float prevYaw = mc.player.getYaw();
             mc.player.setYaw(angle);
-            mc.player.prevYaw = angle;
+            ((thunder.hack.injection.accesors.IClientPlayerEntity) mc.player).setLastYaw(angle);
             ((IClientPlayerEntity) mc.player).setLastYaw(angle);
             int prevSlot = mc.player.getInventory().getSelectedSlot();
             InteractionUtility.placeBlock(pistonPos, InteractionUtility.Rotate.None, interact.getValue(), placeMode.getValue(), getPistonSlot(), true, false);

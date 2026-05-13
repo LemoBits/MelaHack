@@ -230,7 +230,7 @@ public final class Core {
         }
 
         float g = -MathHelper.lerp(tickDelta, prevHorizontalSpeed, horizontalSpeed);
-        float h = MathHelper.lerp(tickDelta, playerEntity.prevStrideDistance, playerEntity.strideDistance);
+        float h = MathHelper.lerp(tickDelta, ((thunder.hack.injection.accesors.IPlayerEntity) playerEntity).getLastStrideDistance(), playerEntity.strideDistance);
         matrices.translate(MathHelper.sin(g * (float) Math.PI) * h * 0.1f, -Math.abs(MathHelper.cos(g * (float) Math.PI) * h) * 0.3, 0.0f);
         matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(MathHelper.sin(g * (float) Math.PI) * h * 3.0f));
         matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(Math.abs(MathHelper.cos(g * (float) Math.PI - 0.2f) * h) * 0.3f));

@@ -162,10 +162,7 @@ public class NameTags extends Module {
 
                 if (armorMode.getValue() != Armor.Durability) stacks.add(ent.getOffHandStack());
 
-                stacks.add(ent.getInventory().armor.get(0));
-                stacks.add(ent.getInventory().armor.get(1));
-                stacks.add(ent.getInventory().armor.get(2));
-                stacks.add(ent.getInventory().armor.get(3));
+                stacks.addAll(thunder.hack.utility.player.ArmorUtility.getArmorItems(ent));
 
                 if (armorMode.getValue() != Armor.Durability) stacks.add(ent.getMainHandStack());
 
@@ -375,7 +372,7 @@ public class NameTags extends Module {
             if (ent instanceof ProjectileEntity pe) {
                 if (pe.getOwner() != null) ownerName = pe.getOwner().getDisplayName().getString();
             } else if (ent instanceof HorseEntity he) {
-                if (he.getOwnerUuid() != null) ownerName = he.getOwnerUuid().toString();
+                if (he.getOwner() != null) ownerName = he.getOwner().getDisplayName().getString();
             } else if (ent instanceof TameableEntity te && te.isTamed() && te.getOwner() != null) {
                 ownerName = te.getOwner().getDisplayName().getString();
             } else continue;

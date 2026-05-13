@@ -36,6 +36,7 @@ import thunder.hack.gui.font.FontRenderers;
 import thunder.hack.gui.hud.HudEditorGui;
 import thunder.hack.setting.Setting;
 import thunder.hack.setting.impl.ColorSetting;
+import thunder.hack.utility.player.ArmorUtility;
 import thunder.hack.utility.ThunderUtility;
 import thunder.hack.utility.Timer;
 import thunder.hack.utility.math.MathUtility;
@@ -272,7 +273,7 @@ public class TargetHud extends HudElement {
             RenderSystem.setShaderColor(1f, 1f, 1f, (float) MathUtility.clamp(animation.getAnimationd(), 0, 1f));
 
             //Броня
-            List<ItemStack> armor = ((PlayerEntity) target).getInventory().armor;
+            List<ItemStack> armor = ArmorUtility.getArmorItems((PlayerEntity) target);
             ItemStack[] items = new ItemStack[]{target.getMainHandStack(), armor.get(3), armor.get(2), armor.get(1), armor.get(0), target.getOffHandStack()};
 
             float xItemOffset = getPosX() + 48;
@@ -347,7 +348,7 @@ public class TargetHud extends HudElement {
         if (target instanceof PlayerEntity) {
             //Броня
             RenderSystem.setShaderColor(1f, 1f, 1f, (float) MathUtility.clamp(animation.getAnimationd(), 0, 1f));
-            List<ItemStack> armor = ((PlayerEntity) target).getInventory().armor;
+            List<ItemStack> armor = ArmorUtility.getArmorItems((PlayerEntity) target);
             ItemStack[] items = new ItemStack[]{target.getMainHandStack(), armor.get(3), armor.get(2), armor.get(1), armor.get(0), target.getOffHandStack()};
 
             float xItemOffset = getPosX() + 38;
@@ -479,7 +480,7 @@ public class TargetHud extends HudElement {
 
         if (target instanceof PlayerEntity) {
             //Броня
-            List<ItemStack> armor = ((PlayerEntity) target).getInventory().armor;
+            List<ItemStack> armor = ArmorUtility.getArmorItems((PlayerEntity) target);
             ItemStack[] items = new ItemStack[]{target.getMainHandStack(), armor.get(3), armor.get(2), armor.get(1), armor.get(0), target.getOffHandStack()};
 
             float xItemOffset = getPosX() + 60;
@@ -501,14 +502,16 @@ public class TargetHud extends HudElement {
     }
 
     private void celestialArmor(DrawContext context, PlayerEntity target, float posX, float posY) {
-        for (int i = 0; i < 4; i++)
-            if (!target.getInventory().armor.get(3 - i).isEmpty()) {
+        for (int i = 0; i < 4; i++) {
+            List<ItemStack> armor = ArmorUtility.getArmorItems(target);
+            if (!armor.get(3 - i).isEmpty()) {
                 context.getMatrices().push();
                 context.getMatrices().translate(posX + (i > 1 ? 138 : 118), posY + (i % 2 == 0 ? 5 : 26), 0);
-                context.drawItem(target.getInventory().armor.get(3 - i), 0, 0);
-                context.drawStackOverlay(mc.textRenderer, target.getInventory().armor.get(3 - i), 0, 0);
+                context.drawItem(armor.get(3 - i), 0, 0);
+                context.drawStackOverlay(mc.textRenderer, armor.get(3 - i), 0, 0);
                 context.getMatrices().pop();
             }
+        }
     }
 
     private void celestialHands(DrawContext context, PlayerEntity target, float posX, float posY) {

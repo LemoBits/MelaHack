@@ -52,7 +52,7 @@ public class MixinOtherClientPlayerEntity extends AbstractClientPlayerEntity imp
         }
 
         Vec3d from = new Vec3d(((IEntityLiving) this).getPrevServerX(), ((IEntityLiving) this).getPrevServerY(), ((IEntityLiving) this).getPrevServerZ());
-        Vec3d to = new Vec3d(serverX, serverY, serverZ);
+        Vec3d to = new Vec3d(getX(), getY(), getZ());
 
         if(mode == Aura.Resolver.Advantage) {
             if (mc.player.squaredDistanceTo(from) > mc.player.squaredDistanceTo(to)) setPosition(to.x, to.y, to.z);

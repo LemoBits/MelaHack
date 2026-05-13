@@ -7,6 +7,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.BookUpdateC2SPacket;
 import net.minecraft.network.packet.c2s.play.ClickSlotC2SPacket;
+import net.minecraft.screen.sync.ItemStackHash;
 import net.minecraft.screen.slot.SlotActionType;
 import thunder.hack.events.impl.EventPostTick;
 
@@ -21,7 +22,7 @@ public class PastedPaperDupe extends Module {
 
     @EventHandler
     private void onTick(EventPostTick event) {
-        if(!(mc.player.getInventory().getMainHandStack().getItem()  == Items.WRITABLE_BOOK)) {
+        if(!(mc.player.getMainHandStack().getItem()  == Items.WRITABLE_BOOK)) {
             disable("Please hold a writable book!");
             return;
         }
@@ -30,11 +31,11 @@ public class PastedPaperDupe extends Module {
             mc.player.networkHandler.sendPacket(new ClickSlotC2SPacket(
                     mc.player.currentScreenHandler.syncId,
                     mc.player.currentScreenHandler.getRevision(),
-                    i,
-                    1,
+                    (short) i,
+                    (byte) 1,
                     SlotActionType.THROW,
-                    ItemStack.EMPTY,
-                    Int2ObjectMaps.emptyMap()
+                    Int2ObjectMaps.emptyMap(),
+                    ItemStackHash.EMPTY
             ));
         }
         mc.player.networkHandler.sendPacket(new BookUpdateC2SPacket(

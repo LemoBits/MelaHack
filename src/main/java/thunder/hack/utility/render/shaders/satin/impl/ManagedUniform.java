@@ -28,6 +28,7 @@ import thunder.hack.utility.render.shaders.satin.api.managed.uniform.Uniform4i;
 import thunder.hack.utility.render.shaders.satin.api.managed.uniform.UniformMat4;
 import net.minecraft.client.gl.GlUniform;
 import net.minecraft.client.gl.PostEffectPass;
+import net.minecraft.client.gl.UniformType;
 import net.minecraft.client.gl.ShaderProgram;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
@@ -47,8 +48,8 @@ public final class ManagedUniform extends ManagedUniformBase implements
     private final int count;
 
     private GlUniform[] targets = NO_TARGETS;
-    private int i0, i1, i2, i3;
-    private float f0, f1, f2, f3;
+    private final int[] intValues = new int[4];
+    private final float[] floatValues = new float[4];
     private boolean firstUpload = true;
 
     public ManagedUniform(String name, int count) {
@@ -58,32 +59,18 @@ public final class ManagedUniform extends ManagedUniformBase implements
 
     @Override
     public boolean findUniformTargets(List<PostEffectPass> shaders) {
-        List<GlUniform> list = new ArrayList<>();
-        for (PostEffectPass shader : shaders) {
-            GlUniform uniform = shader.getProgram().getUniform(this.name);
-
-            if (uniform != null) {
-                if (uniform.getCount() != this.count) {
-                    throw new IllegalStateException("Mismatched number of values, expected " + this.count + " but JSON definition declares " + uniform.getCount());
-                }
-                list.add(uniform);
-            }
-        }
-
-        if (list.size() > 0) {
-            this.targets = list.toArray(new GlUniform[0]);
-            this.syncCurrentValues();
-            return true;
-        } else {
-            this.targets = NO_TARGETS;
-            return false;
-        }
+        this.targets = NO_TARGETS;
+        return false;
     }
 
     @Override
     public boolean findUniformTarget(ShaderProgram shader) {
         GlUniform uniform = shader.getUniform(this.name);
         if (uniform != null) {
+            UniformType type = uniform.getType();
+            if (type.count() != this.count) {
+                throw new IllegalStateException("Mismatched number of values, expected " + this.count + " but shader declares " + type.count());
+            }
             this.targets = new GlUniform[] {uniform};
             this.syncCurrentValues();
             return true;
@@ -96,11 +83,26 @@ public final class ManagedUniform extends ManagedUniformBase implements
     private void syncCurrentValues() {
         if (!this.firstUpload) {
             for (GlUniform target : this.targets) {
-                if (target.getIntData() != null) {
-                    target.setForDataType(i0, i1, i2, i3);
+                if (target.getType().isIntegerData()) {
+                    if (this.count == 1) {
+                        target.set(intValues[0]);
+                    } else if (this.count == 3) {
+                        target.set(intValues[0], intValues[1], intValues[2]);
+                    } else {
+                        target.set(intValues);
+                    }
                 } else {
-                    assert target.getFloatData() != null;
-                    target.setForDataType(f0, f1, f2, f3);
+                    if (this.count == 1) {
+                        target.set(floatValues[0]);
+                    } else if (this.count == 2) {
+                        target.set(floatValues[0], floatValues[1]);
+                    } else if (this.count == 3) {
+                        target.set(floatValues[0], floatValues[1], floatValues[2]);
+                    } else if (this.count == 4) {
+                        target.setAndFlip(floatValues[0], floatValues[1], floatValues[2], floatValues[3]);
+                    } else {
+                        target.set(floatValues);
+                    }
                 }
             }
         }
@@ -111,11 +113,11 @@ public final class ManagedUniform extends ManagedUniformBase implements
         GlUniform[] targets = this.targets;
         int nbTargets = targets.length;
         if (nbTargets > 0) {
-            if (firstUpload || i0 != value) {
+            if (firstUpload || intValues[0] != value) {
                 for (GlUniform target : targets) {
                     target.set(value);
                 }
-                i0 = value;
+                intValues[0] = value;
                 firstUpload = false;
             }
         }
@@ -126,12 +128,12 @@ public final class ManagedUniform extends ManagedUniformBase implements
         GlUniform[] targets = this.targets;
         int nbTargets = targets.length;
         if (nbTargets > 0) {
-            if (firstUpload || i0 != value0 || i1 != value1) {
+            if (firstUpload || intValues[0] != value0 || intValues[1] != value1) {
                 for (GlUniform target : targets) {
-                    target.set(value0, value1);
+                    target.set(new int[] {value0, value1});
                 }
-                i0 = value0;
-                i1 = value1;
+                intValues[0] = value0;
+                intValues[1] = value1;
                 firstUpload = false;
             }
         }
@@ -142,13 +144,13 @@ public final class ManagedUniform extends ManagedUniformBase implements
         GlUniform[] targets = this.targets;
         int nbTargets = targets.length;
         if (nbTargets > 0) {
-            if (firstUpload || i0 != value0 || i1 != value1 || i2 != value2) {
+            if (firstUpload || intValues[0] != value0 || intValues[1] != value1 || intValues[2] != value2) {
                 for (GlUniform target : targets) {
                     target.set(value0, value1, value2);
                 }
-                i0 = value0;
-                i1 = value1;
-                i2 = value2;
+                intValues[0] = value0;
+                intValues[1] = value1;
+                intValues[2] = value2;
                 firstUpload = false;
             }
         }
@@ -159,14 +161,14 @@ public final class ManagedUniform extends ManagedUniformBase implements
         GlUniform[] targets = this.targets;
         int nbTargets = targets.length;
         if (nbTargets > 0) {
-            if (firstUpload || i0 != value0 || i1 != value1 || i2 != value2 || i3 != value3) {
+            if (firstUpload || intValues[0] != value0 || intValues[1] != value1 || intValues[2] != value2 || intValues[3] != value3) {
                 for (GlUniform target : targets) {
-                    target.set(value0, value1, value2, value3);
+                    target.set(new int[] {value0, value1, value2, value3});
                 }
-                i0 = value0;
-                i1 = value1;
-                i2 = value2;
-                i3 = value3;
+                intValues[0] = value0;
+                intValues[1] = value1;
+                intValues[2] = value2;
+                intValues[3] = value3;
                 firstUpload = false;
             }
         }
@@ -177,11 +179,11 @@ public final class ManagedUniform extends ManagedUniformBase implements
         GlUniform[] targets = this.targets;
         int nbTargets = targets.length;
         if (nbTargets > 0) {
-            if (firstUpload || f0 != value) {
+            if (firstUpload || floatValues[0] != value) {
                 for (GlUniform target : targets) {
                     target.set(value);
                 }
-                f0 = value;
+                floatValues[0] = value;
                 firstUpload = false;
             }
         }
@@ -192,12 +194,12 @@ public final class ManagedUniform extends ManagedUniformBase implements
         GlUniform[] targets = this.targets;
         int nbTargets = targets.length;
         if (nbTargets > 0) {
-            if (firstUpload || f0 != value0 || f1 != value1) {
+            if (firstUpload || floatValues[0] != value0 || floatValues[1] != value1) {
                 for (GlUniform target : targets) {
                     target.set(value0, value1);
                 }
-                f0 = value0;
-                f1 = value1;
+                floatValues[0] = value0;
+                floatValues[1] = value1;
                 firstUpload = false;
             }
         }
@@ -213,13 +215,13 @@ public final class ManagedUniform extends ManagedUniformBase implements
         GlUniform[] targets = this.targets;
         int nbTargets = targets.length;
         if (nbTargets > 0) {
-            if (firstUpload || f0 != value0 || f1 != value1 || f2 != value2) {
+            if (firstUpload || floatValues[0] != value0 || floatValues[1] != value1 || floatValues[2] != value2) {
                 for (GlUniform target : targets) {
                     target.set(value0, value1, value2);
                 }
-                f0 = value0;
-                f1 = value1;
-                f2 = value2;
+                floatValues[0] = value0;
+                floatValues[1] = value1;
+                floatValues[2] = value2;
                 firstUpload = false;
             }
         }
@@ -235,14 +237,14 @@ public final class ManagedUniform extends ManagedUniformBase implements
         GlUniform[] targets = this.targets;
         int nbTargets = targets.length;
         if (nbTargets > 0) {
-            if (firstUpload || f0 != value0 || f1 != value1 || f2 != value2 || f3 != value3) {
+            if (firstUpload || floatValues[0] != value0 || floatValues[1] != value1 || floatValues[2] != value2 || floatValues[3] != value3) {
                 for (GlUniform target : targets) {
-                    target.set(value0, value1, value2, value3);
+                    target.setAndFlip(value0, value1, value2, value3);
                 }
-                f0 = value0;
-                f1 = value1;
-                f2 = value2;
-                f3 = value3;
+                floatValues[0] = value0;
+                floatValues[1] = value1;
+                floatValues[2] = value2;
+                floatValues[3] = value3;
                 firstUpload = false;
             }
         }

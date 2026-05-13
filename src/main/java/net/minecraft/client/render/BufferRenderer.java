@@ -3,7 +3,6 @@ package net.minecraft.client.render;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.systems.RenderPass;
-import thunder.hack.utility.render.compat.RenderSystem;
 import com.mojang.blaze3d.textures.GpuTexture;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
@@ -26,15 +25,15 @@ public final class BufferRenderer {
         }
 
         try (buffer; GpuBuffer vertices = parameters.format().uploadImmediateVertexBuffer(buffer.getBuffer())) {
-            RenderSystem.ShapeIndexBuffer shapeIndexBuffer = RenderSystem.getSequentialBuffer(parameters.mode());
+            com.mojang.blaze3d.systems.RenderSystem.ShapeIndexBuffer shapeIndexBuffer = com.mojang.blaze3d.systems.RenderSystem.getSequentialBuffer(parameters.mode());
             GpuBuffer indices = shapeIndexBuffer.getIndexBuffer(parameters.indexCount());
             Framebuffer framebuffer = MinecraftClient.getInstance().getFramebuffer();
 
-            try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(
+            try (RenderPass pass = com.mojang.blaze3d.systems.RenderSystem.getDevice().createCommandEncoder().createRenderPass(
                     framebuffer.getColorAttachment(), OptionalInt.empty(),
                     framebuffer.getDepthAttachment(), OptionalDouble.empty())) {
                 pass.setPipeline(pipeline);
-                GpuTexture texture = RenderSystem.getShaderTexture(0);
+                GpuTexture texture = com.mojang.blaze3d.systems.RenderSystem.getShaderTexture(0);
                 if (texture != null) {
                     pass.bindSampler("Sampler0", texture);
                 }

@@ -17,21 +17,15 @@
  */
 package thunder.hack.utility.render.shaders.satin.impl;
 
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntList;
-import thunder.hack.features.cmd.Command;
 import thunder.hack.utility.render.shaders.satin.api.managed.uniform.SamplerUniform;
 import net.minecraft.client.gl.GlUniform;
 import net.minecraft.client.gl.PostEffectPass;
 import net.minecraft.client.gl.ShaderProgram;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.function.IntSupplier;
 
 public abstract class ManagedSamplerUniformBase extends ManagedUniformBase implements SamplerUniform {
     protected SamplerAccess[] targets = new SamplerAccess[0];
-    protected int[] locations = new int[0];
     protected Object cachedValue;
 
     public ManagedSamplerUniformBase(String name) {
@@ -40,24 +34,8 @@ public abstract class ManagedSamplerUniformBase extends ManagedUniformBase imple
 
     @Override
     public boolean findUniformTargets(List<PostEffectPass> shaders) {
-        List<SamplerAccess> targets = new ArrayList<>(shaders.size());
-        IntList rawTargets = new IntArrayList(shaders.size());
-        for (PostEffectPass shader : shaders) {
-            ShaderProgram program = shader.getProgram();
-            SamplerAccess access = (SamplerAccess) program;
-            if (access.hasSampler(this.name)) {
-                targets.add(access);
-                rawTargets.add(getSamplerLoc(access));
-            }
-        }
-        this.targets = targets.toArray(new SamplerAccess[0]);
-        this.locations = rawTargets.toArray(new int[0]);
-        this.syncCurrentValues();
-        return this.targets.length > 0;
-    }
-
-    private int getSamplerLoc(SamplerAccess access) {
-        return access.getSamplerShaderLocs().get(access.getSamplerNames().indexOf(this.name));
+        this.targets = new SamplerAccess[0];
+        return false;
     }
 
     @Override
@@ -68,7 +46,6 @@ public abstract class ManagedSamplerUniformBase extends ManagedUniformBase imple
     private boolean findUniformTarget1(SamplerAccess access) {
         if (access.hasSampler(this.name)) {
             this.targets = new SamplerAccess[] {access};
-            this.locations = new int[] {getSamplerLoc(access)};
             this.syncCurrentValues();
             return true;
         }

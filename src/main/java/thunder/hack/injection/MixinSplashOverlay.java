@@ -1,6 +1,5 @@
 package thunder.hack.injection;
 
-import com.mojang.blaze3d.platform.GlStateManager;
 import thunder.hack.utility.render.compat.RenderSystem;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
@@ -74,8 +73,8 @@ public abstract class MixinSplashOverlay {
             float m = (float) (k >> 16 & 255) / 255.0F;
             float n = (float) (k >> 8 & 255) / 255.0F;
             float o = (float) (k & 255) / 255.0F;
-            GlStateManager._clearColor(m, n, o, 1.0F);
-            GlStateManager._clear(16384);
+            RenderSystem.clearColor(m, n, o, 1.0F);
+            RenderSystem.clear(16384);
             h = 1.0F;
         }
 

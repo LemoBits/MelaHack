@@ -16,6 +16,7 @@ import thunder.hack.features.modules.Module;
 import thunder.hack.setting.Setting;
 import thunder.hack.setting.impl.SettingGroup;
 import thunder.hack.utility.player.InteractionUtility;
+import thunder.hack.utility.player.MovementUtility;
 import thunder.hack.utility.world.HoleUtility;
 
 import java.util.ArrayList;
@@ -130,7 +131,7 @@ public class HoleSnap extends Module {
         if (mc.player == null || mode.getValue() != Mode.Yaw || hole == null)
             return;
 
-        mc.player.input.getMovementInput().y = 1;
+        MovementUtility.setMovementInputY(1f);
     }
 
     private @Nullable BlockPos findHole() {

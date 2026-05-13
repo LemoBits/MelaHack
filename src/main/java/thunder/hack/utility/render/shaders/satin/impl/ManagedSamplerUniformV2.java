@@ -18,6 +18,7 @@
 package thunder.hack.utility.render.shaders.satin.impl;
 
 import thunder.hack.utility.render.shaders.satin.api.managed.uniform.SamplerUniformV2;
+import com.mojang.blaze3d.textures.GpuTexture;
 import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.gl.ShaderProgram;
 import net.minecraft.client.texture.AbstractTexture;
@@ -31,32 +32,43 @@ public final class ManagedSamplerUniformV2 extends ManagedSamplerUniformBase imp
 
     @Override
     public void set(AbstractTexture texture) {
-        set(texture::getGlId);
+        set((Object) texture);
     }
 
     @Override
     public void set(Framebuffer textureFbo) {
-        set(textureFbo::getColorAttachment);
+        set((Object) textureFbo);
     }
 
     @Override
     public void set(int textureName) {
-        set(() -> textureName);
+        set((Object) textureName);
     }
 
     @Override
     protected void set(Object value) {
-        this.set((IntSupplier) value);
+        SamplerAccess[] targets = this.targets;
+        if (targets.length > 0 && this.cachedValue != value) {
+            GpuTexture texture;
+            if (value instanceof AbstractTexture abstractTexture) {
+                texture = abstractTexture.getGlTexture();
+            } else if (value instanceof Framebuffer framebuffer) {
+                texture = framebuffer.getColorAttachment();
+            } else if (value instanceof GpuTexture gpuTexture) {
+                texture = gpuTexture;
+            } else {
+                this.cachedValue = value;
+                return;
+            }
+            for (SamplerAccess target : targets) {
+                ((ShaderProgram) target).addSamplerTexture(this.name, texture);
+            }
+            this.cachedValue = value;
+        }
     }
 
     @Override
     public void set(IntSupplier value) {
-        SamplerAccess[] targets = this.targets;
-        if (targets.length > 0 && this.cachedValue != value) {
-            for (SamplerAccess target : targets) {
-                ((ShaderProgram) target).addSamplerTexture(this.name, value.getAsInt());
-            }
-            this.cachedValue = value;
-        }
+        this.cachedValue = value;
     }
 }

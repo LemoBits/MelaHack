@@ -124,12 +124,12 @@ public class Chams extends Module {
             RenderSystem.setShaderColor(playerColor.getValue().getGlRed(), playerColor.getValue().getGlGreen(), playerColor.getValue().getGlBlue(), playerColor.getValue().getGlAlpha());
         }
 
-        float h = MathHelper.lerpAngleDegrees(g, pe.prevBodyYaw, pe.bodyYaw);
-        float j = MathHelper.lerpAngleDegrees(g, pe.prevHeadYaw, pe.headYaw);
+        float h = MathHelper.lerpAngleDegrees(g, ((thunder.hack.injection.accesors.ILivingEntity) pe).getLastBodyYaw(), pe.bodyYaw);
+        float j = MathHelper.lerpAngleDegrees(g, ((thunder.hack.injection.accesors.ILivingEntity) pe).getLastHeadYaw(), pe.headYaw);
         float k = j - h;
         if (pe.hasVehicle() && (entity = pe.getVehicle()) instanceof LivingEntity) {
             LivingEntity livingEntity2 = (LivingEntity) entity;
-            h = MathHelper.lerpAngleDegrees(g, livingEntity2.prevBodyYaw, livingEntity2.bodyYaw);
+            h = MathHelper.lerpAngleDegrees(g, ((thunder.hack.injection.accesors.ILivingEntity) livingEntity2).getLastBodyYaw(), livingEntity2.bodyYaw);
             k = j - h;
             float l = MathHelper.wrapDegrees(k);
             if (l < -85.0f) {
@@ -144,7 +144,7 @@ public class Chams extends Module {
             }
             k = j - h;
         }
-        float m = MathHelper.lerp(g, pe.prevPitch, pe.getPitch());
+        float m = MathHelper.lerp(g, ((thunder.hack.injection.accesors.ILivingEntity) pe).getLastPitch(), pe.getPitch());
         if (LivingEntityRenderer.shouldFlipUpsideDown(pe)) {
             m *= -1.0f;
             k *= -1.0f;
@@ -164,8 +164,8 @@ public class Chams extends Module {
         n = 0.0f;
         float o = 0.0f;
         if (!pe.hasVehicle() && pe.isAlive()) {
-            n = pe.limbAnimator.getSpeed(g);
-            o = pe.limbAnimator.getPos(g);
+            n = pe.limbAnimator.getSpeed();
+            o = pe.limbAnimator.getAnimationProgress(g);
             if (pe.isBaby())
                 o *= 3.0f;
 

@@ -77,8 +77,8 @@ public class Hotbar extends HudElement {
             for (int m = 0; m < 9; ++m) {
                 int n = i - 90 + m * 20 + 2;
                 if (m == mc.player.getInventory().getSelectedSlot())
-                    renderHotbarItem(context, n, o - 7, playerEntity.getInventory().main.get(m));
-                else renderHotbarItem(context, n, o - 5, playerEntity.getInventory().main.get(m));
+                    renderHotbarItem(context, n, o - 7, playerEntity.getInventory().getStack(m));
+                else renderHotbarItem(context, n, o - 5, playerEntity.getInventory().getStack(m));
             }
         }
     }

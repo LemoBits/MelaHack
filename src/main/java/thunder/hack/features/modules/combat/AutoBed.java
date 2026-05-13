@@ -164,7 +164,7 @@ public final class AutoBed extends Module {
             sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(angle2, 0, mc.player.isOnGround(), mc.player.horizontalCollision));
             float prevYaw = mc.player.getYaw();
             mc.player.setYaw(angle2);
-            mc.player.prevYaw = angle2;
+            ((thunder.hack.injection.accesors.IClientPlayerEntity) mc.player).setLastYaw(angle2);
             ((IClientPlayerEntity) mc.player).setLastYaw(angle2);
             sendSequencedPacket(id -> new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND, bestPos.hitResult(), id));
             mc.player.swingHand(Hand.MAIN_HAND);

@@ -117,7 +117,7 @@ public class GuiMove extends Module {
         if (e.getPacket() instanceof ClickSlotC2SPacket click) {
             switch (clickBypass.getValue()) {
                 case GrimSwap -> {
-                    if (click.getActionType() != SlotActionType.PICKUP && click.getActionType() != SlotActionType.PICKUP_ALL)
+                    if (click.actionType() != SlotActionType.PICKUP && click.actionType() != SlotActionType.PICKUP_ALL)
                         sendPacket(new CloseHandledScreenC2SPacket(0));
                 }
 
@@ -140,7 +140,7 @@ public class GuiMove extends Module {
                 case MatrixNcp -> {
                     sendPacket(new ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.STOP_SPRINTING));
                     mc.options.forwardKey.setPressed(false);
-                    mc.player.input.getMovementInput().y = 0;
+                    MovementUtility.setMovementInputY(0f);
                 }
 
                 case Delay -> {

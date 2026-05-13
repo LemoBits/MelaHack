@@ -2,15 +2,44 @@ package thunder.hack.utility.player;
 
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec2f;
 import thunder.hack.core.Managers;
 import thunder.hack.events.impl.EventMove;
 import thunder.hack.features.modules.Module;
+import thunder.hack.injection.accesors.IInput;
 
 import static thunder.hack.features.modules.Module.mc;
 
 public final class MovementUtility {
     public static boolean isMoving() {
         return mc.player != null && mc.world != null && mc.player.input != null && (mc.player.input.getMovementInput().y != 0.0 || mc.player.input.getMovementInput().x != 0.0);
+    }
+
+    public static void setMovementInput(float x, float y) {
+        if (mc.player == null || mc.player.input == null) return;
+        ((IInput) mc.player.input).setMovementVector(new Vec2f(x, y));
+    }
+
+    public static void clearMovementInput() {
+        setMovementInput(0f, 0f);
+    }
+
+    public static void setMovementInputX(float x) {
+        if (mc.player == null || mc.player.input == null) return;
+        Vec2f movement = mc.player.input.getMovementInput();
+        setMovementInput(x, movement.y);
+    }
+
+    public static void setMovementInputY(float y) {
+        if (mc.player == null || mc.player.input == null) return;
+        Vec2f movement = mc.player.input.getMovementInput();
+        setMovementInput(movement.x, y);
+    }
+
+    public static void scaleMovementInput(float xScale, float yScale) {
+        if (mc.player == null || mc.player.input == null) return;
+        Vec2f movement = mc.player.input.getMovementInput();
+        setMovementInput(movement.x * xScale, movement.y * yScale);
     }
 
     public static double getSpeed() {

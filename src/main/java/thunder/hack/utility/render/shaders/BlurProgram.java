@@ -41,7 +41,7 @@ public class BlurProgram {
 
     public void setParameters(float x, float y, float width, float height, float r, Color c1, float blurStrenth, float blurOpacity) {
         if (input == null)
-            input = new SimpleFramebuffer(mc.getWindow().getScaledWidth(), mc.getWindow().getScaledHeight(), false);
+            input = new SimpleFramebuffer("thunderhack_blur", mc.getWindow().getScaledWidth(), mc.getWindow().getScaledHeight(), false);
 
         float i = (float) mc.getWindow().getScaleFactor();
         radius.set(r * i);
@@ -50,7 +50,7 @@ public class BlurProgram {
         brightness.set(blurOpacity);
         quality.set(blurStrenth);
         color1.set(c1.getRed() / 255f, c1.getGreen() / 255f, c1.getBlue() / 255f, 1f);
-        sampler.set(input.getColorAttachment());
+        sampler.set(input);
     }
 
     public void use() {
@@ -64,7 +64,7 @@ public class BlurProgram {
             input.resize(mc.getWindow().getFramebufferWidth(), mc.getWindow().getFramebufferHeight());
 
         inputResolution.set((float) buffer.textureWidth, (float) buffer.textureHeight);
-        sampler.set(input.getColorAttachment());
+        sampler.set(input);
 
         RenderSystem.setShader(BLUR.getProgram());
     }

@@ -161,7 +161,7 @@ class GlyphMap {
                     backingBuffer.put(abgr);
                 }
             }
-            NativeImageBackedTexture tex = new NativeImageBackedTexture(image);
+            NativeImageBackedTexture tex = new NativeImageBackedTexture(() -> "glyph_map_" + i, image);
             tex.upload();
             if (RenderSystem.isOnRenderThread()) {
                 MinecraftClient.getInstance().getTextureManager().registerTexture(i, tex);

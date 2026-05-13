@@ -18,6 +18,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.world.GameMode;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RotationAxis;
@@ -77,6 +78,7 @@ public final class PopChams extends Module {
         PlayerEntity entity = new PlayerEntity(mc.world, BlockPos.ORIGIN, e.getEntity().bodyYaw, new GameProfile(e.getEntity().getUuid(), e.getEntity().getName().getString())) {
             @Override public boolean isSpectator() {return false;}
             @Override public boolean isCreative() {return false;}
+            @Override public GameMode getGameMode() { return GameMode.SURVIVAL; }
         };
 
         entity.copyPositionAndRotation(e.getEntity());
@@ -86,7 +88,6 @@ public final class PopChams extends Module {
         entity.handSwingTicks = e.getEntity().handSwingTicks;
         entity.setSneaking(e.getEntity().isSneaking());
         entity.limbAnimator.setSpeed(e.getEntity().limbAnimator.getSpeed());
-        entity.limbAnimator.pos = e.getEntity().limbAnimator.getPos();
         popList.add(new Person(entity, ((AbstractClientPlayerEntity) e.getEntity()).getSkinTextures().texture()));
     }
 

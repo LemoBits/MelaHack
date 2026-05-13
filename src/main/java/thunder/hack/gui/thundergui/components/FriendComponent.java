@@ -78,7 +78,7 @@ public class FriendComponent {
             e.printStackTrace();
         }
         if (Head != null) {
-            NativeImageBackedTexture nIBT = new NativeImageBackedTexture(parseHead(Head));
+            NativeImageBackedTexture nIBT = new NativeImageBackedTexture(() -> "friend_head", parseHead(Head));
             return nIBT;
         }
         return null;

@@ -136,8 +136,7 @@ public class PearlChaser extends Module {
             mc.options.backKey.setPressed(false);
             mc.options.leftKey.setPressed(false);
             mc.options.rightKey.setPressed(false);
-            mc.player.input.getMovementInput().y = 0;
-            mc.player.input.getMovementInput().x = 0;
+            thunder.hack.utility.player.MovementUtility.clearMovementInput();
             return;
         }
 

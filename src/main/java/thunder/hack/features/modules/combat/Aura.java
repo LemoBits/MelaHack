@@ -589,8 +589,8 @@ public class Aura extends Module {
         }
 
         if (clientLook.getValue() && rotationMode.getValue() != Mode.None) {
-            mc.player.setYaw((float) Render2DEngine.interpolate(mc.player.prevYaw, rotationYaw, Render3DEngine.getTickDelta()));
-            mc.player.setPitch((float) Render2DEngine.interpolate(mc.player.prevPitch, rotationPitch, Render3DEngine.getTickDelta()));
+            mc.player.setYaw((float) Render2DEngine.interpolate(((thunder.hack.injection.accesors.IClientPlayerEntity) mc.player).getLastYaw(), rotationYaw, Render3DEngine.getTickDelta()));
+            mc.player.setPitch((float) Render2DEngine.interpolate(((thunder.hack.injection.accesors.IClientPlayerEntity) mc.player).getLastPitch(), rotationPitch, Render3DEngine.getTickDelta()));
         }
     }
 
