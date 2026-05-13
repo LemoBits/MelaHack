@@ -1,6 +1,8 @@
 package thunder.hack.gui.font;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.VertexFormat;
+
+import thunder.hack.utility.render.compat.RenderSystem;
 import net.minecraft.client.gl.ShaderProgramKeys;
 import it.unimi.dsi.fastutil.chars.Char2IntArrayMap;
 import it.unimi.dsi.fastutil.chars.Char2ObjectArrayMap;

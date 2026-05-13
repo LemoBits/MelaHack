@@ -1,7 +1,6 @@
 package thunder.hack.utility.player;
 
 import net.minecraft.block.Block;
-import net.minecraft.component.DataComponentTypes;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.Enchantments;
@@ -14,6 +13,7 @@ import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.Registries;
+import net.minecraft.registry.tag.ItemTags;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.core.Managers;
 import thunder.hack.core.manager.client.ModuleManager;
@@ -49,8 +49,8 @@ public final class InventoryUtility {
 
         for (int b1 = 9; b1 < 45; b1++) {
             ItemStack itemStack = mc.player.getInventory().getStack(b1 >= 36 ? b1 - 36 : b1);
-            if (itemStack != null && itemStack.getItem() instanceof AxeItem axe) {
-                float f1 = axe.getComponents().get(DataComponentTypes.MAX_DAMAGE);
+            if (itemStack != null && itemStack.getItem() instanceof AxeItem) {
+                float f1 = itemStack.getMaxDamage();
                 f1 += getEnchantmentLevel(Enchantments.SHARPNESS, itemStack);
                 if (f1 > f) {
                     f = f1;
@@ -72,7 +72,7 @@ public final class InventoryUtility {
         float f = 1.0F;
         for (int b1 = 0; b1 < 9; b1++) {
             ItemStack itemStack = mc.player.getInventory().getStack(b1);
-            if (itemStack != null && itemStack.getItem() instanceof PickaxeItem) {
+            if (itemStack != null && itemStack.isIn(ItemTags.PICKAXES)) {
                 float f1 = 0;
                 f1 += getEnchantmentLevel(Enchantments.EFFICIENCY, itemStack);
                 if (f1 > f) {
@@ -93,7 +93,7 @@ public final class InventoryUtility {
         float f = 1.0F;
         for (int b1 = 9; b1 < 45; b1++) {
             ItemStack itemStack = mc.player.getInventory().getStack(b1);
-            if (itemStack != null && itemStack.getItem() instanceof PickaxeItem) {
+            if (itemStack != null && itemStack.isIn(ItemTags.PICKAXES)) {
                 float f1 = 0;
                 f1 += getEnchantmentLevel(Enchantments.EFFICIENCY, itemStack);
                 if (f1 > f) {
@@ -114,7 +114,7 @@ public final class InventoryUtility {
         float f = 1.0F;
         for (int b1 = 0; b1 < 9; b1++) {
             ItemStack itemStack = mc.player.getInventory().getStack(b1);
-            if (itemStack != null && itemStack.getItem() instanceof PickaxeItem) {
+            if (itemStack != null && itemStack.isIn(ItemTags.PICKAXES)) {
                 float f1 = 0;
                 f1 += getEnchantmentLevel(Enchantments.EFFICIENCY, itemStack);
                 if (f1 > f) {
@@ -154,8 +154,8 @@ public final class InventoryUtility {
         float f = 1.0F;
         for (int b1 = 9; b1 < 45; b1++) {
             ItemStack itemStack = mc.player.getInventory().getStack(b1);
-            if (itemStack != null && itemStack.getItem() instanceof SwordItem sword) {
-                float f1 = sword.getComponents().get(DataComponentTypes.MAX_DAMAGE);
+            if (itemStack != null && itemStack.isIn(ItemTags.SWORDS)) {
+                float f1 = itemStack.getMaxDamage();
                 f1 += getEnchantmentLevel(Enchantments.SHARPNESS, itemStack);
                 if (f1 > f) {
                     f = f1;
@@ -175,8 +175,8 @@ public final class InventoryUtility {
         float f = 1.0F;
         for (int b1 = 0; b1 < 9; b1++) {
             ItemStack itemStack = mc.player.getInventory().getStack(b1);
-            if (itemStack != null && itemStack.getItem() instanceof SwordItem sword) {
-                float f1 = sword.getComponents().get(DataComponentTypes.MAX_DAMAGE);
+            if (itemStack != null && itemStack.isIn(ItemTags.SWORDS)) {
+                float f1 = itemStack.getMaxDamage();
                 f1 += getEnchantmentLevel(Enchantments.SHARPNESS, itemStack);
                 if (f1 > f) {
                     f = f1;
@@ -197,8 +197,8 @@ public final class InventoryUtility {
         float f = 1.0F;
         for (int b1 = 0; b1 < 9; b1++) {
             ItemStack itemStack = mc.player.getInventory().getStack(b1);
-            if (itemStack != null && itemStack.getItem() instanceof AxeItem axe) {
-                float f1 = axe.getComponents().get(DataComponentTypes.MAX_DAMAGE);
+            if (itemStack != null && itemStack.getItem() instanceof AxeItem) {
+                float f1 = itemStack.getMaxDamage();
                 f1 += getEnchantmentLevel(Enchantments.SHARPNESS, itemStack);
                 if (f1 > f) {
                     f = f1;
@@ -213,7 +213,7 @@ public final class InventoryUtility {
 
 
     public static int getElytra() {
-        for (ItemStack stack : mc.player.getInventory().armor)
+        for (ItemStack stack : ArmorUtility.getArmorItems(mc.player))
             if (stack.getItem() == Items.ELYTRA && stack.getDamage() < 430)
                 return -2;
 
@@ -292,7 +292,7 @@ public final class InventoryUtility {
     }
 
     public static void saveSlot() {
-        cachedSlot = mc.player.getInventory().selectedSlot;
+        cachedSlot = mc.player.getInventory().getSelectedSlot();
     }
 
     public static void returnSlot() {
@@ -304,17 +304,17 @@ public final class InventoryUtility {
     public static void saveAndSwitchTo(int slot) {
         saveSlot();
         if (mc.player == null || mc.getNetworkHandler() == null) return;
-        if (mc.player.getInventory().selectedSlot == slot && Managers.PLAYER.serverSideSlot == slot)
+        if (mc.player.getInventory().getSelectedSlot() == slot && Managers.PLAYER.serverSideSlot == slot)
             return;
-        mc.player.getInventory().selectedSlot = slot;
+        mc.player.getInventory().setSelectedSlot(slot);
         ((IInteractionManager) mc.interactionManager).syncSlot();
     }
 
     public static void switchTo(int slot) {
         if (mc.player == null || mc.getNetworkHandler() == null) return;
-        if (mc.player.getInventory().selectedSlot == slot && Managers.PLAYER.serverSideSlot == slot)
+        if (mc.player.getInventory().getSelectedSlot() == slot && Managers.PLAYER.serverSideSlot == slot)
             return;
-        mc.player.getInventory().selectedSlot = slot;
+        mc.player.getInventory().setSelectedSlot(slot);
         ((IInteractionManager) mc.interactionManager).syncSlot();
     }
 
@@ -327,16 +327,16 @@ public final class InventoryUtility {
         if (mc.player == null) return SearchInvResult.notFound();
 
         Item mainHand = mc.player.getMainHandStack().getItem();
-        if (mainHand instanceof SwordItem
-                || mainHand instanceof PickaxeItem
+        if (mc.player.getMainHandStack().isIn(ItemTags.SWORDS)
+                || mc.player.getMainHandStack().isIn(ItemTags.PICKAXES)
                 || mainHand instanceof AxeItem
                 || mainHand instanceof ShovelItem) {
-            return new SearchInvResult(mc.player.getInventory().selectedSlot, true, mc.player.getMainHandStack());
+            return new SearchInvResult(mc.player.getInventory().getSelectedSlot(), true, mc.player.getMainHandStack());
         }
 
         return findInHotBar(
-                itemStack -> itemStack.getItem() instanceof SwordItem
-                        || itemStack.getItem() instanceof PickaxeItem
+                itemStack -> itemStack.isIn(ItemTags.SWORDS)
+                        || itemStack.isIn(ItemTags.PICKAXES)
                         || itemStack.getItem() instanceof AxeItem
                         || itemStack.getItem() instanceof ShovelItem
         );
@@ -346,10 +346,10 @@ public final class InventoryUtility {
         if (mc.player == null) return 0;
         float baseDamage = 1f;
 
-        if (weapon.getItem() instanceof SwordItem swordItem)
+        if (weapon.isIn(ItemTags.SWORDS))
             baseDamage = 7;
 
-        if (weapon.getItem() instanceof AxeItem axeItem)
+        if (weapon.getItem() instanceof AxeItem)
             baseDamage = 9;
 
         if (mc.player.fallDistance > 0 || ModuleManager.criticals.isEnabled())

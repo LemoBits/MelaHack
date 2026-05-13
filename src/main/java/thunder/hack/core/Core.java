@@ -1,6 +1,6 @@
 package thunder.hack.core;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import thunder.hack.utility.render.compat.RenderSystem;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.gui.DrawContext;

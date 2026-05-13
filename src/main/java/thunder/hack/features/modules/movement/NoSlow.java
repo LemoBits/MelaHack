@@ -44,7 +44,7 @@ public class NoSlow extends Module {
 
         if (mc.player.isUsingItem() && !mc.player.isRiding() && !mc.player.isGliding()) {
             switch (mode.getValue()) {
-                case StrictNCP -> sendPacket(new UpdateSelectedSlotC2SPacket(mc.player.getInventory().selectedSlot));
+                case StrictNCP -> sendPacket(new UpdateSelectedSlotC2SPacket(mc.player.getInventory().getSelectedSlot()));
                 case MusteryGrief -> {
                     if (mc.player.isOnGround() && mc.options.jumpKey.isPressed()) {
                         mc.options.sneakKey.setPressed(true);
@@ -53,9 +53,9 @@ public class NoSlow extends Module {
                 }
                 case Grim -> {
                     if (mc.player.getActiveHand() == Hand.OFF_HAND) {
-                        sendPacket(new UpdateSelectedSlotC2SPacket(mc.player.getInventory().selectedSlot % 8 + 1));
-                        sendPacket(new UpdateSelectedSlotC2SPacket(mc.player.getInventory().selectedSlot % 7 + 2));
-                        sendPacket(new UpdateSelectedSlotC2SPacket(mc.player.getInventory().selectedSlot));
+                        sendPacket(new UpdateSelectedSlotC2SPacket(mc.player.getInventory().getSelectedSlot() % 8 + 1));
+                        sendPacket(new UpdateSelectedSlotC2SPacket(mc.player.getInventory().getSelectedSlot() % 7 + 2));
+                        sendPacket(new UpdateSelectedSlotC2SPacket(mc.player.getInventory().getSelectedSlot()));
                     } else if (mainHand.getValue()) {
                         // TODO rotations
                         sendSequencedPacket(id -> new PlayerInteractItemC2SPacket(Hand.OFF_HAND, id, mc.player.getYaw(), mc.player.getPitch()));
@@ -69,9 +69,9 @@ public class NoSlow extends Module {
                 }
                 case GrimNew -> {
                     if (mc.player.getActiveHand() == Hand.OFF_HAND) {
-                        sendPacket(new UpdateSelectedSlotC2SPacket(mc.player.getInventory().selectedSlot % 8 + 1));
-                        sendPacket(new UpdateSelectedSlotC2SPacket(mc.player.getInventory().selectedSlot % 7 + 2));
-                        sendPacket(new UpdateSelectedSlotC2SPacket(mc.player.getInventory().selectedSlot));
+                        sendPacket(new UpdateSelectedSlotC2SPacket(mc.player.getInventory().getSelectedSlot() % 8 + 1));
+                        sendPacket(new UpdateSelectedSlotC2SPacket(mc.player.getInventory().getSelectedSlot() % 7 + 2));
+                        sendPacket(new UpdateSelectedSlotC2SPacket(mc.player.getInventory().getSelectedSlot()));
                     } else if (mainHand.getValue() && (mc.player.getItemUseTime() <= 3 || mc.player.age % 2 == 0)) {
                         sendSequencedPacket(id -> new PlayerInteractItemC2SPacket(Hand.OFF_HAND, id, mc.player.getYaw(), mc.player.getPitch()));
                     }
@@ -94,27 +94,27 @@ public class NoSlow extends Module {
     @EventHandler
     public void onKeyboardInput(EventKeyboardInput e) {
         if (mode.getValue() == Mode.Matrix3 && mc.player.isUsingItem() && !mc.player.isGliding()) {
-            mc.player.input.movementForward *= 5f;
-            mc.player.input.movementSideways *= 5f;
+            mc.player.input.getMovementInput().y *= 5f;
+            mc.player.input.getMovementInput().x *= 5f;
             float mult = 1f;
 
             if (mc.player.isOnGround()) {
-                if (mc.player.input.movementForward != 0 && mc.player.input.movementSideways != 0) {
-                    mc.player.input.movementForward *= 0.35f;
-                    mc.player.input.movementSideways *= 0.35f;
+                if (mc.player.input.getMovementInput().y != 0 && mc.player.input.getMovementInput().x != 0) {
+                    mc.player.input.getMovementInput().y *= 0.35f;
+                    mc.player.input.getMovementInput().x *= 0.35f;
                 } else {
-                    mc.player.input.movementForward *= 0.5f;
-                    mc.player.input.movementSideways *= 0.5f;
+                    mc.player.input.getMovementInput().y *= 0.5f;
+                    mc.player.input.getMovementInput().x *= 0.5f;
                 }
             } else {
-                if (mc.player.input.movementForward != 0 && mc.player.input.movementSideways != 0) {
+                if (mc.player.input.getMovementInput().y != 0 && mc.player.input.getMovementInput().x != 0) {
                     mult = 0.47f;
                 } else {
                     mult = 0.67f;
                 }
             }
-            mc.player.input.movementForward *= mult;
-            mc.player.input.movementSideways *= mult;
+            mc.player.input.getMovementInput().y *= mult;
+            mc.player.input.getMovementInput().x *= mult;
         }
     }
 

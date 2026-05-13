@@ -1,7 +1,9 @@
 package thunder.hack.gui.windows.impl;
 
+import com.mojang.blaze3d.vertex.VertexFormat;
+
 import com.google.common.collect.Lists;
-import com.mojang.blaze3d.systems.RenderSystem;
+import thunder.hack.utility.render.compat.RenderSystem;
 import net.minecraft.block.Block;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gl.ShaderProgramKeys;

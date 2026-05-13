@@ -20,7 +20,7 @@ public class AutoSoup extends Module {
     public void onUpdate() {
         if (mc.player.getHealth() <= health.getValue()) {
             SearchInvResult result = InventoryUtility.findItemInHotBar(Items.MUSHROOM_STEW);
-            int prevSlot = mc.player.getInventory().selectedSlot;
+            int prevSlot = mc.player.getInventory().getSelectedSlot();
             if (result.found()) {
                 result.switchTo();
                 sendSequencedPacket(id -> new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, id, mc.player.getYaw(), mc.player.getPitch()));

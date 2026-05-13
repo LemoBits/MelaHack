@@ -177,7 +177,7 @@ public class TNTAura extends Module {
 
     private int getObbySlot() {
         if (mc.player.getMainHandStack().getItem() == Items.OBSIDIAN)
-            return mc.player.getInventory().selectedSlot;
+            return mc.player.getInventory().getSelectedSlot();
 
         int slot = -1;
 
@@ -192,7 +192,7 @@ public class TNTAura extends Module {
 
     private int getTntSlot() {
         if (mc.player.getMainHandStack().getItem() == Items.TNT)
-            return mc.player.getInventory().selectedSlot;
+            return mc.player.getInventory().getSelectedSlot();
 
         int slot = -1;
 
@@ -207,7 +207,7 @@ public class TNTAura extends Module {
 
     private int getFlintSlot() {
         if (mc.player.getMainHandStack().getItem() == Items.FLINT_AND_STEEL)
-            return mc.player.getInventory().selectedSlot;
+            return mc.player.getInventory().getSelectedSlot();
 
         int slot = -1;
 

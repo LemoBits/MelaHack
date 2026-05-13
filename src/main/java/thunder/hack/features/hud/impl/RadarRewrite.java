@@ -1,7 +1,9 @@
 package thunder.hack.features.hud.impl;
 
+import com.mojang.blaze3d.vertex.VertexFormat;
+
 import com.google.common.collect.Lists;
-import com.mojang.blaze3d.systems.RenderSystem;
+import thunder.hack.utility.render.compat.RenderSystem;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gl.ShaderProgramKeys;
 import net.minecraft.client.render.*;
@@ -42,8 +44,8 @@ public class RadarRewrite extends HudElement {
 
     public static float getRotations(Entity entity) {
         if (mc.player == null) return 0;
-        double x = interp(entity.getPos().x, entity.prevX) - interp(mc.player.getPos().x, mc.player.prevX);
-        double z = interp(entity.getPos().z, entity.prevZ) - interp(mc.player.getPos().z, mc.player.prevZ);
+        double x = interp(entity.getPos().x, entity.lastX) - interp(mc.player.getPos().x, mc.player.lastX);
+        double z = interp(entity.getPos().z, entity.lastZ) - interp(mc.player.getPos().z, mc.player.lastZ);
         return (float) -(Math.atan2(x, z) * (180 / Math.PI));
     }
 

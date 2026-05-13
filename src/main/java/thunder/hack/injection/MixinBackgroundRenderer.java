@@ -1,6 +1,6 @@
 package thunder.hack.injection;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import thunder.hack.utility.render.compat.RenderSystem;
 import net.minecraft.client.render.BackgroundRenderer;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.Fog;

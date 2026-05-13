@@ -211,7 +211,7 @@ public class TargetStrafe extends Module {
 
     @EventHandler
     public void updateValues(EventSync e) {
-        oldSpeed = Math.hypot(mc.player.getX() - mc.player.prevX, mc.player.getZ() - mc.player.prevZ) * contextFriction;
+        oldSpeed = Math.hypot(mc.player.getX() - mc.player.lastX, mc.player.getZ() - mc.player.lastZ) * contextFriction;
 
         if (mc.player.isOnGround() && jump.getValue() && Aura.target != null) {
             mc.player.jump();

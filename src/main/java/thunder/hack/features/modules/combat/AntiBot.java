@@ -61,8 +61,8 @@ public final class AntiBot extends Module {
                 }
             }
             case MotionCheck -> {
-                double diffX = ent.getX() - ent.prevX;
-                double diffZ = ent.getZ() - ent.prevZ;
+                double diffX = ent.getX() - ent.lastX;
+                double diffZ = ent.getZ() - ent.lastZ;
                 
                 if ((diffX * diffX) + (diffZ * diffZ) > 0.5D) {
                     if (ticks >= checkticks.getValue())

@@ -1,7 +1,6 @@
 package thunder.hack.core.manager.client;
 
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
+import thunder.hack.utility.render.compat.RenderSystem;
 import thunder.hack.utility.render.Render3DEngine;
 import thunder.hack.utility.render.shaders.satin.api.managed.ManagedShaderEffect;
 import thunder.hack.utility.render.shaders.satin.api.managed.ShaderEffectManager;
@@ -9,10 +8,10 @@ import thunder.hack.utility.render.shaders.satin.impl.PostEffectRenderUtil;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.gl.PostEffectProcessor;
+import net.minecraft.client.gl.SimpleFramebuffer;
 import net.minecraft.client.util.ObjectAllocator;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
-import org.lwjgl.opengl.GL30C;
 import thunder.hack.core.manager.IManager;
 import thunder.hack.features.modules.render.Shaders;
 import java.util.ArrayList;
@@ -62,12 +61,7 @@ public class ShaderManager implements IManager {
         RenderSystem.assertOnRenderThreadOrInit();
         if (shaderBuffer.textureWidth != MCBuffer.textureWidth || shaderBuffer.textureHeight != MCBuffer.textureHeight)
             shaderBuffer.resize(MCBuffer.textureWidth, MCBuffer.textureHeight);
-        GlStateManager._glBindFramebuffer(GL30C.GL_DRAW_FRAMEBUFFER, shaderBuffer.fbo);
-        shaderBuffer.beginWrite(true);
         runnable.run();
-        shaderBuffer.endWrite();
-        GlStateManager._glBindFramebuffer(GL30C.GL_DRAW_FRAMEBUFFER, MCBuffer.fbo);
-        MCBuffer.beginWrite(false);
         ManagedShaderEffect shader = getShader(mode);
         Framebuffer mainBuffer = MinecraftClient.getInstance().getFramebuffer();
         PostEffectProcessor effect = shader.getShaderEffect();
@@ -80,15 +74,12 @@ public class ShaderManager implements IManager {
             externalTargets.put(BUF_OUT, shaderBuffer);
             PostEffectRenderUtil.render(effect, shaderBuffer.textureWidth, shaderBuffer.textureHeight, externalTargets, ObjectAllocator.TRIVIAL);
         }
-        mainBuffer.beginWrite(false);
         RenderSystem.enableBlend();
-        RenderSystem.blendFuncSeparate(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SrcFactor.ZERO, GlStateManager.DstFactor.ONE);
         RenderSystem.backupProjectionMatrix();
-        shaderBuffer.draw(shaderBuffer.textureWidth, shaderBuffer.textureHeight);
+        shaderBuffer.blitToScreen();
         RenderSystem.restoreProjectionMatrix();
         RenderSystem.defaultBlendFunc();
         RenderSystem.disableBlend();
-        shaderBuffer.clear();
     }
 
     public ManagedShaderEffect getShader(@NotNull Shader mode) {
@@ -178,12 +169,11 @@ public class ShaderManager implements IManager {
         SNOW_OUTLINE = ShaderEffectManager.getInstance().manage(Identifier.of("thunderhack", "snow"));
     }
 
-    public static class ThunderHackFramebuffer extends Framebuffer {
+    public static class ThunderHackFramebuffer extends SimpleFramebuffer {
         public ThunderHackFramebuffer(int width, int height) {
-            super(false);
+            super("melahack_shader", width, height, false);
             RenderSystem.assertOnRenderThreadOrInit();
             resize(width, height);
-            setClearColor(0f, 0f, 0f, 0f);
         }
     }
 

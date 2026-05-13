@@ -183,7 +183,7 @@ public final class AutoWeb extends Module {
         if (mainhandStack != ItemStack.EMPTY && mainhandStack.getItem() instanceof BlockItem) {
             final Block blockFromMainhandItem = ((BlockItem) mainhandStack.getItem()).getBlock();
             if (canUseBlocks.contains(blockFromMainhandItem)) {
-                slot = mc.player.getInventory().selectedSlot;
+                slot = mc.player.getInventory().getSelectedSlot();
             }
         }
         if (slot == -1) {

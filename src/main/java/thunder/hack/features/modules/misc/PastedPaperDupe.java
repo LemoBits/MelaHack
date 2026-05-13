@@ -26,7 +26,7 @@ public class PastedPaperDupe extends Module {
             return;
         }
         for (int i = 9; i < 44; i++) {
-            if (36 + mc.player.getInventory().selectedSlot == i) continue;
+            if (36 + mc.player.getInventory().getSelectedSlot() == i) continue;
             mc.player.networkHandler.sendPacket(new ClickSlotC2SPacket(
                     mc.player.currentScreenHandler.syncId,
                     mc.player.currentScreenHandler.getRevision(),
@@ -38,7 +38,7 @@ public class PastedPaperDupe extends Module {
             ));
         }
         mc.player.networkHandler.sendPacket(new BookUpdateC2SPacket(
-                mc.player.getInventory().selectedSlot, List.of(""), Optional.of("The quick brown fox jumps over the lazy dog"
+                mc.player.getInventory().getSelectedSlot(), List.of(""), Optional.of("The quick brown fox jumps over the lazy dog"
         )));
         toggle();
     }

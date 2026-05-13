@@ -1,6 +1,6 @@
 package thunder.hack.utility.render.shaders;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import thunder.hack.utility.render.compat.RenderSystem;
 import net.minecraft.client.render.VertexFormats;
 import net.minecraft.util.Identifier;
 import thunder.hack.utility.render.animation.AnimationUtility;

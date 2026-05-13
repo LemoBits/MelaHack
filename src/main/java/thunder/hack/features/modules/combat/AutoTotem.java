@@ -16,6 +16,7 @@ import net.minecraft.item.*;
 import net.minecraft.network.packet.c2s.play.*;
 import net.minecraft.network.packet.s2c.play.BlockUpdateS2CPacket;
 import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
+import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
@@ -96,7 +97,7 @@ public final class AutoTotem extends Module {
             BlockPos pos = blockHitResult.getBlockPos();
             if (rcGap.not(RCGap.Off)) {
                 ClientPlayerEntity clientPlayer = mc.player;
-                if (clientPlayer != null && clientPlayer.getMainHandStack().getItem() instanceof SwordItem && mc.options.useKey.isPressed() && !clientPlayer.isUsingItem() && !pomoyka.getValue()) {
+                if (clientPlayer != null && clientPlayer.getMainHandStack().isIn(ItemTags.SWORDS) && mc.options.useKey.isPressed() && !clientPlayer.isUsingItem() && !pomoyka.getValue()) {
                     assert mc.world != null;
                     if (!(mc.world.getBlockState(pos).getBlock() instanceof DoorBlock ||
                             mc.world.getBlockState(pos).getBlock() instanceof BedBlock ||
@@ -173,7 +174,7 @@ public final class AutoTotem extends Module {
             if (stopMotion.getValue()) mc.player.setVelocity(0, mc.player.getVelocity().getY(), 0);
 
             int nearestSlot = findNearestCurrentItem();
-            int prevCurrentItem = mc.player.getInventory().selectedSlot;
+            int prevCurrentItem = mc.player.getInventory().getSelectedSlot();
             if (slot >= 9) {
                 switch (mode.getValue()) {
                     case Default -> {
@@ -200,7 +201,7 @@ public final class AutoTotem extends Module {
                         debug(slot + " " + nearestSlot);
 
                         sendPacket(new UpdateSelectedSlotC2SPacket(nearestSlot));
-                        mc.player.getInventory().selectedSlot = nearestSlot;
+                        mc.player.getInventory().setSelectedSlot(nearestSlot);
 
                         ItemStack itemstack = mc.player.getOffHandStack();
                         mc.player.setStackInHand(Hand.OFF_HAND, mc.player.getMainHandStack());
@@ -208,7 +209,7 @@ public final class AutoTotem extends Module {
                         sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.SWAP_ITEM_WITH_OFFHAND, BlockPos.ORIGIN, Direction.DOWN));
 
                         sendPacket(new UpdateSelectedSlotC2SPacket(prevCurrentItem));
-                        mc.player.getInventory().selectedSlot = prevCurrentItem;
+                        mc.player.getInventory().setSelectedSlot(prevCurrentItem);
 
                         mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, slot, nearestSlot, SlotActionType.SWAP, mc.player);
 
@@ -220,8 +221,8 @@ public final class AutoTotem extends Module {
                         debug(slot + " pick");
                         mc.interactionManager.clickCreativeStack(mc.player.getInventory().getStack(slot), slot);
                         sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.SWAP_ITEM_WITH_OFFHAND, BlockPos.ORIGIN, Direction.DOWN));
-                        int prevSlot = mc.player.getInventory().selectedSlot;
-                        Managers.ASYNC.run(() -> mc.player.getInventory().selectedSlot = prevSlot, 300);
+                        int prevSlot = mc.player.getInventory().getSelectedSlot();
+                        Managers.ASYNC.run(() -> mc.player.getInventory().setSelectedSlot(prevSlot, 300));
                     }
                     case NewVersion -> {
                         debug(slot + " swap");
@@ -231,11 +232,11 @@ public final class AutoTotem extends Module {
                 }
             } else {
                 sendPacket(new UpdateSelectedSlotC2SPacket(slot));
-                mc.player.getInventory().selectedSlot = slot;
+                mc.player.getInventory().setSelectedSlot(slot);
                 debug(slot + " select");
                 sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.SWAP_ITEM_WITH_OFFHAND, BlockPos.ORIGIN, Direction.DOWN));
                 sendPacket(new UpdateSelectedSlotC2SPacket(prevCurrentItem));
-                mc.player.getInventory().selectedSlot = prevCurrentItem;
+                mc.player.getInventory().setSelectedSlot(prevCurrentItem);
                 if (resetAttackCooldown.getValue())
                     mc.player.resetLastAttackedTicks();
             }
@@ -244,7 +245,7 @@ public final class AutoTotem extends Module {
     }
 
     public static int findNearestCurrentItem() {
-        int i = mc.player.getInventory().selectedSlot;
+        int i = mc.player.getInventory().getSelectedSlot();
         if (i == 8) return 7;
         if (i == 0) return 1;
         return i - 1;
@@ -346,7 +347,7 @@ public final class AutoTotem extends Module {
         if (getTriggerHealth() <= healthF.getValue() && (InventoryUtility.findItemInInventory(Items.TOTEM_OF_UNDYING).found() || offHandItem == Items.TOTEM_OF_UNDYING))
             item = Items.TOTEM_OF_UNDYING;
 
-        if (!rcGap.is(RCGap.Off) && (mc.player.getMainHandStack().getItem() instanceof SwordItem) && mc.options.useKey.isPressed() && !(offHandItem instanceof ShieldItem)) {
+        if (!rcGap.is(RCGap.Off) && mc.player.getMainHandStack().isIn(ItemTags.SWORDS) && mc.options.useKey.isPressed() && !(offHandItem instanceof ShieldItem)) {
             if (rcGap.is(RCGap.Always) || (rcGap.is(RCGap.OnlySafe) && getTriggerHealth() > healthF.getValue())) {
                 if (crapple.found() || offHandItem == Items.GOLDEN_APPLE)
                     item = Items.GOLDEN_APPLE;

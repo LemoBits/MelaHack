@@ -48,14 +48,14 @@ public class Spider extends Module {
             mc.player.setPitch(82);
             int slot = getAtHotBar();
             if (slot != -1) {
-                int originalSlot = mc.player.getInventory().selectedSlot;
-                mc.player.getInventory().selectedSlot = slot;
+                int originalSlot = mc.player.getInventory().getSelectedSlot();
+                mc.player.getInventory().setSelectedSlot(slot);
                 sendPacket(new UpdateSelectedSlotC2SPacket(slot));
 
                 mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
                 mc.player.swingHand(Hand.MAIN_HAND);
 
-                mc.player.getInventory().selectedSlot = originalSlot;
+                mc.player.getInventory().setSelectedSlot(originalSlot);
                 sendPacket(new UpdateSelectedSlotC2SPacket(originalSlot));
             }
 
@@ -67,7 +67,7 @@ public class Spider extends Module {
             mc.player.setVelocity(mc.player.getVelocity().getX(), 0.21, mc.player.getVelocity().getZ());
         } else if (mode.getValue() == Mode.Matrix) {
             mc.player.setOnGround(mc.player.age % delay.getValue() == 0);
-            mc.player.prevY -= 2.0E-232;
+            mc.player.lastY -= 2.0E-232;
             if (mc.player.isOnGround())
                 mc.player.setVelocity(mc.player.getVelocity().getX(), 0.42, mc.player.getVelocity().getZ());
         }
@@ -102,7 +102,7 @@ public class Spider extends Module {
             }
             mc.player.setOnGround(true);
             mc.player.jump();
-            sendPacket(new UpdateSelectedSlotC2SPacket(mc.player.getInventory().selectedSlot));
+            sendPacket(new UpdateSelectedSlotC2SPacket(mc.player.getInventory().getSelectedSlot()));
         }
     }
 

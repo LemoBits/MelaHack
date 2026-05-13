@@ -1,6 +1,6 @@
 package thunder.hack.injection;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import thunder.hack.utility.render.compat.RenderSystem;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.RenderTickCounter;
 import thunder.hack.core.Managers;
@@ -10,8 +10,7 @@ import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.PickaxeItem;
-import net.minecraft.item.SwordItem;
+import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.resource.ResourceFactory;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
@@ -121,8 +120,8 @@ public abstract class MixinGameRenderer {
 
     @Inject(method = "findCrosshairTarget", at = @At("HEAD"), cancellable = true)
     private void findCrosshairTargetHook(Entity camera, double blockInteractionRange, double entityInteractionRange, float tickDelta, CallbackInfoReturnable<HitResult> cir) {
-        if (ModuleManager.noEntityTrace.isEnabled() && (mc.player.getMainHandStack().getItem() instanceof PickaxeItem || !NoEntityTrace.ponly.getValue())) {
-            if (mc.player.getMainHandStack().getItem() instanceof SwordItem && NoEntityTrace.noSword.getValue()) return;
+        if (ModuleManager.noEntityTrace.isEnabled() && (mc.player.getMainHandStack().isIn(ItemTags.PICKAXES) || !NoEntityTrace.ponly.getValue())) {
+            if (mc.player.getMainHandStack().isIn(ItemTags.SWORDS) && NoEntityTrace.noSword.getValue()) return;
             double d = Math.max(blockInteractionRange, entityInteractionRange);
             Vec3d vec3d = camera.getCameraPosVec(tickDelta);
             HitResult hitResult = camera.raycast(d, tickDelta, false);

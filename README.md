@@ -27,14 +27,14 @@ This fork is mainly focused on anarchy and hvh features. Won't update bypasses o
 
 ## Information
 
-- Minecraft version: ```Fabric``` 1.21.4
+- Minecraft version: ```Fabric``` 1.21.5
 - Default ClickGui keybind - **```P```**
 - Default prefix - **```@```**
 - Middle click the module to bind it.
 
 ## Requires these mods:
 
-- [FabricApi 1.21.4](https://www.curseforge.com/minecraft/mc-mods/fabric-api/files)
+- [FabricApi 1.21.5](https://www.curseforge.com/minecraft/mc-mods/fabric-api/files)
 - [Java 21+ (use jdk)](https://adoptium.net/temurin/releases/)
 
 ## Recommended to read:

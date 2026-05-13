@@ -1,6 +1,8 @@
 package thunder.hack.features.modules.movement;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.VertexFormat;
+
+import thunder.hack.utility.render.compat.RenderSystem;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.FluidBlock;
@@ -494,7 +496,7 @@ public class ElytraPlus extends Module {
         if (mc.player.getInventory().getStack(38).getItem() != Items.ELYTRA || !mc.player.isGliding() || mc.player.isTouchingWater() || mc.player.isInLava() || !mc.player.isGliding())
             return;
 
-        float moveForward = mc.player.input.movementForward;
+        float moveForward = mc.player.input.getMovementInput().y;
 
         if (cruiseControl.getValue()) {
             if (mc.options.jumpKey.isPressed()) height++;
@@ -719,14 +721,14 @@ public class ElytraPlus extends Module {
 
         boolean inOffhand = mc.player.getOffHandStack().getItem() == Items.FIREWORK_ROCKET;
 
-        int prevSlot = mc.player.getInventory().selectedSlot;
+        int prevSlot = mc.player.getInventory().getSelectedSlot();
 
         if (!inOffhand && prevSlot != slot)
             sendPacket(new UpdateSelectedSlotC2SPacket(slot));
 
         sendSequencedPacket(id -> new PlayerInteractItemC2SPacket(inOffhand ? Hand.OFF_HAND : Hand.MAIN_HAND, id, mc.player.getYaw(), mc.player.getPitch()));
 
-        if (!inOffhand && prevSlot != mc.player.getInventory().selectedSlot)
+        if (!inOffhand && prevSlot != mc.player.getInventory().getSelectedSlot())
             sendPacket(new UpdateSelectedSlotC2SPacket(prevSlot));
 
         flying = true;
@@ -868,10 +870,10 @@ public class ElytraPlus extends Module {
             if (!MovementUtility.isMoving())
                 acceleration = 0;
 
-            if (mc.player.input.movementSideways > 0) {
-                mc.player.input.movementSideways = 1;
-            } else if (mc.player.input.movementSideways < 0) {
-                mc.player.input.movementSideways = -1;
+            if (mc.player.input.getMovementInput().x > 0) {
+                mc.player.input.getMovementInput().x = 1;
+            } else if (mc.player.input.getMovementInput().x < 0) {
+                mc.player.input.getMovementInput().x = -1;
             }
 
             MovementUtility.modifyEventSpeed(e, xzSpeed.getValue() * Math.min((acceleration += 9) / 100.0f, 1.0f));

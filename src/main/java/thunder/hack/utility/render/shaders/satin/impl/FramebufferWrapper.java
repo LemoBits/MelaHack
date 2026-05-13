@@ -46,9 +46,6 @@ public final class FramebufferWrapper implements ManagedFramebuffer {
 
     @Override
     public void beginWrite(boolean updateViewport) {
-        if (this.wrapped != null) {
-            this.wrapped.beginWrite(updateViewport);
-        }
     }
 
     @Override
@@ -60,21 +57,15 @@ public final class FramebufferWrapper implements ManagedFramebuffer {
     @Override
     public void draw(int width, int height, boolean disableBlend) {
         if (this.wrapped != null) {
-            this.wrapped.draw(width, height);
+            this.wrapped.blitToScreen();
         }
     }
 
     @Override
     public void clear() {
-        if (this.wrapped != null) {
-            this.wrapped.clear();
-        }
     }
 
     @Override
     public void clear(boolean swallowErrors) {
-        if (this.wrapped != null) {
-            this.wrapped.clear();
-        }
     }
 }

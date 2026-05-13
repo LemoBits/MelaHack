@@ -135,7 +135,7 @@ public class Speed extends Module {
             if (mc.world.isAir(pos) || !result.found() || !mc.options.jumpKey.isPressed())
                 return;
 
-            prevSlot = mc.player.getInventory().selectedSlot;
+            prevSlot = mc.player.getInventory().getSelectedSlot();
             result.switchTo();
             sendPacket(new PlayerMoveC2SPacket.Full(mc.player.getX(), mc.player.getY(), mc.player.getZ(), mc.player.getYaw(), 90, mc.player.isOnGround(), mc.player.horizontalCollision));
 
@@ -153,7 +153,7 @@ public class Speed extends Module {
     @EventHandler
     public void onPostTick(EventPostTick e) {
         if ((mode.is(Mode.GrimIce) || mode.is(Mode.GrimCombo)) && prevSlot != -1) {
-            mc.player.getInventory().selectedSlot = prevSlot;
+            mc.player.getInventory().setSelectedSlot(prevSlot);
             ((IInteractionManager) mc.interactionManager).syncSlot();
             prevSlot = -1;
         }
@@ -183,7 +183,7 @@ public class Speed extends Module {
                         mc.interactionManager.clickSlot(0, 6, 1, SlotActionType.PICKUP, mc.player);
                     }
                     mc.player.networkHandler.sendPacket(new ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.START_FALL_FLYING));
-                    int prevSlot = mc.player.getInventory().selectedSlot;
+                    int prevSlot = mc.player.getInventory().getSelectedSlot();
                     if (prevSlot != fireSlot && !inOffHand)
                         sendPacket(new UpdateSelectedSlotC2SPacket(fireSlot));
                     mc.interactionManager.interactItem(mc.player, inOffHand ? Hand.OFF_HAND : Hand.MAIN_HAND);
@@ -252,7 +252,7 @@ public class Speed extends Module {
 
         if (MovementUtility.isMoving()) {
             ThunderHack.TICK_TIMER = useTimer.getValue() ? 1.088f : 1f;
-            float currentSpeed = mode.getValue() == Mode.NCP && mc.player.input.movementForward <= 0 && prevForward > 0 ? Managers.PLAYER.currentPlayerSpeed * 0.66f : Managers.PLAYER.currentPlayerSpeed;
+            float currentSpeed = mode.getValue() == Mode.NCP && mc.player.input.getMovementInput().y <= 0 && prevForward > 0 ? Managers.PLAYER.currentPlayerSpeed * 0.66f : Managers.PLAYER.currentPlayerSpeed;
             boolean canJump = !mc.player.horizontalCollision || ModuleManager.step.isDisabled();
 
             if (stage == 1 && mc.player.isOnGround() && canJump) {
@@ -271,8 +271,8 @@ public class Speed extends Module {
 
             baseSpeed = Math.max(baseSpeed, MovementUtility.getBaseMoveSpeed());
 
-            double ncpSpeed = mode.getValue() == Mode.StrictStrafe || mc.player.input.movementForward < 1 ? 0.465 : 0.576;
-            double ncpBypassSpeed = mode.getValue() == Mode.StrictStrafe || mc.player.input.movementForward < 1 ? 0.44 : 0.57;
+            double ncpSpeed = mode.getValue() == Mode.StrictStrafe || mc.player.input.getMovementInput().y < 1 ? 0.465 : 0.576;
+            double ncpBypassSpeed = mode.getValue() == Mode.StrictStrafe || mc.player.input.getMovementInput().y < 1 ? 0.44 : 0.57;
 
             if (mc.player.hasStatusEffect(StatusEffects.SPEED)) {
                 double amplifier = mc.player.getStatusEffect(StatusEffects.SPEED).getAmplifier();
@@ -292,7 +292,7 @@ public class Speed extends Module {
                 ticks = 0;
 
             MovementUtility.modifyEventSpeed(event, baseSpeed);
-            prevForward = mc.player.input.movementForward;
+            prevForward = mc.player.input.getMovementInput().y;
         } else {
             ThunderHack.TICK_TIMER = 1f;
             event.setX(0);

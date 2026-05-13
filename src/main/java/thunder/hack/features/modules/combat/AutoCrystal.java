@@ -16,8 +16,8 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.*;
 import net.minecraft.network.packet.c2s.play.*;
 import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
-import net.minecraft.network.packet.s2c.play.ExperienceOrbSpawnS2CPacket;
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
+import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
@@ -344,9 +344,6 @@ public class AutoCrystal extends Module {
     public void onPacketReceive(PacketEvent.Receive e) {
         if (mc.player == null || mc.world == null) return;
 
-        if (e.getPacket() instanceof ExperienceOrbSpawnS2CPacket spawn)
-            processSpawnPacket(spawn.getEntityId());
-
         if (e.getPacket() instanceof EntitySpawnS2CPacket spawn)
             processSpawnPacket(spawn.getEntityId());
 
@@ -586,7 +583,7 @@ public class AutoCrystal extends Module {
 
         int prevSlot = -1;
         SearchInvResult antiWeaknessResult = InventoryUtility.getAntiWeaknessItem();
-        SearchInvResult antiWeaknessResultInv = InventoryUtility.findInInventory(itemStack -> itemStack.getItem() instanceof SwordItem || itemStack.getItem() instanceof PickaxeItem || itemStack.getItem() instanceof AxeItem || itemStack.getItem() instanceof ShovelItem);
+        SearchInvResult antiWeaknessResultInv = InventoryUtility.findInInventory(itemStack -> itemStack.isIn(ItemTags.SWORDS) || itemStack.isIn(ItemTags.PICKAXES) || itemStack.getItem() instanceof AxeItem || itemStack.getItem() instanceof ShovelItem);
 
         if (antiWeakness.getValue() != Switch.NONE)
             if (weaknessEffect != null && (strengthEffect == null || strengthEffect.getAmplifier() < weaknessEffect.getAmplifier()))
@@ -616,11 +613,11 @@ public class AutoCrystal extends Module {
 
         if (prevSlot != -1) {
             if (antiWeakness.getValue() == Switch.SILENT) {
-                mc.player.getInventory().selectedSlot = prevSlot;
+                mc.player.getInventory().setSelectedSlot(prevSlot);
                 sendPacket(new UpdateSelectedSlotC2SPacket(prevSlot));
             }
             if (antiWeakness.getValue() == Switch.INVENTORY) {
-                mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, prevSlot, mc.player.getInventory().selectedSlot, SlotActionType.SWAP, mc.player);
+                mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, prevSlot, mc.player.getInventory().getSelectedSlot(), SlotActionType.SWAP, mc.player);
                 sendPacket(new CloseHandledScreenC2SPacket(mc.player.currentScreenHandler.syncId));
             }
         }
@@ -656,13 +653,13 @@ public class AutoCrystal extends Module {
     private int switchTo(SearchInvResult result, SearchInvResult resultInv, @NotNull Setting<Switch> switchMode) {
         if (mc.player == null || mc.world == null || mc.interactionManager == null) return -1;
 
-        int prevSlot = mc.player.getInventory().selectedSlot;
+        int prevSlot = mc.player.getInventory().getSelectedSlot();
 
         switch (switchMode.getValue()) {
             case INVENTORY -> {
                 if (resultInv.found()) {
                     prevSlot = resultInv.slot();
-                    mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, prevSlot, mc.player.getInventory().selectedSlot, SlotActionType.SWAP, mc.player);
+                    mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, prevSlot, mc.player.getInventory().getSelectedSlot(), SlotActionType.SWAP, mc.player);
                     sendPacket(new CloseHandledScreenC2SPacket(mc.player.currentScreenHandler.syncId));
                 }
             }
@@ -732,12 +729,12 @@ public class AutoCrystal extends Module {
         if (mc.player == null || mc.world == null || mc.interactionManager == null) return;
 
         if (autoSwitch.getValue() == Switch.SILENT && slot != -1) {
-            mc.player.getInventory().selectedSlot = slot;
+            mc.player.getInventory().setSelectedSlot(slot);
             sendPacket(new UpdateSelectedSlotC2SPacket(slot));
         }
 
         if (autoSwitch.getValue() == Switch.INVENTORY && slot != -1) {
-            mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, slot, mc.player.getInventory().selectedSlot, SlotActionType.SWAP, mc.player);
+            mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, slot, mc.player.getInventory().getSelectedSlot(), SlotActionType.SWAP, mc.player);
             sendPacket(new CloseHandledScreenC2SPacket(mc.player.currentScreenHandler.syncId));
         }
     }
@@ -1067,7 +1064,7 @@ public class AutoCrystal extends Module {
             return true;
 
         if (armorBreaker.getValue().isEnabled())
-            for (ItemStack armor : target.getArmorItems())
+            for (ItemStack armor : thunder.hack.utility.player.ArmorUtility.getArmorItems(target))
                 if (armor != null && !armor.getItem().equals(Items.AIR) && ((armor.getMaxDamage() - armor.getDamage()) / (float) armor.getMaxDamage()) * 100 < armorScale.getValue())
                     return true;
 

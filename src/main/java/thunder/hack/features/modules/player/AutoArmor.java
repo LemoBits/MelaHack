@@ -7,7 +7,6 @@ import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.item.ArmorItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
@@ -106,7 +105,7 @@ public class AutoArmor extends Module {
     }
 
     private int getProtection(ItemStack is) {
-        if (is.getItem() instanceof ArmorItem || is.isOf(Items.ELYTRA)) {
+        if (mc.player.getPreferredEquipmentSlot(is).isArmorSlot() || is.isOf(Items.ELYTRA)) {
             int prot = 0;
 
             EquipmentSlot slot = mc.player.getPreferredEquipmentSlot(is);
@@ -162,7 +161,7 @@ public class AutoArmor extends Module {
                     prot = -999;
             }
 
-            if (is.getItem() instanceof ArmorItem) {
+            if (slot.isArmorSlot()) {
                 final double[] armorValues = new double[2];
                 is.applyAttributeModifiers(slot, (attribute, modifier) -> {
                     if (attribute.matches(EntityAttributes.ARMOR)) {

@@ -99,7 +99,7 @@ public class MiddleClick extends Module {
     }
 
     private static boolean needXp() {
-        for (ItemStack stack : mc.player.getArmorItems())
+        for (ItemStack stack : thunder.hack.utility.player.ArmorUtility.getArmorItems(mc.player))
             if (PlayerUtility.calculatePercentage(stack) < ModuleManager.middleClick.durability.getValue())
                 return true;
 
@@ -174,7 +174,7 @@ public class MiddleClick extends Module {
             if (timer.every(250)) {
                 if (getHpSlot() != -1) {
                     int hpSlot = getHpSlot();
-                    int originalSlot = mc.player.getInventory().selectedSlot;
+                    int originalSlot = mc.player.getInventory().getSelectedSlot();
                     if (hpSlot != -1) {
                         InventoryUtility.switchTo(hpSlot);
                         InteractionUtility.sendSequencedPacket(id -> new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, id, mc.player.getYaw(), mc.player.getPitch()));
@@ -183,10 +183,10 @@ public class MiddleClick extends Module {
                 } else {
                     int hpSlot = findHpInInventory();
                     if (hpSlot != -1) {
-                        mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, hpSlot, mc.player.getInventory().selectedSlot, SlotActionType.SWAP, mc.player);
+                        mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, hpSlot, mc.player.getInventory().getSelectedSlot(), SlotActionType.SWAP, mc.player);
                         InteractionUtility.sendSequencedPacket(id -> new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, id, mc.player.getYaw(), mc.player.getPitch()));
                         mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
-                        mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, hpSlot, mc.player.getInventory().selectedSlot, SlotActionType.SWAP, mc.player);
+                        mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, hpSlot, mc.player.getInventory().getSelectedSlot(), SlotActionType.SWAP, mc.player);
                     }
                 }
             }
@@ -197,32 +197,32 @@ public class MiddleClick extends Module {
                 int epSlot1 = InventoryUtility.findItemInHotBar(Items.FIREWORK_ROCKET).slot();
                 if (ModuleManager.middleClick.silent.getValue()) {
                     if (!ModuleManager.middleClick.inventory.getValue() || (ModuleManager.middleClick.inventory.getValue() && epSlot1 != -1)) {
-                        int originalSlot = mc.player.getInventory().selectedSlot;
+                        int originalSlot = mc.player.getInventory().getSelectedSlot();
                         if (epSlot1 != -1) {
-                            mc.player.getInventory().selectedSlot = epSlot1;
+                            mc.player.getInventory().setSelectedSlot(epSlot1);
                             mc.player.networkHandler.sendPacket(new UpdateSelectedSlotC2SPacket(epSlot1));
                             InteractionUtility.sendSequencedPacket(id -> new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, id, mc.player.getYaw(), mc.player.getPitch()));
                             mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
-                            mc.player.getInventory().selectedSlot = originalSlot;
+                            mc.player.getInventory().setSelectedSlot(originalSlot);
                             mc.player.networkHandler.sendPacket(new UpdateSelectedSlotC2SPacket(originalSlot));
                         }
                     } else {
                         int epSlot = InventoryUtility.findItemInInventory(Items.FIREWORK_ROCKET).slot();
                         if (epSlot != -1) {
-                            mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, epSlot, mc.player.getInventory().selectedSlot, SlotActionType.SWAP, mc.player);
+                            mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, epSlot, mc.player.getInventory().getSelectedSlot(), SlotActionType.SWAP, mc.player);
                             InteractionUtility.sendSequencedPacket(id -> new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, id, mc.player.getYaw(), mc.player.getPitch()));
                             mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
-                            mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, epSlot, mc.player.getInventory().selectedSlot, SlotActionType.SWAP, mc.player);
+                            mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, epSlot, mc.player.getInventory().getSelectedSlot(), SlotActionType.SWAP, mc.player);
                         }
                     }
                 } else {
                     if (!ModuleManager.middleClick.inventory.getValue() || (ModuleManager.middleClick.inventory.getValue() && epSlot1 != -1)) {
                         if (epSlot1 != -1)
-                            new PearlThread(mc.player, epSlot1, mc.player.getInventory().selectedSlot, ModuleManager.middleClick.swapDelay.getValue(), false).start();
+                            new PearlThread(mc.player, epSlot1, mc.player.getInventory().getSelectedSlot(), ModuleManager.middleClick.swapDelay.getValue(), false).start();
                     } else {
                         int epSlot = InventoryUtility.findItemInInventory(Items.FIREWORK_ROCKET).slot();
                         if (epSlot != -1)
-                            new PearlThread(mc.player, epSlot, mc.player.getInventory().selectedSlot, ModuleManager.middleClick.swapDelay.getValue(), true).start();
+                            new PearlThread(mc.player, epSlot, mc.player.getInventory().getSelectedSlot(), ModuleManager.middleClick.swapDelay.getValue(), true).start();
                     }
                 }
             }
@@ -249,32 +249,32 @@ public class MiddleClick extends Module {
                 int epSlot1 = InventoryUtility.findItemInHotBar(Items.ENDER_PEARL).slot();
                 if (ModuleManager.middleClick.silent.getValue()) {
                     if (!ModuleManager.middleClick.inventory.getValue() || (ModuleManager.middleClick.inventory.getValue() && epSlot1 != -1)) {
-                        int originalSlot = mc.player.getInventory().selectedSlot;
+                        int originalSlot = mc.player.getInventory().getSelectedSlot();
                         if (epSlot1 != -1) {
-                            mc.player.getInventory().selectedSlot = epSlot1;
+                            mc.player.getInventory().setSelectedSlot(epSlot1);
                             mc.player.networkHandler.sendPacket(new UpdateSelectedSlotC2SPacket(epSlot1));
                             InteractionUtility.sendSequencedPacket(id -> new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, id, mc.player.getYaw(), mc.player.getPitch()));
                             mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
-                            mc.player.getInventory().selectedSlot = originalSlot;
+                            mc.player.getInventory().setSelectedSlot(originalSlot);
                             mc.player.networkHandler.sendPacket(new UpdateSelectedSlotC2SPacket(originalSlot));
                         }
                     } else {
                         int epSlot = InventoryUtility.findItemInInventory(Items.ENDER_PEARL).slot();
                         if (epSlot != -1) {
-                            mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, epSlot, mc.player.getInventory().selectedSlot, SlotActionType.SWAP, mc.player);
+                            mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, epSlot, mc.player.getInventory().getSelectedSlot(), SlotActionType.SWAP, mc.player);
                             InteractionUtility.sendSequencedPacket(id -> new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, id, mc.player.getYaw(), mc.player.getPitch()));
                             mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
-                            mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, epSlot, mc.player.getInventory().selectedSlot, SlotActionType.SWAP, mc.player);
+                            mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, epSlot, mc.player.getInventory().getSelectedSlot(), SlotActionType.SWAP, mc.player);
                         }
                     }
                 } else {
                     if (!ModuleManager.middleClick.inventory.getValue() || (ModuleManager.middleClick.inventory.getValue() && epSlot1 != -1)) {
                         if (epSlot1 != -1)
-                            new PearlThread(mc.player, epSlot1, mc.player.getInventory().selectedSlot, ModuleManager.middleClick.swapDelay.getValue(), false).start();
+                            new PearlThread(mc.player, epSlot1, mc.player.getInventory().getSelectedSlot(), ModuleManager.middleClick.swapDelay.getValue(), false).start();
                     } else {
                         int epSlot = InventoryUtility.findItemInInventory(Items.ENDER_PEARL).slot();
                         if (epSlot != -1)
-                            new PearlThread(mc.player, epSlot, mc.player.getInventory().selectedSlot, ModuleManager.middleClick.swapDelay.getValue(), true).start();
+                            new PearlThread(mc.player, epSlot, mc.player.getInventory().getSelectedSlot(), ModuleManager.middleClick.swapDelay.getValue(), true).start();
                     }
                 }
             }
@@ -290,7 +290,7 @@ public class MiddleClick extends Module {
                 if (mc.options.pickItemKey.isPressed()) {
                     int slot = InventoryUtility.findItemInHotBar(Items.EXPERIENCE_BOTTLE).slot();
                     if (slot != -1) {
-                        int lastSlot = mc.player.getInventory().selectedSlot;
+                        int lastSlot = mc.player.getInventory().getSelectedSlot();
                         InventoryUtility.switchTo(slot);
                         InteractionUtility.sendSequencedPacket(id -> new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, id, mc.player.getYaw(), mc.player.getPitch()));
                         if (ModuleManager.middleClick.silent.getValue())

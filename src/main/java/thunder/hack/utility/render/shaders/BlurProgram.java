@@ -1,6 +1,6 @@
 package thunder.hack.utility.render.shaders;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import thunder.hack.utility.render.compat.RenderSystem;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.gl.SimpleFramebuffer;
@@ -57,10 +57,6 @@ public class BlurProgram {
         var buffer = MinecraftClient.getInstance().getFramebuffer();
 
         if (!captureValid) {
-            input.beginWrite(false);
-            GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, buffer.fbo);
-            GL30.glBlitFramebuffer(0, 0, buffer.textureWidth, buffer.textureHeight, 0, 0, buffer.textureWidth, buffer.textureHeight, GL30.GL_COLOR_BUFFER_BIT, GL30.GL_LINEAR);
-            buffer.beginWrite(false);
             captureValid = true;
         }
 

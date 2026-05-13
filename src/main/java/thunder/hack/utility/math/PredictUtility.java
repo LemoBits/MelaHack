@@ -71,9 +71,9 @@ public class PredictUtility {
 
         copyEntity.setPosition(posVec);
         copyEntity.setHealth(original.getHealth());
-        copyEntity.prevX = original.prevX;
-        copyEntity.prevZ = original.prevZ;
-        copyEntity.prevY = original.prevY;
+        copyEntity.lastX = original.lastX;
+        copyEntity.lastZ = original.lastZ;
+        copyEntity.lastY = original.lastY;
         copyEntity.getInventory().clone(original.getInventory());
         for (StatusEffectInstance se : original.getStatusEffects()) {
             copyEntity.addStatusEffect(se);

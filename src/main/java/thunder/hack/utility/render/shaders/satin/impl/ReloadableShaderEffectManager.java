@@ -22,7 +22,7 @@ import thunder.hack.utility.render.shaders.satin.api.managed.ManagedCoreShader;
 import thunder.hack.utility.render.shaders.satin.api.managed.ManagedShaderEffect;
 import thunder.hack.utility.render.shaders.satin.api.managed.ShaderEffectManager;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.VertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.render.VertexFormats;
 import net.minecraft.resource.ResourceFactory;
 import net.minecraft.util.Identifier;

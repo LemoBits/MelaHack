@@ -10,7 +10,7 @@ import static thunder.hack.features.modules.Module.mc;
 
 public final class MovementUtility {
     public static boolean isMoving() {
-        return mc.player != null && mc.world != null && mc.player.input != null && (mc.player.input.movementForward != 0.0 || mc.player.input.movementSideways != 0.0);
+        return mc.player != null && mc.world != null && mc.player.input != null && (mc.player.input.getMovementInput().y != 0.0 || mc.player.input.getMovementInput().x != 0.0);
     }
 
     public static double getSpeed() {
@@ -18,8 +18,8 @@ public final class MovementUtility {
     }
 
     public static double[] forward(final double d) {
-        float f = mc.player.input.movementForward;
-        float f2 = mc.player.input.movementSideways;
+        float f = mc.player.input.getMovementInput().y;
+        float f2 = mc.player.input.getMovementInput().x;
         float f3 = mc.player.getYaw();
         if (f != 0.0f) {
             if (f2 > 0.0f) {
@@ -42,8 +42,8 @@ public final class MovementUtility {
     }
 
     public static void setMotion(double speed) {
-        double forward = mc.player.input.movementForward;
-        double strafe = mc.player.input.movementSideways;
+        double forward = mc.player.input.getMovementInput().y;
+        double strafe = mc.player.input.getMovementInput().x;
         float yaw = mc.player.getYaw();
         if (forward == 0 && strafe == 0) {
             mc.player.setVelocity(0, mc.player.getVelocity().y, 0);
@@ -68,8 +68,8 @@ public final class MovementUtility {
     }
 
     public static float getMoveDirection() {
-        double forward = mc.player.input.movementForward;
-        double strafe = mc.player.input.movementSideways;
+        double forward = mc.player.input.getMovementInput().y;
+        double strafe = mc.player.input.getMovementInput().x;
 
         if (strafe > 0) {
             strafe = 1;
@@ -118,8 +118,8 @@ public final class MovementUtility {
     }
 
     public static void modifyEventSpeed(EventMove event, double d) {
-        double d2 = mc.player.input.movementForward;
-        double d3 = mc.player.input.movementSideways;
+        double d2 = mc.player.input.getMovementInput().y;
+        double d3 = mc.player.input.getMovementInput().x;
         float f = mc.player.getYaw();
         if (d2 == 0.0 && d3 == 0.0) {
             event.setX(0.0);

@@ -34,16 +34,16 @@ public class AbstractCategory {
         animationY = (float) interpolate(y, animationY, 0.05);
         if (this.dragging) {
             prevTargetX = x;
-            this.x = this.prevX + mouseX;
-            this.y = this.prevY + mouseY;
+            this.x = this.lastX + mouseX;
+            this.y = this.lastY + mouseY;
         } else prevTargetX = x;
     }
 
     public void mouseClicked(int mouseX, int mouseY, int button) {
         if (this.hovered && button == 0) {
             this.dragging = true;
-            this.prevX = this.x - mouseX;
-            this.prevY = this.y - mouseY;
+            this.lastX = this.x - mouseX;
+            this.lastY = this.y - mouseY;
         }
     }
 

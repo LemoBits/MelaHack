@@ -24,7 +24,7 @@ public class ToolSaver extends Module {
         int percent = (int) ((durability / (float) tool.getMaxDamage()) * 100F);
 
         if(percent <= savePercent.getValue()) {
-            mc.player.getInventory().selectedSlot = findNearestCurrentItem();
+            mc.player.getInventory().setSelectedSlot(findNearestCurrentItem());
             sendMessage(isRu() ? "Твой инструмент почти сломался!" : "Your tool is almost broken!");
         }
     }

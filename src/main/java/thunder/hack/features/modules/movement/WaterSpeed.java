@@ -34,7 +34,7 @@ public class WaterSpeed extends Module {
     public void onMove(EventMove e) {
         if (mode.getValue() == Mode.Intave) {
             if (mc.player.isSwimming()) {
-                double[] dirSpeed = MovementUtility.forward(acceleration / (mc.player.input.movementSideways != 0 ? 2.2f : 2f));
+                double[] dirSpeed = MovementUtility.forward(acceleration / (mc.player.input.getMovementInput().x != 0 ? 2.2f : 2f));
                 e.setX(e.getX() + dirSpeed[0]);
                 e.setZ(e.getZ() + dirSpeed[1]);
                 e.cancel();
@@ -46,7 +46,7 @@ public class WaterSpeed extends Module {
 
         if (mode.getValue() == Mode.FunTimeNew) {
             if (mc.player.isSwimming()) {
-                mc.player.input.movementSideways = 0;
+                mc.player.input.getMovementInput().x = 0;
                 double[] dirSpeed = MovementUtility.forward(acceleration / 6.3447f);
                 e.setX(e.getX() + dirSpeed[0]);
                 e.setZ(e.getZ() + dirSpeed[1]);

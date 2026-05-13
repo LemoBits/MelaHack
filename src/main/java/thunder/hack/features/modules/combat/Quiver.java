@@ -32,7 +32,7 @@ public final class Quiver extends Module {
     @Override
     public void onEnable() {
         count = 0;
-        preBowSlot = mc.player.getInventory().selectedSlot;
+        preBowSlot = mc.player.getInventory().getSelectedSlot();
     }
 
     @Override

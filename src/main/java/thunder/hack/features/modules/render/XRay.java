@@ -5,7 +5,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.item.PickaxeItem;
+import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.network.packet.s2c.play.BlockUpdateS2CPacket;
 import net.minecraft.util.Hand;
@@ -173,7 +173,7 @@ public class XRay extends Module {
             return;
         }
 
-        if (mc.player.getMainHandStack().getItem() instanceof PickaxeItem) {
+        if (mc.player.getMainHandStack().isIn(ItemTags.PICKAXES)) {
             if (mc.player.age % 8 == 0) disable(isRu() ? "Убери кирку из руки!" : "Remove pickaxe from ur hand!");
             return;
         }

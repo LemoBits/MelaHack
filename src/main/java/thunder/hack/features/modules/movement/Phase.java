@@ -140,7 +140,7 @@ public class Phase extends Module {
             int best_tool = getTool(blockToBreak);
             if (best_tool == -1) return;
 
-            int prevItem = mc.player.getInventory().selectedSlot;
+            int prevItem = mc.player.getInventory().getSelectedSlot();
 
             InventoryUtility.switchTo(best_tool);
             mc.interactionManager.updateBlockBreakingProgress(blockToBreak, mc.player.getHorizontalFacing());
@@ -192,7 +192,7 @@ public class Phase extends Module {
                     return;
 
                 int epSlot = findEPSlot();
-                int prevItem = mc.player.getInventory().selectedSlot;
+                int prevItem = mc.player.getInventory().getSelectedSlot();
 
                 if (epSlot != -1) {
                     InventoryUtility.switchTo(epSlot);
@@ -211,7 +211,7 @@ public class Phase extends Module {
     private int findEPSlot() {
         int epSlot = -1;
         if (mc.player.getMainHandStack().getItem() == Items.ENDER_PEARL) {
-            epSlot = mc.player.getInventory().selectedSlot;
+            epSlot = mc.player.getInventory().getSelectedSlot();
         }
         if (epSlot == -1) {
             for (int l = 0; l < 9; ++l) {

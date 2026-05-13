@@ -1,7 +1,7 @@
 package thunder.hack.utility.render.shaders.satin.impl;
 
 import com.google.common.base.Preconditions;
-import com.mojang.blaze3d.systems.RenderSystem;
+import thunder.hack.utility.render.compat.RenderSystem;
 import com.mojang.logging.LogUtils;
 import thunder.hack.utility.render.shaders.satin.api.managed.ManagedFramebuffer;
 import thunder.hack.utility.render.shaders.satin.api.managed.ManagedShaderEffect;
@@ -78,7 +78,6 @@ public final class ResettableManagedShaderEffect extends ResettableManagedShader
                 BUF_OUT, client.getFramebuffer()
             );
             PostEffectRenderUtil.render(sg, client.getFramebuffer().textureWidth, client.getFramebuffer().textureHeight, externalTargets, ObjectAllocator.TRIVIAL);
-            MinecraftClient.getInstance().getFramebuffer().beginWrite(true);
             RenderSystem.disableBlend();
             RenderSystem.blendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             RenderSystem.enableDepthTest();

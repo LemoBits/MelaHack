@@ -76,13 +76,13 @@ public class Rotations extends Module {
             if (Float.isNaN(fixRotation) || mc.player.isRiding())
                 return;
 
-            float mF = mc.player.input.movementForward;
-            float mS = mc.player.input.movementSideways;
+            float mF = mc.player.input.getMovementInput().y;
+            float mS = mc.player.input.getMovementInput().x;
             float delta = (mc.player.getYaw() - fixRotation) * MathHelper.RADIANS_PER_DEGREE;
             float cos = MathHelper.cos(delta);
             float sin = MathHelper.sin(delta);
-            mc.player.input.movementSideways = Math.round(mS * cos - mF * sin);
-            mc.player.input.movementForward = Math.round(mF * cos + mS * sin);
+            mc.player.input.getMovementInput().x = Math.round(mS * cos - mF * sin);
+            mc.player.input.getMovementInput().y = Math.round(mF * cos + mS * sin);
         }
     }
 

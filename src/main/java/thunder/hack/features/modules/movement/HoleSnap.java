@@ -130,7 +130,7 @@ public class HoleSnap extends Module {
         if (mc.player == null || mode.getValue() != Mode.Yaw || hole == null)
             return;
 
-        mc.player.input.movementForward = 1;
+        mc.player.input.getMovementInput().y = 1;
     }
 
     private @Nullable BlockPos findHole() {

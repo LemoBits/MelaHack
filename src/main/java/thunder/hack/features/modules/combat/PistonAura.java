@@ -250,9 +250,9 @@ public final class PistonAura extends Module {
             int prev_slot = -1;
             if (!offHand) {
                 int crystal_slot = InventoryUtility.findItemInHotBar(Items.END_CRYSTAL).slot();
-                prev_slot = mc.player.getInventory().selectedSlot;
+                prev_slot = mc.player.getInventory().getSelectedSlot();
                 if (crystal_slot != -1) {
-                    mc.player.getInventory().selectedSlot = crystal_slot;
+                    mc.player.getInventory().setSelectedSlot(crystal_slot);
                     sendPacket(new UpdateSelectedSlotC2SPacket(crystal_slot));
                 }
             }
@@ -261,7 +261,7 @@ public final class PistonAura extends Module {
             sendPacket(new HandSwingC2SPacket(offHand ? Hand.OFF_HAND : Hand.MAIN_HAND));
 
             if (!offHand) {
-                mc.player.getInventory().selectedSlot = prev_slot;
+                mc.player.getInventory().setSelectedSlot(prev_slot);
                 sendPacket(new UpdateSelectedSlotC2SPacket(prev_slot));
             }
 
@@ -380,10 +380,10 @@ public final class PistonAura extends Module {
             mc.player.setYaw(angle2);
             mc.player.prevYaw = angle2;
             ((IClientPlayerEntity) mc.player).setLastYaw(angle2);
-            int prevSlot = mc.player.getInventory().selectedSlot;
+            int prevSlot = mc.player.getInventory().getSelectedSlot();
             InteractionUtility.placeBlock(pistonPos, InteractionUtility.Rotate.None, interact.getValue(), placeMode.getValue(), piston_slot, false, false);
             sendPacket(new UpdateSelectedSlotC2SPacket(prevSlot));
-            mc.player.getInventory().selectedSlot = prevSlot;
+            mc.player.getInventory().setSelectedSlot(prevSlot);
             mc.player.setYaw(prevYaw);
 
             stage = isFire ? Stage.Fire : Stage.Crystal;

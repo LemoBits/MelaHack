@@ -135,7 +135,7 @@ public abstract class PlaceModule extends Module {
                 || entity.age < crystalAge.getValue())
             return;
 
-        int preSlot = mc.player.getInventory().selectedSlot;
+        int preSlot = mc.player.getInventory().getSelectedSlot();
         if (antiWeakness.getValue() && mc.player.hasStatusEffect(StatusEffects.WEAKNESS)) {
             final SearchInvResult result = InventoryUtility.getAntiWeaknessItem();
             if (!result.found())
@@ -193,7 +193,7 @@ public abstract class PlaceModule extends Module {
         if (mainHandStack != ItemStack.EMPTY && mainHandStack.getItem() instanceof BlockItem) {
             final Block blockFromMainHandItem = ((BlockItem) mainHandStack.getItem()).getBlock();
             if (canUseBlocks.contains(blockFromMainHandItem))
-                return new SearchInvResult(mc.player.getInventory().selectedSlot, true, mainHandStack);
+                return new SearchInvResult(mc.player.getInventory().getSelectedSlot(), true, mainHandStack);
         }
 
         return InventoryUtility.findBlockInHotBar(canUseBlocks);

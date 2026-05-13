@@ -476,13 +476,13 @@ public final class AutoAnchor extends Module {
     private int switchTo(SearchInvResult result, SearchInvResult resultInv, @NotNull Setting<Switch> switchMode) {
         if (mc.player == null || mc.world == null || mc.interactionManager == null) return -1;
 
-        int prevSlot = mc.player.getInventory().selectedSlot;
+        int prevSlot = mc.player.getInventory().getSelectedSlot();
 
         switch (switchMode.getValue()) {
             case INVENTORY -> {
                 if (resultInv.found()) {
                     prevSlot = resultInv.slot();
-                    mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, prevSlot, mc.player.getInventory().selectedSlot, SlotActionType.SWAP, mc.player);
+                    mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, prevSlot, mc.player.getInventory().getSelectedSlot(), SlotActionType.SWAP, mc.player);
                     sendPacket(new CloseHandledScreenC2SPacket(mc.player.currentScreenHandler.syncId));
                 }
             }
@@ -550,7 +550,7 @@ public final class AutoAnchor extends Module {
             InventoryUtility.switchTo(slot);
 
         if (autoSwitch.getValue() == Switch.INVENTORY && slot != -1) {
-            mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, slot, mc.player.getInventory().selectedSlot, SlotActionType.SWAP, mc.player);
+            mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, slot, mc.player.getInventory().getSelectedSlot(), SlotActionType.SWAP, mc.player);
             sendPacket(new CloseHandledScreenC2SPacket(mc.player.currentScreenHandler.syncId));
         }
     }
@@ -639,7 +639,7 @@ public final class AutoAnchor extends Module {
         boolean override = target.getHealth() + target.getAbsorptionAmount() <= facePlaceHp.getValue();
 
         if (armorBreaker.getValue().isEnabled())
-            for (ItemStack armor : target.getArmorItems())
+            for (ItemStack armor : thunder.hack.utility.player.ArmorUtility.getArmorItems(target))
                 if (armor != null && !armor.getItem().equals(Items.AIR) && ((armor.getMaxDamage() - armor.getDamage()) / (float) armor.getMaxDamage()) * 100 < armorScale.getValue()) {
                     override = true;
                     break;

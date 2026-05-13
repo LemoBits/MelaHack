@@ -1,6 +1,6 @@
 package thunder.hack.features.hud.impl;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import thunder.hack.utility.render.compat.RenderSystem;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.item.ItemStack;
@@ -22,7 +22,7 @@ public class ArmorHud extends HudElement {
     public void onRender2D(DrawContext context) {
         super.onRender2D(context);
         float xItemOffset = getPosX();
-        for (ItemStack itemStack : mc.player.getInventory().armor.reversed()) {
+        for (ItemStack itemStack : thunder.hack.utility.player.ArmorUtility.getArmorItems(mc.player).reversed()) {
             if (itemStack.isEmpty()) continue;
 
             if (mode.is(Mode.V1)) {

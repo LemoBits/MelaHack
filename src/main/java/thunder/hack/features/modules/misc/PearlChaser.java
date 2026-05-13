@@ -136,8 +136,8 @@ public class PearlChaser extends Module {
             mc.options.backKey.setPressed(false);
             mc.options.leftKey.setPressed(false);
             mc.options.rightKey.setPressed(false);
-            mc.player.input.movementForward = 0;
-            mc.player.input.movementSideways = 0;
+            mc.player.input.getMovementInput().y = 0;
+            mc.player.input.getMovementInput().x = 0;
             return;
         }
 
@@ -153,13 +153,13 @@ public class PearlChaser extends Module {
 
         postSyncAction = () -> {
             int epSlot = findEPSlot();
-            int originalSlot = mc.player.getInventory().selectedSlot;
+            int originalSlot = mc.player.getInventory().getSelectedSlot();
             if (epSlot != -1) {
-                mc.player.getInventory().selectedSlot = epSlot;
+                mc.player.getInventory().setSelectedSlot(epSlot);
                 sendPacket(new UpdateSelectedSlotC2SPacket(epSlot));
                 sendSequencedPacket(id -> new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, id, yaw, pitch));
                 sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
-                mc.player.getInventory().selectedSlot = originalSlot;
+                mc.player.getInventory().setSelectedSlot(originalSlot);
                 sendPacket(new UpdateSelectedSlotC2SPacket(originalSlot));
             }
         };
@@ -179,7 +179,7 @@ public class PearlChaser extends Module {
     private int findEPSlot() {
         int epSlot = -1;
         if (mc.player.getMainHandStack().getItem() == Items.ENDER_PEARL)
-            epSlot = mc.player.getInventory().selectedSlot;
+            epSlot = mc.player.getInventory().getSelectedSlot();
         if (epSlot == -1)
             for (int l = 0; l < 9; ++l)
                 if (mc.player.getInventory().getStack(l).getItem() == Items.ENDER_PEARL) {

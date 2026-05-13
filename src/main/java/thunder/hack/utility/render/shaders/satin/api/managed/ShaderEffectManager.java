@@ -17,7 +17,7 @@
  */
 package thunder.hack.utility.render.shaders.satin.api.managed;
 
-import net.minecraft.client.render.VertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.util.Identifier;
 import thunder.hack.utility.render.shaders.satin.impl.ReloadableShaderEffectManager;
 

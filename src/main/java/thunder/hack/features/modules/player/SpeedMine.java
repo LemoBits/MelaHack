@@ -407,7 +407,7 @@ public final class SpeedMine extends Module {
             }
 
             int pickSlot = getTool(pos);
-            int prevSlot = mc.player.getInventory().selectedSlot;
+            int prevSlot = mc.player.getInventory().getSelectedSlot();
 
             if (pickSlot == -1)
                 return false;
@@ -462,9 +462,9 @@ public final class SpeedMine extends Module {
         private void switchTo(int slot, int from) {
             if (switchMode.getValue() == SwitchMode.Alternative || slot >= 9) {
                 if (from == -1)
-                    clickSlot(slot < 9 ? slot + 36 : slot, mc.player.getInventory().selectedSlot, SlotActionType.SWAP);
+                    clickSlot(slot < 9 ? slot + 36 : slot, mc.player.getInventory().getSelectedSlot(), SlotActionType.SWAP);
                 else
-                    clickSlot(from < 9 ? from + 36 : from, mc.player.getInventory().selectedSlot, SlotActionType.SWAP);
+                    clickSlot(from < 9 ? from + 36 : from, mc.player.getInventory().getSelectedSlot(), SlotActionType.SWAP);
                 closeScreen();
             } else if (switchMode.is(SwitchMode.Silent)) InventoryUtility.switchToSilent(slot);
             else InventoryUtility.switchTo(slot);

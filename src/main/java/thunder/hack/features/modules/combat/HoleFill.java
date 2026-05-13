@@ -105,7 +105,7 @@ public final class HoleFill extends Module {
     @EventHandler
     public void onTick(EventTick event) {
         if (fullNullCheck()) return;
-        if (jumpDisable.getValue() && mc.player.prevY < mc.player.getY())
+        if (jumpDisable.getValue() && mc.player.lastY < mc.player.getY())
             disable(isRu() ? "Вы прыгнули! Выключаю..." : "You jumped! Disabling...");
 
         if (tickCounter < actionInterval.getValue()) {
@@ -310,7 +310,7 @@ public final class HoleFill extends Module {
         ItemStack stack = mc.player.getMainHandStack();
 
         if (!stack.isEmpty() && isValidItem(stack.getItem())) {
-            return mc.player.getInventory().selectedSlot;
+            return mc.player.getInventory().getSelectedSlot();
         } else {
             for (int i = 0; i < 9; ++i) {
                 stack = mc.player.getInventory().getStack(i);

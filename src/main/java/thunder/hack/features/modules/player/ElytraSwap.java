@@ -80,7 +80,7 @@ public class ElytraSwap extends Module {
         if (hotbarFireWorkResult.found()) {
             hotbarFireWorkResult.switchTo();
         } else if (fireWorkResult.found()) {
-            mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, fireWorkResult.slot(), mc.player.getInventory().selectedSlot, SlotActionType.SWAP, mc.player);
+            mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, fireWorkResult.slot(), mc.player.getInventory().getSelectedSlot(), SlotActionType.SWAP, mc.player);
             sendPacket(new CloseHandledScreenC2SPacket(mc.player.currentScreenHandler.syncId));
         } else {
             sendMessage(isRu() ? "У тебя нет фейерверков!" : "You've got no fireworks!");
@@ -93,7 +93,7 @@ public class ElytraSwap extends Module {
         if (fireWorkMode.getValue() == FireWorkMode.Silent) {
             InventoryUtility.returnSlot();
             if (!hotbarFireWorkResult.found()) {
-                mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, fireWorkResult.slot(), mc.player.getInventory().selectedSlot, SlotActionType.SWAP, mc.player);
+                mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, fireWorkResult.slot(), mc.player.getInventory().getSelectedSlot(), SlotActionType.SWAP, mc.player);
                 sendPacket(new CloseHandledScreenC2SPacket(mc.player.currentScreenHandler.syncId));
             }
         }

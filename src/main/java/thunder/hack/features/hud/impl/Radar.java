@@ -70,8 +70,8 @@ public class Radar extends HudElement {
                 if (entityPlayer == mc.player)
                     continue;
 
-                float posX = (float) (entityPlayer.prevX + (entityPlayer.prevX - entityPlayer.getX()) * Render3DEngine.getTickDelta() - mc.player.getX()) * 2;
-                float posZ = (float) (entityPlayer.prevZ + (entityPlayer.prevZ - entityPlayer.getZ()) * Render3DEngine.getTickDelta() - mc.player.getZ()) * 2;
+                float posX = (float) (entityPlayer.lastX + (entityPlayer.lastX - entityPlayer.getX()) * Render3DEngine.getTickDelta() - mc.player.getX()) * 2;
+                float posZ = (float) (entityPlayer.lastZ + (entityPlayer.lastZ - entityPlayer.getZ()) * Render3DEngine.getTickDelta() - mc.player.getZ()) * 2;
                 float cos = (float) Math.cos(mc.player.getYaw(Render3DEngine.getTickDelta()) * 0.017453292);
                 float sin = (float) Math.sin(mc.player.getYaw(Render3DEngine.getTickDelta()) * 0.017453292);
                 float rotY = -(posZ * cos - posX * sin);

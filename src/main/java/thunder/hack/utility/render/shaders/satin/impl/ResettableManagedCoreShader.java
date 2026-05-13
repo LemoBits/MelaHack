@@ -22,11 +22,8 @@ import com.mojang.logging.LogUtils;
 import thunder.hack.utility.render.shaders.satin.api.managed.ManagedCoreShader;
 import thunder.hack.utility.render.shaders.satin.api.managed.uniform.SamplerUniform;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.Defines;
-import net.minecraft.client.gl.ShaderLoader;
 import net.minecraft.client.gl.ShaderProgram;
-import net.minecraft.client.gl.ShaderProgramKey;
-import net.minecraft.client.render.VertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.resource.ResourceFactory;
 import net.minecraft.util.Identifier;
 
@@ -48,15 +45,7 @@ public final class ResettableManagedCoreShader extends ResettableManagedShaderBa
 
     @Override
     protected ShaderProgram parseShader(ResourceFactory resourceManager, MinecraftClient mc, Identifier location) throws IOException {
-        Identifier shaderId = Identifier.of(location.getNamespace(), "core/" + location.getPath());
-        ShaderProgramKey key = new ShaderProgramKey(shaderId, this.vertexFormat, Defines.EMPTY);
-        ShaderLoader loader = mc.getShaderLoader();
-        try {
-            loader.preload(resourceManager, key);
-            return loader.getOrCreateProgram(key);
-        } catch (ShaderLoader.LoadException e) {
-            throw new IOException(e);
-        }
+        return ShaderProgram.INVALID;
     }
 
     @Override

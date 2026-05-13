@@ -79,8 +79,8 @@ public final class AimBot extends Module {
             if (Float.isNaN(pitch)) return;
 
             PlayerEntity predictedEntity = PredictUtility.predictPlayer(nearestTarget, predictTicks.getValue());
-            double iX = predictedEntity.getX() - predictedEntity.prevX;
-            double iZ = predictedEntity.getZ() - predictedEntity.prevZ;
+            double iX = predictedEntity.getX() - predictedEntity.lastX;
+            double iZ = predictedEntity.getZ() - predictedEntity.lastZ;
             double distance = mc.player.distanceTo(predictedEntity);
             distance -= distance % 2.0;
             iX = distance / 2.0 * iX * (mc.player.isSprinting() ? 1.3 : 1.1);
@@ -284,7 +284,7 @@ public final class AimBot extends Module {
     }
 
     private Vec3d getResolvedPos(@NotNull Entity pl) {
-        return new Vec3d(pl.getX() + (pl.getX() - pl.prevX) * predict.getValue(), pl.getY(), pl.getZ() + (pl.getZ() - pl.prevZ) * predict.getValue());
+        return new Vec3d(pl.getX() + (pl.getX() - pl.lastX) * predict.getValue(), pl.getY(), pl.getZ() + (pl.getZ() - pl.lastZ) * predict.getValue());
     }
 
     private enum Bone {

@@ -1,8 +1,10 @@
 package thunder.hack.features.modules.render;
 
+import com.mojang.blaze3d.vertex.VertexFormat;
+
 import com.mojang.authlib.GameProfile;
 import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
+import thunder.hack.utility.render.compat.RenderSystem;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.gl.ShaderProgramKeys;

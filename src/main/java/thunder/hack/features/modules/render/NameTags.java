@@ -2,7 +2,7 @@ package thunder.hack.features.modules.render;
 
 import com.google.common.collect.Ordering;
 import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
+import thunder.hack.utility.render.compat.RenderSystem;
 import net.minecraft.block.ShulkerBoxBlock;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.MobSpawnerBlockEntity;
@@ -109,9 +109,9 @@ public class NameTags extends Module {
             if (ent == mc.player && (mc.options.getPerspective().isFirstPerson() || !self.getValue())) continue;
             if (getEntityPing(ent) <= 0 && ignoreBots.getValue()) continue;
 
-            double x = ent.prevX + (ent.getX() - ent.prevX) * Render3DEngine.getTickDelta();
-            double y = ent.prevY + (ent.getY() - ent.prevY) * Render3DEngine.getTickDelta();
-            double z = ent.prevZ + (ent.getZ() - ent.prevZ) * Render3DEngine.getTickDelta();
+            double x = ent.lastX + (ent.getX() - ent.lastX) * Render3DEngine.getTickDelta();
+            double y = ent.lastY + (ent.getY() - ent.lastY) * Render3DEngine.getTickDelta();
+            double z = ent.lastZ + (ent.getZ() - ent.lastZ) * Render3DEngine.getTickDelta();
             float scale = resize.getValue() ? this.scale.getValue() / mc.player.distanceTo(ent) : this.scale.getValue();
             Vec3d vector = new Vec3d(x, y + height.getValue(), z);
 
@@ -381,9 +381,9 @@ public class NameTags extends Module {
             } else continue;
 
             String final_string = "Owned by " + ownerName;
-            double x = ent.prevX + (ent.getX() - ent.prevX) * Render3DEngine.getTickDelta();
-            double y = ent.prevY + (ent.getY() - ent.prevY) * Render3DEngine.getTickDelta();
-            double z = ent.prevZ + (ent.getZ() - ent.prevZ) * Render3DEngine.getTickDelta();
+            double x = ent.lastX + (ent.getX() - ent.lastX) * Render3DEngine.getTickDelta();
+            double y = ent.lastY + (ent.getY() - ent.lastY) * Render3DEngine.getTickDelta();
+            double z = ent.lastZ + (ent.getZ() - ent.lastZ) * Render3DEngine.getTickDelta();
             Vec3d vector = new Vec3d(x, y + 2, z);
             Vector4d position = null;
             vector = Render3DEngine.worldSpaceToScreenSpace(new Vec3d(vector.x, vector.y, vector.z));

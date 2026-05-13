@@ -1,6 +1,6 @@
 package thunder.hack.gui.font;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import thunder.hack.utility.render.compat.RenderSystem;
 import it.unimi.dsi.fastutil.chars.Char2ObjectArrayMap;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.texture.NativeImage;

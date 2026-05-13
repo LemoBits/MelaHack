@@ -67,7 +67,7 @@ public class AutoEat extends Module {
         eating = false;
         mc.options.useKey.setPressed(false);
         if (swapBack.getValue())
-            mc.player.getInventory().selectedSlot = prevSlot;
+            mc.player.getInventory().setSelectedSlot(prevSlot);
 
         if (pauseBaritone.getValue() && ThunderHack.baritone)
             BaritoneAPI.getProvider().getPrimaryBaritone().getCommandManager().execute("resume");
@@ -87,8 +87,8 @@ public class AutoEat extends Module {
                     continue;
                 if (!pufferfish.getValue() && (stack.getItem() == Items.PUFFERFISH))
                     continue;
-                prevSlot = mc.player.getInventory().selectedSlot;
-                mc.player.getInventory().selectedSlot = i;
+                prevSlot = mc.player.getInventory().getSelectedSlot();
+                mc.player.getInventory().setSelectedSlot(i);
                 sendPacket(new UpdateSelectedSlotC2SPacket(i));
                 return true;
             }

@@ -284,9 +284,9 @@ public class ServerHelper extends Module {
             sendSequencedPacket(id -> new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, id, mc.player.getYaw(), mc.player.getPitch()));
             InventoryUtility.returnSlot();
         } else if (invResult.found()) {
-            clickSlot(invResult.slot(), mc.player.getInventory().selectedSlot, SlotActionType.SWAP);
+            clickSlot(invResult.slot(), mc.player.getInventory().getSelectedSlot(), SlotActionType.SWAP);
             sendSequencedPacket(id -> new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, id, mc.player.getYaw(), mc.player.getPitch()));
-            clickSlot(invResult.slot(), mc.player.getInventory().selectedSlot, SlotActionType.SWAP);
+            clickSlot(invResult.slot(), mc.player.getInventory().getSelectedSlot(), SlotActionType.SWAP);
             sendPacket(new CloseHandledScreenC2SPacket(mc.player.currentScreenHandler.syncId));
         }
         disorientTimer.reset();

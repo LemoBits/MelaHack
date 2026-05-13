@@ -68,7 +68,7 @@ public class Step extends Module {
     @EventHandler
     public void onStep(EventSync event) {
         if (mode.getValue() == Mode.NCP) {
-            double stepHeight = mc.player.getY() - mc.player.prevY;
+            double stepHeight = mc.player.getY() - mc.player.lastY;
 
             if (stepHeight <= 0.75 || stepHeight > height.getValue() || (strict.getValue() && stepHeight > 1)) return;
 
@@ -79,9 +79,9 @@ public class Step extends Module {
                     timer = true;
                 }
                 for (double offset : offsets)
-                    sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(mc.player.prevX, mc.player.prevY + offset, mc.player.prevZ, false, mc.player.horizontalCollision));
+                    sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(mc.player.lastX, mc.player.lastY + offset, mc.player.lastZ, false, mc.player.horizontalCollision));
                 if (strict.getValue())
-                    sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(mc.player.prevX, mc.player.prevY + stepHeight, mc.player.prevZ, false, mc.player.horizontalCollision));
+                    sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(mc.player.lastX, mc.player.lastY + stepHeight, mc.player.lastZ, false, mc.player.horizontalCollision));
             }
             stepTimer.reset();
         }

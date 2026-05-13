@@ -24,6 +24,7 @@ import net.minecraft.item.*;
 import net.minecraft.network.packet.c2s.play.*;
 import net.minecraft.network.packet.s2c.play.EntityStatusS2CPacket;
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
+import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.*;
@@ -218,7 +219,7 @@ public class Aura extends Module {
         Item handItem = mc.player.getMainHandStack().getItem();
         if (onlyWeapon.getValue()) {
             if (switchMode.getValue() == Switch.None) {
-                return handItem instanceof SwordItem || handItem instanceof AxeItem || handItem instanceof TridentItem;
+                return mc.player.getMainHandStack().isIn(ItemTags.SWORDS) || handItem instanceof AxeItem || handItem instanceof TridentItem;
             } else {
                 return (InventoryUtility.getSwordHotBar().found() || InventoryUtility.getAxeHotBar().found());
             }
@@ -307,7 +308,7 @@ public class Aura extends Module {
         SearchInvResult swordResult = InventoryUtility.getSwordHotBar();
         if (swordResult.found() && switchMode.getValue() != Switch.None) {
             if (switchMode.getValue() == Switch.Silent)
-                prevSlot = mc.player.getInventory().selectedSlot;
+                prevSlot = mc.player.getInventory().getSelectedSlot();
             swordResult.switchTo();
         }
 
@@ -457,17 +458,17 @@ public class Aura extends Module {
             return false;
 
         if (axeSlot >= 9) {
-            mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, axeSlot, mc.player.getInventory().selectedSlot, SlotActionType.SWAP, mc.player);
+            mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, axeSlot, mc.player.getInventory().getSelectedSlot(), SlotActionType.SWAP, mc.player);
             sendPacket(new CloseHandledScreenC2SPacket(mc.player.currentScreenHandler.syncId));
             mc.interactionManager.attackEntity(mc.player, target);
             swingHand();
-            mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, axeSlot, mc.player.getInventory().selectedSlot, SlotActionType.SWAP, mc.player);
+            mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, axeSlot, mc.player.getInventory().getSelectedSlot(), SlotActionType.SWAP, mc.player);
             sendPacket(new CloseHandledScreenC2SPacket(mc.player.currentScreenHandler.syncId));
         } else {
             sendPacket(new UpdateSelectedSlotC2SPacket(axeSlot));
             mc.interactionManager.attackEntity(mc.player, target);
             swingHand();
-            sendPacket(new UpdateSelectedSlotC2SPacket(mc.player.getInventory().selectedSlot));
+            sendPacket(new UpdateSelectedSlotC2SPacket(mc.player.getInventory().getSelectedSlot()));
         }
         hitTicks = 10;
         return true;
@@ -765,7 +766,7 @@ public class Aura extends Module {
 
             case LowestDurability -> first_stage.stream().min(Comparator.comparing(e -> {
                         float v = 0;
-                        for (ItemStack armor : e.getArmorItems())
+                        for (ItemStack armor : thunder.hack.utility.player.ArmorUtility.getArmorItems(e))
                             if (armor != null && !armor.getItem().equals(Items.AIR)) {
                                 v += ((armor.getMaxDamage() - armor.getDamage()) / (float) armor.getMaxDamage());
                             }
@@ -775,7 +776,7 @@ public class Aura extends Module {
 
             case HighestDurability -> first_stage.stream().max(Comparator.comparing(e -> {
                         float v = 0;
-                        for (ItemStack armor : e.getArmorItems())
+                        for (ItemStack armor : thunder.hack.utility.player.ArmorUtility.getArmorItems(e))
                             if (armor != null && !armor.getItem().equals(Items.AIR)) {
                                 v += ((armor.getMaxDamage() - armor.getDamage()) / (float) armor.getMaxDamage());
                             }
