@@ -20,10 +20,12 @@ import thunder.hack.ThunderHack;
 import thunder.hack.core.manager.client.ModuleManager;
 import thunder.hack.events.impl.EventFixVelocity;
 import thunder.hack.features.modules.Module;
+import thunder.hack.features.modules.combat.Aura;
 import thunder.hack.features.modules.combat.HitBox;
 import thunder.hack.features.modules.render.Shaders;
 import thunder.hack.features.modules.render.Trails;
 import thunder.hack.utility.interfaces.IEntity;
+import thunder.hack.utility.interfaces.IEntityLiving;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,10 +33,13 @@ import java.util.List;
 import static thunder.hack.features.modules.Module.mc;
 
 @Mixin(Entity.class)
-public abstract class MixinEntity implements IEntity {
+public abstract class MixinEntity implements IEntity, IEntityLiving {
 
     @Shadow
     protected abstract BlockPos getVelocityAffectingPos();
+
+    @Shadow
+    public abstract Vec3d getSyncedPos();
 
     @Shadow
     private Box boundingBox;
@@ -51,6 +56,43 @@ public abstract class MixinEntity implements IEntity {
 
     @Unique
     public List<Trails.Trail> trails = new ArrayList<>();
+
+    @Unique
+    double prevServerX, prevServerY, prevServerZ;
+
+    @Unique
+    public List<Aura.Position> positonHistory = new ArrayList<>();
+
+    @Override
+    public List<Aura.Position> getPositionHistory() {
+        return positonHistory;
+    }
+
+    @Inject(method = {"updateTrackedPositionAndAngles"}, at = {@At("HEAD")})
+    private void updateTrackedPositionAndAnglesHook(Vec3d pos, float yaw, float pitch, CallbackInfo ci) {
+        if (Module.fullNullCheck()) return;
+        Vec3d syncedPos = getSyncedPos();
+        prevServerX = syncedPos.x;
+        prevServerY = syncedPos.y;
+        prevServerZ = syncedPos.z;
+        positonHistory.add(new Aura.Position(syncedPos.x, syncedPos.y, syncedPos.z));
+        positonHistory.removeIf(Aura.Position::shouldRemove);
+    }
+
+    @Override
+    public double getPrevServerX() {
+        return prevServerX;
+    }
+
+    @Override
+    public double getPrevServerY() {
+        return prevServerY;
+    }
+
+    @Override
+    public double getPrevServerZ() {
+        return prevServerZ;
+    }
 
     @ModifyArgs(method = "pushAwayFrom", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;addVelocity(DDD)V"))
     public void pushAwayFromHook(Args args) {

@@ -1,5 +1,6 @@
 package thunder.hack.injection;
 
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.dimension.DimensionType;
 import thunder.hack.core.manager.client.ModuleManager;
@@ -13,8 +14,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(LightmapTextureManager.class)
 public class MixinLightmapTextureManager {
 
-    @Inject(method = "getDarknessFactor(F)F", at = @At("HEAD"), cancellable = true)
-    private void getDarknessFactor(float tickDelta, CallbackInfoReturnable<Float> info) {
+    @Inject(method = "getDarkness", at = @At("HEAD"), cancellable = true)
+    private void getDarkness(LivingEntity entity, float tickDelta, float factor, CallbackInfoReturnable<Float> info) {
         if (ModuleManager.noRender.isEnabled() && ModuleManager.noRender.darkness.getValue()) info.setReturnValue(0.0f);
     }
     @Inject(method = "getBrightness", at = @At("HEAD"), cancellable = true)

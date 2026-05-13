@@ -24,23 +24,24 @@ public final class BufferRenderer {
                     : RenderPipelines.DEBUG_QUADS;
         }
 
-        try (buffer; GpuBuffer vertices = parameters.format().uploadImmediateVertexBuffer(buffer.getBuffer())) {
-            com.mojang.blaze3d.systems.RenderSystem.ShapeIndexBuffer shapeIndexBuffer = com.mojang.blaze3d.systems.RenderSystem.getSequentialBuffer(parameters.mode());
-            GpuBuffer indices = shapeIndexBuffer.getIndexBuffer(parameters.indexCount());
-            Framebuffer framebuffer = MinecraftClient.getInstance().getFramebuffer();
+        GpuBuffer vertices = parameters.format().uploadImmediateVertexBuffer(buffer.getBuffer());
+        com.mojang.blaze3d.systems.RenderSystem.ShapeIndexBuffer shapeIndexBuffer = com.mojang.blaze3d.systems.RenderSystem.getSequentialBuffer(parameters.mode());
+        GpuBuffer indices = shapeIndexBuffer.getIndexBuffer(parameters.indexCount());
+        Framebuffer framebuffer = MinecraftClient.getInstance().getFramebuffer();
 
-            try (RenderPass pass = com.mojang.blaze3d.systems.RenderSystem.getDevice().createCommandEncoder().createRenderPass(
-                    framebuffer.getColorAttachment(), OptionalInt.empty(),
-                    framebuffer.getDepthAttachment(), OptionalDouble.empty())) {
-                pass.setPipeline(pipeline);
-                GpuTexture texture = com.mojang.blaze3d.systems.RenderSystem.getShaderTexture(0);
-                if (texture != null) {
-                    pass.bindSampler("Sampler0", texture);
-                }
-                pass.setVertexBuffer(0, vertices);
-                pass.setIndexBuffer(indices, shapeIndexBuffer.getIndexType());
-                pass.drawIndexed(0, parameters.indexCount());
+        try (RenderPass pass = com.mojang.blaze3d.systems.RenderSystem.getDevice().createCommandEncoder().createRenderPass(
+                framebuffer.getColorAttachment(), OptionalInt.empty(),
+                framebuffer.getDepthAttachment(), OptionalDouble.empty())) {
+            pass.setPipeline(pipeline);
+            GpuTexture texture = com.mojang.blaze3d.systems.RenderSystem.getShaderTexture(0);
+            if (texture != null) {
+                pass.bindSampler("Sampler0", texture);
             }
+            pass.setVertexBuffer(0, vertices);
+            pass.setIndexBuffer(indices, shapeIndexBuffer.getIndexType());
+            pass.drawIndexed(0, parameters.indexCount());
+        } finally {
+            buffer.close();
         }
     }
 }

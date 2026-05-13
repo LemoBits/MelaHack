@@ -16,4 +16,16 @@ public interface IEntity {
     @Mutable
     @Accessor("blockPos")
     void setBlockPos(BlockPos blockPos);
+
+    @Accessor("lastYaw")
+    float getLastYaw();
+
+    @Accessor("lastYaw")
+    void setLastYaw(float yaw);
+
+    @Accessor("lastPitch")
+    float getLastPitch();
+
+    @Accessor("lastPitch")
+    void setLastPitch(float pitch);
 }

@@ -21,24 +21,13 @@ import thunder.hack.events.impl.EventTravel;
 import thunder.hack.events.impl.EventEatFood;
 import thunder.hack.events.impl.EventPlayerJump;
 import thunder.hack.features.modules.Module;
-import thunder.hack.features.modules.combat.Aura;
 import thunder.hack.features.modules.render.Animations;
-import thunder.hack.utility.interfaces.IEntityLiving;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import static thunder.hack.features.modules.Module.mc;
 import static thunder.hack.features.modules.movement.WaterSpeed.Mode.CancelResurface;
 
 @Mixin(LivingEntity.class)
-public abstract class MixinEntityLiving implements IEntityLiving {
-    @Shadow
-    protected double serverX;
-    @Shadow
-    protected double serverY;
-    @Shadow
-    protected double serverZ;
+public abstract class MixinEntityLiving {
 
     @Shadow
     public abstract Hand getActiveHand();
@@ -46,46 +35,10 @@ public abstract class MixinEntityLiving implements IEntityLiving {
     @Shadow
     public abstract ItemStack getStackInHand(Hand hand);
 
-    @Unique
-    double prevServerX, prevServerY, prevServerZ;
-
-    @Unique
-    public List<Aura.Position> positonHistory = new ArrayList<>();
-
-    @Override
-    public List<Aura.Position> getPositionHistory() {
-        return positonHistory;
-    }
-
     @Inject(method = "getHandSwingDuration", at = {@At("HEAD")}, cancellable = true)
     private void getArmSwingAnimationEnd(final CallbackInfoReturnable<Integer> info) {
         if (!ModuleManager.noRender.noSwing.getValue() && ModuleManager.animations.shouldChangeAnimationDuration() && Animations.slowAnimation.getValue())
             info.setReturnValue(Animations.slowAnimationVal.getValue());
-    }
-
-    @Inject(method = {"updateTrackedPositionAndAngles"}, at = {@At("HEAD")})
-    private void updateTrackedPositionAndAnglesHook(double x, double y, double z, float yaw, float pitch, int interpolationSteps, CallbackInfo ci) {
-        if (Module.fullNullCheck()) return;
-        prevServerX = serverX;
-        prevServerY = serverY;
-        prevServerZ = serverZ;
-        positonHistory.add(new Aura.Position(serverX, serverY, serverZ));
-        positonHistory.removeIf(Aura.Position::shouldRemove);
-    }
-
-    @Override
-    public double getPrevServerX() {
-        return prevServerX;
-    }
-
-    @Override
-    public double getPrevServerY() {
-        return prevServerY;
-    }
-
-    @Override
-    public double getPrevServerZ() {
-        return prevServerZ;
     }
 
     @Unique

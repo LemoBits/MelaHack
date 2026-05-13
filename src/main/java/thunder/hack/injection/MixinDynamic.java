@@ -11,10 +11,10 @@ import thunder.hack.ThunderHack;
 @Mixin(RenderTickCounter.Dynamic.class)
 public class MixinDynamic {
     @Shadow
-    private float lastFrameDuration;
+    private float dynamicDeltaTicks;
     @Shadow
-    private float tickDelta;
-    @Shadow private long prevTimeMillis;
+    private float tickProgress;
+    @Shadow private long lastTimeMillis;
     @Final
     @Shadow private float tickTime;
 
@@ -23,11 +23,11 @@ public class MixinDynamic {
         if(ThunderHack.TICK_TIMER == 1)
             return;
 
-        this.lastFrameDuration = ((timeMillis - this.prevTimeMillis) / this.tickTime) * ThunderHack.TICK_TIMER;
-        this.prevTimeMillis = timeMillis;
-        this.tickDelta += this.lastFrameDuration;
-        int i = (int) this.tickDelta;
-        this.tickDelta -= i;
+        this.dynamicDeltaTicks = ((timeMillis - this.lastTimeMillis) / this.tickTime) * ThunderHack.TICK_TIMER;
+        this.lastTimeMillis = timeMillis;
+        this.tickProgress += this.dynamicDeltaTicks;
+        int i = (int) this.tickProgress;
+        this.tickProgress -= i;
         cir.setReturnValue(i);
     }
 }

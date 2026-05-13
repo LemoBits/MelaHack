@@ -32,6 +32,7 @@ import thunder.hack.events.impl.EventPostSync;
 import thunder.hack.events.impl.EventSync;
 import thunder.hack.events.impl.PacketEvent;
 import thunder.hack.injection.accesors.IClientPlayerEntity;
+import thunder.hack.injection.accesors.IEntity;
 import thunder.hack.features.modules.Module;
 import thunder.hack.setting.Setting;
 import thunder.hack.utility.Timer;
@@ -378,8 +379,8 @@ public final class PistonAura extends Module {
             sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(angle2, 0, mc.player.isOnGround(), mc.player.horizontalCollision));
             float prevYaw = mc.player.getYaw();
             mc.player.setYaw(angle2);
-            ((thunder.hack.injection.accesors.IClientPlayerEntity) mc.player).setLastYaw(angle2);
-            ((IClientPlayerEntity) mc.player).setLastYaw(angle2);
+            ((thunder.hack.injection.accesors.IEntity) mc.player).setLastYaw(angle2);
+            ((IEntity) mc.player).setLastYaw(angle2);
             int prevSlot = mc.player.getInventory().getSelectedSlot();
             InteractionUtility.placeBlock(pistonPos, InteractionUtility.Rotate.None, interact.getValue(), placeMode.getValue(), piston_slot, false, false);
             sendPacket(new UpdateSelectedSlotC2SPacket(prevSlot));

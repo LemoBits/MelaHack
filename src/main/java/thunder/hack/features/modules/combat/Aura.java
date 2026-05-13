@@ -38,6 +38,7 @@ import thunder.hack.events.impl.PacketEvent;
 import thunder.hack.events.impl.PlayerUpdateEvent;
 import thunder.hack.gui.notification.Notification;
 import thunder.hack.injection.accesors.ILivingEntity;
+import thunder.hack.injection.accesors.IEntity;
 import thunder.hack.features.modules.Module;
 import thunder.hack.features.modules.client.HudEditor;
 import thunder.hack.setting.Setting;
@@ -589,8 +590,8 @@ public class Aura extends Module {
         }
 
         if (clientLook.getValue() && rotationMode.getValue() != Mode.None) {
-            mc.player.setYaw((float) Render2DEngine.interpolate(((thunder.hack.injection.accesors.IClientPlayerEntity) mc.player).getLastYaw(), rotationYaw, Render3DEngine.getTickDelta()));
-            mc.player.setPitch((float) Render2DEngine.interpolate(((thunder.hack.injection.accesors.IClientPlayerEntity) mc.player).getLastPitch(), rotationPitch, Render3DEngine.getTickDelta()));
+            mc.player.setYaw((float) Render2DEngine.interpolate(((thunder.hack.injection.accesors.IEntity) mc.player).getLastYaw(), rotationYaw, Render3DEngine.getTickDelta()));
+            mc.player.setPitch((float) Render2DEngine.interpolate(((thunder.hack.injection.accesors.IEntity) mc.player).getLastPitch(), rotationPitch, Render3DEngine.getTickDelta()));
         }
     }
 

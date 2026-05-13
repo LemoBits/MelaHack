@@ -9,6 +9,7 @@ import net.minecraft.network.packet.c2s.play.*;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.events.impl.PacketEvent;
 import thunder.hack.injection.accesors.IClientPlayerEntity;
+import thunder.hack.injection.accesors.IEntity;
 import thunder.hack.features.modules.Module;
 import thunder.hack.setting.Setting;
 
@@ -68,7 +69,7 @@ public final class Criticals extends Module {
         if (!full)
             sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(mc.player.getX(), mc.player.getY() + yDelta, mc.player.getZ(), false, mc.player.horizontalCollision));
         else
-            sendPacket(new PlayerMoveC2SPacket.Full(mc.player.getX(), mc.player.getY() + yDelta, mc.player.getZ(), ((IClientPlayerEntity) mc.player).getLastYaw(), ((IClientPlayerEntity) mc.player).getLastPitch(), false, mc.player.horizontalCollision));
+            sendPacket(new PlayerMoveC2SPacket.Full(mc.player.getX(), mc.player.getY() + yDelta, mc.player.getZ(), ((IEntity) mc.player).getLastYaw(), ((IEntity) mc.player).getLastPitch(), false, mc.player.horizontalCollision));
     }
 
     public static Entity getEntity(@NotNull PlayerInteractEntityC2SPacket packet) {

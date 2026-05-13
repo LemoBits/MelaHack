@@ -13,6 +13,7 @@ import thunder.hack.core.Managers;
 import thunder.hack.events.impl.EventPostSync;
 import thunder.hack.events.impl.EventSync;
 import thunder.hack.injection.accesors.IClientPlayerEntity;
+import thunder.hack.injection.accesors.IEntity;
 import thunder.hack.features.modules.Module;
 import thunder.hack.setting.Setting;
 import thunder.hack.setting.impl.ColorSetting;
@@ -182,8 +183,8 @@ public final class PistonPush extends Module {
             sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(angle, 0, mc.player.isOnGround(), mc.player.horizontalCollision));
             float prevYaw = mc.player.getYaw();
             mc.player.setYaw(angle);
-            ((thunder.hack.injection.accesors.IClientPlayerEntity) mc.player).setLastYaw(angle);
-            ((IClientPlayerEntity) mc.player).setLastYaw(angle);
+            ((thunder.hack.injection.accesors.IEntity) mc.player).setLastYaw(angle);
+            ((IEntity) mc.player).setLastYaw(angle);
             int prevSlot = mc.player.getInventory().getSelectedSlot();
             InteractionUtility.placeBlock(pistonPos, InteractionUtility.Rotate.None, interact.getValue(), placeMode.getValue(), getPistonSlot(), true, false);
             sendPacket(new UpdateSelectedSlotC2SPacket(prevSlot));

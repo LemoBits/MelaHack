@@ -9,18 +9,6 @@ public interface ILivingEntity {
     @Accessor("lastAttackedTicks")
     int getLastAttackedTicks();
 
-    @Accessor("lastYaw")
-    float getLastYaw();
-
-    @Accessor("lastYaw")
-    void setLastYaw(float yaw);
-
-    @Accessor("lastPitch")
-    float getLastPitch();
-
-    @Accessor("lastPitch")
-    void setLastPitch(float pitch);
-
     @Accessor("lastBodyYaw")
     float getLastBodyYaw();
 

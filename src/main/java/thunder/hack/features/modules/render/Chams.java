@@ -144,7 +144,7 @@ public class Chams extends Module {
             }
             k = j - h;
         }
-        float m = MathHelper.lerp(g, ((thunder.hack.injection.accesors.ILivingEntity) pe).getLastPitch(), pe.getPitch());
+        float m = MathHelper.lerp(g, ((thunder.hack.injection.accesors.IEntity) pe).getLastPitch(), pe.getPitch());
         if (LivingEntityRenderer.shouldFlipUpsideDown(pe)) {
             m *= -1.0f;
             k *= -1.0f;

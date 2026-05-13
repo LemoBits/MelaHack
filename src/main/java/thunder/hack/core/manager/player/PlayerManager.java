@@ -23,6 +23,7 @@ import thunder.hack.core.manager.IManager;
 import thunder.hack.core.manager.client.ModuleManager;
 import thunder.hack.events.impl.*;
 import thunder.hack.injection.accesors.IClientPlayerEntity;
+import thunder.hack.injection.accesors.IEntity;
 import thunder.hack.features.modules.Module;
 import thunder.hack.features.modules.combat.Aura;
 import thunder.hack.utility.Timer;
@@ -55,8 +56,8 @@ public class PlayerManager implements IManager {
 
         yaw = mc.player.getYaw();
         pitch = mc.player.getPitch();
-        lastYaw = ((IClientPlayerEntity) mc.player).getLastYaw();
-        lastPitch = ((IClientPlayerEntity) mc.player).getLastPitch();
+        lastYaw = ((IEntity) mc.player).getLastYaw();
+        lastPitch = ((IEntity) mc.player).getLastPitch();
         if (mc.currentScreen == null) inInventory = false;
         if (mc.player.isGliding() && mc.player.getEquippedStack(EquipmentSlot.CHEST).getItem() == Items.ELYTRA) {
             ticksElytraFlying++;
@@ -142,9 +143,9 @@ public class PlayerManager implements IManager {
         float offset = bodyYaw;
         if ((x * x + z * z) > 0.0025000002f) offset = (float) (MathHelper.atan2(z, x) * 57.295776f - 90.0f);
         if (mc.player.handSwingProgress > 0.0f)
-            offset = ((IClientPlayerEntity) MinecraftClient.getInstance().player).getLastYaw();
-        float deltaBodyYaw = clamp(MathHelper.wrapDegrees((((IClientPlayerEntity) MinecraftClient.getInstance().player).getLastYaw()) - (bodyYaw + MathHelper.wrapDegrees(offset - bodyYaw) * 0.3f)), -45.0f, 75.0f);
-        return (deltaBodyYaw > 50f ? deltaBodyYaw * 0.2f : 0) + ((IClientPlayerEntity) MinecraftClient.getInstance().player).getLastYaw() - deltaBodyYaw;
+            offset = ((IEntity) MinecraftClient.getInstance().player).getLastYaw();
+        float deltaBodyYaw = clamp(MathHelper.wrapDegrees((((IEntity) MinecraftClient.getInstance().player).getLastYaw()) - (bodyYaw + MathHelper.wrapDegrees(offset - bodyYaw) * 0.3f)), -45.0f, 75.0f);
+        return (deltaBodyYaw > 50f ? deltaBodyYaw * 0.2f : 0) + ((IEntity) MinecraftClient.getInstance().player).getLastYaw() - deltaBodyYaw;
     }
 
     public boolean checkRtx(float yaw, float pitch, float distance, float wallDistance, Aura.RayTrace rt) {

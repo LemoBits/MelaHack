@@ -24,6 +24,7 @@ import thunder.hack.ThunderHack;
 import thunder.hack.core.Managers;
 import thunder.hack.core.manager.client.ModuleManager;
 import thunder.hack.injection.accesors.IClientPlayerEntity;
+import thunder.hack.injection.accesors.IEntity;
 import thunder.hack.injection.accesors.ILivingEntity;
 import thunder.hack.features.modules.Module;
 import thunder.hack.features.modules.client.ClientSettings;
@@ -56,12 +57,12 @@ public abstract class MixinLivingEntityRenderer {
         if (mc.player != null && livingEntity == mc.player && mc.player.getControllingVehicle() == null && ClientSettings.renderRotations.getValue() && !ThunderHack.isFuturePresent()) {
             originalHeadYaw = livingEntity.headYaw;
             originalPrevHeadYaw = ((ILivingEntity) livingEntity).getLastHeadYaw();
-            originalPrevHeadPitch = ((ILivingEntity) livingEntity).getLastPitch();
+            originalPrevHeadPitch = ((IEntity) livingEntity).getLastPitch();
             originalHeadPitch = livingEntity.getPitch();
 
-            livingEntity.setPitch(((IClientPlayerEntity) MinecraftClient.getInstance().player).getLastPitch());
-            ((ILivingEntity) livingEntity).setLastPitch(Managers.PLAYER.lastPitch);
-            livingEntity.headYaw = ((IClientPlayerEntity) MinecraftClient.getInstance().player).getLastYaw();
+            livingEntity.setPitch(((IEntity) MinecraftClient.getInstance().player).getLastPitch());
+            ((IEntity) livingEntity).setLastPitch(Managers.PLAYER.lastPitch);
+            livingEntity.headYaw = ((IEntity) MinecraftClient.getInstance().player).getLastYaw();
             livingEntity.bodyYaw = Render2DEngine.interpolateFloat(Managers.PLAYER.prevBodyYaw, Managers.PLAYER.bodyYaw, Render3DEngine.getTickDelta());
             ((ILivingEntity) livingEntity).setLastHeadYaw(Managers.PLAYER.lastYaw);
             ((ILivingEntity) livingEntity).setLastBodyYaw(Render2DEngine.interpolateFloat(Managers.PLAYER.prevBodyYaw, Managers.PLAYER.bodyYaw, Render3DEngine.getTickDelta()));
@@ -101,7 +102,7 @@ public abstract class MixinLivingEntityRenderer {
                     }
                     k = j - h;
                 }
-                float m = MathHelper.lerp(g, ((ILivingEntity) pe).getLastPitch(), pe.getPitch());
+                float m = MathHelper.lerp(g, ((IEntity) pe).getLastPitch(), pe.getPitch());
                 if (LivingEntityRenderer.shouldFlipUpsideDown(pe)) {
                     m *= -1.0f;
                     k *= -1.0f;
@@ -135,7 +136,7 @@ public abstract class MixinLivingEntityRenderer {
     public void postRender(LivingEntity livingEntity) {
         if (Module.fullNullCheck()) return;
         if (mc.player != null && livingEntity == mc.player && mc.player.getControllingVehicle() == null && ClientSettings.renderRotations.getValue() && !ThunderHack.isFuturePresent()) {
-            ((ILivingEntity) livingEntity).setLastPitch(originalPrevHeadPitch);
+            ((IEntity) livingEntity).setLastPitch(originalPrevHeadPitch);
             livingEntity.setPitch(originalHeadPitch);
             livingEntity.headYaw = originalHeadYaw;
             ((ILivingEntity) livingEntity).setLastHeadYaw(originalPrevHeadYaw);

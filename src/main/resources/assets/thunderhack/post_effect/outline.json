@@ -4,7 +4,7 @@
   },
   "passes": [
     {
-      "program": "thunderhack:program/outline",
+      "vertex_shader": "thunderhack:program/outline", "fragment_shader": "thunderhack:program/outline",
       "inputs": [
         {
           "sampler_name": "In",
@@ -15,7 +15,7 @@
       "uniforms": []
     },
     {
-      "program": "minecraft:post/blit",
+      "vertex_shader": "minecraft:post/blit", "fragment_shader": "minecraft:post/blit",
       "inputs": [
         {
           "sampler_name": "In",

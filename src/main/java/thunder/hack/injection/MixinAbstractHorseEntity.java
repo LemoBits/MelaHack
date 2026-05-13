@@ -5,10 +5,6 @@ import net.minecraft.entity.passive.AbstractHorseEntity;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import thunder.hack.core.manager.client.ModuleManager;
 
 @Mixin(AbstractHorseEntity.class)
 public abstract class MixinAbstractHorseEntity extends AnimalEntity {
@@ -16,9 +12,5 @@ public abstract class MixinAbstractHorseEntity extends AnimalEntity {
         super(entityType, world);
     }
 
-    @Inject(method = "isSaddled", at = @At("HEAD"), cancellable = true)
-    public void onIsSaddled(CallbackInfoReturnable<Boolean> cir) {
-        if (ModuleManager.entityControl.isEnabled())
-            cir.setReturnValue(true);
-    }
+    // isSaddled() removed in 1.21.5 - needs porting to new saddle check
 }

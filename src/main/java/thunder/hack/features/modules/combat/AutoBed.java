@@ -34,6 +34,7 @@ import thunder.hack.events.impl.EventPostSync;
 import thunder.hack.events.impl.EventSync;
 import thunder.hack.events.impl.PlayerUpdateEvent;
 import thunder.hack.injection.accesors.IClientPlayerEntity;
+import thunder.hack.injection.accesors.IEntity;
 import thunder.hack.features.modules.Module;
 import thunder.hack.features.modules.client.HudEditor;
 import thunder.hack.setting.Setting;
@@ -164,8 +165,8 @@ public final class AutoBed extends Module {
             sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(angle2, 0, mc.player.isOnGround(), mc.player.horizontalCollision));
             float prevYaw = mc.player.getYaw();
             mc.player.setYaw(angle2);
-            ((thunder.hack.injection.accesors.IClientPlayerEntity) mc.player).setLastYaw(angle2);
-            ((IClientPlayerEntity) mc.player).setLastYaw(angle2);
+            ((thunder.hack.injection.accesors.IEntity) mc.player).setLastYaw(angle2);
+            ((IEntity) mc.player).setLastYaw(angle2);
             sendSequencedPacket(id -> new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND, bestPos.hitResult(), id));
             mc.player.swingHand(Hand.MAIN_HAND);
             placeTimer.reset();

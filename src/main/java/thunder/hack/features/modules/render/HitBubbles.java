@@ -10,6 +10,7 @@ import thunder.hack.core.Managers;
 import thunder.hack.core.manager.client.ModuleManager;
 import thunder.hack.events.impl.EventAttack;
 import thunder.hack.injection.accesors.IClientPlayerEntity;
+import thunder.hack.injection.accesors.IEntity;
 import thunder.hack.features.modules.Module;
 import thunder.hack.setting.Setting;
 import thunder.hack.utility.Timer;
@@ -29,9 +30,9 @@ public class HitBubbles extends Module {
 
     @EventHandler
     public void onHit(EventAttack e) {
-        Vec3d point = Managers.PLAYER.getRtxPoint(((IClientPlayerEntity) mc.player).getLastYaw(), ((IClientPlayerEntity) mc.player).getLastPitch(), ModuleManager.aura.attackRange.getValue());
+        Vec3d point = Managers.PLAYER.getRtxPoint(((IEntity) mc.player).getLastYaw(), ((IEntity) mc.player).getLastPitch(), ModuleManager.aura.attackRange.getValue());
         if (point != null && !e.isPre())
-            bubbles.add(new HitBubble((float) point.x, (float) point.y, (float) point.z, -((IClientPlayerEntity) mc.player).getLastYaw(), ((IClientPlayerEntity) mc.player).getLastPitch(), new Timer()));
+            bubbles.add(new HitBubble((float) point.x, (float) point.y, (float) point.z, -((IEntity) mc.player).getLastYaw(), ((IEntity) mc.player).getLastPitch(), new Timer()));
     }
 
     public void onRender3D(MatrixStack matrixStack) {

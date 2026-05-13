@@ -24,14 +24,14 @@ public abstract class MixinWorldRenderer {
         return ModuleManager.freeCam.isEnabled() || spectator;
     }
 
-    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gl/PostEffectProcessor;render(Lnet/minecraft/client/render/FrameGraphBuilder;IILnet/minecraft/client/gl/PostEffectProcessor$FramebufferSet;)V", ordinal = 0))
-    private void replaceShaderHook(PostEffectProcessor instance, FrameGraphBuilder frameGraphBuilder, int width, int height, PostEffectProcessor.FramebufferSet framebufferSet) {
+    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gl/PostEffectProcessor;render(Lnet/minecraft/client/render/FrameGraphBuilder;IILnet/minecraft/client/gl/PostEffectProcessor$FramebufferSet;Ljava/util/function/Consumer;)V", ordinal = 0))
+    private void replaceShaderHook(PostEffectProcessor instance, FrameGraphBuilder frameGraphBuilder, int width, int height, PostEffectProcessor.FramebufferSet framebufferSet, Consumer<com.mojang.blaze3d.systems.RenderPass> passConsumer) {
         ShaderManager.Shader shaders = ModuleManager.shaders.mode.getValue();
         if (ModuleManager.shaders.isEnabled() && mc.world != null) {
             if (Managers.SHADER.fullNullCheck()) return;
             Managers.SHADER.setupShader(shaders, Managers.SHADER.getShaderOutline(shaders));
         } else {
-            instance.render(frameGraphBuilder, width, height, framebufferSet, pass -> {});
+            instance.render(frameGraphBuilder, width, height, framebufferSet, passConsumer);
         }
     }
 

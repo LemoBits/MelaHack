@@ -50,7 +50,7 @@ public abstract class MixinGameRenderer {
     private float zoomY;
 
     @Shadow
-    private float viewDistance;
+    private float viewDistanceBlocks;
 
     @Shadow
     public abstract void tick();
@@ -138,7 +138,7 @@ public abstract class MixinGameRenderer {
                 matrixStack.translate(zoomX, -zoomY, 0.0f);
                 matrixStack.scale(zoom, zoom, 1.0f);
             }
-            matrixStack.peek().getPositionMatrix().mul(new Matrix4f().setPerspective((float) (fov * 0.01745329238474369), ModuleManager.aspectRatio.ratio.getValue(), 0.05f, viewDistance * 4.0f));
+            matrixStack.peek().getPositionMatrix().mul(new Matrix4f().setPerspective((float) (fov * 0.01745329238474369), ModuleManager.aspectRatio.ratio.getValue(), 0.05f, viewDistanceBlocks * 4.0f));
             cir.setReturnValue(matrixStack.peek().getPositionMatrix());
         }
     }

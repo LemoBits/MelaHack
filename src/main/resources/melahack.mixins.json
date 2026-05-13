@@ -55,6 +55,8 @@
     "accesors.IMinecraftClient",
     "accesors.INativeImage",
     "accesors.IRenderPhaseMixin",
+    "accesors.IEntityRenderDispatcher",
+    "accesors.IInput",
     "accesors.ISignEditScreen",
     "accesors.IWorldRenderer"
   ],
@@ -95,6 +97,8 @@
     "accesors.IHeldItemRenderer",
     "accesors.ILivingEntity",
     "accesors.IPlayerInteractBlockC2SPacket",
+    "accesors.IPlayerEntity",
+    "accesors.IPlayerInteractEntityC2SPacket",
     "accesors.IPlayerMoveC2SPacket",
     "accesors.IPlayerPositionLookS2CPacket",
     "accesors.ISPacketEntityVelocity"

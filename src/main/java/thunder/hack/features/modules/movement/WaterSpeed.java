@@ -9,6 +9,7 @@ import thunder.hack.setting.Setting;
 import thunder.hack.utility.math.MathUtility;
 import thunder.hack.utility.player.MovementUtility;
 import thunder.hack.injection.accesors.IClientPlayerEntity;
+import thunder.hack.injection.accesors.IEntity;
 
 public class WaterSpeed extends Module {
     public WaterSpeed() {
@@ -53,7 +54,7 @@ public class WaterSpeed extends Module {
                 e.setZ(e.getZ() + dirSpeed[1]);
                 e.cancel();
 
-                if(Math.abs(mc.player.getYaw() - ((IClientPlayerEntity) mc.player).getLastYaw()) > 3) acceleration -= 0.1f;
+                if(Math.abs(mc.player.getYaw() - ((IEntity) mc.player).getLastYaw()) > 3) acceleration -= 0.1f;
                 else acceleration += 0.015f;
 
                 acceleration = MathUtility.clamp(acceleration, 0f, 1f);
