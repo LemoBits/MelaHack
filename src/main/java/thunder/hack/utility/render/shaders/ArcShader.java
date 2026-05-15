@@ -1,64 +1,88 @@
 package thunder.hack.utility.render.shaders;
 
-import thunder.hack.utility.render.compat.RenderSystem;
+import com.mojang.blaze3d.pipeline.BlendFunction;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.blaze3d.platform.DepthTestFunction;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import net.minecraft.client.gl.UniformType;
 import net.minecraft.client.render.VertexFormats;
 import net.minecraft.util.Identifier;
-import thunder.hack.utility.render.shaders.satin.api.managed.ManagedCoreShader;
-import thunder.hack.utility.render.shaders.satin.api.managed.ShaderEffectManager;
-import thunder.hack.utility.render.shaders.satin.api.managed.uniform.Uniform1f;
-import thunder.hack.utility.render.shaders.satin.api.managed.uniform.Uniform2f;
-import thunder.hack.utility.render.shaders.satin.api.managed.uniform.Uniform4f;
+import thunder.hack.utility.render.compat.RenderSystem;
 
 import java.awt.*;
 
 import static thunder.hack.features.modules.Module.mc;
 
 public class ArcShader {
-    private Uniform2f uLocation;
-    private Uniform2f uSize;
-    private Uniform1f radius;
-    private Uniform1f thickness;
-    private Uniform1f time;
-    private Uniform4f color1;
-    private Uniform4f color2;
-    private Uniform1f start;
-    private Uniform1f end;
+    private float uLocationX;
+    private float uLocationY;
+    private float uSizeX;
+    private float uSizeY;
+    private float radius;
+    private float thickness;
+    private float time;
+    private float start;
+    private float end;
+    private Color color1 = Color.WHITE;
+    private Color color2 = Color.WHITE;
 
-    public static final ManagedCoreShader ARC = ShaderEffectManager.getInstance()
-            .manageCoreShader(Identifier.of("minecraft", "arc"), VertexFormats.POSITION);
+    public static final RenderPipeline ARC_SHADER = RenderPipeline.builder()
+            .withLocation(Identifier.of("thunderhack", "pipeline/arc"))
+            .withVertexShader(Identifier.of("minecraft", "core/position_only"))
+            .withFragmentShader(Identifier.of("minecraft", "core/arc"))
+            .withBlend(BlendFunction.TRANSLUCENT)
+            .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+            .withDepthWrite(false)
+            .withUniform("ModelViewMat", UniformType.MATRIX4X4)
+            .withUniform("ProjMat", UniformType.MATRIX4X4)
+            .withUniform("color1", UniformType.VEC4)
+            .withUniform("color2", UniformType.VEC4)
+            .withUniform("uSize", UniformType.VEC2)
+            .withUniform("uLocation", UniformType.VEC2)
+            .withUniform("radius", UniformType.FLOAT)
+            .withUniform("thickness", UniformType.FLOAT)
+            .withUniform("start", UniformType.FLOAT)
+            .withUniform("end", UniformType.FLOAT)
+            .withUniform("time", UniformType.FLOAT)
+            .withVertexFormat(VertexFormats.POSITION, VertexFormat.DrawMode.QUADS)
+            .build();
 
     public ArcShader() {
-        setup();
     }
 
     public void setParameters(float x, float y, float width, float height, float r, float thickness, float start, float end, Color c1, Color c2) {
-        if (mc.player == null)
+        if (mc.player == null) {
             return;
+        }
+
         float i = (float) mc.getWindow().getScaleFactor();
-        radius.set(r * i);
-        uLocation.set(x * i, -y * i + mc.getWindow().getScaledHeight() * i - height * i);
-        uSize.set(width * i, height * i);
-        color1.set(c1.getRed() / 255f, c1.getGreen() / 255f, c1.getBlue() / 255f, 1f);
-        color2.set(c2.getRed() / 255f, c2.getGreen() / 255f, c2.getBlue() / 255f, 1f);
-        time.set((float) mc.player.age * 4);
-        this.thickness.set(thickness);
-        this.start.set(start);
-        this.end.set(end);
+        radius = r * i;
+        uLocationX = x * i;
+        uLocationY = -y * i + mc.getWindow().getScaledHeight() * i - height * i;
+        uSizeX = width * i;
+        uSizeY = height * i;
+        color1 = c1;
+        color2 = c2;
+        time = mc.player.age * 4f;
+        this.thickness = thickness;
+        this.start = start;
+        this.end = end;
     }
 
     public void use() {
-        RenderSystem.setShader(ARC.getProgram());
-    }
+        if (mc.player == null) {
+            return;
+        }
 
-    protected void setup() {
-        uSize = ARC.findUniform2f("uSize");
-        uLocation = ARC.findUniform2f("uLocation");
-        radius = ARC.findUniform1f("radius");
-        thickness = ARC.findUniform1f("thickness");
-        start = ARC.findUniform1f("start");
-        end = ARC.findUniform1f("end");
-        time = ARC.findUniform1f("time");
-        color1 = ARC.findUniform4f("color1");
-        color2 = ARC.findUniform4f("color2");
+        RenderSystem.setShader(ARC_SHADER);
+        RenderSystem.setShaderUniform("uSize", uSizeX, uSizeY);
+        RenderSystem.setShaderUniform("uLocation", uLocationX, uLocationY);
+        RenderSystem.setShaderUniform("radius", radius);
+        RenderSystem.setShaderUniform("thickness", thickness);
+        RenderSystem.setShaderUniform("start", start);
+        RenderSystem.setShaderUniform("end", end);
+        RenderSystem.setShaderUniform("time", time);
+        RenderSystem.setShaderUniform("color1", color1.getRed() / 255f, color1.getGreen() / 255f, color1.getBlue() / 255f, color1.getAlpha() / 255f);
+        RenderSystem.setShaderUniform("color2", color2.getRed() / 255f, color2.getGreen() / 255f, color2.getBlue() / 255f, color2.getAlpha() / 255f);
     }
 }

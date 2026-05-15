@@ -1,45 +1,51 @@
 package thunder.hack.utility.render.shaders;
 
+import com.mojang.blaze3d.pipeline.BlendFunction;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.blaze3d.platform.DepthTestFunction;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import thunder.hack.utility.render.compat.RenderSystem;
+import net.minecraft.client.gl.UniformType;
 import net.minecraft.client.render.VertexFormats;
 import net.minecraft.util.Identifier;
 import thunder.hack.utility.render.animation.AnimationUtility;
-import thunder.hack.utility.render.shaders.satin.api.managed.ManagedCoreShader;
-import thunder.hack.utility.render.shaders.satin.api.managed.ShaderEffectManager;
-import thunder.hack.utility.render.shaders.satin.api.managed.uniform.Uniform1f;
-import thunder.hack.utility.render.shaders.satin.api.managed.uniform.Uniform2f;
-import thunder.hack.utility.render.shaders.satin.api.managed.uniform.Uniform4f;
 
 import static thunder.hack.features.modules.Module.mc;
 
 public class MainMenuProgram {
-    private Uniform1f Time;
-    private Uniform2f uSize;
-    private Uniform4f color;
+    private float width;
+    private float height;
+    private float time;
     public static float time_ = 10000f;
 
-    public static final ManagedCoreShader MAIN_MENU = ShaderEffectManager.getInstance()
-            .manageCoreShader(Identifier.of("minecraft", "mainmenu"), VertexFormats.POSITION);
+    public static final RenderPipeline MAIN_MENU = RenderPipeline.builder()
+            .withLocation(Identifier.of("thunderhack", "pipeline/main_menu"))
+            .withVertexShader(Identifier.of("minecraft", "core/position_only"))
+            .withFragmentShader(Identifier.of("minecraft", "core/mainmenu"))
+            .withBlend(BlendFunction.TRANSLUCENT)
+            .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+            .withDepthWrite(false)
+            .withUniform("ModelViewMat", UniformType.MATRIX4X4)
+            .withUniform("ProjMat", UniformType.MATRIX4X4)
+            .withUniform("uSize", UniformType.VEC2)
+            .withUniform("Time", UniformType.FLOAT)
+            .withVertexFormat(VertexFormats.POSITION, VertexFormat.DrawMode.QUADS)
+            .build();
 
     public MainMenuProgram() {
-        setup();
     }
 
     public void setParameters(float x, float y, float width, float height) {
         float i = (float) mc.getWindow().getScaleFactor();
-        this.uSize.set(width * i, height * i);
+        this.width = width * i;
+        this.height = height * i;
         time_ += (float) (0.55 * AnimationUtility.deltaTime());
-        this.Time.set((float) time_);
-        //     this.color.set(HudEditor.getColor(0).getRed() / 255f, HudEditor.getColor(0).getGreen() / 255f, HudEditor.getColor(0).getBlue() / 255f, HudEditor.getColor(0).getAlpha() / 255f);
+        this.time = time_;
     }
 
     public void use() {
-        RenderSystem.setShader(MAIN_MENU.getProgram());
-    }
-
-    protected void setup() {
-        uSize = MAIN_MENU.findUniform2f("uSize");
-        Time = MAIN_MENU.findUniform1f("Time");
-        color = MAIN_MENU.findUniform4f("color");
+        RenderSystem.setShader(MAIN_MENU);
+        RenderSystem.setShaderUniform("uSize", width, height);
+        RenderSystem.setShaderUniform("Time", time);
     }
 }

@@ -10,8 +10,12 @@ import org.joml.Matrix4f;
 import org.joml.Matrix4fStack;
 import org.lwjgl.opengl.GL11;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 public final class RenderSystem {
     private static RenderPipeline currentPipeline;
+    private static final Map<String, Object> currentUniforms = new LinkedHashMap<>();
 
     private RenderSystem() {
     }
@@ -20,14 +24,36 @@ public final class RenderSystem {
         return currentPipeline;
     }
 
+    public static Map<String, Object> getCurrentUniforms() {
+        return currentUniforms;
+    }
+
     public static void setShader(RenderPipeline pipeline) {
+        if (currentPipeline != pipeline) {
+            currentUniforms.clear();
+        }
         currentPipeline = pipeline;
     }
 
     public static void setShader(Object ignored) {
         if (ignored instanceof RenderPipeline pipeline) {
-            currentPipeline = pipeline;
+            setShader(pipeline);
+        } else {
+            currentPipeline = null;
+            currentUniforms.clear();
         }
+    }
+
+    public static void setShaderUniform(String name, float... values) {
+        currentUniforms.put(name, values);
+    }
+
+    public static void setShaderUniform(String name, int... values) {
+        currentUniforms.put(name, values);
+    }
+
+    public static void setShaderUniform(String name, Matrix4f value) {
+        currentUniforms.put(name, value);
     }
 
     public static void enableBlend() {

@@ -1,75 +1,94 @@
 package thunder.hack.utility.render.shaders;
 
-import thunder.hack.utility.render.compat.RenderSystem;
+import com.mojang.blaze3d.pipeline.BlendFunction;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.blaze3d.platform.DepthTestFunction;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import net.minecraft.client.gl.UniformType;
 import net.minecraft.client.render.VertexFormats;
 import net.minecraft.util.Identifier;
-import thunder.hack.features.modules.client.HudEditor;
-import thunder.hack.utility.render.shaders.satin.api.managed.ManagedCoreShader;
-import thunder.hack.utility.render.shaders.satin.api.managed.ShaderEffectManager;
-import thunder.hack.utility.render.shaders.satin.api.managed.uniform.Uniform1f;
-import thunder.hack.utility.render.shaders.satin.api.managed.uniform.Uniform2f;
-import thunder.hack.utility.render.shaders.satin.api.managed.uniform.Uniform4f;
+import thunder.hack.utility.render.compat.RenderSystem;
 
 import java.awt.*;
 
 import static thunder.hack.features.modules.Module.mc;
 
 public class HudShader {
-    private Uniform2f uSize;
-    private Uniform2f uLocation;
-    private Uniform1f radius;
-    private Uniform1f blend;
-    private Uniform1f alpha;
-    private Uniform1f outline;
-    private Uniform1f glow;
-    private Uniform4f color1;
-    private Uniform4f color2;
-    private Uniform4f color3;
-    private Uniform4f color4;
+    private float uSizeX;
+    private float uSizeY;
+    private float uLocationX;
+    private float uLocationY;
+    private float radius;
+    private float blend = 1f;
+    private float alpha = 1f;
+    private float outline;
+    private float glow;
+    private Color color1 = Color.WHITE;
+    private Color color2 = Color.WHITE;
+    private Color color3 = Color.WHITE;
+    private Color color4 = Color.WHITE;
 
-    public static final ManagedCoreShader HUD_SHADER = ShaderEffectManager.getInstance()
-            .manageCoreShader(Identifier.of("minecraft", "hudshader"), VertexFormats.POSITION);
+    public static final RenderPipeline HUD_SHADER = RenderPipeline.builder()
+            .withLocation(Identifier.of("thunderhack", "pipeline/hudshader"))
+            .withVertexShader(Identifier.of("minecraft", "core/position_only"))
+            .withFragmentShader(Identifier.of("minecraft", "core/hudshader"))
+            .withBlend(BlendFunction.TRANSLUCENT)
+            .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+            .withDepthWrite(false)
+            .withUniform("ModelViewMat", UniformType.MATRIX4X4)
+            .withUniform("ProjMat", UniformType.MATRIX4X4)
+            .withUniform("color1", UniformType.VEC4)
+            .withUniform("color2", UniformType.VEC4)
+            .withUniform("color3", UniformType.VEC4)
+            .withUniform("color4", UniformType.VEC4)
+            .withUniform("uSize", UniformType.VEC2)
+            .withUniform("uLocation", UniformType.VEC2)
+            .withUniform("radius", UniformType.FLOAT)
+            .withUniform("blend", UniformType.FLOAT)
+            .withUniform("alpha", UniformType.FLOAT)
+            .withUniform("glow", UniformType.FLOAT)
+            .withUniform("outline", UniformType.FLOAT)
+            .withVertexFormat(VertexFormats.POSITION, VertexFormat.DrawMode.QUADS)
+            .build();
 
     public HudShader() {
-        setup();
     }
 
     public void setParameters(float x, float y, float width, float height, float r, float externalAlpha, float internalAlpha) {
         float i = (float) mc.getWindow().getScaleFactor();
-        radius.set(r * i);
-        uLocation.set(x * i, -y * i + mc.getWindow().getScaledHeight() * i - height * i);
-        uSize.set(width * i, height * i);
+        radius = r * i;
+        uLocationX = x * i;
+        uLocationY = -y * i + mc.getWindow().getScaledHeight() * i - height * i;
+        uSizeX = width * i;
+        uSizeY = height * i;
 
-        Color c1 = HudEditor.getColor(270);
-        Color c2 = HudEditor.getColor(0);
-        Color c3 = HudEditor.getColor(180);
-        Color c4 = HudEditor.getColor(90);
+        Color c1 = thunder.hack.features.modules.client.HudEditor.getColor(270);
+        Color c2 = thunder.hack.features.modules.client.HudEditor.getColor(0);
+        Color c3 = thunder.hack.features.modules.client.HudEditor.getColor(180);
+        Color c4 = thunder.hack.features.modules.client.HudEditor.getColor(90);
 
-        color1.set(c1.getRed() / 255f, c1.getGreen() / 255f, c1.getBlue() / 255f, externalAlpha);
-        color2.set(c2.getRed() / 255f, c2.getGreen() / 255f, c2.getBlue() / 255f, externalAlpha);
-        color3.set(c3.getRed() / 255f, c3.getGreen() / 255f, c3.getBlue() / 255f, externalAlpha);
-        color4.set(c4.getRed() / 255f, c4.getGreen() / 255f, c4.getBlue() / 255f, externalAlpha);
-        blend.set(HudEditor.blend.getValue());
-        outline.set(HudEditor.outline.getValue());
-        glow.set(HudEditor.glow1.getValue());
-        alpha.set(internalAlpha);
+        color1 = new Color(c1.getRed(), c1.getGreen(), c1.getBlue(), Math.round(externalAlpha * 255f));
+        color2 = new Color(c2.getRed(), c2.getGreen(), c2.getBlue(), Math.round(externalAlpha * 255f));
+        color3 = new Color(c3.getRed(), c3.getGreen(), c3.getBlue(), Math.round(externalAlpha * 255f));
+        color4 = new Color(c4.getRed(), c4.getGreen(), c4.getBlue(), Math.round(externalAlpha * 255f));
+        blend = thunder.hack.features.modules.client.HudEditor.blend.getValue();
+        outline = thunder.hack.features.modules.client.HudEditor.outline.getValue();
+        glow = thunder.hack.features.modules.client.HudEditor.glow1.getValue();
+        alpha = internalAlpha;
     }
 
     public void use() {
-        RenderSystem.setShader(HUD_SHADER.getProgram());
-    }
-
-    public void setup() {
-        uSize = HUD_SHADER.findUniform2f("uSize");
-        uLocation = HUD_SHADER.findUniform2f("uLocation");
-        radius = HUD_SHADER.findUniform1f("radius");
-        blend = HUD_SHADER.findUniform1f("blend");
-        alpha = HUD_SHADER.findUniform1f("alpha");
-        color1 = HUD_SHADER.findUniform4f("color1");
-        color2 = HUD_SHADER.findUniform4f("color2");
-        color3 = HUD_SHADER.findUniform4f("color3");
-        color4 = HUD_SHADER.findUniform4f("color4");
-        outline = HUD_SHADER.findUniform1f("outline");
-        glow = HUD_SHADER.findUniform1f("glow");
+        RenderSystem.setShader(HUD_SHADER);
+        RenderSystem.setShaderUniform("uSize", uSizeX, uSizeY);
+        RenderSystem.setShaderUniform("uLocation", uLocationX, uLocationY);
+        RenderSystem.setShaderUniform("radius", radius);
+        RenderSystem.setShaderUniform("blend", blend);
+        RenderSystem.setShaderUniform("alpha", alpha);
+        RenderSystem.setShaderUniform("outline", outline);
+        RenderSystem.setShaderUniform("glow", glow);
+        RenderSystem.setShaderUniform("color1", color1.getRed() / 255f, color1.getGreen() / 255f, color1.getBlue() / 255f, color1.getAlpha() / 255f);
+        RenderSystem.setShaderUniform("color2", color2.getRed() / 255f, color2.getGreen() / 255f, color2.getBlue() / 255f, color2.getAlpha() / 255f);
+        RenderSystem.setShaderUniform("color3", color3.getRed() / 255f, color3.getGreen() / 255f, color3.getBlue() / 255f, color3.getAlpha() / 255f);
+        RenderSystem.setShaderUniform("color4", color4.getRed() / 255f, color4.getGreen() / 255f, color4.getBlue() / 255f, color4.getAlpha() / 255f);
     }
 }

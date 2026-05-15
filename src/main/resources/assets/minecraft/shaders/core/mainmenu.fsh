@@ -2,90 +2,65 @@
 
 uniform vec2 uSize;
 uniform float Time;
-uniform vec4 color;
 
 out vec4 fragColor;
 
-//License: CC BY 3.0
-//Author: Jan Mróz (jaszunio15)
-
-vec2 hash22(vec2 x)
-{
-    return fract(sin(x * mat2(43.37862, 24.58974, 32.37621, 53.32761)) * 4534.3897);
+float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
 }
 
-float hash12(vec2 x)
-{
-    return fract(sin(dot(x, vec2(43.37861, 34.58761))) * 342.538772);
+float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+
+    float a = hash(i);
+    float b = hash(i + vec2(1.0, 0.0));
+    float c = hash(i + vec2(0.0, 1.0));
+    float d = hash(i + vec2(1.0, 1.0));
+
+    return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
 }
 
-vec2 getCellPoint(vec2 cell)
-{
-    float time = Time * (hash12(cell + 0.123) - 0.5) * 0.5;
-    float c = cos(time), s = sin(time);
-    vec2 hash = (hash22(cell) - 0.5) * mat2(c, s, -s, c) + 0.5;;
-    return hash + cell;
-}
-
-float getCellValue(vec2 cell)
-{
-    return hash12(cell);
-}
-
-float makeSmooth(float x)
-{
-    return mix(x * x * (3.0 - 2.0 * x), sqrt(x), 0.01);
-}
-
-float modifiedVoronoiNoise12(vec2 uv)
-{
-    vec2 rootCell = floor(uv);
-
+float fbm(vec2 p) {
     float value = 0.0;
+    float amplitude = 0.5;
+    mat2 m = mat2(1.6, 1.2, -1.2, 1.6);
 
-    for (float x = -1.0; x <= 1.0; x++)
-    {
-        for(float y = -1.0; y <= 1.0; y++)
-        {
-            vec2 cell = rootCell + vec2(x, y);
-            vec2 cellPoint = getCellPoint(cell);
-            float cellValue = getCellValue(cell);
-            float cellDist = distance(uv, cellPoint);
-            value += makeSmooth(clamp(1.0 - cellDist, 0.0, 1.0)) * cellValue;
-        }
+    for (int i = 0; i < 5; i++) {
+        value += amplitude * noise(p);
+        p = m * p + vec2(2.9, 3.7);
+        amplitude *= 0.5;
     }
 
-    return value * 0.5;
+    return value;
 }
 
-float layeredNoise12(vec2 x)
-{
-    float sum = 0.0;
-    float maxValue = 0.0;
+void main() {
+    vec2 uv = gl_FragCoord.xy / uSize.xy;
+    vec2 p = uv * 2.0 - 1.0;
+    p.x *= uSize.x / uSize.y;
 
-    for (float i = 1.0; i <= 2.0; i *= 2.0)
-    {
-        float noise = modifiedVoronoiNoise12(x * i) / i;
-        sum += noise;
-        maxValue += 1.0 / i;
-    }
+    float t = Time * 0.045;
+    vec2 warp = vec2(
+        fbm(p * 1.7 + vec2(t, -t * 0.6)),
+        fbm(p * 1.7 + vec2(-t * 0.5, t * 0.8))
+    );
 
-    return sum / maxValue;
-}
+    vec2 q = p + (warp - 0.5) * 0.55;
+    float glow = smoothstep(1.15, 0.0, length(q + vec2(0.08 * sin(t * 1.4), -0.06 * cos(t * 1.1))));
+    float bandA = smoothstep(0.18, 0.88, fbm(q * 2.4 + vec2(t * 1.2, -t * 0.7)));
+    float bandB = smoothstep(0.22, 0.92, fbm(q * 3.8 - vec2(t * 0.6, t * 0.4)));
+    float streak = smoothstep(0.3, 0.95, fbm(vec2(q.x * 4.5, q.y * 1.1 + sin(t + q.x * 2.0))));
 
-void main()
-{
-    vec2 uv = (gl_FragCoord.xy - 0.5 * uSize.xy) / uSize.y;
-    vec2 stretchedUV = (gl_FragCoord.xy - 0.5 * uSize.xy) / uSize.xy;
-    float vignette = smoothstep(0.65, 0.0, length(stretchedUV));
-    uv.y -= Time * 0.05;
-    uv *= 6.0;
+    vec3 base = mix(vec3(0.010, 0.045, 0.030), vec3(0.020, 0.170, 0.145), bandA);
+    vec3 accent = mix(vec3(0.005, 0.120, 0.280), vec3(0.015, 0.520, 0.700), bandB);
+    vec3 mist = vec3(0.010, 0.240, 0.330) * streak;
 
-    vec4 col = sin(Time * 0.1 + uv.y * 0.2 + vec4(0,2,4,6)) * 0.5 + 0.5;
-    vec4 col2 = sin(Time * 0.1 + 0.6 + uv.y * 0.2 + vec4(0,2,4,6)) * 0.5 + 0.5;
+    vec3 color = mix(base, accent, 0.55);
+    color += mist * 0.35;
+    color += glow * vec3(0.03, 0.22, 0.18);
+    color *= 0.72 + 0.28 * smoothstep(1.15, 0.0, length(p));
 
-    uv += layeredNoise12(uv);
-    float noise = layeredNoise12(uv);
-    noise *= vignette;
-    fragColor = vec4(smoothstep(-0.14, 1.1, mix(col, col2 * 0.2, 1.0 - noise * 2.0)).rgb, 1.);
+    fragColor = vec4(color, 1.0);
 }

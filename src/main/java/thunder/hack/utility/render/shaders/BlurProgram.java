@@ -1,90 +1,103 @@
 package thunder.hack.utility.render.shaders;
 
-import thunder.hack.utility.render.compat.RenderSystem;
+import com.mojang.blaze3d.pipeline.BlendFunction;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.blaze3d.platform.DepthTestFunction;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.gl.SimpleFramebuffer;
+import net.minecraft.client.gl.UniformType;
 import net.minecraft.client.render.VertexFormats;
 import net.minecraft.util.Identifier;
-import org.lwjgl.opengl.GL30;
-import thunder.hack.utility.render.WindowResizeCallback;
-import thunder.hack.utility.render.shaders.satin.api.managed.ManagedCoreShader;
-import thunder.hack.utility.render.shaders.satin.api.managed.ShaderEffectManager;
-import thunder.hack.utility.render.shaders.satin.api.managed.uniform.SamplerUniform;
-import thunder.hack.utility.render.shaders.satin.api.managed.uniform.Uniform1f;
-import thunder.hack.utility.render.shaders.satin.api.managed.uniform.Uniform2f;
-import thunder.hack.utility.render.shaders.satin.api.managed.uniform.Uniform4f;
+import thunder.hack.utility.render.compat.RenderSystem;
 
 import java.awt.*;
 
 import static thunder.hack.features.modules.Module.mc;
 
 public class BlurProgram {
-    private Uniform2f uSize;
-    private Uniform2f uLocation;
-    private Uniform1f radius;
-    private Uniform2f inputResolution;
-    private Uniform1f brightness;
-    private Uniform1f quality;
-    private Uniform4f color1;
-    private SamplerUniform sampler;
-
+    private float uSizeX;
+    private float uSizeY;
+    private float uLocationX;
+    private float uLocationY;
+    private float radius;
+    private float brightness;
+    private float quality;
+    private Color color1 = Color.WHITE;
     private Framebuffer input;
     private boolean captureValid = false;
 
-    public static final ManagedCoreShader BLUR = ShaderEffectManager.getInstance()
-            .manageCoreShader(Identifier.of("minecraft", "blur"), VertexFormats.POSITION);
+    public static final RenderPipeline BLUR_SHADER = RenderPipeline.builder()
+            .withLocation(Identifier.of("thunderhack", "pipeline/blur"))
+            .withVertexShader(Identifier.of("minecraft", "core/position_only"))
+            .withFragmentShader(Identifier.of("minecraft", "core/blur"))
+            .withBlend(BlendFunction.TRANSLUCENT)
+            .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+            .withDepthWrite(false)
+            .withSampler("InputSampler")
+            .withUniform("ModelViewMat", UniformType.MATRIX4X4)
+            .withUniform("ProjMat", UniformType.MATRIX4X4)
+            .withUniform("InputResolution", UniformType.VEC2)
+            .withUniform("Quality", UniformType.FLOAT)
+            .withUniform("Brightness", UniformType.FLOAT)
+            .withUniform("color1", UniformType.VEC4)
+            .withUniform("uSize", UniformType.VEC2)
+            .withUniform("uLocation", UniformType.VEC2)
+            .withUniform("radius", UniformType.FLOAT)
+            .withVertexFormat(VertexFormats.POSITION, VertexFormat.DrawMode.QUADS)
+            .build();
 
     public BlurProgram() {
-        setup();
     }
 
     public void setParameters(float x, float y, float width, float height, float r, Color c1, float blurStrenth, float blurOpacity) {
-        if (input == null)
-            input = new SimpleFramebuffer("thunderhack_blur", mc.getWindow().getScaledWidth(), mc.getWindow().getScaledHeight(), false);
+        if (input == null) {
+            input = new SimpleFramebuffer("thunderhack_blur", mc.getWindow().getFramebufferWidth(), mc.getWindow().getFramebufferHeight(), false);
+        }
 
         float i = (float) mc.getWindow().getScaleFactor();
-        radius.set(r * i);
-        uLocation.set(x * i, -y * i + mc.getWindow().getScaledHeight() * i - height * i);
-        uSize.set(width * i, height * i);
-        brightness.set(blurOpacity);
-        quality.set(blurStrenth);
-        color1.set(c1.getRed() / 255f, c1.getGreen() / 255f, c1.getBlue() / 255f, 1f);
-        sampler.set(input);
+        radius = r * i;
+        uLocationX = x * i;
+        uLocationY = -y * i + mc.getWindow().getScaledHeight() * i - height * i;
+        uSizeX = width * i;
+        uSizeY = height * i;
+        brightness = blurOpacity;
+        quality = blurStrenth;
+        color1 = c1;
     }
 
     public void use() {
-        var buffer = MinecraftClient.getInstance().getFramebuffer();
+        Framebuffer framebuffer = MinecraftClient.getInstance().getFramebuffer();
+        if (input == null) {
+            input = new SimpleFramebuffer("thunderhack_blur", framebuffer.textureWidth, framebuffer.textureHeight, false);
+        }
+        if (input.textureWidth != framebuffer.textureWidth || input.textureHeight != framebuffer.textureHeight) {
+            input.resize(framebuffer.textureWidth, framebuffer.textureHeight);
+            captureValid = false;
+        }
 
         if (!captureValid) {
+            input.drawBlit(framebuffer.getColorAttachment());
             captureValid = true;
         }
 
-        if (input != null && (input.textureWidth != mc.getWindow().getFramebufferWidth() || input.textureHeight != mc.getWindow().getFramebufferHeight()))
-            input.resize(mc.getWindow().getFramebufferWidth(), mc.getWindow().getFramebufferHeight());
-
-        inputResolution.set((float) buffer.textureWidth, (float) buffer.textureHeight);
-        sampler.set(input);
-
-        RenderSystem.setShader(BLUR.getProgram());
+        RenderSystem.setShader(BLUR_SHADER);
+        RenderSystem.setShaderTexture(0, input.getColorAttachment());
+        RenderSystem.setShaderUniform("InputResolution", (float) framebuffer.textureWidth, (float) framebuffer.textureHeight);
+        RenderSystem.setShaderUniform("Quality", quality);
+        RenderSystem.setShaderUniform("Brightness", brightness);
+        RenderSystem.setShaderUniform("color1",
+                color1.getRed() / 255f,
+                color1.getGreen() / 255f,
+                color1.getBlue() / 255f,
+                color1.getAlpha() / 255f);
+        RenderSystem.setShaderUniform("uSize", uSizeX, uSizeY);
+        RenderSystem.setShaderUniform("uLocation", uLocationX, uLocationY);
+        RenderSystem.setShaderUniform("radius", radius);
     }
 
     public void invalidateCapture() {
         captureValid = false;
-    }
-
-    protected void setup() {
-        this.inputResolution = BLUR.findUniform2f("InputResolution");
-        this.brightness = BLUR.findUniform1f("Brightness");
-        this.quality = BLUR.findUniform1f("Quality");
-        this.color1 = BLUR.findUniform4f("color1");
-        this.uSize = BLUR.findUniform2f("uSize");
-        this.uLocation = BLUR.findUniform2f("uLocation");
-        this.radius = BLUR.findUniform1f("radius");
-        sampler = BLUR.findSampler("InputSampler");
-        WindowResizeCallback.EVENT.register((client, window) -> {
-            if (input != null)
-                input.resize(window.getFramebufferWidth(), window.getFramebufferHeight());
-        });
     }
 }
