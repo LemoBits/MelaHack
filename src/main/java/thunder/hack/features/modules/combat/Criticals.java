@@ -1,13 +1,13 @@
 package thunder.hack.features.modules.combat;
 
-import io.netty.buffer.Unpooled;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.decoration.EndCrystalEntity;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.network.packet.c2s.play.*;
+import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.events.impl.PacketEvent;
+import thunder.hack.injection.accesors.IPlayerInteractEntityC2SPacket;
 import thunder.hack.injection.accesors.IClientPlayerEntity;
 import thunder.hack.injection.accesors.IEntity;
 import thunder.hack.features.modules.Module;
@@ -73,16 +73,11 @@ public final class Criticals extends Module {
     }
 
     public static Entity getEntity(@NotNull PlayerInteractEntityC2SPacket packet) {
-        PacketByteBuf packetBuf = new PacketByteBuf(Unpooled.buffer());
-        packet.write(packetBuf);
-        return mc.world.getEntityById(packetBuf.readVarInt());
+        return mc.world.getEntityById(((IPlayerInteractEntityC2SPacket) packet).getEntityId());
     }
 
     public static InteractType getInteractType(@NotNull PlayerInteractEntityC2SPacket packet) {
-        PacketByteBuf packetBuf = new PacketByteBuf(Unpooled.buffer());
-        packet.write(packetBuf);
-        packetBuf.readVarInt();
-        return packetBuf.readEnumConstant(InteractType.class);
+        return InteractType.valueOf(((IPlayerInteractEntityC2SPacket) packet).getType().getType().name());
     }
 
     public enum InteractType {

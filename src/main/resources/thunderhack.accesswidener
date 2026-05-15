@@ -18,5 +18,4 @@ accessible field net/minecraft/entity/Entity hasVisualFire Z
 accessible field net/minecraft/network/packet/s2c/play/GameMessageS2CPacket content Lnet/minecraft/text/Text;
 accessible field net/minecraft/block/spawner/MobSpawnerLogic spawnDelay I
 accessible class net/minecraft/client/gui/hud/InGameHud$HeartType
-accessible method net/minecraft/network/packet/c2s/play/PlayerInteractEntityC2SPacket write (Lnet/minecraft/network/PacketByteBuf;)V
 accessible method net/minecraft/client/world/ClientWorld getPendingUpdateManager ()Lnet/minecraft/client/network/PendingUpdateManager;
