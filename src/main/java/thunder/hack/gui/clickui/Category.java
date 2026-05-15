@@ -1,14 +1,17 @@
 package thunder.hack.gui.clickui;
 
-import com.mojang.blaze3d.vertex.VertexFormat;
-
 import com.mojang.blaze3d.platform.GlStateManager;
-import thunder.hack.utility.render.compat.RenderSystem;
+import com.mojang.blaze3d.pipeline.BlendFunction;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.blaze3d.platform.DepthTestFunction;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gl.ShaderProgramKeys;
+import net.minecraft.client.gl.UniformType;
 import net.minecraft.client.render.*;
 import net.minecraft.util.Identifier;
+import org.joml.Matrix4f;
 import thunder.hack.ThunderHack;
+import thunder.hack.utility.render.compat.RenderSystem;
 import thunder.hack.core.manager.client.ModuleManager;
 import thunder.hack.features.modules.Module;
 import thunder.hack.features.modules.client.BaritoneSettings;
@@ -25,6 +28,19 @@ import java.util.List;
 
 public class Category extends AbstractCategory {
     private final Identifier ICON;
+    private static final RenderPipeline HEADER_ICON_PIPELINE = RenderPipeline.builder()
+            .withLocation(Identifier.of("thunderhack", "pipeline/clickgui_header_icon"))
+            .withVertexShader(Identifier.of("minecraft", "core/position_tex_color"))
+            .withFragmentShader(Identifier.of("minecraft", "core/position_tex_color"))
+            .withSampler("Sampler0")
+            .withUniform("ModelViewMat", UniformType.MATRIX4X4)
+            .withUniform("ProjMat", UniformType.MATRIX4X4)
+            .withUniform("ColorModulator", UniformType.VEC4)
+            .withBlend(BlendFunction.ADDITIVE)
+            .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+            .withDepthWrite(false)
+            .withVertexFormat(VertexFormats.POSITION_TEXTURE_COLOR, VertexFormat.DrawMode.QUADS)
+            .build();
 
     private boolean scrollHover;
     private final List<AbstractButton> buttons;
@@ -70,11 +86,6 @@ public class Category extends AbstractCategory {
 
         catHeight = AnimationUtility.fast(catHeight, height1, 30f);
 
-        Color m1 = HudEditor.getColor(270);
-        Color m2 = HudEditor.getColor(0);
-        Color m3 = HudEditor.getColor(180);
-        Color m4 = HudEditor.getColor(90);
-
         if (isOpen()) {
             Render2DEngine.drawHudBase(context.getMatrices(), getX() + 3, getY() + height - 6, width - 6, catHeight, 1, false);
 
@@ -106,26 +117,32 @@ public class Category extends AbstractCategory {
 
         Render2DEngine.drawHudBase(context.getMatrices(), getX() + 2, getY() - 5, width - 4, height, 1, false);
 
+        Color m1 = HudEditor.getColor(270);
+        Color m2 = HudEditor.getColor(0);
+        Color m3 = HudEditor.getColor(180);
+        Color m4 = HudEditor.getColor(90);
         {
             RenderSystem.setShaderTexture(0, ICON);
             RenderSystem.enableBlend();
             RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE);
-            Render2DEngine.addWindow(context.getMatrices(), getX() + 2, getY() - 4, getX() + 2 + width - 4, getY() - 5 + height, 1);
-            RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX_COLOR);
+            RenderSystem.setShader(HEADER_ICON_PIPELINE);
             BufferBuilder b = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR);
-            Render2DEngine.renderGradientTextureInternal(b, context.getMatrices(), getX() + 85, (getY() + (height - 24) / 2), 12, 12, 0, 0, 12, 12, 12, 12, m1.darker(), m2.darker(), m3.darker(), m4.darker());
-            Render2DEngine.renderGradientTextureInternal(b, context.getMatrices(), getX() + 75, (getY() + (height - 34) / 2), 16, 16, 0, 0, 16, 16, 16, 16, m1, m2, m3, m4);
-            Render2DEngine.renderGradientTextureInternal(b, context.getMatrices(), getX() + 65, (getY() + (height - 20) / 2), 12, 12, 0, 0, 12, 12, 12, 12, m1.darker().darker(), m2.darker().darker(), m3.darker().darker(), m4.darker().darker());
-            Render2DEngine.renderGradientTextureInternal(b, context.getMatrices(), getX() + 55, (getY() + (height - 28) / 2), 6, 6, 0, 0, 6, 6, 6, 6, m1, m2, m3, m4);
-            Render2DEngine.renderGradientTextureInternal(b, context.getMatrices(), getX() + 45, (getY() + (height - 17) / 2), 17, 17, 0, 0, 17, 17, 17, 17, m1, m2, m3, m4);
-            Render2DEngine.renderGradientTextureInternal(b, context.getMatrices(), getX() + 35, (getY() + (height - 30) / 2), 15, 15, 0, 0, 15, 15, 15, 15, m1.darker().darker().darker(), m2.darker().darker().darker(), m3.darker().darker().darker(), m4.darker().darker().darker());
-            Render2DEngine.renderGradientTextureInternal(b, context.getMatrices(), getX() + 25, (getY() + (height - 21) / 2), 8, 8, 0, 0, 8, 8, 8, 8, m1, m2, m3, m4);
-            Render2DEngine.renderGradientTextureInternal(b, context.getMatrices(), getX() + 15, (getY() + (height - 22) / 2), 12, 12, 0, 0, 12, 12, 12, 12, m1.darker().darker().darker(), m2.darker().darker().darker(), m3.darker().darker().darker(), m4.darker().darker().darker());
-            Render2DEngine.renderGradientTextureInternal(b, context.getMatrices(), getX() + 5, (getY() + (height - 28) / 2), 20, 20, 0, 0, 20, 20, 20, 20, m1, m2, m3, m4);
+            float clipX0 = getX() + 2;
+            float clipY0 = getY() - 5;
+            float clipX1 = clipX0 + width - 4;
+            float clipY1 = clipY0 + height;
+            renderHeaderIcon(b, context, getX() + 85, (getY() + (height - 24) / 2), 12, 12, 0, 0, 12, 12, 12, 12, clipX0, clipY0, clipX1, clipY1, m1.darker(), m2.darker(), m3.darker(), m4.darker());
+            renderHeaderIcon(b, context, getX() + 75, (getY() + (height - 34) / 2), 16, 16, 0, 0, 16, 16, 16, 16, clipX0, clipY0, clipX1, clipY1, m1, m2, m3, m4);
+            renderHeaderIcon(b, context, getX() + 65, (getY() + (height - 20) / 2), 12, 12, 0, 0, 12, 12, 12, 12, clipX0, clipY0, clipX1, clipY1, m1.darker().darker(), m2.darker().darker(), m3.darker().darker(), m4.darker().darker());
+            renderHeaderIcon(b, context, getX() + 55, (getY() + (height - 28) / 2), 6, 6, 0, 0, 6, 6, 6, 6, clipX0, clipY0, clipX1, clipY1, m1, m2, m3, m4);
+            renderHeaderIcon(b, context, getX() + 45, (getY() + (height - 17) / 2), 17, 17, 0, 0, 17, 17, 17, 17, clipX0, clipY0, clipX1, clipY1, m1, m2, m3, m4);
+            renderHeaderIcon(b, context, getX() + 35, (getY() + (height - 30) / 2), 15, 15, 0, 0, 15, 15, 15, 15, clipX0, clipY0, clipX1, clipY1, m1.darker().darker().darker(), m2.darker().darker().darker(), m3.darker().darker().darker(), m4.darker().darker().darker());
+            renderHeaderIcon(b, context, getX() + 25, (getY() + (height - 21) / 2), 8, 8, 0, 0, 8, 8, 8, 8, clipX0, clipY0, clipX1, clipY1, m1, m2, m3, m4);
+            renderHeaderIcon(b, context, getX() + 15, (getY() + (height - 22) / 2), 12, 12, 0, 0, 12, 12, 12, 12, clipX0, clipY0, clipX1, clipY1, m1.darker().darker().darker(), m2.darker().darker().darker(), m3.darker().darker().darker(), m4.darker().darker().darker());
+            renderHeaderIcon(b, context, getX() + 5, (getY() + (height - 28) / 2), 20, 20, 0, 0, 20, 20, 20, 20, clipX0, clipY0, clipX1, clipY1, m1, m2, m3, m4);
             BufferRenderer.drawWithGlobalProgram(b.end());
             RenderSystem.defaultBlendFunc();
             RenderSystem.disableBlend();
-            Render2DEngine.popWindow();
         }
 
         Render2DEngine.drawBlurredShadow(context.getMatrices(),
@@ -134,6 +151,32 @@ public class Category extends AbstractCategory {
         FontRenderers.categories.drawCenteredString(context.getMatrices(), getName(), ((int) getX() + 2 + (width - 4) / 2), (int) getY() + (int) height / 2f - 7, new Color(-1).getRGB());
         context.getMatrices().pop();
         updatePosition();
+    }
+
+    private void renderHeaderIcon(BufferBuilder b, DrawContext context,
+                                  float x, float y, float width, float height,
+                                  float u, float v, float regionWidth, float regionHeight,
+                                  float textureWidth, float textureHeight,
+                                  float clipX0, float clipY0, float clipX1, float clipY1,
+                                  Color c1, Color c2, Color c3, Color c4) {
+        float x0 = Math.max(x, clipX0);
+        float y0 = Math.max(y, clipY0);
+        float x1 = Math.min(x + width, clipX1);
+        float y1 = Math.min(y + height, clipY1);
+        if (x1 <= x0 || y1 <= y0) {
+            return;
+        }
+
+        float clippedU0 = u + (x0 - x) / width * regionWidth;
+        float clippedU1 = u + (x1 - x) / width * regionWidth;
+        float clippedV0 = v + (y0 - y) / height * regionHeight;
+        float clippedV1 = v + (y1 - y) / height * regionHeight;
+        Matrix4f matrix = context.getMatrices().peek().getPositionMatrix();
+
+        b.vertex(matrix, x0, y1, 0).texture(clippedU0 / textureWidth, clippedV1 / textureHeight).color(c1.getRGB());
+        b.vertex(matrix, x1, y1, 0).texture(clippedU1 / textureWidth, clippedV1 / textureHeight).color(c2.getRGB());
+        b.vertex(matrix, x1, y0, 0).texture(clippedU1 / textureWidth, clippedV0 / textureHeight).color(c3.getRGB());
+        b.vertex(matrix, x0, y0, 0).texture(clippedU0 / textureWidth, clippedV0 / textureHeight).color(c4.getRGB());
     }
 
     @Override

@@ -131,10 +131,6 @@ public class ModuleButton extends AbstractButton {
                 Render2DEngine.popWindow();
             }
 
-            if (Render2DEngine.isHovered(mouseX, mouseY, x + 4, y + height - 12f, width - 8, height + (float) getElementsHeight())) {
-                Render2DEngine.drawBlurredShadow(context.getMatrices(), mouseX - 10, mouseY - 10, 20, 20, 40, HudEditor.getColor(270));
-            }
-
             for (AbstractElement element : elements) {
                 if (!element.isVisible())
                     continue;
@@ -175,7 +171,7 @@ public class ModuleButton extends AbstractButton {
         } else {
             if (hovered) {
                 Render2DEngine.addWindow(context.getMatrices(), x + 1, y, x + width - 2, y + height, 1.);
-                Render2DEngine.drawBlurredShadow(context.getMatrices(), mouseX - 10, mouseY - 10, 20, 20, 35, HudEditor.getColor(270));
+                Render2DEngine.drawRect(context.getMatrices(), x + 4f, y + 1f, width - 8, height - 2, Render2DEngine.applyOpacity(HudEditor.getColor(270), 0.08f));
                 Render2DEngine.popWindow();
             }
         }
