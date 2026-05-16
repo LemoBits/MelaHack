@@ -14,8 +14,21 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public final class RenderSystem {
+    public enum BlendMode {
+        DEFAULT,
+        ADDITIVE,
+        DST_ALPHA,
+        CUSTOM
+    }
+
     private static RenderPipeline currentPipeline;
     private static final Map<String, Object> currentUniforms = new LinkedHashMap<>();
+    private static BlendMode blendMode = BlendMode.DEFAULT;
+    private static boolean scissorEnabled;
+    private static int scissorX;
+    private static int scissorY;
+    private static int scissorWidth;
+    private static int scissorHeight;
 
     private RenderSystem() {
     }
@@ -26,6 +39,10 @@ public final class RenderSystem {
 
     public static Map<String, Object> getCurrentUniforms() {
         return currentUniforms;
+    }
+
+    public static BlendMode getBlendMode() {
+        return blendMode;
     }
 
     public static void setShader(RenderPipeline pipeline) {
@@ -67,6 +84,7 @@ public final class RenderSystem {
     public static void defaultBlendFunc() {
         com.mojang.blaze3d.opengl.GlStateManager._blendFuncSeparate(
                 GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO);
+        blendMode = BlendMode.DEFAULT;
     }
 
     public static void blendFunc(GlStateManager.SrcFactor src, GlStateManager.DstFactor dst) {
@@ -75,6 +93,7 @@ public final class RenderSystem {
 
     public static void blendFunc(int src, int dst) {
         com.mojang.blaze3d.opengl.GlStateManager._blendFuncSeparate(src, dst, GL11.GL_ONE, GL11.GL_ZERO);
+        blendMode = classifyBlend(src, dst, GL11.GL_ONE, GL11.GL_ZERO);
     }
 
     public static void blendFuncSeparate(
@@ -85,6 +104,32 @@ public final class RenderSystem {
     ) {
         com.mojang.blaze3d.opengl.GlStateManager._blendFuncSeparate(
                 srcRgb.value, dstRgb.value, srcAlpha.value, dstAlpha.value);
+        blendMode = classifyBlend(srcRgb.value, dstRgb.value, srcAlpha.value, dstAlpha.value);
+    }
+
+    private static BlendMode classifyBlend(int srcRgb, int dstRgb, int srcAlpha, int dstAlpha) {
+        if (srcRgb == GL11.GL_SRC_ALPHA
+                && dstRgb == GL11.GL_ONE
+                && srcAlpha == GL11.GL_ONE
+                && dstAlpha == GL11.GL_ZERO) {
+            return BlendMode.ADDITIVE;
+        }
+
+        if (srcRgb == GL11.GL_SRC_ALPHA
+                && dstRgb == GL11.GL_ONE_MINUS_SRC_ALPHA
+                && srcAlpha == GL11.GL_ONE
+                && dstAlpha == GL11.GL_ZERO) {
+            return BlendMode.DEFAULT;
+        }
+
+        if (srcRgb == GL11.GL_DST_ALPHA
+                && dstRgb == GL11.GL_ONE_MINUS_DST_ALPHA
+                && srcAlpha == GL11.GL_ONE
+                && dstAlpha == GL11.GL_ZERO) {
+            return BlendMode.DST_ALPHA;
+        }
+
+        return BlendMode.CUSTOM;
     }
 
     public static void enableDepthTest() {
@@ -145,11 +190,25 @@ public final class RenderSystem {
     }
 
     public static void enableScissor(int x, int y, int width, int height) {
+        scissorEnabled = true;
+        scissorX = x;
+        scissorY = y;
+        scissorWidth = width;
+        scissorHeight = height;
         com.mojang.blaze3d.systems.RenderSystem.enableScissor(x, y, width, height);
     }
 
     public static void disableScissor() {
+        scissorEnabled = false;
         com.mojang.blaze3d.systems.RenderSystem.disableScissor();
+    }
+
+    public static void applyScissor(com.mojang.blaze3d.systems.RenderPass pass) {
+        if (scissorEnabled) {
+            pass.enableScissor(scissorX, scissorY, scissorWidth, scissorHeight);
+        } else {
+            pass.disableScissor();
+        }
     }
 
     public static void backupProjectionMatrix() {

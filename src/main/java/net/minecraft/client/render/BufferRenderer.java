@@ -34,6 +34,18 @@ public final class BufferRenderer {
                 default -> pipeline;
             };
         }
+        thunder.hack.utility.render.compat.RenderSystem.BlendMode blendMode =
+                thunder.hack.utility.render.compat.RenderSystem.getBlendMode();
+        if (blendMode == thunder.hack.utility.render.compat.RenderSystem.BlendMode.ADDITIVE) {
+            if (pipeline == ShaderProgramKeys.POSITION_TEX) {
+                pipeline = ShaderProgramKeys.POSITION_TEX_ADDITIVE;
+            } else if (pipeline == ShaderProgramKeys.POSITION_TEX_COLOR) {
+                pipeline = ShaderProgramKeys.POSITION_TEX_COLOR_ADDITIVE;
+            }
+        } else if (blendMode == thunder.hack.utility.render.compat.RenderSystem.BlendMode.DST_ALPHA
+                && pipeline == ShaderProgramKeys.POSITION_TEX_COLOR) {
+            pipeline = ShaderProgramKeys.POSITION_TEX_COLOR_DST_ALPHA;
+        }
 
         GpuBuffer vertices = parameters.format().uploadImmediateVertexBuffer(buffer.getBuffer());
         com.mojang.blaze3d.systems.RenderSystem.ShapeIndexBuffer shapeIndexBuffer = com.mojang.blaze3d.systems.RenderSystem.getSequentialBuffer(parameters.mode());
@@ -44,6 +56,7 @@ public final class BufferRenderer {
                 framebuffer.getColorAttachment(), OptionalInt.empty(),
                 framebuffer.getDepthAttachment(), OptionalDouble.empty())) {
             pass.setPipeline(pipeline);
+            thunder.hack.utility.render.compat.RenderSystem.applyScissor(pass);
             setCommonUniforms(pass, pipeline);
             for (Map.Entry<String, Object> uniform : thunder.hack.utility.render.compat.RenderSystem.getCurrentUniforms().entrySet()) {
                 Object value = uniform.getValue();
