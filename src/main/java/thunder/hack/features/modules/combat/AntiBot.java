@@ -33,6 +33,8 @@ public final class AntiBot extends Module {
         if (!onlyAura.getValue()) mc.world.getPlayers().forEach(this::markAsBot);
         else if (Aura.target instanceof PlayerEntity ent) this.markAsBot(ent);
 
+        bots.removeIf(PlayerEntity::isCreative);
+
         if (remove.getValue())
             bots.forEach(b -> {
                     try {
@@ -50,6 +52,8 @@ public final class AntiBot extends Module {
 
     private void markAsBot(PlayerEntity ent) {
         if (bots.contains(ent))
+            return;
+        if (ent.isCreative())
             return;
 
         switch (mode.getValue()) {
