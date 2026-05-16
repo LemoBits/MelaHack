@@ -7,6 +7,7 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.gl.UniformType;
 import net.minecraft.client.render.VertexFormats;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.MathHelper;
 import thunder.hack.features.modules.client.HudEditor;
 import thunder.hack.utility.render.compat.RenderSystem;
 
@@ -59,11 +60,12 @@ public class RectangleShader {
         Color c2 = HudEditor.getColor(0);
         Color c3 = HudEditor.getColor(180);
         Color c4 = HudEditor.getColor(90);
+        int alphaByte = MathHelper.clamp(Math.round(alpha * 255f), 0, 255);
 
-        color1 = new Color(c1.getRed(), c1.getGreen(), c1.getBlue(), Math.round(alpha * 255f));
-        color2 = new Color(c2.getRed(), c2.getGreen(), c2.getBlue(), Math.round(alpha * 255f));
-        color3 = new Color(c3.getRed(), c3.getGreen(), c3.getBlue(), Math.round(alpha * 255f));
-        color4 = new Color(c4.getRed(), c4.getGreen(), c4.getBlue(), Math.round(alpha * 255f));
+        color1 = new Color(c1.getRed(), c1.getGreen(), c1.getBlue(), alphaByte);
+        color2 = new Color(c2.getRed(), c2.getGreen(), c2.getBlue(), alphaByte);
+        color3 = new Color(c3.getRed(), c3.getGreen(), c3.getBlue(), alphaByte);
+        color4 = new Color(c4.getRed(), c4.getGreen(), c4.getBlue(), alphaByte);
     }
 
     public void setParameters(float x, float y, float width, float height, float r, float alpha, Color c1, Color c2, Color c3, Color c4) {
@@ -73,10 +75,11 @@ public class RectangleShader {
         uLocationY = -y * i + mc.getWindow().getScaledHeight() * i - height * i;
         uSizeX = width * i;
         uSizeY = height * i;
-        color1 = new Color(c1.getRed(), c1.getGreen(), c1.getBlue(), Math.round(alpha * 255f));
-        color2 = new Color(c2.getRed(), c2.getGreen(), c2.getBlue(), Math.round(alpha * 255f));
-        color3 = new Color(c3.getRed(), c3.getGreen(), c3.getBlue(), Math.round(alpha * 255f));
-        color4 = new Color(c4.getRed(), c4.getGreen(), c4.getBlue(), Math.round(alpha * 255f));
+        int alphaByte = MathHelper.clamp(Math.round(alpha * 255f), 0, 255);
+        color1 = new Color(c1.getRed(), c1.getGreen(), c1.getBlue(), alphaByte);
+        color2 = new Color(c2.getRed(), c2.getGreen(), c2.getBlue(), alphaByte);
+        color3 = new Color(c3.getRed(), c3.getGreen(), c3.getBlue(), alphaByte);
+        color4 = new Color(c4.getRed(), c4.getGreen(), c4.getBlue(), alphaByte);
     }
 
     public void use() {

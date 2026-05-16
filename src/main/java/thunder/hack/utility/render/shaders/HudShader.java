@@ -7,6 +7,7 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.gl.UniformType;
 import net.minecraft.client.render.VertexFormats;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.MathHelper;
 import thunder.hack.utility.render.compat.RenderSystem;
 
 import java.awt.*;
@@ -66,15 +67,16 @@ public class HudShader {
         Color c2 = thunder.hack.features.modules.client.HudEditor.getColor(0);
         Color c3 = thunder.hack.features.modules.client.HudEditor.getColor(180);
         Color c4 = thunder.hack.features.modules.client.HudEditor.getColor(90);
+        int alphaByte = MathHelper.clamp(Math.round(externalAlpha * 255f), 0, 255);
 
-        color1 = new Color(c1.getRed(), c1.getGreen(), c1.getBlue(), Math.round(externalAlpha * 255f));
-        color2 = new Color(c2.getRed(), c2.getGreen(), c2.getBlue(), Math.round(externalAlpha * 255f));
-        color3 = new Color(c3.getRed(), c3.getGreen(), c3.getBlue(), Math.round(externalAlpha * 255f));
-        color4 = new Color(c4.getRed(), c4.getGreen(), c4.getBlue(), Math.round(externalAlpha * 255f));
+        color1 = new Color(c1.getRed(), c1.getGreen(), c1.getBlue(), alphaByte);
+        color2 = new Color(c2.getRed(), c2.getGreen(), c2.getBlue(), alphaByte);
+        color3 = new Color(c3.getRed(), c3.getGreen(), c3.getBlue(), alphaByte);
+        color4 = new Color(c4.getRed(), c4.getGreen(), c4.getBlue(), alphaByte);
         blend = thunder.hack.features.modules.client.HudEditor.blend.getValue();
         outline = thunder.hack.features.modules.client.HudEditor.outline.getValue();
         glow = thunder.hack.features.modules.client.HudEditor.glow1.getValue();
-        alpha = internalAlpha;
+        alpha = MathHelper.clamp(internalAlpha, 0f, 1f);
     }
 
     public void use() {
