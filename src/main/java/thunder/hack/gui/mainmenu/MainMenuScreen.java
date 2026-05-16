@@ -1,8 +1,6 @@
 package thunder.hack.gui.mainmenu;
 
-import thunder.hack.utility.render.compat.RenderSystem;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen;
@@ -13,12 +11,9 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Util;
 import org.jetbrains.annotations.NotNull;
-import thunder.hack.api.IAddon;
-import thunder.hack.core.Managers;
 import thunder.hack.core.manager.client.ModuleManager;
 import thunder.hack.gui.font.FontRenderers;
 import thunder.hack.utility.render.Render2DEngine;
-import thunder.hack.utility.render.TextureStorage;
 
 import java.awt.*;
 import java.net.URI;
@@ -110,16 +105,6 @@ public class MainMenuScreen extends Screen {
 
         }*/
 
-        Render2DEngine.drawHudBase(context.getMatrices(), mc.getWindow().getScaledWidth() - 40, mc.getWindow().getScaledHeight() - 40, 30, 30, 5, Render2DEngine.isHovered(mouseX, mouseY, mc.getWindow().getScaledWidth() - 40, mc.getWindow().getScaledHeight() - 40, 30, 30) ? 0.7f : 1f);
-        RenderSystem.setShaderColor(1f, 1f, 1f, Render2DEngine.isHovered(mouseX, mouseY, mc.getWindow().getScaledWidth() - 40, mc.getWindow().getScaledHeight() - 40, 30, 30) ? 0.7f : 1f);
-        context.drawTexture(RenderLayer::getGuiTextured, TextureStorage.thTeam, mc.getWindow().getScaledWidth() - 40, mc.getWindow().getScaledHeight() - 40, 0, 0, 30, 30, 1000, 1000, 1000, 1000);
-        RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
-
-        Render2DEngine.drawHudBase(context.getMatrices(), mc.getWindow().getScaledWidth() - 80, mc.getWindow().getScaledHeight() - 40, 30, 30, 5, Render2DEngine.isHovered(mouseX, mouseY, mc.getWindow().getScaledWidth() - 80, mc.getWindow().getScaledHeight() - 40, 30, 30) ? 0.7f : 1f);
-        RenderSystem.setShaderColor(1f, 1f, 1f, Render2DEngine.isHovered(mouseX, mouseY, mc.getWindow().getScaledWidth() - 80, mc.getWindow().getScaledHeight() - 40, 30, 30) ? 0.7f : 1f);
-        context.drawTexture(RenderLayer::getGuiTextured, TextureStorage.donation, mc.getWindow().getScaledWidth() - 79, mc.getWindow().getScaledHeight() - 39, 0, 0, 28, 28, 1000, 1000, 1000, 1000);
-        RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
-
 //        // Remove changelog cuz it's ugly
 //        int offsetY = 10;
 //        for (String change : ThunderUtility.changeLog) {
@@ -127,22 +112,6 @@ public class MainMenuScreen extends Screen {
 //            FontRenderers.sf_medium.drawString(context.getMatrices(), prefix, 10, offsetY, Render2DEngine.applyOpacity(-1, 0.4f));
 //            offsetY += 10;
 //        }
-
-        int totalAddonsLoaded = Managers.ADDON.getTotalAddons();
-        String addonsText = "Addons Loaded: " + totalAddonsLoaded;
-        int screenWidth = mc.getWindow().getScaledWidth();
-        int textWidth = (int) FontRenderers.sf_bold.getStringWidth(addonsText);
-        int textX = screenWidth - textWidth - 5;
-        FontRenderers.sf_bold.drawString(context.getMatrices(), addonsText, textX, 5, Color.WHITE.getRGB());
-
-        int offset = 0;
-        for (IAddon addon : Managers.ADDON.getAddons()) {
-            // for (String addon : Arrays.asList("Addon", "Addon2", "Addon3", "Addon4", "Addon5")) {
-            textWidth = (int) FontRenderers.sf_bold.getStringWidth(addon.getName() + " |");
-            textX = screenWidth - textWidth - 5;
-            FontRenderers.sf_bold.drawString(context.getMatrices(), addon.getName() + Formatting.WHITE + " |", textX, 13 + offset, Color.GRAY.getRGB());
-            offset += 9;
-        }
     }
 
     private static @NotNull String getPrefix(@NotNull String change) {
@@ -174,12 +143,6 @@ public class MainMenuScreen extends Screen {
             mc.setScreen(new TitleScreen());
             confirm = false;
         }
-
-        if (Render2DEngine.isHovered(mouseX, mouseY, mc.getWindow().getScaledWidth() - 40, mc.getWindow().getScaledHeight() - 40, 40, 40))
-            mc.setScreen(CreditsScreen.getInstance());
-
-        if (Render2DEngine.isHovered(mouseX, mouseY, mc.getWindow().getScaledWidth() - 90, mc.getWindow().getScaledHeight() - 40, 40, 40))
-            Util.getOperatingSystem().open(URI.create("https://www.donationalerts.com/r/06ed/"));
 
         if (Render2DEngine.isHovered(mouseX, mouseY, (int) (halfOfWidth - 157), (int) (halfOfHeight - 140), 300, 70))
             Util.getOperatingSystem().open(URI.create("https://github.com/HundSimon/MelaHack/"));
