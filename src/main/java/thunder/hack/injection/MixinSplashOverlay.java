@@ -13,7 +13,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import thunder.hack.features.modules.client.ClientSettings;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import thunder.hack.core.manager.client.ModuleManager;
 import thunder.hack.utility.render.Render2DEngine;
@@ -36,7 +35,7 @@ public abstract class MixinSplashOverlay {
 
     @Inject(method = "render", at = @At("HEAD"), cancellable = true)
     public void render(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
-        if(ModuleManager.unHook.isEnabled() || !ClientSettings.customLoadingScreen.getValue())
+        if (ModuleManager.unHook.isEnabled())
             return;
         ci.cancel();
         renderCustom(context, mouseX, mouseY, delta);
