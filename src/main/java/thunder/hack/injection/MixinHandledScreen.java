@@ -203,7 +203,6 @@ public abstract class MixinHandledScreen<T extends ScreenHandler> extends Screen
         drawBackground(context, offsetX, offsetY, colors);
 
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        DiffuseLighting.enableGuiDepthLighting();
         int row = 0;
         int i = 0;
         for (ItemStack itemStack : itemStacks) {
@@ -219,7 +218,6 @@ public abstract class MixinHandledScreen<T extends ScreenHandler> extends Screen
                 row++;
             }
         }
-        DiffuseLighting.disableGuiDepthLighting();
         RenderSystem.enableDepthTest();
     }
 
@@ -228,13 +226,13 @@ public abstract class MixinHandledScreen<T extends ScreenHandler> extends Screen
         RenderSystem.setShaderColor(colors[0], colors[1], colors[2], 1F);
         RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
         RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR_MIPMAP_LINEAR);
-        context.drawTexture(RenderLayer::getGuiTextured, TextureStorage.container, x, y, 0, 0, 176, 67, 176, 67);
+        context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, TextureStorage.container, x, y, 0, 0, 176, 67, 176, 67);
         RenderSystem.enableBlend();
     }
 
     private void drawMapPreview(DrawContext context, ItemStack stack, int x, int y) {
         RenderSystem.enableBlend();
-        context.getMatrices().push();
+        context.getMatrices().pushMatrix();
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
         int y1 = y - 12;
@@ -250,14 +248,14 @@ public abstract class MixinHandledScreen<T extends ScreenHandler> extends Screen
             y1 += 8;
             z = 310;
             double scale = (double) (100 - 16) / 128.0D;
-            context.getMatrices().translate(x1, y1, z);
-            context.getMatrices().scale((float) scale, (float) scale, 0);
+            context.getMatrices().translate((float) (x1), (float) (y1));
+            context.getMatrices().scale((float) scale, (float) scale);
             VertexConsumerProvider.Immediate consumer = client.getBufferBuilders().getEntityVertexConsumers();
             MapRenderState renderState = new MapRenderState();
             client.getMapRenderer().update((MapIdComponent) stack.get(DataComponentTypes.MAP_ID), mapState, renderState);
-            client.getMapRenderer().draw(renderState, context.getMatrices(), consumer, false, 0xF000F0);
+            client.getMapRenderer().draw(renderState, thunder.hack.utility.render.GuiMatrix.asMatrixStack(context.getMatrices()), consumer, false, 0xF000F0);
         }
-        context.getMatrices().pop();
+        context.getMatrices().popMatrix();
     }
 
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)

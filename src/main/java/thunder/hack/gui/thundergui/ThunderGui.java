@@ -162,9 +162,8 @@ public class ThunderGui extends Screen {
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         if (Module.fullNullCheck())
-            renderBackground(context, mouseX, mouseY, delta);
-        context.draw();
-        context.getMatrices().push();
+            context.fill(0, 0, mc.getWindow().getScaledWidth(), mc.getWindow().getScaledHeight(), 0xAA000000);
+        context.getMatrices().pushMatrix();
         mouse_x = mouseX;
         mouse_y = mouseY;
         if (open_animation.getAnimationd() > 0) {
@@ -175,7 +174,7 @@ public class ThunderGui extends Screen {
             mc.currentScreen = null;
             mc.setScreen(null);
         }
-        context.getMatrices().pop();
+        context.getMatrices().popMatrix();
     }
 
     public void renderGui(DrawContext context, int mouseX, int mouseY, float partialTicks) {
@@ -223,13 +222,13 @@ public class ThunderGui extends Screen {
         // Плита с лого / Main GUI logo
         Render2DEngine.drawRound(context.getMatrices(), main_posX + 5, main_posY + 5, 90, 30, 7f, ThunderHackGui.getColorByTheme(1));
 
-        context.getMatrices().push();
-        context.getMatrices().scale(0.85f, 0.85f, 1);
-        context.getMatrices().translate((main_posX + 10) / 0.85, (main_posY + 15) / 0.85, 0);
+        context.getMatrices().pushMatrix();
+        context.getMatrices().scale(0.85f, 0.85f);
+        context.getMatrices().translate((float) ((main_posX + 10) / 0.85), (float) ((main_posY + 15) / 0.85));
         FontRenderers.thglitch.drawString(context.getMatrices(), "MELAHACK", 0, 0, ThunderHackGui.getColorByTheme(2).getRGB());
-        context.getMatrices().translate(-(main_posX + 10) / 0.85, -(main_posY + 15) / 0.85, 0);
-        context.getMatrices().scale(1, 1, 1);
-        context.getMatrices().pop();
+        context.getMatrices().translate((float) (-(main_posX + 10) / 0.85), (float) (-(main_posY + 15) / 0.85));
+        context.getMatrices().scale(1, 1);
+        context.getMatrices().popMatrix();
 
         FontRenderers.settings.drawString(context.getMatrices(), "recode v" + ThunderHack.VERSION, main_posX + 91 - (FontRenderers.settings.getStringWidth("recode v" + ThunderHack.VERSION)), main_posY + 30, ThunderHackGui.getColorByTheme(3).getRGB());
 
@@ -337,9 +336,9 @@ public class ThunderGui extends Screen {
 
         Render2DEngine.addWindow(context.getMatrices(), main_posX + 79, main_posY + 35, main_posX + 396 + 40, main_posY + main_height, 1d);
 
-        this.components.forEach(components -> components.render(context.getMatrices(), mouseX, mouseY));
+        this.components.forEach(components -> components.render(thunder.hack.utility.render.GuiMatrix.asMatrixStack(context.getMatrices()), mouseX, mouseY));
         Render2DEngine.popWindow();
-        this.categories.forEach(category -> category.render(context.getMatrices(), mouseX, mouseY));
+        this.categories.forEach(category -> category.render(thunder.hack.utility.render.GuiMatrix.asMatrixStack(context.getMatrices()), mouseX, mouseY));
 
         if (currentMode == CurrentMode.Modules) {
             Render2DEngine.draw2DGradientRect(context.getMatrices(), main_posX + 98, main_posY + 34, main_posX + 191, main_posY + 50, new Color(37, 27, 41, 0), new Color(37, 27, 41, 245), new Color(37, 27, 41, 0), new Color(37, 27, 41, 245));
@@ -427,7 +426,7 @@ public class ThunderGui extends Screen {
                         element.setHeight(15);
                     }
                 }
-                element.render(context.getMatrices(), mouseX, mouseY, partialTicks);
+                element.render(thunder.hack.utility.render.GuiMatrix.asMatrixStack(context.getMatrices()), mouseX, mouseY, partialTicks);
                 offsetY += element.getHeight() + 3f;
             }
         }

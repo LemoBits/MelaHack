@@ -110,10 +110,10 @@ public class ModuleButton extends AbstractButton {
                 float px = x + 4 + (width - 8) / 2f;
                 float py = y + 12f + (height + (float) getElementsHeight()) / 2f;
                 int gScale = ModuleManager.clickGui.gearScale.getValue();
-                context.getMatrices().push();
-                context.getMatrices().translate(px, py, 0.0F);
-                context.getMatrices().multiply(RotationAxis.POSITIVE_Z.rotationDegrees(gearAnimation.getValue()));
-                context.getMatrices().translate(-px, -py, 0.0F);
+                context.getMatrices().pushMatrix();
+                context.getMatrices().translate((float) (px), (float) (py));
+                context.getMatrices().rotate((float) Math.toRadians(gearAnimation.getValue()));
+                context.getMatrices().translate((float) (-px), (float) (-py));
                 RenderSystem.setShaderTexture(0, TextureStorage.Gear);
                 RenderSystem.enableBlend();
                 RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE);
@@ -124,10 +124,10 @@ public class ModuleButton extends AbstractButton {
                         Render2DEngine.injectAlpha(HudEditor.getColor(90).darker(), 110));
                 RenderSystem.defaultBlendFunc();
                 RenderSystem.disableBlend();
-                context.getMatrices().translate(px, py, 0.0F);
-                context.getMatrices().multiply(RotationAxis.POSITIVE_Z.rotationDegrees((float) Render2DEngine.interpolate(mc.player.age - 1, mc.player.age, Render3DEngine.getTickDelta()) * -4f));
-                context.getMatrices().translate(-px, -py, 0.0F);
-                context.getMatrices().pop();
+                context.getMatrices().translate((float) (px), (float) (py));
+                context.getMatrices().rotate((float) Math.toRadians((float) Render2DEngine.interpolate(mc.player.age - 1, mc.player.age, Render3DEngine.getTickDelta()) * -4f));
+                context.getMatrices().translate((float) (-px), (float) (-py));
+                context.getMatrices().popMatrix();
                 Render2DEngine.popWindow();
             }
 
@@ -156,13 +156,13 @@ public class ModuleButton extends AbstractButton {
                 offsetY += element.getHeight();
             }
 
-            context.getMatrices().push();
+            context.getMatrices().pushMatrix();
             TargetHud.sizeAnimation(context.getMatrices(), x + width / 2f + 6, y + height / 2f - 12, ticksOpened < 5 ? Math.clamp(category_animation / offsetY, 0f, 1f) : 1f);
             elements.forEach(e -> {
                 if (e.isVisible())
                     e.render(context, mouseX, mouseY, delta);
             });
-            context.getMatrices().pop();
+            context.getMatrices().popMatrix();
 
             Render2DEngine.drawBlurredShadow(context.getMatrices(), x + 3, y + height, width - 6, 3, 13, HudEditor.getColor(1));
             if (!module.isEnabled())

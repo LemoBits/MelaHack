@@ -57,6 +57,7 @@
     "accesors.IRenderPhaseMixin",
     "accesors.IEntityRenderDispatcher",
     "accesors.IInput",
+    "accesors.IPostEffectPass",
     "accesors.ISignEditScreen",
     "accesors.IWorldRenderer"
   ],

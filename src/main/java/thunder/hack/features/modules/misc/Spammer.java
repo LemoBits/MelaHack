@@ -148,12 +148,12 @@ public class Spammer extends Module {
             if (mode.getValue() == Mode.Chat) {
                 if (c.charAt(0) == '/') {
                     c = c.replace("/", "");
-                    mc.player.networkHandler.sendCommand(c);
+                    mc.player.networkHandler.sendChatCommand(c);
                 } else mc.player.networkHandler.sendChatMessage(global.getValue() ? "!" + c : c);
             } else {
                 try {
                     String prefix = whisper_prefix.getValue().prefix;
-                    mc.player.networkHandler.sendCommand(prefix + getPlayerName() + " " + c);
+                    mc.player.networkHandler.sendChatCommand(prefix + getPlayerName() + " " + c);
                 } catch (NullPointerException e) {
                 }
             }

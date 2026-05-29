@@ -1,13 +1,33 @@
 #version 150
 
-uniform float time;
-uniform vec2 resolution;
 uniform sampler2D InSampler;
 in vec2 texCoord;
-uniform int quality;
-uniform vec4 color;
 
 out vec4 fragColor;
+
+layout(std140) uniform ThunderHackPost {
+    vec4 color;
+    vec4 outlinecolor;
+    vec4 primaryColor;
+    vec4 secondaryColor;
+    vec4 first;
+    vec4 ffirst;
+    vec3 second;
+    vec3 third;
+    vec3 fsecond;
+    vec3 fthird;
+    vec2 resolution;
+    float time;
+    float alpha0;
+    float alpha1;
+    float alpha2;
+    float factor;
+    float moreGradient;
+    float fillAlpha;
+    int quality;
+    int lineWidth;
+    int oct;
+};
 
 float snow(vec2 uv, float scale)
 {

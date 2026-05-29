@@ -138,7 +138,7 @@ public class FriendComponent {
         FontRenderers.icons.drawString(context.getMatrices(), "w", posX + 268, posY + 13, Render2DEngine.applyOpacity(-1, getFadeFactor()));
 
 
-        context.drawTexture(RenderLayer::getGuiTextured, Objects.requireNonNullElse(head, TextureStorage.crackedSkin), posX + 10, posY + 3, 0, 0, 22, 22, 22, 22);
+        context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, Objects.requireNonNullElse(head, TextureStorage.crackedSkin), posX + 10, posY + 3, 0, 0, 22, 22, 22, 22);
 
         FontRenderers.modules.drawString(context.getMatrices(), name, posX + 37, posY + 6, Render2DEngine.applyOpacity(-1, getFadeFactor()));
 

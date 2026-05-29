@@ -4,7 +4,6 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import thunder.hack.utility.render.compat.RenderSystem;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.util.math.MatrixStack;
 import thunder.hack.features.hud.HudElement;
 import thunder.hack.setting.Setting;
 import thunder.hack.utility.render.Render2DEngine;
@@ -38,12 +37,12 @@ public class CandleHud extends HudElement {
 
         prevPitch = mc.player.getPitch();
 
-        context.getMatrices().push();
-        context.getMatrices().translate((int) getPosX(), (int) getPosY(), 0);
+        context.getMatrices().pushMatrix();
+        context.getMatrices().translate((float) ((int) getPosX()), (float) ((int) getPosY()));
         float scalefactor = (float) scale.getValue() / 100f;
-        context.getMatrices().scale(scalefactor, scalefactor, 1);
-        context.drawTexture(RenderLayer::getGuiTextured, TextureStorage.candle, 0, -5, 0, 0, 102, 529, 102, 529);
-        context.getMatrices().pop();
+        context.getMatrices().scale(scalefactor, scalefactor);
+        context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, TextureStorage.candle, 0, -5, 0, 0, 102, 529, 102, 529);
+        context.getMatrices().popMatrix();
 
         drawFire(context.getMatrices(), getPosX() + (40 + 15f - xAnim) * scalefactor, getPosY() + (10 - yAnim) * scalefactor, 7 * scalefactor, 7 * scalefactor,
                 Render2DEngine.applyOpacity(new Color(0xFA460F), (float) Math.sin((mc.player.age + 10) / 15f) + 1.4f));
@@ -59,7 +58,7 @@ public class CandleHud extends HudElement {
         setBounds(getPosX(), getPosY(), (int) (102 * scalefactor), (int) (529 * scalefactor));
     }
 
-    private void drawFire(MatrixStack matrices, float x, float y, float width, float height, Color color) {
+    private void drawFire(Object matrices, float x, float y, float width, float height, Color color) {
         width = width + 7 * 2;
         height = height + 7 * 2;
         x = x - 7;

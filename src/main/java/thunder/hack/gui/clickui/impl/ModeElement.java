@@ -39,20 +39,20 @@ public class ModeElement extends AbstractElement {
         float tx = x + width - 11;
         float ty = y + 7.5f;
 
-        MatrixStack matrixStack = context.getMatrices();
+        var matrixStack = context.getMatrices();
 
         float thetaRotation = -180f * animation;
-        matrixStack.push();
+        matrixStack.pushMatrix();
 
-        matrixStack.translate(tx, ty, 0);
-        matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(thetaRotation));
-        matrixStack.translate(-tx, -ty, 0);
+        matrixStack.translate(tx, ty);
+        matrixStack.rotate((float) Math.toRadians(thetaRotation));
+        matrixStack.translate(-tx, -ty);
 
-        matrixStack.translate((x + width - 14), y + 4.5f, 0);
-        context.drawTexture(RenderLayer::getGuiTextured, TextureStorage.guiArrow, 0, 0, 0, 0, 6, 6, 6, 6);
-        matrixStack.translate(-(x + width - 14), -y - 4.5f, 0);
+        matrixStack.translate((x + width - 14), y + 4.5f);
+        context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, TextureStorage.guiArrow, 0, 0, 0, 0, 6, 6, 6, 6);
+        matrixStack.translate(-(x + width - 14), -y - 4.5f);
 
-        matrixStack.pop();
+        matrixStack.popMatrix();
 
         if (setting.group != null)
             Render2DEngine.drawRect(context.getMatrices(), x + 4, y, 1f, 17, HudEditor.getColor(1));

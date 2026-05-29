@@ -33,15 +33,9 @@ public class RectangleShader {
             .withBlend(BlendFunction.TRANSLUCENT)
             .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
             .withDepthWrite(false)
-            .withUniform("ModelViewMat", UniformType.MATRIX4X4)
-            .withUniform("ProjMat", UniformType.MATRIX4X4)
-            .withUniform("color1", UniformType.VEC4)
-            .withUniform("color2", UniformType.VEC4)
-            .withUniform("color3", UniformType.VEC4)
-            .withUniform("color4", UniformType.VEC4)
-            .withUniform("uSize", UniformType.VEC2)
-            .withUniform("uLocation", UniformType.VEC2)
-            .withUniform("radius", UniformType.FLOAT)
+            .withUniform("Projection", UniformType.UNIFORM_BUFFER)
+            .withUniform("DynamicTransforms", UniformType.UNIFORM_BUFFER)
+            .withUniform("ThunderHackCustom", UniformType.UNIFORM_BUFFER)
             .withVertexFormat(VertexFormats.POSITION, VertexFormat.DrawMode.QUADS)
             .build();
 

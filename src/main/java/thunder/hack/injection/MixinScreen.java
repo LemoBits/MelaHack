@@ -39,7 +39,7 @@ public abstract class MixinScreen {
     @Shadow
     public abstract void init(MinecraftClient client, int width, int height);
 
-    @Inject(method = "handleTextClick", at = @At(value = "INVOKE", target = "Lorg/slf4j/Logger;error(Ljava/lang/String;Ljava/lang/Object;)V", ordinal = 1, remap = false), cancellable = true)
+    @Inject(method = "handleTextClick", at = @At("HEAD"), cancellable = true)
     private void onRunCommand(Style style, CallbackInfoReturnable<Boolean> cir) {
         if (Objects.requireNonNull(style.getClickEvent()) instanceof ClientClickEvent clientClickEvent && clientClickEvent.getValue().startsWith(Managers.COMMAND.getPrefix()))
             try {

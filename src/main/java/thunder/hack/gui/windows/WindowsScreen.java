@@ -39,10 +39,9 @@ public class WindowsScreen extends Screen {
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         //   super.render(context, mouseX, mouseY, delta);
         if (Module.fullNullCheck())
-            renderBackground(context, mouseX, mouseY, delta);
-        context.draw();
+            context.fill(0, 0, mc.getWindow().getScaledWidth(), mc.getWindow().getScaledHeight(), 0xAA000000);
 
-        MatrixStack matrices = context.getMatrices();
+        var matrices = context.getMatrices();
         int i = mc.getWindow().getScaledWidth() / 2;
 
         float offset = (windows.size() * 20f) / -2f - 23;
@@ -52,7 +51,7 @@ public class WindowsScreen extends Screen {
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.setShaderColor(1f, 1f, 1f, Render2DEngine.isHovered(mouseX, mouseY, (i + offset) + 1, mc.getWindow().getScaledHeight() - 23, 15, 15) ? 0.95f : 0.7f);
-        context.drawTexture(RenderLayer::getGuiTextured, clickGuiIcon, (int) (i + offset) + 1, mc.getWindow().getScaledHeight() - 23, 15, 15, 0, 0, 15, 15, 15, 15);
+        context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, clickGuiIcon, (int) (i + offset) + 1, mc.getWindow().getScaledHeight() - 23, 15, 15, 0, 0, 15, 15, 15, 15);
         RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
         RenderSystem.disableBlend();
 
@@ -66,7 +65,7 @@ public class WindowsScreen extends Screen {
             RenderSystem.enableBlend();
             RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE);
             RenderSystem.setShaderColor(1f, 1f, 1f, Render2DEngine.isHovered(mouseX, mouseY, (i + offset) + 1, mc.getWindow().getScaledHeight() - 23, 15, 15) ? 0.95f : 0.7f);
-            context.drawTexture(RenderLayer::getGuiTextured, w.getIcon() != null ? w.getIcon() : TextureStorage.configIcon, (int) (i + offset) + 3, mc.getWindow().getScaledHeight() - 21, 11, 11, 0, 0, 11, 11, 11, 11);
+            context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, w.getIcon() != null ? w.getIcon() : TextureStorage.configIcon, (int) (i + offset) + 3, mc.getWindow().getScaledHeight() - 21, 11, 11, 0, 0, 11, 11, 11, 11);
             RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
             RenderSystem.disableBlend();
             offset += 20f;

@@ -15,6 +15,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import thunder.hack.core.manager.client.ModuleManager;
+import thunder.hack.features.modules.client.ClientSettings;
 import thunder.hack.utility.render.Render2DEngine;
 import thunder.hack.utility.render.TextureStorage;
 
@@ -35,7 +36,7 @@ public abstract class MixinSplashOverlay {
 
     @Inject(method = "render", at = @At("HEAD"), cancellable = true)
     public void render(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
-        if (ModuleManager.unHook.isEnabled())
+        if (ModuleManager.unHook.isEnabled() || !ClientSettings.customLoadingScreen.getValue())
             return;
         ci.cancel();
         renderCustom(context, mouseX, mouseY, delta);
@@ -84,10 +85,10 @@ public abstract class MixinSplashOverlay {
         RenderSystem.blendFunc(770, 1);
 
         int logoAlpha = MathHelper.ceil(MathHelper.clamp(h, 0.0F, 1.0F) * 255.0F);
-        context.drawTexture(RenderLayer::getGuiTextured, TextureStorage.thLogo, k - 150, p - 35, 0, 0, 300, 70, 300, 70,
+        context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, TextureStorage.thLogo, k - 150, p - 35, 0, 0, 300, 70, 300, 70,
                 withAlpha(new Color(0x1A1A1A).getRGB(), logoAlpha));
         Render2DEngine.addWindow(context.getMatrices(),k - 150, p - 35, k - 150 + (300 * progress), p + 35, 1f);
-        context.drawTexture(RenderLayer::getGuiTextured, TextureStorage.thLogo, k - 150, p - 35, 0, 0, 300, 70, 300, 70,
+        context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, TextureStorage.thLogo, k - 150, p - 35, 0, 0, 300, 70, 300, 70,
                 withAlpha(Color.WHITE.getRGB(), logoAlpha));
         Render2DEngine.popWindow();
 

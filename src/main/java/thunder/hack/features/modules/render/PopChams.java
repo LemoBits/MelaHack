@@ -75,7 +75,7 @@ public final class PopChams extends Module {
     private void onTotemPop(@NotNull TotemPopEvent e) {
         if (e.getEntity().equals(mc.player) || mc.world == null) return;
 
-        PlayerEntity entity = new PlayerEntity(mc.world, BlockPos.ORIGIN, e.getEntity().bodyYaw, new GameProfile(e.getEntity().getUuid(), e.getEntity().getName().getString())) {
+        PlayerEntity entity = new PlayerEntity(mc.world, new GameProfile(e.getEntity().getUuid(), e.getEntity().getName().getString())) {
             @Override public boolean isSpectator() {return false;}
             @Override public boolean isCreative() {return false;}
             @Override public GameMode getGameMode() { return GameMode.SURVIVAL; }

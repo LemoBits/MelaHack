@@ -36,15 +36,9 @@ public class BlurProgram {
             .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
             .withDepthWrite(false)
             .withSampler("InputSampler")
-            .withUniform("ModelViewMat", UniformType.MATRIX4X4)
-            .withUniform("ProjMat", UniformType.MATRIX4X4)
-            .withUniform("InputResolution", UniformType.VEC2)
-            .withUniform("Quality", UniformType.FLOAT)
-            .withUniform("Brightness", UniformType.FLOAT)
-            .withUniform("color1", UniformType.VEC4)
-            .withUniform("uSize", UniformType.VEC2)
-            .withUniform("uLocation", UniformType.VEC2)
-            .withUniform("radius", UniformType.FLOAT)
+            .withUniform("Projection", UniformType.UNIFORM_BUFFER)
+            .withUniform("DynamicTransforms", UniformType.UNIFORM_BUFFER)
+            .withUniform("ThunderHackCustom", UniformType.UNIFORM_BUFFER)
             .withVertexFormat(VertexFormats.POSITION, VertexFormat.DrawMode.QUADS)
             .build();
 
@@ -78,12 +72,12 @@ public class BlurProgram {
         }
 
         if (!captureValid) {
-            input.drawBlit(framebuffer.getColorAttachment());
+            input.drawBlit(framebuffer.getColorAttachmentView());
             captureValid = true;
         }
 
         RenderSystem.setShader(BLUR_SHADER);
-        RenderSystem.setShaderTexture(0, input.getColorAttachment());
+        RenderSystem.setShaderTexture(0, input.getColorAttachmentView());
         RenderSystem.setShaderUniform("InputResolution", (float) framebuffer.textureWidth, (float) framebuffer.textureHeight);
         RenderSystem.setShaderUniform("Quality", quality);
         RenderSystem.setShaderUniform("Brightness", brightness);

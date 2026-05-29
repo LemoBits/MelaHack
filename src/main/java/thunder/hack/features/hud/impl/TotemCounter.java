@@ -32,15 +32,15 @@ public class TotemCounter extends HudElement {
 
         float factor = Math.abs(angle < 0 ? angle / 15f : 0f);
 
-        context.getMatrices().push();
-        context.getMatrices().translate(xPos, yPos, 0);
-        context.getMatrices().multiply(RotationAxis.NEGATIVE_Z.rotation((float) Math.toRadians(-Render2DEngine.interpolateFloat(prevAngle, angle, Render3DEngine.getTickDelta()))));
-        context.getMatrices().translate(-xPos, -yPos, 0);
+        context.getMatrices().pushMatrix();
+        context.getMatrices().translate((float) (xPos), (float) (yPos));
+        context.getMatrices().rotate(-((float) Math.toRadians(-Render2DEngine.interpolateFloat(prevAngle, angle, Render3DEngine.getTickDelta()))));
+        context.getMatrices().translate((float) (-xPos), (float) (-yPos));
 
         RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
-        context.getMatrices().translate(xPos - 36, yPos - 9, 0);
+        context.getMatrices().translate((float) (xPos - 36), (float) (yPos - 9));
         context.drawItem(Items.TOTEM_OF_UNDYING.getDefaultStack(), 0, 0);
-        context.getMatrices().translate(-(xPos - 36), -(yPos - 9), 0);
+        context.getMatrices().translate((float) (-(xPos - 36)), (float) (-(yPos - 9)));
         RenderSystem.setShaderColor(1f, 1f - factor, 1f - factor, 1f);
 
         if (factor > 0)
@@ -48,7 +48,7 @@ public class TotemCounter extends HudElement {
 
         FontRenderers.sf_bold_mini.drawCenteredString(context.getMatrices(), getItemCount(Items.TOTEM_OF_UNDYING) + "",xPos - 28, yPos + 8, -1);
         RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
-        context.getMatrices().pop();
+        context.getMatrices().popMatrix();
     }
 
     @EventHandler

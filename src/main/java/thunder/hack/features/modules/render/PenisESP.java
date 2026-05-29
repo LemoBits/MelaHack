@@ -90,7 +90,7 @@ public class PenisESP extends Module {
         }
     }
 
-    public void drawPenis(PlayerEntity player, MatrixStack event, double size, Vec3d start) {
+    public void drawPenis(PlayerEntity player, Object event, double size, Vec3d start) {
         Vec3d copy = start;
         start = start.add(Vec3d.fromPolar(0, player.getYaw()).multiply(0.1));
         Vec3d end = start.add(Vec3d.fromPolar(0, player.getYaw()).multiply(size));

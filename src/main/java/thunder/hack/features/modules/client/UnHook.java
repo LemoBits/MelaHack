@@ -46,7 +46,7 @@ public class UnHook extends Module { // Йо фабос, засунь в о4ко
 
                 // Clean icon
                 try {
-                    mc.getWindow().setIcon(mc.getDefaultResourcePack(), SharedConstants.getGameVersion().isStable() ? Icons.RELEASE : Icons.SNAPSHOT);
+                    mc.getWindow().setIcon(mc.getDefaultResourcePack(), SharedConstants.getGameVersion().stable() ? Icons.RELEASE : Icons.SNAPSHOT);
                 } catch (Exception e) {
                 }
 

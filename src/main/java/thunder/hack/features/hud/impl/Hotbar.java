@@ -30,7 +30,7 @@ public class Hotbar extends HudElement {
 
         PlayerEntity playerEntity = mc.player;
         if (playerEntity != null) {
-            MatrixStack matrices = context.getMatrices();
+            var matrices = context.getMatrices();
             int i = mc.getWindow().getScaledWidth() / 2;
 
             if (mc.player.getOffHandStack().isEmpty()) {
@@ -63,7 +63,7 @@ public class Hotbar extends HudElement {
         PlayerEntity playerEntity = mc.player;
         if (playerEntity != null) {
 
-            MatrixStack matrices = context.getMatrices();
+            var matrices = context.getMatrices();
             int i = mc.getWindow().getScaledWidth() / 2;
             int o = mc.getWindow().getScaledHeight() - 16 - 3;
 
@@ -85,17 +85,17 @@ public class Hotbar extends HudElement {
 
     private static void renderHotbarItem(DrawContext context, int i, int j, ItemStack itemStack) {
         if (!itemStack.isEmpty()) {
-            context.getMatrices().push();
-            context.getMatrices().translate((float) (i + 8), (float) (j + 12), 0.0F);
-            context.getMatrices().scale(0.9f, 0.9f, 1.0F);
-            context.getMatrices().translate((float) (-(i + 8)), (float) (-(j + 12)), 0.0F);
+            context.getMatrices().pushMatrix();
+            context.getMatrices().translate((float) ((float) (i + 8)), (float) ((float) (j + 12)));
+            context.getMatrices().scale(0.9f, 0.9f);
+            context.getMatrices().translate((float) ((float) (-(i + 8))), (float) ((float) (-(j + 12))));
             context.drawItem(itemStack, i, j);
             context.drawStackOverlay(mc.textRenderer, itemStack, i, j);
-            context.getMatrices().pop();
+            context.getMatrices().popMatrix();
         }
     }
 
-    public static void renderXpBar(int x, MatrixStack matrices) {
+    public static void renderXpBar(int x, Object matrices) {
         int k;
         int l;
 

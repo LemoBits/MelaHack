@@ -4,8 +4,6 @@ accessible   class   net/minecraft/network/packet/c2s/play/PlayerInteractEntityC
 accessible   class   net/minecraft/network/packet/c2s/play/PlayerInteractEntityC2SPacket$InteractType
 accessible class net/minecraft/network/packet/c2s/play/PlayerInteractEntityC2SPacket
 accessible field net/minecraft/client/network/ClientPlayerEntity lastSprinting Z
-accessible    field    net/minecraft/client/render/chunk/ChunkBuilder$ChunkData    nonEmptyLayers    Ljava/util/Set;
-accessible    field    net/minecraft/client/render/chunk/ChunkBuilder$ChunkData    occlusionGraph    Lnet/minecraft/client/render/chunk/ChunkOcclusionData;
 accessible field net/minecraft/entity/projectile/FishingBobberEntity CAUGHT_FISH Lnet/minecraft/entity/data/TrackedData;
 accessible field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket onGround Z
 accessible field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket pitch F

@@ -99,10 +99,10 @@ public class ItemSelectWindow extends WindowBase {
             if (itemPlate.offset + getY() + 25 + getScrollOffset() > getY() + getHeight() || itemPlate.offset + getScrollOffset() + getY() + 10 < getY())
                 continue;
 
-            context.getMatrices().push();
-            context.getMatrices().translate(getX() + 6, itemPlate.offset + getY() + 32 + getScrollOffset(), 0);
+            context.getMatrices().pushMatrix();
+            context.getMatrices().translate((float) (getX() + 6), (float) (itemPlate.offset + getY() + 32 + getScrollOffset()));
             context.drawItem(itemPlate.item().getDefaultStack(), 0, 0);
-            context.getMatrices().pop();
+            context.getMatrices().popMatrix();
 
             FontRenderers.sf_medium.drawString(context.getMatrices(), I18n.translate(itemPlate.key()), getX() + 26, itemPlate.offset + getY() + 38 + getScrollOffset(), new Color(0xBDBDBD).getRGB());
 

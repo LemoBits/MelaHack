@@ -18,9 +18,7 @@
 package thunder.hack.utility.render.shaders.satin.impl;
 
 import net.minecraft.client.gl.Framebuffer;
-import net.minecraft.client.gl.ShaderProgram;
 import net.minecraft.client.texture.AbstractTexture;
-import com.mojang.blaze3d.textures.GpuTexture;
 
 public final class ManagedSamplerUniformV1 extends ManagedSamplerUniformBase {
     public ManagedSamplerUniformV1(String name) {
@@ -44,22 +42,6 @@ public final class ManagedSamplerUniformV1 extends ManagedSamplerUniformBase {
 
     @Override
     protected void set(Object value) {
-        SamplerAccess[] targets = this.targets;
-        if (targets.length > 0 && this.cachedValue != value) {
-            GpuTexture gpuTexture;
-            if (value instanceof AbstractTexture abstractTexture) {
-                gpuTexture = abstractTexture.getGlTexture();
-            } else if (value instanceof Framebuffer framebuffer) {
-                gpuTexture = framebuffer.getColorAttachment();
-            } else if (value instanceof GpuTexture texture) {
-                gpuTexture = texture;
-            } else {
-                return;
-            }
-            for (SamplerAccess target : targets) {
-                ((ShaderProgram) target).addSamplerTexture(this.name, gpuTexture);
-            }
-            this.cachedValue = value;
-        }
+        this.cachedValue = value;
     }
 }

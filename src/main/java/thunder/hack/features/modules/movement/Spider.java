@@ -93,12 +93,12 @@ public class Spider extends Module {
                 Direction opposite = side.getOpposite();
                 Vec3d hitVec = new Vec3d(neighbour.getX() + 0.5, neighbour.getY() + 0.5, neighbour.getZ() + 0.5).add(new Vec3d(opposite.getUnitVector()).multiply(0.5));
                 sendSequencedPacket(id -> new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND, new BlockHitResult(hitVec, opposite, neighbour, false), id));
-                sendPacket(new ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.PRESS_SHIFT_KEY));
+                sendPacket(new net.minecraft.network.packet.c2s.play.PlayerInputC2SPacket(new net.minecraft.util.PlayerInput(false, false, false, false, false, true, false)));
                 if (mc.world.getBlockState(BlockPos.ofFloored(mc.player.getPos()).add(0, 2, 0)).getBlock() != Blocks.AIR) {
                     sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, neighbour, opposite));
                     sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, neighbour, opposite));
                 }
-                sendPacket(new ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY));
+                sendPacket(new net.minecraft.network.packet.c2s.play.PlayerInputC2SPacket(new net.minecraft.util.PlayerInput(false, false, false, false, false, false, false)));
             }
             mc.player.setOnGround(true);
             mc.player.jump();

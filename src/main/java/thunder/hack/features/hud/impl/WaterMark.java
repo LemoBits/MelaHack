@@ -114,12 +114,12 @@ public class WaterMark extends HudElement {
             Render2DEngine.drawHudBase(context.getMatrices(), getPosX(), getPosY(), 100, 64, HudEditor.hudRound.getValue());
 
             Render2DEngine.addWindow(context.getMatrices(), getPosX(), getPosY(), getPosX() + 100, getPosY() + 64, 1f);
-            context.getMatrices().push();
-            context.getMatrices().translate(getPosX() + 10, getPosY() + 32, 0);
-            context.getMatrices().multiply(RotationAxis.POSITIVE_Z.rotation((float) Math.toRadians(mc.player.age * 3 + Render3DEngine.getTickDelta())));
-            context.getMatrices().translate(-(getPosX() + 10), -(getPosY() + 32), 0);
-            context.drawTexture(RenderLayer::getGuiTextured, TextureStorage.baltika, (int) getPosX() - 10, (int) getPosY() + 2, 0, 0, 40, 64, 40, 64);
-            context.getMatrices().pop();
+            context.getMatrices().pushMatrix();
+            context.getMatrices().translate((float) (getPosX() + 10), (float) (getPosY() + 32));
+            context.getMatrices().rotate((float) Math.toRadians(mc.player.age * 3 + Render3DEngine.getTickDelta()));
+            context.getMatrices().translate((float) (-(getPosX() + 10)), (float) (-(getPosY() + 32)));
+            context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, TextureStorage.baltika, (int) getPosX() - 10, (int) getPosY() + 2, 0, 0, 40, 64, 40, 64);
+            context.getMatrices().popMatrix();
             Render2DEngine.popWindow();
 
             FontRenderers.thglitch.drawString(context.getMatrices(), "BALTIKA", getPosX() + 43, getPosY() + 41.5, -1);

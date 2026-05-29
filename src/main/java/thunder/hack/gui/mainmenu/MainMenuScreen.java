@@ -71,8 +71,7 @@ public class MainMenuScreen extends Screen {
         float mainWidth = 240f;
         float mainHeight = 140;
 
-        // Render2DEngine.drawMainMenuShader(context.getMatrices(), 0, 0, halfOfWidth * 2f, halfOfHeight * 2);
-        renderBackground(context, mouseX, mouseY, delta);
+        renderCustomBackground(context, halfOfWidth * 2f, halfOfHeight * 2);
 
         Render2DEngine.drawHudBase(context.getMatrices(), mainX, mainY, mainWidth, mainHeight, 20);
 
@@ -93,15 +92,15 @@ public class MainMenuScreen extends Screen {
 
             FontRenderers.sf_bold.drawCenteredString(context.getMatrices(), onlineUsers, halfOfWidth, halfOfHeight * 2 - 15, Color.GREEN);
 
-            context.getMatrices().push();
-            context.getMatrices().translate(halfOfWidth - 10 - FontRenderers.sf_medium.getStringWidth(onlineUsers) / 2f, halfOfHeight * 2 - 17, 0);
+            context.getMatrices().pushMatrix();
+            context.getMatrices().translate((float) (halfOfWidth - 10 - FontRenderers.sf_medium.getStringWidth(onlineUsers) / 2f), (float) (halfOfHeight * 2 - 17));
             Render2DEngine.drawBloom(context.getMatrices(), Render2DEngine.applyOpacity(Color.GREEN, 0.6f), 9f);
-            context.getMatrices().pop();
+            context.getMatrices().popMatrix();
 
-            context.getMatrices().push();
-            context.getMatrices().translate(halfOfWidth - 10 - FontRenderers.sf_medium.getStringWidth(onlineUsers) / 2f, halfOfHeight * 2 - 17, 0);
+            context.getMatrices().pushMatrix();
+            context.getMatrices().translate((float) (halfOfWidth - 10 - FontRenderers.sf_medium.getStringWidth(onlineUsers) / 2f), (float) (halfOfHeight * 2 - 17));
             Render2DEngine.drawBloom(context.getMatrices(), Render2DEngine.applyOpacity(Color.GREEN, (float) (0.5f + (Math.sin((double) System.currentTimeMillis() / 500)) / 2f)), 9f);
-            context.getMatrices().pop();
+            context.getMatrices().popMatrix();
 
         }*/
 
@@ -112,6 +111,14 @@ public class MainMenuScreen extends Screen {
 //            FontRenderers.sf_medium.drawString(context.getMatrices(), prefix, 10, offsetY, Render2DEngine.applyOpacity(-1, 0.4f));
 //            offsetY += 10;
 //        }
+    }
+
+    private void renderCustomBackground(DrawContext context, float width, float height) {
+        if (mc.getOverlay() == null) {
+            Render2DEngine.drawMainMenuShader(context.getMatrices(), 0, 0, width, height);
+        } else {
+            context.fill(0, 0, Math.round(width), Math.round(height), 0xFF070015);
+        }
     }
 
     private static @NotNull String getPrefix(@NotNull String change) {

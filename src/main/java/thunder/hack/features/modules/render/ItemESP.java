@@ -103,7 +103,7 @@ public class ItemESP extends Module {
             if (!any)
                 return;
 
-            Matrix4f matrix = context.getMatrices().peek().getPositionMatrix();
+            Matrix4f matrix = thunder.hack.utility.render.GuiMatrix.positionMatrix(context.getMatrices());
             Render2DEngine.setupRender();
             RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
 

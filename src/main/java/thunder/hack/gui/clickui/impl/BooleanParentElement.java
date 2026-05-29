@@ -34,21 +34,21 @@ public class BooleanParentElement extends AbstractElement {
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
 
-        MatrixStack matrixStack = context.getMatrices();
+        var matrixStack = context.getMatrices();
 
         float tx = x + width - 11;
         float ty = y + 7.5f;
 
         arrowAnimation = fast(arrowAnimation, getParentSetting().getValue().isExtended() ? 0 : 1, 15f);
 
-        matrixStack.push();
-        matrixStack.translate(tx, ty, 0);
-        matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(-180f * arrowAnimation));
-        matrixStack.translate(-tx, -ty, 0);
-        matrixStack.translate((x + width - 14), (y + 4.5f), 0);
-        context.drawTexture(RenderLayer::getGuiTextured, TextureStorage.guiArrow, 0, 0, 0, 0, 6, 6, 6, 6);
-        matrixStack.translate(-(x + width - 14), -(y + 4.5f), 0);
-        matrixStack.pop();
+        matrixStack.pushMatrix();
+        matrixStack.translate(tx, ty);
+        matrixStack.rotate((float) Math.toRadians(-180f * arrowAnimation));
+        matrixStack.translate(-tx, -ty);
+        matrixStack.translate((x + width - 14), (y + 4.5f));
+        context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, TextureStorage.guiArrow, 0, 0, 0, 0, 6, 6, 6, 6);
+        matrixStack.translate(-(x + width - 14), -(y + 4.5f));
+        matrixStack.popMatrix();
 
         FontRenderers.sf_medium_mini.drawString(matrixStack, setting.getName(), x + 6, y + height / 2 - 1f, new Color(-1).getRGB());
         animation = fast(animation, getParentSetting().getValue().isEnabled() ? 1 : 0, 15f);

@@ -4,7 +4,7 @@
   },
   "passes": [
     {
-      "vertex_shader": "thunderhack:program/smoke", "fragment_shader": "thunderhack:program/smoke",
+      "vertex_shader": "minecraft:post/sobel", "fragment_shader": "thunderhack:program/smoke",
       "inputs": [
         {
           "sampler_name": "In",
@@ -12,7 +12,31 @@
         }
       ],
       "output": "swap",
-      "uniforms": []
+      "uniforms": {
+        "ThunderHackPost": [
+          { "name": "color", "type": "vec4", "value": [1.0, 1.0, 1.0, 1.0] },
+          { "name": "outlinecolor", "type": "vec4", "value": [1.0, 1.0, 1.0, 1.0] },
+          { "name": "primaryColor", "type": "vec4", "value": [1.0, 1.0, 1.0, 1.0] },
+          { "name": "secondaryColor", "type": "vec4", "value": [1.0, 1.0, 1.0, 1.0] },
+          { "name": "first", "type": "vec4", "value": [1.0, 1.0, 1.0, 1.0] },
+          { "name": "ffirst", "type": "vec4", "value": [1.0, 1.0, 1.0, 1.0] },
+          { "name": "second", "type": "vec3", "value": [1.0, 1.0, 1.0] },
+          { "name": "third", "type": "vec3", "value": [1.0, 1.0, 1.0] },
+          { "name": "fsecond", "type": "vec3", "value": [1.0, 1.0, 1.0] },
+          { "name": "fthird", "type": "vec3", "value": [1.0, 1.0, 1.0] },
+          { "name": "resolution", "type": "vec2", "value": [1.0, 1.0] },
+          { "name": "time", "type": "float", "value": 0.0 },
+          { "name": "alpha0", "type": "float", "value": 1.0 },
+          { "name": "alpha1", "type": "float", "value": 1.0 },
+          { "name": "alpha2", "type": "float", "value": 1.0 },
+          { "name": "factor", "type": "float", "value": 1.0 },
+          { "name": "moreGradient", "type": "float", "value": 1.0 },
+          { "name": "fillAlpha", "type": "float", "value": 1.0 },
+          { "name": "quality", "type": "int", "value": 1 },
+          { "name": "lineWidth", "type": "int", "value": 1 },
+          { "name": "oct", "type": "int", "value": 1 }
+        ]
+      }
     },
     {
       "vertex_shader": "minecraft:post/blit", "fragment_shader": "minecraft:post/blit",
@@ -23,7 +47,11 @@
         }
       ],
       "output": "thunderhack:buf_out",
-      "uniforms": []
+      "uniforms": {
+        "BlitConfig": [
+          { "name": "ColorModulate", "type": "vec4", "value": [1.0, 1.0, 1.0, 1.0] }
+        ]
+      }
     }
   ]
 }

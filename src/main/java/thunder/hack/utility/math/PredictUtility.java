@@ -57,7 +57,7 @@ public class PredictUtility {
     }
 
     public static PlayerEntity equipAndReturn(PlayerEntity original, Vec3d posVec) {
-        PlayerEntity copyEntity = new PlayerEntity(mc.world, original.getBlockPos(), original.getYaw(), new GameProfile(UUID.fromString("66123666-1234-5432-6666-667563866600"), "PredictEntity339")) {
+        PlayerEntity copyEntity = new PlayerEntity(mc.world, new GameProfile(UUID.fromString("66123666-1234-5432-6666-667563866600"), "PredictEntity339")) {
             @Override
             public boolean isSpectator() {
                 return false;

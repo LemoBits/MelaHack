@@ -16,7 +16,6 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.*;
 import org.joml.Matrix4f;
-import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -41,15 +40,6 @@ import static thunder.hack.features.modules.Module.mc;
 public abstract class MixinGameRenderer {
 
     @Shadow
-    private float zoom;
-
-    @Shadow
-    private float zoomX;
-
-    @Shadow
-    private float zoomY;
-
-    @Shadow
     private float viewDistanceBlocks;
 
     @Shadow
@@ -61,7 +51,7 @@ public abstract class MixinGameRenderer {
         Render2DEngine.BLUR_PROGRAM.invalidateCapture();
     }
 
-    @Inject(at = @At(value = "FIELD", target = "Lnet/minecraft/client/render/GameRenderer;renderHand:Z", opcode = Opcodes.GETFIELD, ordinal = 0), method = "renderWorld")
+    @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/GameRenderer;renderHand(FZLorg/joml/Matrix4f;)V"), method = "renderWorld")
     void render3dHook(RenderTickCounter tickCounter, CallbackInfo ci) {
         if (Module.fullNullCheck()) return;
 
@@ -82,7 +72,7 @@ public abstract class MixinGameRenderer {
         RenderSystem.getModelViewStack().popMatrix();
     }
 
-    @Inject(method = "renderWorld", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/GameRenderer;renderHand(Lnet/minecraft/client/render/Camera;FLorg/joml/Matrix4f;)V", shift = At.Shift.AFTER))
+    @Inject(method = "renderWorld", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/GameRenderer;renderHand(FZLorg/joml/Matrix4f;)V", shift = At.Shift.AFTER))
     public void postRender3dHook(RenderTickCounter tickCounter, CallbackInfo ci) {
         if (Module.fullNullCheck()) return;
         Managers.SHADER.renderShaders();
@@ -134,10 +124,6 @@ public abstract class MixinGameRenderer {
         if (ModuleManager.aspectRatio.isEnabled()) {
             MatrixStack matrixStack = new MatrixStack();
             matrixStack.peek().getPositionMatrix().identity();
-            if (zoom != 1.0f) {
-                matrixStack.translate(zoomX, -zoomY, 0.0f);
-                matrixStack.scale(zoom, zoom, 1.0f);
-            }
             matrixStack.peek().getPositionMatrix().mul(new Matrix4f().setPerspective((float) (fov * 0.01745329238474369), ModuleManager.aspectRatio.ratio.getValue(), 0.05f, viewDistanceBlocks * 4.0f));
             cir.setReturnValue(matrixStack.peek().getPositionMatrix());
         }
@@ -193,14 +179,6 @@ public abstract class MixinGameRenderer {
         if (ModuleManager.totemAnimation.isEnabled()) {
             ModuleManager.totemAnimation.showFloatingItem(floatingItem);
             info.cancel();
-        }
-    }
-
-    @Inject(method = "renderFloatingItem", at = @At("HEAD"), cancellable = true)
-    private void renderFloatingItemHook(DrawContext context, float tickDelta, CallbackInfo ci) {
-        if (ModuleManager.totemAnimation.isEnabled()) {
-            ModuleManager.totemAnimation.renderFloatingItem(tickDelta);
-            ci.cancel();
         }
     }
 

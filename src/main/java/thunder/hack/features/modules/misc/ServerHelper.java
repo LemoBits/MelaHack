@@ -126,7 +126,7 @@ public class ServerHelper extends Module {
             }
             sendMessage(String.valueOf(log));
 
-            mc.player.networkHandler.sendCommand("back");
+            mc.player.networkHandler.sendChatCommand("back");
             flag = false;
         }
 
@@ -137,7 +137,7 @@ public class ServerHelper extends Module {
             }
             if (playersNames.size() > 1) {
                 int randomName = (int) Math.floor(Math.random() * playersNames.size());
-                mc.player.networkHandler.sendCommand("c invite " + playersNames.get(randomName));
+                mc.player.networkHandler.sendChatCommand("c invite " + playersNames.get(randomName));
                 playersNames.clear();
                 inviteTimer.reset();
             }

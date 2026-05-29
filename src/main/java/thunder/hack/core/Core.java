@@ -167,7 +167,7 @@ public final class Core {
             int yPos = (int) (mc.getWindow().getScaledHeight() / 2f - 150);
             float alpha = (1f - (skullTimer.getPassedTimeMs() / 3000f));
             RenderSystem.setShaderColor(1f, 1f, 1f, alpha);
-            e.drawTexture(RenderLayer::getGuiTextured, TextureStorage.skull, xPos, yPos, 0, 0, 300, 300, 300, 300);
+            e.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, TextureStorage.skull, xPos, yPos, 0, 0, 300, 300, 300, 300);
             RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
         } else showSkull = false;
     }
@@ -178,13 +178,13 @@ public final class Core {
             float xOffset = mc.getWindow().getScaledWidth() / 2f;
             float yOffset = mc.getWindow().getScaledHeight() / 2f;
             float yaw = getRotations(new Vec2f(ThunderHack.gps_position.getX(), ThunderHack.gps_position.getZ())) - mc.player.getYaw();
-            e.getMatrices().translate(xOffset, yOffset, 0.0F);
-            e.getMatrices().multiply(RotationAxis.POSITIVE_Z.rotationDegrees(yaw));
-            e.getMatrices().translate(-xOffset, -yOffset, 0.0F);
+            e.getMatrices().translate((float) (xOffset), (float) (yOffset));
+            e.getMatrices().rotate((float) Math.toRadians(yaw));
+            e.getMatrices().translate((float) (-xOffset), (float) (-yOffset));
             Render2DEngine.drawTracerPointer(e.getMatrices(), xOffset, yOffset - 50, 12.5f, 0.5f, 3.63f, true, true, HudEditor.getColor(1).getRGB());
-            e.getMatrices().translate(xOffset, yOffset, 0.0F);
-            e.getMatrices().multiply(RotationAxis.POSITIVE_Z.rotationDegrees(-yaw));
-            e.getMatrices().translate(-xOffset, -yOffset, 0.0F);
+            e.getMatrices().translate((float) (xOffset), (float) (yOffset));
+            e.getMatrices().rotate((float) Math.toRadians(-yaw));
+            e.getMatrices().translate((float) (-xOffset), (float) (-yOffset));
             RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
             FontRenderers.modules.drawCenteredString(e.getMatrices(), "gps (" + dst + "m)", (float) (Math.sin(Math.toRadians(yaw)) * 50f) + xOffset, (float) (yOffset - (Math.cos(Math.toRadians(yaw)) * 50f)) - 23, -1);
 

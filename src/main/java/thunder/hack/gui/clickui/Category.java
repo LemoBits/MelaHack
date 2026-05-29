@@ -33,9 +33,8 @@ public class Category extends AbstractCategory {
             .withVertexShader(Identifier.of("minecraft", "core/position_tex_color"))
             .withFragmentShader(Identifier.of("minecraft", "core/position_tex_color"))
             .withSampler("Sampler0")
-            .withUniform("ModelViewMat", UniformType.MATRIX4X4)
-            .withUniform("ProjMat", UniformType.MATRIX4X4)
-            .withUniform("ColorModulator", UniformType.VEC4)
+            .withUniform("Projection", UniformType.UNIFORM_BUFFER)
+            .withUniform("DynamicTransforms", UniformType.UNIFORM_BUFFER)
             .withBlend(BlendFunction.ADDITIVE)
             .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
             .withDepthWrite(false)
@@ -74,7 +73,7 @@ public class Category extends AbstractCategory {
 
         scrollHover = Render2DEngine.isHovered(mouseX, mouseY, getX(), getY() + height, width, catHeight + 20);
 
-        context.getMatrices().push();
+        context.getMatrices().pushMatrix();
 
         boolean popStack = false;
 
@@ -149,7 +148,7 @@ public class Category extends AbstractCategory {
                 ((int) getX() + (width - 4) / 2) - FontRenderers.categories.getStringWidth(getName()) / 2f, (int) getY() + (int) height / 2f - 10, FontRenderers.categories.getStringWidth(getName()) + 6, 13, 20, Render2DEngine.injectAlpha(Color.black, 170));
 
         FontRenderers.categories.drawCenteredString(context.getMatrices(), getName(), ((int) getX() + 2 + (width - 4) / 2), (int) getY() + (int) height / 2f - 7, new Color(-1).getRGB());
-        context.getMatrices().pop();
+        context.getMatrices().popMatrix();
         updatePosition();
     }
 
@@ -171,7 +170,7 @@ public class Category extends AbstractCategory {
         float clippedU1 = u + (x1 - x) / width * regionWidth;
         float clippedV0 = v + (y0 - y) / height * regionHeight;
         float clippedV1 = v + (y1 - y) / height * regionHeight;
-        Matrix4f matrix = context.getMatrices().peek().getPositionMatrix();
+        Matrix4f matrix = thunder.hack.utility.render.GuiMatrix.positionMatrix(context.getMatrices());
 
         b.vertex(matrix, x0, y1, 0).texture(clippedU0 / textureWidth, clippedV1 / textureHeight).color(c1.getRGB());
         b.vertex(matrix, x1, y1, 0).texture(clippedU1 / textureWidth, clippedV1 / textureHeight).color(c2.getRGB());

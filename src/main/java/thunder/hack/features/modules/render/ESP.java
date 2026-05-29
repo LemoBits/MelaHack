@@ -19,8 +19,8 @@ import net.minecraft.entity.decoration.EndCrystalEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.thrown.EnderPearlEntity;
 import net.minecraft.item.Items;
-import net.minecraft.particle.EntityEffectParticleEffect;
 import net.minecraft.particle.ParticleEffect;
+import net.minecraft.particle.TintedParticleEffect;
 import net.minecraft.util.math.*;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
@@ -306,20 +306,20 @@ public class ESP extends Module {
                     float zPos = (float) (pearl.lastZ + (pearl.getPos().getZ() - pearl.lastZ) * Render3DEngine.getTickDelta());
 
                     float yaw = getRotations(new Vec2f(xPos, zPos)) - mc.player.getYaw();
-                    context.getMatrices().translate(xOffset, yOffset, 0.0F);
-                    context.getMatrices().multiply(RotationAxis.POSITIVE_Z.rotationDegrees(yaw));
-                    context.getMatrices().translate(-xOffset, -yOffset, 0.0F);
+                    context.getMatrices().translate((float) (xOffset), (float) (yOffset));
+                    context.getMatrices().rotate((float) Math.toRadians(yaw));
+                    context.getMatrices().translate((float) (-xOffset), (float) (-yOffset));
                     Render2DEngine.drawTracerPointer(context.getMatrices(), xOffset, yOffset - 50, 12.5f, 0.5f, 3.63f, true, true, HudEditor.getColor(1).getRGB());
-                    context.getMatrices().translate(xOffset, yOffset, 0.0F);
-                    context.getMatrices().multiply(RotationAxis.POSITIVE_Z.rotationDegrees(-yaw));
-                    context.getMatrices().translate(-xOffset, -yOffset, 0.0F);
+                    context.getMatrices().translate((float) (xOffset), (float) (yOffset));
+                    context.getMatrices().rotate((float) Math.toRadians(-yaw));
+                    context.getMatrices().translate((float) (-xOffset), (float) (-yOffset));
                     RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
                     FontRenderers.modules.drawCenteredString(context.getMatrices(), String.format("%.1f", mc.player.distanceTo(pearl)) + "m", (float) (Math.sin(Math.toRadians(yaw)) * 50f) + xOffset, (float) (yOffset - (Math.cos(Math.toRadians(yaw)) * 50f)) - 20, -1);
                 }
             }
         }
 
-        Matrix4f matrix = context.getMatrices().peek().getPositionMatrix();
+        Matrix4f matrix = thunder.hack.utility.render.GuiMatrix.positionMatrix(context.getMatrices());
         Render2DEngine.setupRender();
         RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
         BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
@@ -456,7 +456,7 @@ public class ESP extends Module {
 
     private int getAreaCloudColor(AreaEffectCloudEntity ent) {
         ParticleEffect particleEffect = ent.getParticleType();
-        if (particleEffect instanceof EntityEffectParticleEffect effect) {
+        if (particleEffect instanceof TintedParticleEffect effect) {
             return ((IAreaEffectCloudEntity)ent).getPotionContentsComponent().getColor();
         }
         return -1;

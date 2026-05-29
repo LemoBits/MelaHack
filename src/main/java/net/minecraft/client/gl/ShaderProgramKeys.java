@@ -6,7 +6,6 @@ import com.mojang.blaze3d.platform.DepthTestFunction;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.render.VertexFormats;
 import net.minecraft.util.Identifier;
-import net.minecraft.client.gl.UniformType;
 
 public final class ShaderProgramKeys {
     public static final RenderPipeline POSITION = RenderPipelines.DEBUG_QUADS;
@@ -16,9 +15,8 @@ public final class ShaderProgramKeys {
             .withVertexShader(Identifier.of("minecraft", "core/position_tex"))
             .withFragmentShader(Identifier.of("minecraft", "core/position_tex"))
             .withSampler("Sampler0")
-            .withUniform("ModelViewMat", UniformType.MATRIX4X4)
-            .withUniform("ProjMat", UniformType.MATRIX4X4)
-            .withUniform("ColorModulator", UniformType.VEC4)
+            .withUniform("Projection", UniformType.UNIFORM_BUFFER)
+            .withUniform("DynamicTransforms", UniformType.UNIFORM_BUFFER)
             .withBlend(BlendFunction.TRANSLUCENT)
             .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
             .withDepthWrite(false)
@@ -29,9 +27,8 @@ public final class ShaderProgramKeys {
             .withVertexShader(Identifier.of("minecraft", "core/position_tex"))
             .withFragmentShader(Identifier.of("minecraft", "core/position_tex"))
             .withSampler("Sampler0")
-            .withUniform("ModelViewMat", UniformType.MATRIX4X4)
-            .withUniform("ProjMat", UniformType.MATRIX4X4)
-            .withUniform("ColorModulator", UniformType.VEC4)
+            .withUniform("Projection", UniformType.UNIFORM_BUFFER)
+            .withUniform("DynamicTransforms", UniformType.UNIFORM_BUFFER)
             .withBlend(BlendFunction.ADDITIVE)
             .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
             .withDepthWrite(false)
@@ -43,9 +40,8 @@ public final class ShaderProgramKeys {
             .withVertexShader(Identifier.of("minecraft", "core/position_tex_color"))
             .withFragmentShader(Identifier.of("minecraft", "core/position_tex_color"))
             .withSampler("Sampler0")
-            .withUniform("ModelViewMat", UniformType.MATRIX4X4)
-            .withUniform("ProjMat", UniformType.MATRIX4X4)
-            .withUniform("ColorModulator", UniformType.VEC4)
+            .withUniform("Projection", UniformType.UNIFORM_BUFFER)
+            .withUniform("DynamicTransforms", UniformType.UNIFORM_BUFFER)
             .withBlend(BlendFunction.ADDITIVE)
             .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
             .withDepthWrite(false)
@@ -56,9 +52,8 @@ public final class ShaderProgramKeys {
             .withVertexShader(Identifier.of("minecraft", "core/position_tex_color"))
             .withFragmentShader(Identifier.of("minecraft", "core/position_tex_color"))
             .withSampler("Sampler0")
-            .withUniform("ModelViewMat", UniformType.MATRIX4X4)
-            .withUniform("ProjMat", UniformType.MATRIX4X4)
-            .withUniform("ColorModulator", UniformType.VEC4)
+            .withUniform("Projection", UniformType.UNIFORM_BUFFER)
+            .withUniform("DynamicTransforms", UniformType.UNIFORM_BUFFER)
             .withBlend(new BlendFunction(
                     com.mojang.blaze3d.platform.SourceFactor.DST_ALPHA,
                     com.mojang.blaze3d.platform.DestFactor.ONE_MINUS_DST_ALPHA,

@@ -1,14 +1,28 @@
 #version 150
 
 uniform sampler2D InputSampler;
-uniform vec2 InputResolution;
-uniform vec2 uSize;
-uniform vec2 uLocation;
-
-uniform float radius;
-uniform float Brightness;
-uniform float Quality;
-uniform vec4 color1;
+layout(std140) uniform ThunderHackCustom {
+    vec4 color1;
+    vec4 color2;
+    vec4 color3;
+    vec4 color4;
+    vec2 uSize;
+    vec2 uSize2;
+    vec2 uLocation;
+    vec2 InputResolution;
+    float radius;
+    float blend;
+    float alpha;
+    float outline;
+    float glow;
+    float thickness;
+    float start;
+    float end;
+    float time;
+    float Time;
+    float Quality;
+    float Brightness;
+};
 in vec2 texCoord;
 
 out vec4 fragColor;

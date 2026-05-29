@@ -50,11 +50,11 @@ public class PVPResources extends HudElement {
             int offsetX = i % 2 * 25;
             int offsetY = i / 2 * 25;
             context.drawItem(list.get(i), (int) (getPosX() + offsetX + 4), (int) (getPosY() + offsetY + 4));
-            context.getMatrices().push();
-            context.getMatrices().translate(0, 0, 151);
+            context.getMatrices().pushMatrix();
+            context.getMatrices().translate((float) (0), (float) (0));
             Render2DEngine.drawBlurredShadow(context.getMatrices(), getPosX() + offsetX + 8, getPosY() + offsetY + 8, 9, 9, 12, Color.BLACK);
             FontRenderers.sf_medium.drawCenteredString(context.getMatrices(), String.valueOf(list.get(i).getCount()), (int) (getPosX() + offsetX + 12), (int) (getPosY() + offsetY + 11f), HudEditor.textColor.getValue().getColor());
-            context.getMatrices().pop();
+            context.getMatrices().popMatrix();
         }
     }
 

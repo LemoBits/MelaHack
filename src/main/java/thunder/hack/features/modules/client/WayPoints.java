@@ -58,10 +58,10 @@ public final class WayPoints extends Module {
                 String distance = String.format("%.0f", Math.sqrt(mc.player.squaredDistanceTo(wp.getX(), wp.getY(), wp.getZ()))) + "m";
                 float tagX3 = (float) ((posX + diff - FontRenderers.sf_bold_mini.getStringWidth(distance) / 2) * 1);
 
-                context.getMatrices().push();
-                context.getMatrices().translate(posX - 10, (posY - 35), 0);
-                context.drawTexture(RenderLayer::getGuiTextured, TextureStorage.waypoint, 0, 0, 20, 20, 0, 0, 20, 20, 20, 20);
-                context.getMatrices().pop();
+                context.getMatrices().pushMatrix();
+                context.getMatrices().translate((float) (posX - 10), (float) ((posY - 35)));
+                context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, TextureStorage.waypoint, 0, 0, 20, 20, 0, 0, 20, 20, 20, 20);
+                context.getMatrices().popMatrix();
 
                 FontRenderers.sf_bold_mini.drawString(context.getMatrices(), wp.getName(), tagX, (float) posY - 10, -1);
                 FontRenderers.sf_bold_mini.drawString(context.getMatrices(), Formatting.GRAY + coords, tagX2, (float) posY - 2, -1);

@@ -33,7 +33,7 @@ public final class PostEffectRenderUtil {
             }
         };
 
-        effect.render(frameGraphBuilder, width, height, framebufferSet, pass -> {});
+        effect.render(frameGraphBuilder, width, height, framebufferSet);
         frameGraphBuilder.run(allocator);
     }
 }

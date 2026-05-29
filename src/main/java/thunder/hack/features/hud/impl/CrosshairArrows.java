@@ -45,21 +45,20 @@ public class CrosshairArrows extends HudElement {
 
         int color = 0;
 
-        context.getMatrices().push();
-        context.getMatrices().translate(middleW, middleH, 0);
-        context.getMatrices().multiply(RotationAxis.POSITIVE_X.rotationDegrees(90f / Math.abs(90f / MathUtility.clamp(mc.player.getPitch(), pitchLock.getValue(), 90f)) - 102));
-        context.getMatrices().translate(-middleW, -middleH, 0);
+        context.getMatrices().pushMatrix();
+        context.getMatrices().translate((float) (middleW), (float) (middleH));
+        context.getMatrices().translate((float) (-middleW), (float) (-middleH));
 
         smoothYaw = AnimationUtility.fast(smoothYaw, mc.player.getYaw(), 13);
 
         for (PlayerEntity e : Lists.newArrayList(mc.world.getPlayers())) {
             if (e != mc.player){
-                context.getMatrices().push();
+                context.getMatrices().pushMatrix();
 
                 float yaw = getRotations(e) - smoothYaw;
-                context.getMatrices().translate(middleW, middleH, 0.0F);
-                context.getMatrices().multiply(RotationAxis.POSITIVE_Z.rotationDegrees(yaw));
-                context.getMatrices().translate(-middleW, -middleH, 0.0F);
+                context.getMatrices().translate((float) (middleW), (float) (middleH));
+                context.getMatrices().rotate((float) Math.toRadians(yaw));
+                context.getMatrices().translate((float) (-middleW), (float) (-middleH));
 
                 if (Managers.FRIEND.isFriend(e))
                     color = colorf.getValue().getColor();
@@ -70,13 +69,13 @@ public class CrosshairArrows extends HudElement {
 
                 Render2DEngine.drawTracerPointer(context.getMatrices(), middleW, middleH - xOffset.getValue(), width.getValue() * 5F,tracerWidth.getValue(), downHeight.getValue(), down.getValue().isEnabled(), glow.getValue(), color);
 
-                context.getMatrices().translate(middleW, middleH, 0.0F);
-                context.getMatrices().multiply(RotationAxis.POSITIVE_Z.rotationDegrees(-yaw));
-                context.getMatrices().translate(-middleW, -middleH, 0.0F);
-                context.getMatrices().pop();
+                context.getMatrices().translate((float) (middleW), (float) (middleH));
+                context.getMatrices().rotate((float) Math.toRadians(-yaw));
+                context.getMatrices().translate((float) (-middleW), (float) (-middleH));
+                context.getMatrices().popMatrix();
             }
         }
-        context.getMatrices().pop();
+        context.getMatrices().popMatrix();
     }
 
     public enum triangleModeEn {

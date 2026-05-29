@@ -37,7 +37,7 @@ public class SliderElement extends AbstractElement {
         super.render(context, mouseX, mouseY, delta);
         animation = Render2DEngine.scrollAnimate(animation, (((Number) setting.getValue()).floatValue() - min) / (max - min), 0.4f);
 
-        MatrixStack matrixStack = context.getMatrices();
+        var matrixStack = context.getMatrices();
 
         if (setting.group != null)
             Render2DEngine.drawRect(context.getMatrices(), x + 4, y, 1f, 18, HudEditor.getColor(1));

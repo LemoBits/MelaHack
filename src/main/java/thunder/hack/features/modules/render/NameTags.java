@@ -166,26 +166,25 @@ public class NameTags extends Module {
 
                 if (armorMode.getValue() != Armor.Durability) stacks.add(ent.getMainHandStack());
 
-                context.getMatrices().push();
-                context.getMatrices().translate(tagX - 2 + (textWidth + 4) / 2f, (float) (posY - 13f) + 6.5f, 0);
-                context.getMatrices().scale(scale, scale, 1f);
-                context.getMatrices().translate(-(tagX - 2 + (textWidth + 4) / 2f), -(float) ((posY - 13f) + 6.5f), 0);
+                context.getMatrices().pushMatrix();
+                context.getMatrices().translate((float) (tagX - 2 + (textWidth + 4) / 2f), (float) ((float) (posY - 13f) + 6.5f));
+                context.getMatrices().scale(scale, scale);
+                context.getMatrices().translate((float) (-(tagX - 2 + (textWidth + 4) / 2f)), (float) (-(float) ((posY - 13f) + 6.5f)));
 
                 float item_offset = 0;
                 if (armorMode.getValue() != Armor.None) for (ItemStack armorComponent : stacks) {
                     if (!armorComponent.isEmpty()) {
                         if (armorMode.getValue() == Armor.Full) {
-                            context.getMatrices().push();
-                            context.getMatrices().translate(posX - 55 + item_offset, (float) (posY - 33f), 0);
-                            context.getMatrices().scale(1.1f, 1.1f, 1.1f);
-                            DiffuseLighting.disableGuiDepthLighting();
+                            context.getMatrices().pushMatrix();
+                            context.getMatrices().translate((float) (posX - 55 + item_offset), (float) ((float) (posY - 33f)));
+                            context.getMatrices().scale(1.1f, 1.1f);
                             context.drawItem(armorComponent, 0, 0);
                             context.drawStackOverlay(mc.textRenderer, armorComponent, 0, 0);
-                            context.getMatrices().pop();
+                            context.getMatrices().popMatrix();
                         } else {
-                            context.getMatrices().push();
-                            context.getMatrices().translate(posX - 35 + item_offset, (float) (posY - 20), 0);
-                            context.getMatrices().scale(0.7f, 0.7f, 0.7f);
+                            context.getMatrices().pushMatrix();
+                            context.getMatrices().translate((float) (posX - 35 + item_offset), (float) ((float) (posY - 20)));
+                            context.getMatrices().scale(0.7f, 0.7f);
 
                             float durability = armorComponent.getMaxDamage() - armorComponent.getDamage();
                             int percent = (int) ((durability / (float) armorComponent.getMaxDamage()) * 100F);
@@ -199,7 +198,7 @@ public class NameTags extends Module {
                                 color = Color.GREEN;
                             }
                             context.drawText(mc.textRenderer, percent + "%", 0, 0, color.getRGB(), false);
-                            context.getMatrices().pop();
+                            context.getMatrices().popMatrix();
                         }
 
                         float enchantmentY = 0;
@@ -219,10 +218,10 @@ public class NameTags extends Module {
                                         if (font.getValue() == Font.Fancy) {
                                             FontRenderers.sf_bold.drawString(context.getMatrices(), encName, posX - 50 + item_offset, (float) posY - 45 + enchantmentY, -1);
                                         } else {
-                                            context.getMatrices().push();
-                                            context.getMatrices().translate((posX - 50f + item_offset), (posY - 45f + enchantmentY), 0);
+                                            context.getMatrices().pushMatrix();
+                                            context.getMatrices().translate((float) ((posX - 50f + item_offset)), (float) ((posY - 45f + enchantmentY)));
                                             context.drawText(mc.textRenderer, encName, 0, 0, -1, false);
-                                            context.getMatrices().pop();
+                                            context.getMatrices().popMatrix();
                                         }
                                         enchantmentY -= 8;
                                         if (maxEnchantY > enchantmentY)
@@ -278,21 +277,21 @@ public class NameTags extends Module {
                 if (font.getValue() == Font.Fancy) {
                     FontRenderers.sf_bold.drawString(context.getMatrices(), final_string, tagX, (float) posY - 10, -1);
                 } else {
-                    context.getMatrices().push();
-                    context.getMatrices().translate(tagX, ((float) posY - 11), 0);
+                    context.getMatrices().pushMatrix();
+                    context.getMatrices().translate((float) (tagX), (float) (((float) posY - 11)));
                     context.drawText(mc.textRenderer, final_string, 0, 0, -1, false);
-                    context.getMatrices().pop();
+                    context.getMatrices().popMatrix();
                 }
 
                 if (!health.is(Health.Number)) {
                     int i = MathHelper.ceil(ent.getHealth());
                     float f = (float) ent.getAttributeValue(EntityAttributes.MAX_HEALTH);
                     int p = MathHelper.ceil(ent.getAbsorptionAmount());
-                    context.getMatrices().push();
-                    context.getMatrices().translate(posX - 44, posY, 0);
-                    context.getMatrices().scale(1.1f, 1.1f, 1f);
+                    context.getMatrices().pushMatrix();
+                    context.getMatrices().translate((float) (posX - 44), (float) (posY));
+                    context.getMatrices().scale(1.1f, 1.1f);
                     renderHealthBar(context, ent, f, i, p);
-                    context.getMatrices().pop();
+                    context.getMatrices().popMatrix();
                 }
 
                 if (potions.getValue())
@@ -302,7 +301,7 @@ public class NameTags extends Module {
 
                 if (shulkers.getValue())
                     renderShulkerToolTip(context, (int) posX - 90, (int) posY - 120, (handItem instanceof BlockItem bi) && (bi.getBlock() instanceof ShulkerBoxBlock) ? ent.getMainHandStack() : ent.getOffHandStack());
-                context.getMatrices().pop();
+                context.getMatrices().popMatrix();
             }
         }
 
@@ -492,10 +491,10 @@ public class NameTags extends Module {
             if (l >= i) {
                 int r = q - k;
                 if (q - k < absorption) {
-                    context.getMatrices().push();
-                    context.getMatrices().translate(0, 0, 0.001f);
+                    context.getMatrices().pushMatrix();
+                    context.getMatrices().translate((float) (0), (float) (0));
                     drawHeart(context, HeartType.ABSORBING, o, r + 1 == absorption, player);
-                    context.getMatrices().pop();
+                    context.getMatrices().popMatrix();
                 }
             }
         }
@@ -516,7 +515,7 @@ public class NameTags extends Module {
                     Render2DEngine.drawRect(context.getMatrices(), x, 0, 7, 3, getHealthColor2(player.getHealth() + player.getAbsorptionAmount()));
                 }
             }
-        } else context.drawGuiTexture(RenderLayer::getGuiTextured, type.getTexture(half), x, 0, 9, 9);
+        } else context.drawGuiTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, type.getTexture(half), x, 0, 9, 9);
     }
 
     private enum HeartType {
@@ -577,12 +576,12 @@ public class NameTags extends Module {
                 case 4 -> power = "V";
             }
 
-            context.getMatrices().push();
-            context.getMatrices().translate(x, y, 0);
-            context.drawSpriteStretched(RenderLayer::getGuiTextured, mc.getStatusEffectSpriteManager().getSprite(statusEffectInstance.getEffectType()), 0, 0, 18, 18);
+            context.getMatrices().pushMatrix();
+            context.getMatrices().translate((float) (x), (float) (y));
+            context.drawGuiTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, net.minecraft.client.gui.hud.InGameHud.getEffectTexture(statusEffectInstance.getEffectType()), 0, 0, 18, 18);
             FontRenderers.sf_bold_mini.drawCenteredString(context.getMatrices(), PotionHud.getDuration(statusEffectInstance), 9, -8, -1);
             FontRenderers.categories.drawCenteredString(context.getMatrices(), power, 9, -16, -1);
-            context.getMatrices().pop();
+            context.getMatrices().popMatrix();
 
         }
         RenderSystem.disableBlend();
@@ -622,7 +621,6 @@ public class NameTags extends Module {
         drawBackground(context, offsetX, offsetY, colors);
 
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        DiffuseLighting.enableGuiDepthLighting();
         int row = 0;
         int i = 0;
         for (ItemStack itemStack : itemStacks) {
@@ -634,7 +632,6 @@ public class NameTags extends Module {
                 row++;
             }
         }
-        DiffuseLighting.disableGuiDepthLighting();
         RenderSystem.enableDepthTest();
     }
 
@@ -643,7 +640,7 @@ public class NameTags extends Module {
         RenderSystem.setShaderColor(colors[0], colors[1], colors[2], 1F);
         RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
         RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR_MIPMAP_LINEAR);
-        context.drawTexture(RenderLayer::getGuiTextured, TextureStorage.container, x, y, 0, 0, 176, 67, 176, 67);
+        context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, TextureStorage.container, x, y, 0, 0, 176, 67, 176, 67);
         RenderSystem.enableBlend();
     }
 

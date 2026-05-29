@@ -142,8 +142,11 @@ public class ClickGUI extends Screen {
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         Render2DEngine.resetScissorStack();
 
-        if (ModuleManager.clickGui.blur.getValue())
-            applyBlur();
+        // 1.21.8 applies screen blur before custom screens render.
+        // When blur is disabled, fill with an opaque backdrop to cover the vanilla blur.
+        if (!ModuleManager.clickGui.blur.getValue()) {
+            context.fill(0, 0, mc.getWindow().getScaledWidth(), mc.getWindow().getScaledHeight(), 0xFF000000);
+        }
 
         anyHovered = false;
 
@@ -175,10 +178,6 @@ public class ClickGUI extends Screen {
 
         if (Module.fullNullCheck())
             renderBackground(context, mouseX, mouseY, delta);
-
-        // Flush batched background so it renders behind ClickGUI elements,
-        // not on top of them (which would double-dim the UI)
-        context.draw();
 
         if (ModuleManager.clickGui.scrollMode.getValue() == ClickGui.scrollModeEn.Old) {
             for (AbstractCategory window : windows) {

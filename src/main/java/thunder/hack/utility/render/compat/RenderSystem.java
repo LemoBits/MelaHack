@@ -1,10 +1,11 @@
 package thunder.hack.utility.render.compat;
 
 import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.textures.GpuTexture;
+import com.mojang.blaze3d.textures.GpuTextureView;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.Fog;
 import net.minecraft.util.Identifier;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fStack;
@@ -25,6 +26,7 @@ public final class RenderSystem {
     private static final Map<String, Object> currentUniforms = new LinkedHashMap<>();
     private static BlendMode blendMode = BlendMode.DEFAULT;
     private static boolean scissorEnabled;
+    private static final float[] shaderColor = new float[]{1f, 1f, 1f, 1f};
     private static int scissorX;
     private static int scissorY;
     private static int scissorWidth;
@@ -165,15 +167,25 @@ public final class RenderSystem {
     }
 
     public static void setShaderColor(float red, float green, float blue, float alpha) {
-        com.mojang.blaze3d.systems.RenderSystem.setShaderColor(red, green, blue, alpha);
+        shaderColor[0] = red;
+        shaderColor[1] = green;
+        shaderColor[2] = blue;
+        shaderColor[3] = alpha;
+    }
+
+    public static float[] getShaderColor() {
+        return shaderColor;
     }
 
     public static void setShaderTexture(int slot, Identifier id) {
-        GpuTexture texture = MinecraftClient.getInstance().getTextureManager().getTexture(id).getGlTexture();
+        GpuTextureView texture = MinecraftClient.getInstance().getTextureManager().getTexture(id).getGlTextureView();
         com.mojang.blaze3d.systems.RenderSystem.setShaderTexture(slot, texture);
     }
 
     public static void setShaderTexture(int slot, GpuTexture texture) {
+    }
+
+    public static void setShaderTexture(int slot, GpuTextureView texture) {
         com.mojang.blaze3d.systems.RenderSystem.setShaderTexture(slot, texture);
     }
 
@@ -195,12 +207,12 @@ public final class RenderSystem {
         scissorY = y;
         scissorWidth = width;
         scissorHeight = height;
-        com.mojang.blaze3d.systems.RenderSystem.enableScissor(x, y, width, height);
+        com.mojang.blaze3d.systems.RenderSystem.enableScissorForRenderTypeDraws(x, y, width, height);
     }
 
     public static void disableScissor() {
         scissorEnabled = false;
-        com.mojang.blaze3d.systems.RenderSystem.disableScissor();
+        com.mojang.blaze3d.systems.RenderSystem.disableScissorForRenderTypeDraws();
     }
 
     public static void applyScissor(com.mojang.blaze3d.systems.RenderPass pass) {
@@ -220,7 +232,7 @@ public final class RenderSystem {
     }
 
     public static Matrix4f getProjectionMatrix() {
-        return com.mojang.blaze3d.systems.RenderSystem.getProjectionMatrix();
+        return new Matrix4f();
     }
 
     public static Matrix4f getModelViewMatrix() {
@@ -235,11 +247,11 @@ public final class RenderSystem {
         com.mojang.blaze3d.systems.RenderSystem.resetTextureMatrix();
     }
 
-    public static Fog getShaderFog() {
+    public static GpuBufferSlice getShaderFog() {
         return com.mojang.blaze3d.systems.RenderSystem.getShaderFog();
     }
 
-    public static void setShaderFog(Fog fog) {
+    public static void setShaderFog(GpuBufferSlice fog) {
         com.mojang.blaze3d.systems.RenderSystem.setShaderFog(fog);
     }
 

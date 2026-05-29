@@ -4,17 +4,31 @@ in vec2 texCoord;
 out vec4 fragColor;
 
 uniform sampler2D InSampler;
-uniform vec4 primaryColor;
-uniform vec4 secondaryColor;
-uniform float time;
-uniform vec2 InSize;
-
-uniform vec4 outlinecolor;
-uniform float alpha0;
-uniform float fillAlpha;
-uniform int quality;
-uniform int lineWidth;
 in vec2 oneTexel;
+
+layout(std140) uniform ThunderHackPost {
+    vec4 color;
+    vec4 outlinecolor;
+    vec4 primaryColor;
+    vec4 secondaryColor;
+    vec4 first;
+    vec4 ffirst;
+    vec3 second;
+    vec3 third;
+    vec3 fsecond;
+    vec3 fthird;
+    vec2 resolution;
+    float time;
+    float alpha0;
+    float alpha1;
+    float alpha2;
+    float factor;
+    float moreGradient;
+    float fillAlpha;
+    int quality;
+    int lineWidth;
+    int oct;
+};
 
 vec3 wave(vec2 pos)
 {

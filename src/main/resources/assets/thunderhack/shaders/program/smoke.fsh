@@ -5,25 +5,30 @@ uniform sampler2D InSampler;
 in vec2 texCoord;
 in vec2 oneTexel;
 out vec4 fragColor;
-uniform int quality;
-uniform int lineWidth;
-uniform vec2 InSize;
-uniform float alpha0;
-uniform float alpha1;
 
-
-uniform vec2 resolution;
-uniform float time;
-
-uniform vec4 first;
-uniform vec3 second;
-uniform vec3 third;
-
-uniform vec4 ffirst;
-uniform vec3 fsecond;
-uniform vec3 fthird;
-
-uniform int oct;
+layout(std140) uniform ThunderHackPost {
+    vec4 color;
+    vec4 outlinecolor;
+    vec4 primaryColor;
+    vec4 secondaryColor;
+    vec4 first;
+    vec4 ffirst;
+    vec3 second;
+    vec3 third;
+    vec3 fsecond;
+    vec3 fthird;
+    vec2 resolution;
+    float time;
+    float alpha0;
+    float alpha1;
+    float alpha2;
+    float factor;
+    float moreGradient;
+    float fillAlpha;
+    int quality;
+    int lineWidth;
+    int oct;
+};
 
 
 float random (in vec2 _st) {
@@ -122,7 +127,5 @@ void main() {
         fragColor = vec4(colorFinal, alphaOutline);
     }
 }
-
-
 
 

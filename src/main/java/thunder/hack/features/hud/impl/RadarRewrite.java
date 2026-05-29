@@ -7,7 +7,6 @@ import thunder.hack.utility.render.compat.RenderSystem;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gl.ShaderProgramKeys;
 import net.minecraft.client.render.*;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.RotationAxis;
@@ -61,24 +60,23 @@ public class RadarRewrite extends HudElement {
         float middleH = mc.getWindow().getScaledHeight() * getY();
 
         MSAAFramebuffer.use(false, () -> {
-            context.getMatrices().push();
+            context.getMatrices().pushMatrix();
             renderCompass(context.getMatrices(), middleW + CRadius.getValue(), middleH + CRadius.getValue());
-            context.getMatrices().pop();
+            context.getMatrices().popMatrix();
 
             int color = 0;
 
-            context.getMatrices().push();
-            context.getMatrices().translate(middleW + CRadius.getValue(), middleH + CRadius.getValue(), 0);
-            context.getMatrices().multiply(RotationAxis.POSITIVE_X.rotationDegrees(90f / Math.abs(90f / MathUtility.clamp(mc.player.getPitch(), pitchLock.getValue(), 90f)) - 102));
-            context.getMatrices().translate(-(middleW + CRadius.getValue()), -(middleH + CRadius.getValue()), 0);
+            context.getMatrices().pushMatrix();
+            context.getMatrices().translate((float) (middleW + CRadius.getValue()), (float) (middleH + CRadius.getValue()));
+            context.getMatrices().translate((float) (-(middleW + CRadius.getValue())), (float) (-(middleH + CRadius.getValue())));
 
             for (PlayerEntity e : Lists.newArrayList(mc.world.getPlayers())) {
                 if (e != mc.player) {
-                    context.getMatrices().push();
+                    context.getMatrices().pushMatrix();
                     float yaw = getRotations(e) - mc.player.getYaw();
-                    context.getMatrices().translate(middleW + CRadius.getValue(), middleH + CRadius.getValue(), 0.0F);
-                    context.getMatrices().multiply(RotationAxis.POSITIVE_Z.rotationDegrees(yaw));
-                    context.getMatrices().translate(-(middleW + CRadius.getValue()), -(middleH + CRadius.getValue()), 0.0F);
+                    context.getMatrices().translate((float) (middleW + CRadius.getValue()), (float) (middleH + CRadius.getValue()));
+                    context.getMatrices().rotate((float) Math.toRadians(yaw));
+                    context.getMatrices().translate((float) (-(middleW + CRadius.getValue())), (float) (-(middleH + CRadius.getValue())));
 
                     if (Managers.FRIEND.isFriend(e))
                         color = colorf.getValue().getColor();
@@ -89,31 +87,31 @@ public class RadarRewrite extends HudElement {
 
                     Render2DEngine.drawTracerPointer(context.getMatrices(), middleW + CRadius.getValue(), middleH - xOffset.getValue() + CRadius.getValue(), width.getValue() * 5F, tracerWidth.getValue(), down.getValue(), true, glow.getValue(), color);
 
-                    context.getMatrices().translate(middleW + CRadius.getValue(), middleH + CRadius.getValue(), 0.0F);
-                    context.getMatrices().multiply(RotationAxis.POSITIVE_Z.rotationDegrees(-yaw));
-                    context.getMatrices().translate(-(middleW + CRadius.getValue()), -(middleH + CRadius.getValue()), 0.0F);
-                    context.getMatrices().pop();
+                    context.getMatrices().translate((float) (middleW + CRadius.getValue()), (float) (middleH + CRadius.getValue()));
+                    context.getMatrices().rotate((float) Math.toRadians(-yaw));
+                    context.getMatrices().translate((float) (-(middleW + CRadius.getValue())), (float) (-(middleH + CRadius.getValue())));
+                    context.getMatrices().popMatrix();
                 }
             }
-            context.getMatrices().pop();
+            context.getMatrices().popMatrix();
         });
         setBounds(getPosX(), getPosY(),(int) (CRadius.getValue() * 2), (int) (CRadius.getValue() * 2));
     }
 
-    public void renderCompass(MatrixStack matrices, float x, float y) {
+    public void renderCompass(Object matrices, float x, float y) {
         float pitchFactor = Math.abs(90f / MathUtility.clamp(mc.player.getPitch(), pitchLock.getValue(), 90f));
         drawEllipsCompas(matrices, -(int) mc.player.getYaw(), x, y, pitchFactor, 1f, -2f, 1f, ciColor.getValue().getColorObject(), false);
         drawEllipsCompas(matrices, -(int) mc.player.getYaw(), x, y, pitchFactor, 1f, 0f, 3f, Color.WHITE, true);
     }
 
-    public void drawEllipsCompas(MatrixStack matrices, int yaw, float x, float y, float x2, float y2, float margin, float width, Color color, boolean Dir) {
+    public void drawEllipsCompas(Object matrices, int yaw, float x, float y, float x2, float y2, float margin, float width, Color color, boolean Dir) {
         drawElipse(matrices, x, y, x2, y2, 15 + yaw, 75 + yaw, margin, width, color, Dir ? "W" : "");
         drawElipse(matrices, x, y, x2, y2, 105 + yaw, 165 + yaw, margin, width, color, Dir ? "N" : "");
         drawElipse(matrices, x, y, x2, y2, 195 + yaw, 255 + yaw, margin, width, color, Dir ? "E" : "");
         drawElipse(matrices, x, y, x2, y2, 285 + yaw, 345 + yaw, margin, width, color, Dir ? "S" : "");
     }
 
-    public void drawElipse(MatrixStack matrices, float x, float y, float rx, float ry, float start, float end, float margin, float width, Color color, String direction) {
+    public void drawElipse(Object matrices, float x, float y, float rx, float ry, float start, float end, float margin, float width, Color color, String direction) {
         float sin;
         float cos;
         float endOffset;

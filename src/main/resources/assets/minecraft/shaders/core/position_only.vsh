@@ -1,10 +1,10 @@
 #version 150
 
+#moj_import <minecraft:projection.glsl>
+#moj_import <minecraft:dynamictransforms.glsl>
+
 in vec3 Position;
 
-uniform mat4 ModelViewMat;
-uniform mat4 ProjMat;
-
 void main() {
-    gl_Position = ProjMat * ModelViewMat * vec4(Position, 1.0);
+    gl_Position = ProjMat * ModelViewMat * vec4(Position + ModelOffset, 1.0);
 }

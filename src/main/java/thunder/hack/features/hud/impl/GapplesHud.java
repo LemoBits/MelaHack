@@ -44,22 +44,22 @@ public class GapplesHud extends HudElement {
 
         factor2 = MathUtility.clamp(factor2, 0.01f, 1f);
 
-        context.getMatrices().push();
-        context.getMatrices().translate(xPos, yPos, 0);
-        context.getMatrices().multiply(RotationAxis.NEGATIVE_Z.rotation((float) Math.toRadians(-Render2DEngine.interpolateFloat(prevAngle, angle, Render3DEngine.getTickDelta()))));
-        context.getMatrices().translate(-xPos, -yPos, 0);
+        context.getMatrices().pushMatrix();
+        context.getMatrices().translate((float) (xPos), (float) (yPos));
+        context.getMatrices().rotate(-((float) Math.toRadians(-Render2DEngine.interpolateFloat(prevAngle, angle, Render3DEngine.getTickDelta()))));
+        context.getMatrices().translate((float) (-xPos), (float) (-yPos));
 
         RenderSystem.setShaderColor(0.3f, 0.3f, 0.3f, 1f);
-        context.getMatrices().translate(xPos + 20, yPos - 9, 0);
+        context.getMatrices().translate((float) (xPos + 20), (float) (yPos - 9));
         context.drawItem(targetItem.getDefaultStack(), 0, 0);
-        context.getMatrices().translate(-(xPos + 20), -(yPos - 9), 0);
+        context.getMatrices().translate((float) (-(xPos + 20)), (float) (-(yPos - 9)));
         RenderSystem.setShaderColor(1f, 1f - factor, 1f - factor, 1f);
 
-        context.getMatrices().translate((xPos + 28), (yPos - 1), 0);
-        context.getMatrices().scale(factor2, factor2, 1f);
+        context.getMatrices().translate((float) ((xPos + 28)), (float) ((yPos - 1)));
+        context.getMatrices().scale(factor2, factor2);
         context.drawItem(targetItem.getDefaultStack(), -8, -8);
-        context.getMatrices().scale(factor2 != 0 ? 1f / factor2 : 1f, factor2 != 0 ? 1f / factor2 : 1f, 1f);
-        context.getMatrices().translate(-(xPos + 28), -(yPos - 1), 0);
+        context.getMatrices().scale(factor2 != 0 ? 1f / factor2 : 1f, factor2 != 0 ? 1f / factor2 : 1f);
+        context.getMatrices().translate((float) (-(xPos + 28)), (float) (-(yPos - 1)));
 
         RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
 
@@ -68,7 +68,7 @@ public class GapplesHud extends HudElement {
 
         FontRenderers.sf_bold_mini.drawCenteredString(context.getMatrices(), getItemCount(targetItem) + "", xPos + 28.5f, yPos + 8, -1);
         RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
-        context.getMatrices().pop();
+        context.getMatrices().popMatrix();
     }
 
     @EventHandler

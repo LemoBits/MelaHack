@@ -59,17 +59,6 @@ public abstract class MixinInGameHud {
         }
     }
 
-    @Inject(method = "renderExperienceBar", at = @At(value = "HEAD"), cancellable = true)
-    public void renderXpBarCustom(DrawContext context, int x, CallbackInfo ci) {
-        if (mc != null && mc.currentScreen instanceof WindowsScreen)
-            ci.cancel();
-
-        if (ModuleManager.hotbar.isEnabled()) {
-            ci.cancel();
-            Hotbar.renderXpBar(x, context.getMatrices());
-        }
-    }
-
     @Inject(method = "renderScoreboardSidebar(Lnet/minecraft/client/gui/DrawContext;Lnet/minecraft/scoreboard/ScoreboardObjective;)V", at = @At(value = "HEAD"), cancellable = true)
     private void renderScoreboardSidebarHook(DrawContext context, ScoreboardObjective objective, CallbackInfo ci) {
         if(ModuleManager.noRender.noScoreBoard.getValue() && ModuleManager.noRender.isEnabled()){

@@ -121,10 +121,10 @@ public class PotionHud extends HudElement {
 
             float px = getPosX() + (max_width - pointerX - 10);
 
-            context.getMatrices().push();
-            context.getMatrices().translate(getPosX() + 2, getPosY() + 16 + y_offset, 0);
-            context.drawSpriteStretched(RenderLayer::getGuiTextured, mc.getStatusEffectSpriteManager().getSprite(potionEffect.getEffectType()), 0, 0, 8, 8);
-            context.getMatrices().pop();
+            context.getMatrices().pushMatrix();
+            context.getMatrices().translate((float) (getPosX() + 2), (float) (getPosY() + 16 + y_offset));
+            context.drawGuiTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, net.minecraft.client.gui.hud.InGameHud.getEffectTexture(potionEffect.getEffectType()), 0, 0, 8, 8);
+            context.getMatrices().popMatrix();
 
             // Position offsets for each language
             if (Objects.equals(currentLanguage, "zh_cn")) {
