@@ -1,11 +1,15 @@
 package thunder.hack.utility.render.compat;
 
+import com.mojang.blaze3d.PrimitiveTopology;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.GpuDevice;
+import com.mojang.blaze3d.systems.RenderSystem.AutoStorageIndexBuffer;
 import com.mojang.blaze3d.textures.GpuTexture;
 import com.mojang.blaze3d.textures.GpuSampler;
 import com.mojang.blaze3d.textures.GpuTextureView;
+import net.minecraft.client.renderer.DynamicUniforms;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fStack;
 import org.lwjgl.opengl.GL11;
@@ -35,9 +39,90 @@ public final class RenderSystem {
     private static int scissorY;
     private static int scissorWidth;
     private static int scissorHeight;
+    private static boolean depthTest = true;
+    private static int worldDrawingDepth;
+    private static Runnable pendingCapture;
 
     private RenderSystem() {
     }
+
+    /**
+     * World space geometry (ESP, chams, 3D text, …) has to be projected with the level
+     * perspective projection, while screens and the HUD use an orthographic GUI projection.
+     * Minecraft 26.2 only has one projection per draw call, so call sites that draw world
+     * geometry announce themselves here.
+     */
+    public static void beginWorldDrawing() {
+        worldDrawingDepth++;
+    }
+
+    public static void endWorldDrawing() {
+        if (worldDrawingDepth > 0) {
+            worldDrawingDepth--;
+        }
+    }
+
+    public static boolean isWorldProjection() {
+        return worldDrawingDepth > 0;
+    }
+
+    public static boolean isDepthTestEnabled() {
+        return depthTest;
+    }
+
+    public static boolean isScissorEnabled() {
+        return scissorEnabled;
+    }
+
+    public static int getScissorX() {
+        return scissorX;
+    }
+
+    public static int getScissorY() {
+        return scissorY;
+    }
+
+    public static int getScissorWidth() {
+        return scissorWidth;
+    }
+
+    public static int getScissorHeight() {
+        return scissorHeight;
+    }
+
+    /**
+     * Screen captures such as MelaHack's blur have to read the main render target while it still
+     * holds the frame they belong to. Because those draws may be replayed later, the capture is
+     * deferred as well.
+     */
+    public static void scheduleCapture(Runnable capture) {
+        pendingCapture = capture;
+    }
+
+    public static Runnable takePendingCapture() {
+        Runnable capture = pendingCapture;
+        pendingCapture = null;
+        return capture;
+    }
+
+    public static GpuDevice getDevice() {
+        return com.mojang.blaze3d.systems.RenderSystem.getDevice();
+    }
+
+    public static DynamicUniforms getDynamicUniforms() {
+        return com.mojang.blaze3d.systems.RenderSystem.getDynamicUniforms();
+    }
+
+    public static AutoStorageIndexBuffer getSequentialBuffer(PrimitiveTopology topology) {
+        return com.mojang.blaze3d.systems.RenderSystem.getSequentialBuffer(topology);
+    }
+
+    public static GpuBufferSlice getProjectionMatrixBuffer() {
+        return com.mojang.blaze3d.systems.RenderSystem.getProjectionMatrixBuffer();
+    }
+
+    public static final int PROJECTION_MATRIX_UBO_SIZE =
+            com.mojang.blaze3d.systems.RenderSystem.PROJECTION_MATRIX_UBO_SIZE;
 
     public static RenderPipeline getCurrentPipeline() {
         return currentPipeline;
@@ -139,11 +224,11 @@ public final class RenderSystem {
     }
 
     public static void enableDepthTest() {
-        com.mojang.blaze3d.opengl.GlStateManager._enableDepthTest();
+        depthTest = true;
     }
 
     public static void disableDepthTest() {
-        com.mojang.blaze3d.opengl.GlStateManager._disableDepthTest();
+        depthTest = false;
     }
 
     public static void depthMask(boolean mask) {

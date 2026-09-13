@@ -9,11 +9,12 @@ import com.mojang.blaze3d.shaders.UniformType;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import thunder.hack.features.modules.client.HudEditor;
+import thunder.hack.utility.render.ShaderProgramKeys;
 import thunder.hack.utility.render.compat.RenderSystem;
 
 import java.awt.*;
 import net.minecraft.resources.Identifier;
-import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.BindGroupLayouts;
 import net.minecraft.util.Mth;
 
 import static thunder.hack.features.modules.Module.mc;
@@ -29,7 +30,18 @@ public class RectangleShader {
     private Color color3 = Color.WHITE;
     private Color color4 = Color.WHITE;
 
-    public static final RenderPipeline RECTANGLE_SHADER = RenderPipelines.DEBUG_QUADS;
+    public static final RenderPipeline RECTANGLE_SHADER = RenderPipeline.builder()
+            .withLocation(Identifier.fromNamespaceAndPath("thunderhack", "pipeline/rectangle"))
+            .withVertexShader(Identifier.fromNamespaceAndPath("minecraft", "core/position_only"))
+            .withFragmentShader(Identifier.fromNamespaceAndPath("minecraft", "core/rectangle"))
+            .withBindGroupLayout(BindGroupLayouts.MATRICES_PROJECTION)
+            .withBindGroupLayout(ShaderProgramKeys.customUniformLayout())
+            .withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT))
+            .withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false))
+            .withCull(false)
+            .withVertexBinding(0, DefaultVertexFormat.POSITION)
+            .withPrimitiveTopology(com.mojang.blaze3d.PrimitiveTopology.QUADS)
+            .build();
 
     public RectangleShader() {
     }

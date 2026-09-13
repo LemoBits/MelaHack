@@ -8,11 +8,12 @@ import com.mojang.blaze3d.platform.CompareOp;
 import com.mojang.blaze3d.shaders.UniformType;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import thunder.hack.utility.render.ShaderProgramKeys;
 import thunder.hack.utility.render.compat.RenderSystem;
 
 import java.awt.*;
 import net.minecraft.resources.Identifier;
-import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.BindGroupLayouts;
 
 import static thunder.hack.features.modules.Module.mc;
 
@@ -29,7 +30,18 @@ public class ArcShader {
     private Color color1 = Color.WHITE;
     private Color color2 = Color.WHITE;
 
-    public static final RenderPipeline ARC_SHADER = RenderPipelines.DEBUG_TRIANGLE_FAN;
+    public static final RenderPipeline ARC_SHADER = RenderPipeline.builder()
+            .withLocation(Identifier.fromNamespaceAndPath("thunderhack", "pipeline/arc"))
+            .withVertexShader(Identifier.fromNamespaceAndPath("minecraft", "core/position_only"))
+            .withFragmentShader(Identifier.fromNamespaceAndPath("minecraft", "core/arc"))
+            .withBindGroupLayout(BindGroupLayouts.MATRICES_PROJECTION)
+            .withBindGroupLayout(ShaderProgramKeys.customUniformLayout())
+            .withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT))
+            .withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false))
+            .withCull(false)
+            .withVertexBinding(0, DefaultVertexFormat.POSITION)
+            .withPrimitiveTopology(com.mojang.blaze3d.PrimitiveTopology.QUADS)
+            .build();
 
     public ArcShader() {
     }

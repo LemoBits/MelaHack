@@ -19,6 +19,7 @@ import thunder.hack.features.modules.client.ClientSettings;
 import thunder.hack.utility.math.MathUtility;
 import thunder.hack.utility.render.Render2DEngine;
 import thunder.hack.utility.render.Render3DEngine;
+import thunder.hack.utility.render.compat.RenderSystem;
 
 import static thunder.hack.features.modules.Module.mc;
 
@@ -76,7 +77,14 @@ public abstract class MixinLivingEntityRenderer {
         }
 
         if (livingEntity instanceof Player pe && ModuleManager.chams.isEnabled() && ModuleManager.chams.players.getValue()) {
-            ModuleManager.chams.renderPlayer(pe, state.bodyRot, Render3DEngine.getTickDelta(), matrixStack, state.lightCoords, model, ci, () -> postRender(livingEntity));
+            // Chams render world space geometry outside the level frame graph, so they use the
+            // level projection instead of the GUI one.
+            RenderSystem.beginWorldDrawing();
+            try {
+                ModuleManager.chams.renderPlayer(pe, state.bodyRot, Render3DEngine.getTickDelta(), matrixStack, state.lightCoords, model, ci, () -> postRender(livingEntity));
+            } finally {
+                RenderSystem.endWorldDrawing();
+            }
 
             if (!pe.isSpectator()) {
                 float g = Render3DEngine.getTickDelta();

@@ -30,6 +30,7 @@ import thunder.hack.features.modules.client.ClientSettings;
 import thunder.hack.features.modules.player.NoEntityTrace;
 import thunder.hack.utility.math.FrameRateCounter;
 import thunder.hack.utility.render.BlockAnimationUtility;
+import thunder.hack.utility.render.BufferRenderer;
 import thunder.hack.utility.render.Render2DEngine;
 import thunder.hack.utility.render.Render3DEngine;
 
@@ -46,6 +47,11 @@ public abstract class MixinGameRenderer {
 
     @Inject(method = "render", at = @At("TAIL"))
     void postHudRenderHook(DeltaTracker tickCounter, boolean tick, CallbackInfo ci) {
+        // In game MelaHack's HUD belongs on top of the vanilla one, so whatever is still queued is
+        // replayed here. Screen content was already replayed by MixinGuiRenderer between the
+        // vanilla GUI layers.
+        BufferRenderer.flushQueue();
+        BufferRenderer.endFrame();
         FrameRateCounter.INSTANCE.recordFrame();
         Render2DEngine.BLUR_PROGRAM.invalidateCapture();
     }
@@ -60,13 +66,20 @@ public abstract class MixinGameRenderer {
         matrixStack.mulPose(Axis.XP.rotationDegrees(camera.xRot()));
         matrixStack.mulPose(Axis.YP.rotationDegrees(camera.yRot() + 180.0f));
 
-        Render3DEngine.lastProjMat.set(RenderSystem.getProjectionMatrix());
-        Render3DEngine.lastModMat.set(RenderSystem.getModelViewMatrix());
+        // World space geometry is projected with the level projection and already carries the view
+        // rotation, so the model view matrix stays at identity.
+        Render3DEngine.lastProjMat.set(mc.gameRenderer.gameRenderState().levelRenderState.cameraRenderState.projectionMatrix);
+        Render3DEngine.lastModMat.identity();
         Render3DEngine.lastWorldSpaceMatrix.set(matrixStack.last().pose());
 
-        Managers.MODULE.onRender3D(matrixStack);
-        BlockAnimationUtility.onRender(matrixStack);
-        Render3DEngine.onRender3D(matrixStack); // <- не двигать
+        RenderSystem.beginWorldDrawing();
+        try {
+            Managers.MODULE.onRender3D(matrixStack);
+            BlockAnimationUtility.onRender(matrixStack);
+            Render3DEngine.onRender3D(matrixStack); // <- не двигать
+        } finally {
+            RenderSystem.endWorldDrawing();
+        }
 
         RenderSystem.getModelViewStack().popMatrix();
     }

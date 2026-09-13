@@ -56,10 +56,12 @@
     "accesors.IMinecraftClient",
     "accesors.INativeImage",
     "accesors.IEntityRenderDispatcher",
+    "accesors.IGuiRenderer",
     "accesors.IInput",
     "accesors.IPostEffectPass",
     "accesors.ISignEditScreen",
-    "accesors.IWorldRenderer"
+    "accesors.IWorldRenderer",
+    "MixinGuiRenderer"
   ],
   "injectors": {
     "defaultRequire": 1
