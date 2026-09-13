@@ -55,13 +55,13 @@ public class Companion extends HudElement {
         context.getMatrices().scale((float) scale.getValue() / 100f, (float) scale.getValue() / 100f);
         context.getMatrices().translate((float) (-((int) getPosX() + 100)), (float) (-((int) getPosY() + 100)));
         if (mode.getValue() == Mode.Boykisser)
-            context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, TextureStorage.boykisser, (int) getPosX(), (int) getPosY(), 0, currentFrame * 128, 130, 128, 130, 6784);
+            context.drawTexture(net.minecraft.client.render.RenderPipelines.GUI_TEXTURED, TextureStorage.boykisser, (int) getPosX(), (int) getPosY(), 0, currentFrame * 128, 130, 128, 130, 6784);
         else if (mode.getValue() == Mode.Paimon)
-            context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, TextureStorage.paimon, (int) getPosX(), (int) getPosY(), 0, currentFrame * 200, 200, 200, 200, 10600);
+            context.drawTexture(net.minecraft.client.render.RenderPipelines.GUI_TEXTURED, TextureStorage.paimon, (int) getPosX(), (int) getPosY(), 0, currentFrame * 200, 200, 200, 200, 10600);
         else if (mode.getValue() == Mode.Baltika)
-            context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, TextureStorage.baltika, (int) getPosX(), (int) getPosY(), 0, 0, 421, 800, 421, 800);
+            context.drawTexture(net.minecraft.client.render.RenderPipelines.GUI_TEXTURED, TextureStorage.baltika, (int) getPosX(), (int) getPosY(), 0, 0, 421, 800, 421, 800);
         else if (mode.getValue() == Mode.Kowk)
-            context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, TextureStorage.kowk, (int) getPosX(), (int) getPosY(), 0, 0, 287, 252, 287, 252);
+            context.drawTexture(net.minecraft.client.render.RenderPipelines.GUI_TEXTURED, TextureStorage.kowk, (int) getPosX(), (int) getPosY(), 0, 0, 287, 252, 287, 252);
         context.getMatrices().popMatrix();
 
         if (!lastPop.passedMs(2000)) {

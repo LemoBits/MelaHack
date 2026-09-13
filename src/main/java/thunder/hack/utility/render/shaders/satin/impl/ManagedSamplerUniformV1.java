@@ -17,7 +17,7 @@
  */
 package thunder.hack.utility.render.shaders.satin.impl;
 
-import net.minecraft.client.gl.Framebuffer;
+import com.mojang.blaze3d.textures.Framebuffer;
 import net.minecraft.client.texture.AbstractTexture;
 
 public final class ManagedSamplerUniformV1 extends ManagedSamplerUniformBase {

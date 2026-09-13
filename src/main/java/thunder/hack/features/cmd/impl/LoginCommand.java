@@ -3,7 +3,7 @@ package thunder.hack.features.cmd.impl;
 import com.mojang.authlib.minecraft.UserApiService;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import net.minecraft.client.network.SocialInteractionsManager;
+import net.minecraft.client.friend.SocialInteractionsManager;
 import net.minecraft.client.session.ProfileKeys;
 import net.minecraft.client.session.Session;
 import net.minecraft.client.session.report.AbuseReportContext;

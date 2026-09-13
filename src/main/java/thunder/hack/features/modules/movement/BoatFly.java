@@ -13,7 +13,7 @@ import net.minecraft.network.packet.c2s.play.VehicleMoveC2SPacket;
 import net.minecraft.network.packet.s2c.common.DisconnectS2CPacket;
 import net.minecraft.network.packet.s2c.play.EntityAttachS2CPacket;
 import net.minecraft.network.packet.s2c.play.EntityS2CPacket;
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
+import net.minecraft.network.packet.s2c.play.PlayerPositionS2CPacket;
 import net.minecraft.network.packet.s2c.play.VehicleMoveS2CPacket;
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.util.Hand;
@@ -238,7 +238,7 @@ public class BoatFly extends Module {
 
         if (cancel.getValue()) {
             if (event.getPacket() instanceof VehicleMoveS2CPacket) event.cancel();
-            if (event.getPacket() instanceof PlayerPositionLookS2CPacket) event.cancel();
+            if (event.getPacket() instanceof PlayerPositionS2CPacket) event.cancel();
             if (event.getPacket() instanceof EntityS2CPacket) event.cancel();
             if (event.getPacket() instanceof EntityAttachS2CPacket) event.cancel();
         }

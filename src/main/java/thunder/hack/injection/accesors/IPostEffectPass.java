@@ -1,7 +1,7 @@
 package thunder.hack.injection.accesors;
 
 import com.mojang.blaze3d.buffers.GpuBuffer;
-import net.minecraft.client.gl.PostEffectPass;
+import net.minecraft.client.render.effect.PostEffectPass;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 

@@ -6,10 +6,10 @@ import thunder.hack.utility.render.shaders.satin.api.managed.ManagedShaderEffect
 import thunder.hack.utility.render.shaders.satin.api.managed.ShaderEffectManager;
 import thunder.hack.utility.render.shaders.satin.impl.PostEffectRenderUtil;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.Framebuffer;
-import net.minecraft.client.gl.PostEffectProcessor;
-import net.minecraft.client.gl.SimpleFramebuffer;
-import net.minecraft.client.util.ObjectAllocator;
+import com.mojang.blaze3d.textures.Framebuffer;
+import net.minecraft.client.render.effect.PostEffectProcessor;
+import net.minecraft.client.render.SimpleFramebuffer;
+import net.minecraft.client.util.memory.ObjectAllocator;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.core.manager.IManager;

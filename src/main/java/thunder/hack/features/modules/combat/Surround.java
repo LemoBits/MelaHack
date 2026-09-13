@@ -8,7 +8,7 @@ import net.minecraft.entity.decoration.EndCrystalEntity;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.network.packet.s2c.play.BlockUpdateS2CPacket;
 import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
+import net.minecraft.network.packet.s2c.play.PlayerPositionS2CPacket;
 import net.minecraft.util.math.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -126,7 +126,7 @@ public final class Surround extends PlaceModule {
         if (event.getPacket() instanceof BlockUpdateS2CPacket pac && mc.player.squaredDistanceTo(pac.getPos().toCenterPos()) < range.getPow2Value() && pac.getState().isReplaceable())
             handlePacket();
 
-        if (event.getPacket() instanceof PlayerPositionLookS2CPacket && onTp.getValue() == OnTpAction.Disable)
+        if (event.getPacket() instanceof PlayerPositionS2CPacket && onTp.getValue() == OnTpAction.Disable)
             disable(isRu() ? "Выключен из-за руббербенда!" : "Disabled due to a rubberband!");
     }
 

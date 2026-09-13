@@ -8,9 +8,9 @@ import thunder.hack.utility.render.shaders.satin.api.managed.ManagedShaderEffect
 import thunder.hack.utility.render.shaders.satin.api.managed.uniform.SamplerUniformV2;
 import thunder.hack.injection.accesors.AccessiblePassesShaderEffect;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.PostEffectProcessor;
+import net.minecraft.client.render.effect.PostEffectProcessor;
 import net.minecraft.client.gl.ShaderLoader;
-import net.minecraft.client.util.ObjectAllocator;
+import net.minecraft.client.util.memory.ObjectAllocator;
 import net.minecraft.resource.ResourceFactory;
 import net.minecraft.util.Identifier;
 
@@ -72,7 +72,7 @@ public final class ResettableManagedShaderEffect extends ResettableManagedShader
             RenderSystem.disableDepthTest();
             RenderSystem.resetTextureMatrix();
             MinecraftClient client = MinecraftClient.getInstance();
-            Map<Identifier, net.minecraft.client.gl.Framebuffer> externalTargets = Map.of(
+            Map<Identifier, com.mojang.blaze3d.textures.Framebuffer> externalTargets = Map.of(
                 PostEffectProcessor.MAIN, client.getFramebuffer(),
                 BUF_IN, client.getFramebuffer(),
                 BUF_OUT, client.getFramebuffer()

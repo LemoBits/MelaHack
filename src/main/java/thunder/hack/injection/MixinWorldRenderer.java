@@ -1,7 +1,7 @@
 package thunder.hack.injection;
 
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
-import net.minecraft.client.gl.PostEffectProcessor;
+import net.minecraft.client.render.effect.PostEffectProcessor;
 import net.minecraft.client.render.FrameGraphBuilder;
 import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.util.math.Vec3d;

@@ -226,7 +226,7 @@ public abstract class MixinHandledScreen<T extends ScreenHandler> extends Screen
         RenderSystem.setShaderColor(colors[0], colors[1], colors[2], 1F);
         RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
         RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR_MIPMAP_LINEAR);
-        context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, TextureStorage.container, x, y, 0, 0, 176, 67, 176, 67);
+        context.drawTexture(net.minecraft.client.render.RenderPipelines.GUI_TEXTURED, TextureStorage.container, x, y, 0, 0, 176, 67, 176, 67);
         RenderSystem.enableBlend();
     }
 

@@ -17,8 +17,8 @@
  */
 package thunder.hack.injection.accesors;
 
-import net.minecraft.client.gl.PostEffectPass;
-import net.minecraft.client.gl.PostEffectProcessor;
+import net.minecraft.client.render.effect.PostEffectPass;
+import net.minecraft.client.render.effect.PostEffectProcessor;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 

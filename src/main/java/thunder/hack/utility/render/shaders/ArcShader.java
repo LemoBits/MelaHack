@@ -4,7 +4,7 @@ import com.mojang.blaze3d.pipeline.BlendFunction;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.platform.DepthTestFunction;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import net.minecraft.client.gl.UniformType;
+import com.mojang.blaze3d.shaders.UniformType;
 import net.minecraft.client.render.VertexFormats;
 import net.minecraft.util.Identifier;
 import thunder.hack.utility.render.compat.RenderSystem;

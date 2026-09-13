@@ -40,7 +40,7 @@ public class ParentElement extends AbstractElement {
         matrixStack.rotate((float) Math.toRadians(-180f * animation));
         matrixStack.translate(-tx, -ty);
         matrixStack.translate((x + width - 14), (y + 4.5f));
-        context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, TextureStorage.guiArrow, 0, 0, 0, 0, 6, 6, 6, 6);
+        context.drawTexture(net.minecraft.client.render.RenderPipelines.GUI_TEXTURED, TextureStorage.guiArrow, 0, 0, 0, 0, 6, 6, 6, 6);
         matrixStack.translate(-(x + width - 14), -(y + 4.5f));
         matrixStack.popMatrix();
 

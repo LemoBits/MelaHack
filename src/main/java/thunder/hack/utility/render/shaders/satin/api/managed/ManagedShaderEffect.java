@@ -19,7 +19,7 @@ package thunder.hack.utility.render.shaders.satin.api.managed;
 
 import thunder.hack.utility.render.shaders.satin.api.managed.uniform.SamplerUniformV2;
 import thunder.hack.utility.render.shaders.satin.api.managed.uniform.UniformFinder;
-import net.minecraft.client.gl.PostEffectProcessor;
+import net.minecraft.client.render.effect.PostEffectProcessor;
 
 public interface ManagedShaderEffect extends UniformFinder {
 

@@ -1,10 +1,10 @@
 package thunder.hack.utility.render.shaders.satin.impl;
 
-import net.minecraft.client.gl.Framebuffer;
-import net.minecraft.client.gl.PostEffectProcessor;
+import com.mojang.blaze3d.textures.Framebuffer;
+import net.minecraft.client.render.effect.PostEffectProcessor;
 import net.minecraft.client.render.FrameGraphBuilder;
 import net.minecraft.client.util.Handle;
-import net.minecraft.client.util.ObjectAllocator;
+import net.minecraft.client.util.memory.ObjectAllocator;
 import net.minecraft.util.Identifier;
 
 import java.util.HashMap;

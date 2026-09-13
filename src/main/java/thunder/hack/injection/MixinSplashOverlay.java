@@ -85,10 +85,10 @@ public abstract class MixinSplashOverlay {
         RenderSystem.blendFunc(770, 1);
 
         int logoAlpha = MathHelper.ceil(MathHelper.clamp(h, 0.0F, 1.0F) * 255.0F);
-        context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, TextureStorage.thLogo, k - 150, p - 35, 0, 0, 300, 70, 300, 70,
+        context.drawTexture(net.minecraft.client.render.RenderPipelines.GUI_TEXTURED, TextureStorage.thLogo, k - 150, p - 35, 0, 0, 300, 70, 300, 70,
                 withAlpha(new Color(0x1A1A1A).getRGB(), logoAlpha));
         Render2DEngine.addWindow(context.getMatrices(),k - 150, p - 35, k - 150 + (300 * progress), p + 35, 1f);
-        context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, TextureStorage.thLogo, k - 150, p - 35, 0, 0, 300, 70, 300, 70,
+        context.drawTexture(net.minecraft.client.render.RenderPipelines.GUI_TEXTURED, TextureStorage.thLogo, k - 150, p - 35, 0, 0, 300, 70, 300, 70,
                 withAlpha(Color.WHITE.getRGB(), logoAlpha));
         Render2DEngine.popWindow();
 

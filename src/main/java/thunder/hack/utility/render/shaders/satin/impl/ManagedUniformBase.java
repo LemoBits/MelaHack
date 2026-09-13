@@ -17,7 +17,7 @@
  */
 package thunder.hack.utility.render.shaders.satin.impl;
 
-import net.minecraft.client.gl.PostEffectPass;
+import net.minecraft.client.render.effect.PostEffectPass;
 import net.minecraft.client.gl.ShaderProgram;
 
 import java.util.List;

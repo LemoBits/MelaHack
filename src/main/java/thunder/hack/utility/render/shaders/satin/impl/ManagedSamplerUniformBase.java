@@ -19,7 +19,7 @@ package thunder.hack.utility.render.shaders.satin.impl;
 
 import thunder.hack.utility.render.shaders.satin.api.managed.uniform.SamplerUniform;
 import net.minecraft.client.gl.GlUniform;
-import net.minecraft.client.gl.PostEffectPass;
+import net.minecraft.client.render.effect.PostEffectPass;
 import net.minecraft.client.gl.ShaderProgram;
 
 import java.util.List;

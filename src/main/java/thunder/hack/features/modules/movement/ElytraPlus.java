@@ -326,7 +326,7 @@ public class ElytraPlus extends Module {
                     e.cancel();
         }
 
-        if (e.getPacket() instanceof PlayerPositionLookS2CPacket) {
+        if (e.getPacket() instanceof PlayerPositionS2CPacket) {
             acceleration = 0;
             accelerationY = 0;
             pingTimer.reset();

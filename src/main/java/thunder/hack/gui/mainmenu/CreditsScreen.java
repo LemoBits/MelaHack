@@ -87,7 +87,7 @@ public class CreditsScreen extends Screen {
             FontRenderers.sf_medium.drawString(context.getMatrices(), contributor.description, cX + 10, cY + 108, new Color(0x818182).getRGB());
 
             if (contributor.avatar != null)
-                context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, contributor.avatar, (int) (cX + 70 - 24), (int) (halfOfHeight - 110), 48, 48, 0, 0, 96, 96, 96, 96);
+                context.drawTexture(net.minecraft.client.render.RenderPipelines.GUI_TEXTURED, contributor.avatar, (int) (cX + 70 - 24), (int) (halfOfHeight - 110), 48, 48, 0, 0, 96, 96, 96, 96);
 
             if (Render2DEngine.isHovered(mouseX, mouseY, cX, cY, 140, 240) && !Objects.equals(contributor.clickAction, ""))
                 Render2DEngine.drawRound(context.getMatrices(), cX, cY, 140, 240, 8, new Color(0x5FFFFFF, true));
@@ -97,7 +97,7 @@ public class CreditsScreen extends Screen {
         RenderSystem.disableBlend();
         Render2DEngine.drawHudBase(context.getMatrices(), mc.getWindow().getScaledWidth() - 40, mc.getWindow().getScaledHeight() - 40, 30, 30, 5, Render2DEngine.isHovered(mouseX, mouseY, mc.getWindow().getScaledWidth() - 60, mc.getWindow().getScaledHeight() - 60, 40, 40) ? 0.7f : 1f);
         RenderSystem.setShaderColor(1f, 1f, 1f, Render2DEngine.isHovered(mouseX, mouseY, mc.getWindow().getScaledWidth() - 40, mc.getWindow().getScaledHeight() - 40, 30, 30) ? 0.7f : 1f);
-        context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, TextureStorage.thTeam, mc.getWindow().getScaledWidth() - 40, mc.getWindow().getScaledHeight() - 40, 0, 0, 30, 30, 1000, 1000, 1000, 1000);
+        context.drawTexture(net.minecraft.client.render.RenderPipelines.GUI_TEXTURED, TextureStorage.thTeam, mc.getWindow().getScaledWidth() - 40, mc.getWindow().getScaledHeight() - 40, 0, 0, 30, 30, 1000, 1000, 1000, 1000);
         RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
     }
 

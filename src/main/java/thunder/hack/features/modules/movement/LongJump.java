@@ -2,7 +2,7 @@ package thunder.hack.features.modules.movement;
 
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
+import net.minecraft.network.packet.s2c.play.PlayerPositionS2CPacket;
 import net.minecraft.util.math.Vec3d;
 import thunder.hack.ThunderHack;
 import thunder.hack.events.impl.EventMove;
@@ -74,7 +74,7 @@ public class LongJump extends Module {
 
     @EventHandler
     public void onPacketReceive(PacketEvent.Receive e) {
-        if (e.getPacket() instanceof PlayerPositionLookS2CPacket)
+        if (e.getPacket() instanceof PlayerPositionS2CPacket)
             disable(isRu() ? "Тебя флагнуло! Отключаю.." : "You've been flagged! Disabling..");
     }
 

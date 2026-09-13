@@ -10,7 +10,7 @@ import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
+import net.minecraft.network.packet.s2c.play.PlayerPositionS2CPacket;
 import net.minecraft.network.packet.s2c.play.PositionFlag;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
@@ -85,7 +85,7 @@ public final class Burrow extends Module {
             }
         }
 
-        if (event.getPacket() instanceof PlayerPositionLookS2CPacket packet) {
+        if (event.getPacket() instanceof PlayerPositionS2CPacket packet) {
             Vec3d position = packet.change().position();
             double x = position.x;
             double y = position.y;

@@ -2,7 +2,7 @@ package thunder.hack.injection;
 
 import com.mojang.authlib.GameProfile;
 import net.minecraft.client.network.PlayerListEntry;
-import net.minecraft.client.util.SkinTextures;
+import net.minecraft.entity.player.SkinTextures;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import org.spongepowered.asm.mixin.Mixin;

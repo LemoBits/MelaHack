@@ -6,14 +6,14 @@ import thunder.hack.ThunderHack;
 import thunder.hack.events.impl.EventMove;
 import thunder.hack.events.impl.EventSync;
 import thunder.hack.events.impl.PacketEvent;
-import thunder.hack.injection.accesors.IPlayerPositionLookS2CPacket;
+import thunder.hack.injection.accesors.IPlayerPositionS2CPacket;
 import thunder.hack.features.modules.Module;
 import thunder.hack.setting.Setting;
 import net.minecraft.client.gui.screen.DownloadingTerrainScreen;
-import net.minecraft.entity.player.PlayerPosition;
+import net.minecraft.entity.EntityPosition;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.network.packet.c2s.play.TeleportConfirmC2SPacket;
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
+import net.minecraft.network.packet.s2c.play.PlayerPositionS2CPacket;
 import net.minecraft.util.math.Vec3d;
 import thunder.hack.setting.impl.BooleanSettingGroup;
 import thunder.hack.utility.player.MovementUtility;
@@ -116,7 +116,7 @@ public class PacketFly extends Module {
     @EventHandler
     public void onPacketReceive(PacketEvent.Receive event) {
         if (fullNullCheck()) return;
-        if (mc.player != null && event.getPacket() instanceof PlayerPositionLookS2CPacket pac) {
+        if (mc.player != null && event.getPacket() instanceof PlayerPositionS2CPacket pac) {
             Teleport teleport = teleports.remove(pac.teleportId());
             Vec3d pos = pac.change().position();
             if (
@@ -132,9 +132,9 @@ public class PacketFly extends Module {
                 event.cancel();
                 return;
             }
-            PlayerPosition change = pac.change();
-            PlayerPosition updated = new PlayerPosition(change.position(), change.deltaMovement(), mc.player.getYaw(), mc.player.getPitch());
-            ((IPlayerPositionLookS2CPacket) (Object) pac).setChange(updated);
+            EntityPosition change = pac.change();
+            EntityPosition updated = new EntityPosition(change.position(), change.deltaMovement(), mc.player.getYaw(), mc.player.getPitch());
+            ((IPlayerPositionS2CPacket) (Object) pac).setChange(updated);
             teleportId = pac.teleportId();
         }
     }

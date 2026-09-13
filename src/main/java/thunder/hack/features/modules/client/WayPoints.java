@@ -60,7 +60,7 @@ public final class WayPoints extends Module {
 
                 context.getMatrices().pushMatrix();
                 context.getMatrices().translate((float) (posX - 10), (float) ((posY - 35)));
-                context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, TextureStorage.waypoint, 0, 0, 20, 20, 0, 0, 20, 20, 20, 20);
+                context.drawTexture(net.minecraft.client.render.RenderPipelines.GUI_TEXTURED, TextureStorage.waypoint, 0, 0, 20, 20, 0, 0, 20, 20, 20, 20);
                 context.getMatrices().popMatrix();
 
                 FontRenderers.sf_bold_mini.drawString(context.getMatrices(), wp.getName(), tagX, (float) posY - 10, -1);

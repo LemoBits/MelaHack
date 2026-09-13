@@ -123,7 +123,7 @@ public class PotionHud extends HudElement {
 
             context.getMatrices().pushMatrix();
             context.getMatrices().translate((float) (getPosX() + 2), (float) (getPosY() + 16 + y_offset));
-            context.drawGuiTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, net.minecraft.client.gui.hud.InGameHud.getEffectTexture(potionEffect.getEffectType()), 0, 0, 8, 8);
+            context.drawGuiTexture(net.minecraft.client.render.RenderPipelines.GUI_TEXTURED, net.minecraft.client.gui.hud.InGameHud.getEffectTexture(potionEffect.getEffectType()), 0, 0, 8, 8);
             context.getMatrices().popMatrix();
 
             // Position offsets for each language

@@ -8,7 +8,7 @@ import net.minecraft.block.entity.ChestBlockEntity;
 import net.minecraft.block.enums.ChestType;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.Pair;
+import com.mojang.datafixers.util.Pair;
 import thunder.hack.gui.font.FontRenderers;
 import thunder.hack.features.hud.HudElement;
 import thunder.hack.features.modules.client.HudEditor;

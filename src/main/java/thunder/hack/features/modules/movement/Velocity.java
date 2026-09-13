@@ -6,7 +6,7 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.network.packet.s2c.common.CommonPingS2CPacket;
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket;
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
+import net.minecraft.network.packet.s2c.play.PlayerPositionS2CPacket;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
@@ -146,7 +146,7 @@ public class Velocity extends Module {
         }
 
         // LAGBACK
-        if (e.getPacket() instanceof PlayerPositionLookS2CPacket) {
+        if (e.getPacket() instanceof PlayerPositionS2CPacket) {
             if (cc.getValue() || mode.getValue() == modeEn.GrimNew)
                 ccCooldown = 5;
         }

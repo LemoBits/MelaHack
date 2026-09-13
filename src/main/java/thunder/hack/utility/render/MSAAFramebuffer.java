@@ -2,7 +2,7 @@ package thunder.hack.utility.render;
 
 import thunder.hack.utility.render.compat.RenderSystem;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.Framebuffer;
+import com.mojang.blaze3d.textures.Framebuffer;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL30C;

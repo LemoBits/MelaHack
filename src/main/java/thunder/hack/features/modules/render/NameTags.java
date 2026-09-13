@@ -515,7 +515,7 @@ public class NameTags extends Module {
                     Render2DEngine.drawRect(context.getMatrices(), x, 0, 7, 3, getHealthColor2(player.getHealth() + player.getAbsorptionAmount()));
                 }
             }
-        } else context.drawGuiTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, type.getTexture(half), x, 0, 9, 9);
+        } else context.drawGuiTexture(net.minecraft.client.render.RenderPipelines.GUI_TEXTURED, type.getTexture(half), x, 0, 9, 9);
     }
 
     private enum HeartType {
@@ -578,7 +578,7 @@ public class NameTags extends Module {
 
             context.getMatrices().pushMatrix();
             context.getMatrices().translate((float) (x), (float) (y));
-            context.drawGuiTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, net.minecraft.client.gui.hud.InGameHud.getEffectTexture(statusEffectInstance.getEffectType()), 0, 0, 18, 18);
+            context.drawGuiTexture(net.minecraft.client.render.RenderPipelines.GUI_TEXTURED, net.minecraft.client.gui.hud.InGameHud.getEffectTexture(statusEffectInstance.getEffectType()), 0, 0, 18, 18);
             FontRenderers.sf_bold_mini.drawCenteredString(context.getMatrices(), PotionHud.getDuration(statusEffectInstance), 9, -8, -1);
             FontRenderers.categories.drawCenteredString(context.getMatrices(), power, 9, -16, -1);
             context.getMatrices().popMatrix();
@@ -640,7 +640,7 @@ public class NameTags extends Module {
         RenderSystem.setShaderColor(colors[0], colors[1], colors[2], 1F);
         RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
         RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR_MIPMAP_LINEAR);
-        context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, TextureStorage.container, x, y, 0, 0, 176, 67, 176, 67);
+        context.drawTexture(net.minecraft.client.render.RenderPipelines.GUI_TEXTURED, TextureStorage.container, x, y, 0, 0, 176, 67, 176, 67);
         RenderSystem.enableBlend();
     }
 

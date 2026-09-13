@@ -5,7 +5,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket;
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
+import net.minecraft.network.packet.s2c.play.PlayerPositionS2CPacket;
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
@@ -234,7 +234,7 @@ public class TargetStrafe extends Module {
 
     @EventHandler
     public void onPacketReceive(PacketEvent.Receive e) {
-        if (e.getPacket() instanceof PlayerPositionLookS2CPacket) {
+        if (e.getPacket() instanceof PlayerPositionS2CPacket) {
             oldSpeed = 0;
         }
         EntityVelocityUpdateS2CPacket velocity;

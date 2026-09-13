@@ -8,8 +8,8 @@ import com.mojang.blaze3d.systems.CommandEncoder;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.textures.GpuTextureView;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.Framebuffer;
-import net.minecraft.client.gl.RenderPipelines;
+import com.mojang.blaze3d.textures.Framebuffer;
+import net.minecraft.client.render.RenderPipelines;
 import net.minecraft.client.gl.ShaderProgramKeys;
 
 import java.nio.ByteBuffer;

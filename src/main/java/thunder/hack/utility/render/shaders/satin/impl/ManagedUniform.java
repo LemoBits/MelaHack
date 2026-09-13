@@ -3,7 +3,7 @@ package thunder.hack.utility.render.shaders.satin.impl;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.Std140Builder;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.gl.PostEffectPass;
+import net.minecraft.client.render.effect.PostEffectPass;
 import net.minecraft.client.gl.ShaderProgram;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;

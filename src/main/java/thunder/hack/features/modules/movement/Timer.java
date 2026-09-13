@@ -3,7 +3,7 @@ package thunder.hack.features.modules.movement;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.network.packet.s2c.common.CommonPingS2CPacket;
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket;
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
+import net.minecraft.network.packet.s2c.play.PlayerPositionS2CPacket;
 import net.minecraft.util.math.MathHelper;
 import thunder.hack.ThunderHack;
 import thunder.hack.events.impl.PacketEvent;
@@ -94,7 +94,7 @@ public class Timer extends Module {
             }
         }
 
-        if (e.getPacket() instanceof PlayerPositionLookS2CPacket) {
+        if (e.getPacket() instanceof PlayerPositionS2CPacket) {
             switch (onFlag.getValue()) {
                 case Reset -> {
                     ThunderHack.TICK_TIMER = 1f;

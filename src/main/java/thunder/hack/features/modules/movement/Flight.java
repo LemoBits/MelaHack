@@ -4,7 +4,7 @@ import meteordevelopment.orbit.EventHandler;
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket;
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
+import net.minecraft.network.packet.s2c.play.PlayerPositionS2CPacket;
 import net.minecraft.util.Formatting;
 import thunder.hack.events.impl.EventSync;
 import thunder.hack.events.impl.PacketEvent;
@@ -110,7 +110,7 @@ public class Flight extends Module {
     public void onPacketReceive(PacketEvent.Receive e) {
         if (mode.is(Mode.MatrixJump)) {
             if (fullNullCheck()) return;
-            if (e.getPacket() instanceof PlayerPositionLookS2CPacket) {
+            if (e.getPacket() instanceof PlayerPositionS2CPacket) {
                 onPosLook = true;
                 prevX = mc.player.getVelocity().getX();
                 prevY = mc.player.getVelocity().getY();

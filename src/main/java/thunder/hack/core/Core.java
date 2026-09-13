@@ -12,7 +12,7 @@ import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.network.packet.s2c.play.GameJoinS2CPacket;
 import net.minecraft.network.packet.s2c.play.GameMessageS2CPacket;
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
+import net.minecraft.network.packet.s2c.play.PlayerPositionS2CPacket;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Formatting;
@@ -146,7 +146,7 @@ public final class Core {
         if (e.getPacket() instanceof GameJoinS2CPacket)
             Managers.MODULE.onLogin();
 
-        if (e.getPacket() instanceof PlayerPositionLookS2CPacket) {
+        if (e.getPacket() instanceof PlayerPositionS2CPacket) {
             setBackTimer.reset();
         }
     }
@@ -167,7 +167,7 @@ public final class Core {
             int yPos = (int) (mc.getWindow().getScaledHeight() / 2f - 150);
             float alpha = (1f - (skullTimer.getPassedTimeMs() / 3000f));
             RenderSystem.setShaderColor(1f, 1f, 1f, alpha);
-            e.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, TextureStorage.skull, xPos, yPos, 0, 0, 300, 300, 300, 300);
+            e.drawTexture(net.minecraft.client.render.RenderPipelines.GUI_TEXTURED, TextureStorage.skull, xPos, yPos, 0, 0, 300, 300, 300, 300);
             RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
         } else showSkull = false;
     }

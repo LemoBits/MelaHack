@@ -6,7 +6,7 @@ import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.platform.DepthTestFunction;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gl.UniformType;
+import com.mojang.blaze3d.shaders.UniformType;
 import net.minecraft.client.render.*;
 import net.minecraft.util.Identifier;
 import org.joml.Matrix4f;

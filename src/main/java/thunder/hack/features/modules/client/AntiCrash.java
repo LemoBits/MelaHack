@@ -3,7 +3,7 @@ package thunder.hack.features.modules.client;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
 import net.minecraft.network.packet.s2c.play.ParticleS2CPacket;
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
+import net.minecraft.network.packet.s2c.play.PlayerPositionS2CPacket;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.events.impl.PacketEvent;
 import thunder.hack.features.modules.Module;
@@ -36,11 +36,11 @@ public class AntiCrash extends Module { //https://github.com/Bram1903/MinecraftP
                 debugTimer.reset();
             }
             receive.cancel();
-        } else if (receive.getPacket() instanceof PlayerPositionLookS2CPacket pos) {
+        } else if (receive.getPacket() instanceof PlayerPositionS2CPacket pos) {
             if (pos.change().position().x > 1E9 || pos.change().position().y > 1E9 || pos.change().position().z > 1E9
                 || pos.change().yaw() > 1E9 || pos.change().pitch() > 1E9) {
                 if (debug.getValue() && debugTimer.passedMs(1000)) {
-                    sendMessage("PlayerPositionLookS2CPacket canceled");
+                    sendMessage("PlayerPositionS2CPacket canceled");
                     debugTimer.reset();
                 }
                 receive.cancel();

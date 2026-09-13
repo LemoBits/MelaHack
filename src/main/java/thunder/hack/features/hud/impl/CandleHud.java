@@ -41,7 +41,7 @@ public class CandleHud extends HudElement {
         context.getMatrices().translate((float) ((int) getPosX()), (float) ((int) getPosY()));
         float scalefactor = (float) scale.getValue() / 100f;
         context.getMatrices().scale(scalefactor, scalefactor);
-        context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, TextureStorage.candle, 0, -5, 0, 0, 102, 529, 102, 529);
+        context.drawTexture(net.minecraft.client.render.RenderPipelines.GUI_TEXTURED, TextureStorage.candle, 0, -5, 0, 0, 102, 529, 102, 529);
         context.getMatrices().popMatrix();
 
         drawFire(context.getMatrices(), getPosX() + (40 + 15f - xAnim) * scalefactor, getPosY() + (10 - yAnim) * scalefactor, 7 * scalefactor, 7 * scalefactor,

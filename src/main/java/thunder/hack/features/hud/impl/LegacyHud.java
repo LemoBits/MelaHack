@@ -9,7 +9,7 @@ import net.minecraft.item.Items;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.Pair;
+import com.mojang.datafixers.util.Pair;
 import org.apache.commons.lang3.StringUtils;
 import thunder.hack.ThunderHack;
 import thunder.hack.core.Managers;

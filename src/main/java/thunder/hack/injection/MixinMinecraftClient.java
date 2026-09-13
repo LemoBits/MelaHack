@@ -9,7 +9,7 @@ import net.minecraft.client.network.ServerInfo;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.util.Icons;
 import net.minecraft.client.util.MacWindowUtil;
-import net.minecraft.client.util.Window;
+import net.minecraft.client.window.Window;
 import net.minecraft.resource.ResourcePack;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;

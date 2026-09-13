@@ -18,7 +18,7 @@
 package thunder.hack.utility.render.shaders.satin.impl;
 
 import thunder.hack.utility.render.shaders.satin.api.managed.uniform.SamplerUniformV2;
-import net.minecraft.client.gl.Framebuffer;
+import com.mojang.blaze3d.textures.Framebuffer;
 import net.minecraft.client.texture.AbstractTexture;
 
 import java.util.function.IntSupplier;

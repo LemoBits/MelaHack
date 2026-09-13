@@ -2,7 +2,7 @@ package thunder.hack.injection.accesors;
 
 import com.mojang.authlib.minecraft.UserApiService;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.SocialInteractionsManager;
+import net.minecraft.client.friend.SocialInteractionsManager;
 import net.minecraft.client.session.ProfileKeys;
 import net.minecraft.client.session.Session;
 import net.minecraft.client.session.report.AbuseReportContext;

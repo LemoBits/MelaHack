@@ -19,9 +19,9 @@ package thunder.hack.utility.render.shaders.satin.impl;
 
 import thunder.hack.utility.render.shaders.satin.api.managed.ManagedFramebuffer;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.Framebuffer;
-import net.minecraft.client.gl.PostEffectProcessor;
-import net.minecraft.client.util.Window;
+import com.mojang.blaze3d.textures.Framebuffer;
+import net.minecraft.client.render.effect.PostEffectProcessor;
+import net.minecraft.client.window.Window;
 
 public final class FramebufferWrapper implements ManagedFramebuffer {
     private final String name;

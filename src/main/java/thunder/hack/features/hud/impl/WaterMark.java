@@ -118,7 +118,7 @@ public class WaterMark extends HudElement {
             context.getMatrices().translate((float) (getPosX() + 10), (float) (getPosY() + 32));
             context.getMatrices().rotate((float) Math.toRadians(mc.player.age * 3 + Render3DEngine.getTickDelta()));
             context.getMatrices().translate((float) (-(getPosX() + 10)), (float) (-(getPosY() + 32)));
-            context.drawTexture(net.minecraft.client.gl.RenderPipelines.GUI_TEXTURED, TextureStorage.baltika, (int) getPosX() - 10, (int) getPosY() + 2, 0, 0, 40, 64, 40, 64);
+            context.drawTexture(net.minecraft.client.render.RenderPipelines.GUI_TEXTURED, TextureStorage.baltika, (int) getPosX() - 10, (int) getPosY() + 2, 0, 0, 40, 64, 40, 64);
             context.getMatrices().popMatrix();
             Render2DEngine.popWindow();
 

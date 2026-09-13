@@ -17,7 +17,7 @@
  */
 package thunder.hack.utility.render.shaders.satin.api.managed;
 
-import net.minecraft.client.gl.Framebuffer;
+import com.mojang.blaze3d.textures.Framebuffer;
 import net.minecraft.client.render.RenderLayer;
 
 public interface ManagedFramebuffer {
