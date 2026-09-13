@@ -2,7 +2,9 @@ package thunder.hack.utility.render.shaders;
 
 import com.mojang.blaze3d.pipeline.BlendFunction;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
-import com.mojang.blaze3d.platform.DepthTestFunction;
+import com.mojang.blaze3d.pipeline.ColorTargetState;
+import com.mojang.blaze3d.pipeline.DepthStencilState;
+import com.mojang.blaze3d.platform.CompareOp;
 import com.mojang.blaze3d.shaders.UniformType;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
@@ -30,9 +32,8 @@ public class ArcShader {
             .withLocation(Identifier.fromNamespaceAndPath("thunderhack", "pipeline/arc"))
             .withVertexShader(Identifier.fromNamespaceAndPath("minecraft", "core/position_only"))
             .withFragmentShader(Identifier.fromNamespaceAndPath("minecraft", "core/arc"))
-            .withBlend(BlendFunction.TRANSLUCENT)
-            .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
-            .withDepthWrite(false)
+            .withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT))
+            .withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false))
             .withUniform("Projection", UniformType.UNIFORM_BUFFER)
             .withUniform("DynamicTransforms", UniformType.UNIFORM_BUFFER)
             .withUniform("ThunderHackCustom", UniformType.UNIFORM_BUFFER)

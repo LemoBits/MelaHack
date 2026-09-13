@@ -14,7 +14,7 @@ import net.minecraft.world.entity.item.PrimedTnt;
 import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.vehicle.minecart.MinecartTNT;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.item.*;
 import net.minecraft.client.gui.screens.inventory.ContainerScreen;
 import net.minecraft.client.player.LocalPlayer;
@@ -186,16 +186,16 @@ public final class AutoTotem extends Module {
                     case Alternative -> {
                         if (ncpStrict.getValue())
                             sendPacket(new ServerboundPlayerCommandPacket(mc.player, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING));
-                        clickSlot(slot, nearestSlot, ClickType.SWAP);
-                        clickSlot(45, nearestSlot, ClickType.SWAP);
-                        clickSlot(slot, nearestSlot, ClickType.SWAP);
+                        clickSlot(slot, nearestSlot, ContainerInput.SWAP);
+                        clickSlot(45, nearestSlot, ContainerInput.SWAP);
+                        clickSlot(slot, nearestSlot, ContainerInput.SWAP);
                         sendPacket(new ServerboundContainerClosePacket(mc.player.containerMenu.containerId));
                     }
                     case Matrix -> {
                         if (ncpStrict.getValue())
                             sendPacket(new ServerboundPlayerCommandPacket(mc.player, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING));
 
-                        mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, slot, nearestSlot, ClickType.SWAP, mc.player);
+                        mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, slot, nearestSlot, ContainerInput.SWAP, mc.player);
                         debug(slot + " " + nearestSlot);
 
                         sendPacket(new ServerboundSetCarriedItemPacket(nearestSlot));
@@ -209,7 +209,7 @@ public final class AutoTotem extends Module {
                         sendPacket(new ServerboundSetCarriedItemPacket(prevCurrentItem));
                         mc.player.getInventory().setSelectedSlot(prevCurrentItem);
 
-                        mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, slot, nearestSlot, ClickType.SWAP, mc.player);
+                        mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, slot, nearestSlot, ContainerInput.SWAP, mc.player);
 
                         sendPacket(new ServerboundContainerClosePacket(mc.player.containerMenu.containerId));
                         if (resetAttackCooldown.getValue())
@@ -224,7 +224,7 @@ public final class AutoTotem extends Module {
                     }
                     case NewVersion -> {
                         debug(slot + " swap");
-                        mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, slot, 40, ClickType.SWAP, mc.player);
+                        mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, slot, 40, ContainerInput.SWAP, mc.player);
                         sendPacket(new ServerboundContainerClosePacket(mc.player.containerMenu.containerId));
                     }
                 }

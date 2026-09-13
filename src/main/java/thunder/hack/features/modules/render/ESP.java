@@ -9,7 +9,7 @@ import com.mojang.math.Axis;
 import thunder.hack.utility.render.compat.RenderSystem;
 import net.minecraft.client.Camera;
 import thunder.hack.utility.render.ShaderProgramKeys;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import thunder.hack.utility.render.BufferRenderer;
 import net.minecraft.core.*;
 import net.minecraft.core.particles.ColorParticleOption;
@@ -299,7 +299,7 @@ public class ESP extends Module {
         }
     }
 
-    public void onRender2D(GuiGraphics context) {
+    public void onRender2D(GuiGraphicsExtractor context) {
         if(mc.options.hideGui) return;
         if (pearls.getValue()) {
             for (Entity ent : mc.level.entitiesForRendering()) {

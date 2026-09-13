@@ -1,7 +1,7 @@
 package thunder.hack.features.hud.impl;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.core.Managers;
@@ -46,7 +46,7 @@ public class Companion extends HudElement {
         }
     }
 
-    public void onRender2D(GuiGraphics context) {
+    public void onRender2D(GuiGraphicsExtractor context) {
         super.onRender2D(context);
 
         context.pose().pushMatrix();

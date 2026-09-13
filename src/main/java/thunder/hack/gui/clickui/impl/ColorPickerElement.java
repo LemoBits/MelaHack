@@ -9,7 +9,7 @@ import thunder.hack.utility.math.MathUtility;
 import thunder.hack.utility.render.Render2DEngine;
 
 import java.awt.*;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 public class ColorPickerElement extends AbstractElement {
     private float hue;
@@ -42,7 +42,7 @@ public class ColorPickerElement extends AbstractElement {
     }
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
 
         var matrixStack = context.pose();
 

@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
@@ -161,7 +161,7 @@ public class ThunderGui extends LegacyInputScreen {
     }
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         if (Module.fullNullCheck())
             context.fill(0, 0, mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight(), 0xAA000000);
         context.pose().pushMatrix();
@@ -178,7 +178,7 @@ public class ThunderGui extends LegacyInputScreen {
         context.pose().popMatrix();
     }
 
-    public void renderGui(GuiGraphics context, int mouseX, int mouseY, float partialTicks) {
+    public void renderGui(GuiGraphicsExtractor context, int mouseX, int mouseY, float partialTicks) {
         if (dragging) {
             float deltaX = (mouseX - drag_x) - main_posX;
             float deltaY = (mouseY - drag_y) - main_posY;

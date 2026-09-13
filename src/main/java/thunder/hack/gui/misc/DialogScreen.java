@@ -6,7 +6,7 @@ import thunder.hack.gui.font.FontRenderers;
 import thunder.hack.utility.render.Render2DEngine;
 
 import java.awt.*;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -34,7 +34,7 @@ public class DialogScreen extends LegacyInputScreen {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics context, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         float halfOfWidth = mc.getWindow().getGuiScaledWidth() / 2f;
         float halfOfHeight = mc.getWindow().getGuiScaledHeight() / 2f;
 

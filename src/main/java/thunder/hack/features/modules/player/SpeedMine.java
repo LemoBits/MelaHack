@@ -13,7 +13,7 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
@@ -461,9 +461,9 @@ public final class SpeedMine extends Module {
         private void switchTo(int slot, int from) {
             if (switchMode.getValue() == SwitchMode.Alternative || slot >= 9) {
                 if (from == -1)
-                    clickSlot(slot < 9 ? slot + 36 : slot, mc.player.getInventory().getSelectedSlot(), ClickType.SWAP);
+                    clickSlot(slot < 9 ? slot + 36 : slot, mc.player.getInventory().getSelectedSlot(), ContainerInput.SWAP);
                 else
-                    clickSlot(from < 9 ? from + 36 : from, mc.player.getInventory().getSelectedSlot(), ClickType.SWAP);
+                    clickSlot(from < 9 ? from + 36 : from, mc.player.getInventory().getSelectedSlot(), ContainerInput.SWAP);
                 closeScreen();
             } else if (switchMode.is(SwitchMode.Silent)) InventoryUtility.switchToSilent(slot);
             else InventoryUtility.switchTo(slot);

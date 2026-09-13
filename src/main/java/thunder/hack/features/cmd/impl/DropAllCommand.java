@@ -3,7 +3,7 @@ package thunder.hack.features.cmd.impl;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.network.protocol.game.ServerboundContainerClosePacket;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.ThunderHack;
 import thunder.hack.core.Managers;
@@ -21,7 +21,7 @@ public class DropAllCommand extends Command {
         builder.then(literal("legit").executes(context -> {
             Managers.ASYNC.run(() -> {
                 for (int i = 5; i <= 45; i++) {
-                    mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, i, 1, ClickType.THROW, mc.player);
+                    mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, i, 1, ContainerInput.THROW, mc.player);
                     try {
                         Thread.sleep(70);
                     } catch (InterruptedException e) {
@@ -37,7 +37,7 @@ public class DropAllCommand extends Command {
 
         builder.executes(context -> {
             for (int i = 5; i <= 45; i++)
-                mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, i, 1, ClickType.THROW, mc.player);
+                mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, i, 1, ContainerInput.THROW, mc.player);
             mc.player.connection.send(new ServerboundContainerClosePacket(mc.player.containerMenu.containerId));
             sendMessage("ok");
             return SINGLE_SUCCESS;

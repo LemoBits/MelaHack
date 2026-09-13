@@ -1,6 +1,6 @@
 package thunder.hack.gui.clickui;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import thunder.hack.features.modules.Module;
 import thunder.hack.utility.render.Render2DEngine;
 
@@ -29,7 +29,7 @@ public class AbstractCategory {
     public void init() {
     }
 
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         hovered = Render2DEngine.isHovered(mouseX, mouseY, x, y, width, height);
         animationY = (float) interpolate(y, animationY, 0.05);
         if (this.dragging) {

@@ -2,7 +2,7 @@ package thunder.hack.features.hud.impl;
 
 import thunder.hack.utility.render.compat.RenderSystem;
 import thunder.hack.utility.render.ShaderProgramKeys;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.entity.EntityRenderer;
@@ -103,7 +103,7 @@ public class TargetHud extends HudElement {
         headAnimation.update();
     }
 
-    public void onRender2D(GuiGraphics context) {
+    public void onRender2D(GuiGraphicsExtractor context) {
         super.onRender2D(context);
 
         getTarget();
@@ -170,7 +170,7 @@ public class TargetHud extends HudElement {
         }
     }
 
-    private void renderCelkaPasta(GuiGraphics context, float health) {
+    private void renderCelkaPasta(GuiGraphicsExtractor context, float health) {
         float hurtPercent = (target.hurtTime) / 6f;
 
         Render2DEngine.drawBlurredShadow(context.pose(), getPosX() - 2, getPosY() - 2, 164, 51, 5, color.getValue().getColorObject());
@@ -210,7 +210,7 @@ public class TargetHud extends HudElement {
         RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
     }
 
-    private void renderNurik(GuiGraphics context, float health, float animationFactor) {
+    private void renderNurik(GuiGraphicsExtractor context, float health, float animationFactor) {
 
         float hurtPercent = (Render2DEngine.interpolateFloat(MathUtility.clamp(target.hurtTime == 0 ? 0 : target.hurtTime + 1, 0, 10), target.hurtTime, Render3DEngine.getTickDelta())) / 8f;
         healthAnimation.setValue(health);
@@ -279,8 +279,8 @@ public class TargetHud extends HudElement {
                 context.pose().pushMatrix();
                 context.pose().translate((float) (xItemOffset), (float) (getPosY() + 15));
                 context.pose().scale(0.75f, 0.75f);
-                context.renderItem(itemStack, 0, 0);
-                context.renderItemDecorations(mc.font, itemStack, 0, 0);
+                context.item(itemStack, 0, 0);
+                context.itemDecorations(mc.font, itemStack, 0, 0);
                 context.pose().popMatrix();
                 xItemOffset += 12;
             }
@@ -288,7 +288,7 @@ public class TargetHud extends HudElement {
         }
     }
 
-    private void renderMiniNurik(GuiGraphics context, float health, float animationFactor) {
+    private void renderMiniNurik(GuiGraphicsExtractor context, float health, float animationFactor) {
         float hurtPercent = (Render2DEngine.interpolateFloat(MathUtility.clamp(target.hurtTime == 0 ? 0 : target.hurtTime + 1, 0, 10), target.hurtTime, Render3DEngine.getTickDelta())) / 8f;
         healthAnimation.setValue(health);
         health = (float) healthAnimation.getAnimationD();
@@ -354,8 +354,8 @@ public class TargetHud extends HudElement {
                 context.pose().pushMatrix();
                 context.pose().translate((float) (xItemOffset), (float) (getPosY() + 13));
                 context.pose().scale(0.5f, 0.5f);
-                context.renderItem(itemStack, 0, 0);
-                context.renderItemDecorations(mc.font, itemStack, 0, 0);
+                context.item(itemStack, 0, 0);
+                context.itemDecorations(mc.font, itemStack, 0, 0);
                 context.pose().popMatrix();
                 xItemOffset += 9;
             }
@@ -363,7 +363,7 @@ public class TargetHud extends HudElement {
         }
     }
 
-    private void renderThunderHack(GuiGraphics context, float health, float animationFactor) {
+    private void renderThunderHack(GuiGraphicsExtractor context, float health, float animationFactor) {
         float hurtPercent = target.hurtTime / 6f;
 
         // Основа
@@ -487,8 +487,8 @@ public class TargetHud extends HudElement {
                 context.pose().pushMatrix();
                 context.pose().translate((float) (xItemOffset), (float) (getPosY() + 35));
                 context.pose().scale(0.75f, 0.75f);
-                context.renderItem(itemStack, 0, 0);
-                context.renderItemDecorations(mc.font, itemStack, 0, 0);
+                context.item(itemStack, 0, 0);
+                context.itemDecorations(mc.font, itemStack, 0, 0);
 
                 context.pose().popMatrix();
                 xItemOffset += 14;
@@ -499,26 +499,26 @@ public class TargetHud extends HudElement {
         }
     }
 
-    private void celestialArmor(GuiGraphics context, Player target, float posX, float posY) {
+    private void celestialArmor(GuiGraphicsExtractor context, Player target, float posX, float posY) {
         for (int i = 0; i < 4; i++) {
             List<ItemStack> armor = ArmorUtility.getArmorItems(target);
             if (!armor.get(3 - i).isEmpty()) {
                 context.pose().pushMatrix();
                 context.pose().translate((float) (posX + (i > 1 ? 138 : 118)), (float) (posY + (i % 2 == 0 ? 5 : 26)));
-                context.renderItem(armor.get(3 - i), 0, 0);
-                context.renderItemDecorations(mc.font, armor.get(3 - i), 0, 0);
+                context.item(armor.get(3 - i), 0, 0);
+                context.itemDecorations(mc.font, armor.get(3 - i), 0, 0);
                 context.pose().popMatrix();
             }
         }
     }
 
-    private void celestialHands(GuiGraphics context, Player target, float posX, float posY) {
+    private void celestialHands(GuiGraphicsExtractor context, Player target, float posX, float posY) {
         for (int i = 0; i < 2; i++)
             if (!(i == 0 ? target.getMainHandItem() : target.getOffhandItem()).isEmpty()) {
                 context.pose().pushMatrix();
                 context.pose().translate((float) (posX + (i == 0 ? 50 : 77)), (float) (posY + 14));
                 context.pose().scale(0.75f, 0.75f);
-                context.renderItem((i == 0 ? target.getMainHandItem() : target.getOffhandItem()), 0, 0);
+                context.item((i == 0 ? target.getMainHandItem() : target.getOffhandItem()), 0, 0);
                 context.pose().popMatrix();
                 FontRenderers.settings.drawString(context.pose(), "x" + (i == 0 ? target.getMainHandItem() : target.getOffhandItem()).getCount(), posX + (i == 0 ? 50 : 77) + 12, posY + 21, -1);
             }

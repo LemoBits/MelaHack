@@ -8,7 +8,7 @@ import thunder.hack.utility.render.Render2DEngine;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -18,7 +18,7 @@ public class PVPResources extends HudElement {
         super("PVPResources", 50, 50);
     }
 
-    public void onRender2D(GuiGraphics context) {
+    public void onRender2D(GuiGraphicsExtractor context) {
         super.onRender2D(context);
         Render2DEngine.drawHudBase(context.pose(), getPosX(), getPosY(), 50, 50, HudEditor.hudRound.getValue());
 
@@ -49,7 +49,7 @@ public class PVPResources extends HudElement {
         for (int i = 0; i < list.size(); ++i) {
             int offsetX = i % 2 * 25;
             int offsetY = i / 2 * 25;
-            context.renderItem(list.get(i), (int) (getPosX() + offsetX + 4), (int) (getPosY() + offsetY + 4));
+            context.item(list.get(i), (int) (getPosX() + offsetX + 4), (int) (getPosY() + offsetY + 4));
             context.pose().pushMatrix();
             context.pose().translate((float) (0), (float) (0));
             Render2DEngine.drawBlurredShadow(context.pose(), getPosX() + offsetX + 8, getPosY() + offsetY + 8, 9, 9, 12, Color.BLACK);

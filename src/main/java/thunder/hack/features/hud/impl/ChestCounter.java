@@ -10,7 +10,7 @@ import thunder.hack.utility.render.TextureStorage;
 
 import java.awt.*;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.util.Tuple;
 import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -23,7 +23,7 @@ public class ChestCounter extends HudElement {
     public ChestCounter() {
         super("ChestCounter", 50, 10);
     }
-    public void onRender2D(GuiGraphics context) {
+    public void onRender2D(GuiGraphicsExtractor context) {
         super.onRender2D(context);
         Tuple<Integer, Integer> chests = getChestCount();
         String str = "Chests: " + ChatFormatting.WHITE + "S:" + chests.getA() + " D:" + chests.getB();

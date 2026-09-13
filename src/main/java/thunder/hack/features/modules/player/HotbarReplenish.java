@@ -1,6 +1,6 @@
 package thunder.hack.features.modules.player;
 
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.item.ItemStack;
 import thunder.hack.features.modules.Module;
 import thunder.hack.setting.Setting;
@@ -47,7 +47,7 @@ public class HotbarReplenish extends Module {
 
             boolean swap = mode.is(Mode.QUICK_MOVE);
 
-            clickSlot(i, swap ? slot : 0, swap ? ClickType.SWAP : ClickType.QUICK_MOVE);
+            clickSlot(i, swap ? slot : 0, swap ? ContainerInput.SWAP : ContainerInput.QUICK_MOVE);
             return true;
         }
         return false;

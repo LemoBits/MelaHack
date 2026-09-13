@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 import static thunder.hack.ThunderHack.LOGGER;
 
@@ -30,7 +30,7 @@ public class NotificationManager implements IManager {
         notifications.add(new Notification(title, content, type, second * 1000));
     }
 
-    public void onRender2D(GuiGraphics context) {
+    public void onRender2D(GuiGraphicsExtractor context) {
         if (!ModuleManager.notifications.isEnabled()) return;
 
         float startY = isDefault() ? mc.getWindow().getGuiScaledHeight() - 36f : mc.getWindow().getGuiScaledHeight() / 2f + 25;

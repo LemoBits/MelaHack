@@ -9,7 +9,7 @@ import thunder.hack.setting.Setting;
 import thunder.hack.setting.impl.ItemSelectSetting;
 
 import java.awt.*;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 import static thunder.hack.core.manager.IManager.mc;
 
@@ -22,7 +22,7 @@ public class ItemSelectElement extends AbstractElement {
     }
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
         var matrixStack = context.pose();
         FontRenderers.icons.drawString(matrixStack, "H", x + width - 14f, y + 6f, new Color(0xFFECECEC, true).getRGB());

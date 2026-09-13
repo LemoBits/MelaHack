@@ -16,7 +16,7 @@ import net.minecraft.network.protocol.game.ServerboundSelectTradePacket;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.npc.villager.Villager;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.MerchantMenu;
 import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.item.trading.MerchantOffers;
@@ -69,15 +69,15 @@ public class AutoTrader extends Module {
                     msh.tryMoveItems(i);
                     msh.setSelectionHint(i);
                     sendPacket(new ServerboundSelectTradePacket(i));
-                    clickSlot(2, ClickType.QUICK_MOVE);
+                    clickSlot(2, ContainerInput.QUICK_MOVE);
                     cooldown = 3;
                     return;
                 } else if (!msh.getSlot(0).getItem().isEmpty()) {
-                    clickSlot(0, ClickType.QUICK_MOVE);
+                    clickSlot(0, ContainerInput.QUICK_MOVE);
                     cooldown = 3;
                     return;
                 } else if (!msh.getSlot(1).getItem().isEmpty()) {
-                    clickSlot(1, ClickType.QUICK_MOVE);
+                    clickSlot(1, ContainerInput.QUICK_MOVE);
                     cooldown = 3;
                     return;
                 } else if (offer.isOutOfStock()) {
@@ -96,7 +96,7 @@ public class AutoTrader extends Module {
                 float[] angles = InteractionUtility.calculateAngle(ent.getEyePosition().add(Math.random() * 0.2, 0, Math.random() * 0.2));
                 mc.player.setYRot(angles[0]);
                 mc.player.setXRot(angles[1]);
-                mc.gameMode.interact(mc.player, ent, InteractionHand.MAIN_HAND);
+                mc.gameMode.interact(mc.player, ent, new net.minecraft.world.phys.EntityHitResult(ent), InteractionHand.MAIN_HAND);
                 lastVillager = ent.getId();
                 interactTicks = 12;
             } else if (noVillagers.getValue())

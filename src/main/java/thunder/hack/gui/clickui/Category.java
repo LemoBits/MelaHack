@@ -4,12 +4,14 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.shaders.UniformType;
 import com.mojang.blaze3d.pipeline.BlendFunction;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
-import com.mojang.blaze3d.platform.DepthTestFunction;
+import com.mojang.blaze3d.pipeline.ColorTargetState;
+import com.mojang.blaze3d.pipeline.DepthStencilState;
+import com.mojang.blaze3d.platform.CompareOp;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import thunder.hack.utility.render.BufferRenderer;
 import net.minecraft.resources.Identifier;
 import org.joml.Matrix4f;
@@ -38,9 +40,8 @@ public class Category extends AbstractCategory {
             .withSampler("Sampler0")
             .withUniform("Projection", UniformType.UNIFORM_BUFFER)
             .withUniform("DynamicTransforms", UniformType.UNIFORM_BUFFER)
-            .withBlend(BlendFunction.ADDITIVE)
-            .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
-            .withDepthWrite(false)
+            .withColorTargetState(new ColorTargetState(BlendFunction.ADDITIVE))
+            .withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false))
             .withVertexFormat(DefaultVertexFormat.POSITION_TEX_COLOR, VertexFormat.Mode.QUADS)
             .build();
 
@@ -69,7 +70,7 @@ public class Category extends AbstractCategory {
     }
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
 
         setWidth(ModuleManager.clickGui.moduleWidth.getValue());
@@ -155,7 +156,7 @@ public class Category extends AbstractCategory {
         updatePosition();
     }
 
-    private void renderHeaderIcon(BufferBuilder b, GuiGraphics context,
+    private void renderHeaderIcon(BufferBuilder b, GuiGraphicsExtractor context,
                                   float x, float y, float width, float height,
                                   float u, float v, float regionWidth, float regionHeight,
                                   float textureWidth, float textureHeight,

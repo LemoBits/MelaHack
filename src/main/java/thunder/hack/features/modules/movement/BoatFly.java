@@ -15,7 +15,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.vehicle.boat.Boat;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
@@ -121,7 +121,7 @@ public class BoatFly extends Module {
     private void mountToBoat() {
         for (Entity entity : mc.level.entitiesForRendering()) {
             if (!(entity instanceof Boat) || mc.player.distanceToSqr(entity) > 25.0f) continue;
-            sendPacket(ServerboundInteractPacket.createInteractionPacket(entity, false, InteractionHand.MAIN_HAND));
+            sendPacket(new ServerboundInteractPacket(entity.getId(), InteractionHand.MAIN_HAND, null, false));
             break;
         }
     }
@@ -213,7 +213,7 @@ public class BoatFly extends Module {
         }
 
         if (slotClick.getValue())
-            mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, 0, 0, ClickType.CLONE, mc.player);
+            mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, 0, 0, ContainerInput.CLONE, mc.player);
 
         if (spoofpackets.getValue()) {
             Vec3 vec3d = entity.position().add(0.0, randomizeYOffset(), 0.0);

@@ -8,7 +8,7 @@ import thunder.hack.utility.render.Render3DEngine;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
@@ -31,7 +31,7 @@ public class PenisESP extends Module {
     private final Setting<ColorSetting> headColor = new Setting<>("HeadColor", new ColorSetting(new Color(240, 50, 180, 255)), v -> !fimoz.getValue());
 
     @Override
-    public void onRender2D(GuiGraphics event) {
+    public void onRender2D(GuiGraphicsExtractor event) {
         for (Player player : mc.level.players()) {
             if (onlyOwn.getValue() && player != mc.player) continue;
             double size = (FRIEND.isFriend(player) ? friendSize.getValue() : (player != mc.player ? enemySize.getValue() : penisSize.getValue()));

@@ -10,7 +10,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.arrow.Arrow;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.block.Blocks;
@@ -184,7 +184,7 @@ public class LegitHelper extends Module {
             if (mc.player.getInventory().getItem(refillSlot.getValue() - 1).getItem() != Items.TNT_MINECART) {
                 SearchInvResult result = InventoryUtility.findItemInInventory(Items.TNT_MINECART);
                 if (result.found())
-                    clickSlot(result.slot(), refillSlot.getValue() - 1, ClickType.SWAP);
+                    clickSlot(result.slot(), refillSlot.getValue() - 1, ContainerInput.SWAP);
             }
 
         if (crossBow.getValue().isEnabled() && isKeyPressed(crossBowBind) && cbtimer.every(300)) {

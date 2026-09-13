@@ -1,7 +1,7 @@
 package thunder.hack.features.hud.impl;
 
 import thunder.hack.utility.render.compat.RenderSystem;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
 import thunder.hack.features.hud.HudElement;
@@ -19,22 +19,22 @@ public class ArmorHud extends HudElement {
         V1, V2
     }
 
-    public void onRender2D(GuiGraphics context) {
+    public void onRender2D(GuiGraphicsExtractor context) {
         super.onRender2D(context);
         float xItemOffset = getPosX();
         for (ItemStack itemStack : thunder.hack.utility.player.ArmorUtility.getArmorItems(mc.player).reversed()) {
             if (itemStack.isEmpty()) continue;
 
             if (mode.is(Mode.V1)) {
-                context.renderItem(itemStack, (int) xItemOffset, (int) getPosY());
-                context.renderItemDecorations(mc.font,itemStack,  (int) xItemOffset, (int) getPosY());
+                context.item(itemStack, (int) xItemOffset, (int) getPosY());
+                context.itemDecorations(mc.font,itemStack,  (int) xItemOffset, (int) getPosY());
             } else {
                 RenderSystem.setShaderColor(0.4f,0.4f,0.4f,0.35f);
-                context.renderItem(itemStack, (int) xItemOffset, (int) getPosY());
+                context.item(itemStack, (int) xItemOffset, (int) getPosY());
                 RenderSystem.setShaderColor(1f,1f,1f,1f);
                 float offset = mc.player.getEquipmentSlotForItem(itemStack) == EquipmentSlot.HEAD ? -4 : 0;
                 Render2DEngine.addWindow(context.pose(), (int) xItemOffset, getPosY() + offset + (15 - offset) * ((float) itemStack.getDamageValue() / (float) itemStack.getMaxDamage()), xItemOffset + 15, getPosY() + 15, 1f);
-                context.renderItem(itemStack, (int) xItemOffset, (int) getPosY());
+                context.item(itemStack, (int) xItemOffset, (int) getPosY());
                 Render2DEngine.popWindow();
             }
             xItemOffset += 20;

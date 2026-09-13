@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
@@ -37,7 +37,7 @@ public class MainMenuScreen extends LegacyInputScreen {
         buttons.add(new MainMenuButton(4, -70, I18n.get("menu.multiplayer").toUpperCase(Locale.ROOT), () -> mc.setScreen(new JoinMultiplayerScreen(this))));
         buttons.add(new MainMenuButton(-110, -29, I18n.get("menu.options")
                 .toUpperCase(Locale.ROOT)
-                .replace(".", ""), () -> mc.setScreen(new OptionsScreen(this, mc.options))));
+                .replace(".", ""), () -> mc.setScreen(new OptionsScreen(this, mc.options, false))));
         buttons.add(new MainMenuButton(4, -29, "CLICKGUI", () -> ModuleManager.clickGui.setGui()));
         buttons.add(new MainMenuButton(-110, 12, I18n.get("menu.quit").toUpperCase(Locale.ROOT), mc::stop, true));
     }
@@ -63,7 +63,7 @@ public class MainMenuScreen extends LegacyInputScreen {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics context, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         float halfOfWidth = mc.getWindow().getGuiScaledWidth() / 2f;
         float halfOfHeight = mc.getWindow().getGuiScaledHeight() / 2f;
 
@@ -114,7 +114,7 @@ public class MainMenuScreen extends LegacyInputScreen {
 //        }
     }
 
-    private void renderCustomBackground(GuiGraphics context, float width, float height) {
+    private void renderCustomBackground(GuiGraphicsExtractor context, float width, float height) {
         if (mc.getOverlay() == null) {
             Render2DEngine.drawMainMenuShader(context.pose(), 0, 0, width, height);
         } else {

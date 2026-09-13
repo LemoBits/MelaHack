@@ -7,7 +7,7 @@ import thunder.hack.utility.render.Render2DEngine;
 import thunder.hack.utility.render.animation.AnimationUtility;
 
 import java.awt.*;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 public class Cooldowns extends HudElement {
     public Cooldowns() {
@@ -16,7 +16,7 @@ public class Cooldowns extends HudElement {
 
     private float animation1, animation2;
 
-    public void onRender2D(GuiGraphics context) {
+    public void onRender2D(GuiGraphicsExtractor context) {
         super.onRender2D(context);
         Render2DEngine.drawHudBase(context.pose(), getPosX(), getPosY(), 100, 40, HudEditor.hudRound.getValue());
 

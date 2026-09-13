@@ -1,6 +1,6 @@
 package thunder.hack.features.modules.combat;
 
-import baritone.api.BaritoneAPI;
+import thunder.hack.utility.BaritoneIntegration;
 import com.mojang.blaze3d.vertex.PoseStack;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.world.InteractionHand;
@@ -19,7 +19,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.entity.projectile.ShulkerBullet;
 import net.minecraft.world.entity.projectile.hurtingprojectile.LargeFireball;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.network.protocol.game.*;
@@ -330,10 +330,10 @@ public class Aura extends Module {
         if(pauseBaritone.getValue() && ThunderHack.baritone){
             boolean isTargeted = (target != null);
             if (isTargeted && !wasTargeted) {
-                BaritoneAPI.getProvider().getPrimaryBaritone().getCommandManager().execute("pause");
+                BaritoneIntegration.execute("pause");
                 wasTargeted = true;
             } else if (!isTargeted && wasTargeted) {
-                BaritoneAPI.getProvider().getPrimaryBaritone().getCommandManager().execute("resume");
+                BaritoneIntegration.execute("resume");
                 wasTargeted = false;
             }
         }
@@ -459,11 +459,11 @@ public class Aura extends Module {
             return false;
 
         if (axeSlot >= 9) {
-            mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, axeSlot, mc.player.getInventory().getSelectedSlot(), ClickType.SWAP, mc.player);
+            mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, axeSlot, mc.player.getInventory().getSelectedSlot(), ContainerInput.SWAP, mc.player);
             sendPacket(new ServerboundContainerClosePacket(mc.player.containerMenu.containerId));
             mc.gameMode.attack(mc.player, target);
             swingHand();
-            mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, axeSlot, mc.player.getInventory().getSelectedSlot(), ClickType.SWAP, mc.player);
+            mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, axeSlot, mc.player.getInventory().getSelectedSlot(), ContainerInput.SWAP, mc.player);
             sendPacket(new ServerboundContainerClosePacket(mc.player.containerMenu.containerId));
         } else {
             sendPacket(new ServerboundSetCarriedItemPacket(axeSlot));

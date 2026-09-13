@@ -13,7 +13,7 @@ import java.awt.*;
 import java.util.Comparator;
 import java.util.List;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 public class ModuleList extends HudElement {
     private final Setting<Mode> mode = new Setting<>("Mode", Mode.ColorText);
@@ -28,7 +28,7 @@ public class ModuleList extends HudElement {
         super("ArrayList", 50, 30);
     }
 
-    public void onRender2D(GuiGraphics context) {
+    public void onRender2D(GuiGraphicsExtractor context) {
         super.onRender2D(context);
 
         int stringWidth;

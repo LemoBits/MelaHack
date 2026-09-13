@@ -6,7 +6,7 @@ import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
 import net.minecraft.network.protocol.game.ServerboundSwingPacket;
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import thunder.hack.core.Managers;
@@ -80,7 +80,7 @@ public class ElytraSwap extends Module {
         if (hotbarFireWorkResult.found()) {
             hotbarFireWorkResult.switchTo();
         } else if (fireWorkResult.found()) {
-            mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, fireWorkResult.slot(), mc.player.getInventory().getSelectedSlot(), ClickType.SWAP, mc.player);
+            mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, fireWorkResult.slot(), mc.player.getInventory().getSelectedSlot(), ContainerInput.SWAP, mc.player);
             sendPacket(new ServerboundContainerClosePacket(mc.player.containerMenu.containerId));
         } else {
             sendMessage(isRu() ? "У тебя нет фейерверков!" : "You've got no fireworks!");
@@ -93,7 +93,7 @@ public class ElytraSwap extends Module {
         if (fireWorkMode.getValue() == FireWorkMode.Silent) {
             InventoryUtility.returnSlot();
             if (!hotbarFireWorkResult.found()) {
-                mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, fireWorkResult.slot(), mc.player.getInventory().getSelectedSlot(), ClickType.SWAP, mc.player);
+                mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, fireWorkResult.slot(), mc.player.getInventory().getSelectedSlot(), ContainerInput.SWAP, mc.player);
                 sendPacket(new ServerboundContainerClosePacket(mc.player.containerMenu.containerId));
             }
         }

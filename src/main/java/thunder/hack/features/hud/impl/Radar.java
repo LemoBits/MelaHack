@@ -13,7 +13,7 @@ import thunder.hack.utility.render.Render3DEngine;
 
 import java.awt.*;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.entity.player.Player;
 
 public class Radar extends HudElement {
@@ -38,7 +38,7 @@ public class Radar extends HudElement {
     private final Setting<ChatFormatting> c32 = new Setting<>("Color3", ChatFormatting.WHITE, v -> mode.is(Mode.Text));
     private final Setting<ChatFormatting> c42 = new Setting<>("Color4", ChatFormatting.WHITE, v -> mode.is(Mode.Text));
 
-    public void onRender2D(GuiGraphics context) {
+    public void onRender2D(GuiGraphicsExtractor context) {
         super.onRender2D(context);
 
         if (mode.getValue() == Mode.Rect) {

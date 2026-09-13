@@ -8,7 +8,7 @@ import thunder.hack.setting.Setting;
 import thunder.hack.utility.render.Render2DEngine;
 
 import java.awt.*;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
@@ -23,7 +23,7 @@ public class Hotbar extends HudElement {
         Merged, Separately
     }
 
-    public void onRender2D(GuiGraphics context) {
+    public void onRender2D(GuiGraphicsExtractor context) {
         if (mc.screen instanceof WindowsScreen)
             return;
 
@@ -55,7 +55,7 @@ public class Hotbar extends HudElement {
     }
 
     // Bake only items
-    public static void renderHotBarItems(float tickDelta, GuiGraphics context) {
+    public static void renderHotBarItems(float tickDelta, GuiGraphicsExtractor context) {
         if (mc.screen instanceof WindowsScreen)
             return;
 
@@ -82,14 +82,14 @@ public class Hotbar extends HudElement {
         }
     }
 
-    private static void renderHotbarItem(GuiGraphics context, int i, int j, ItemStack itemStack) {
+    private static void renderHotbarItem(GuiGraphicsExtractor context, int i, int j, ItemStack itemStack) {
         if (!itemStack.isEmpty()) {
             context.pose().pushMatrix();
             context.pose().translate((float) ((float) (i + 8)), (float) ((float) (j + 12)));
             context.pose().scale(0.9f, 0.9f);
             context.pose().translate((float) ((float) (-(i + 8))), (float) ((float) (-(j + 12))));
-            context.renderItem(itemStack, i, j);
-            context.renderItemDecorations(mc.font, itemStack, i, j);
+            context.item(itemStack, i, j);
+            context.itemDecorations(mc.font, itemStack, i, j);
             context.pose().popMatrix();
         }
     }

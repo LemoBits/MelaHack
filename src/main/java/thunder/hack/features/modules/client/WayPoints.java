@@ -1,7 +1,7 @@
 package thunder.hack.features.modules.client;
 
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Vector4d;
@@ -23,7 +23,7 @@ public final class WayPoints extends Module {
         sendMessage(Managers.COMMAND.getPrefix() + "waypoint add x y z name");
     }
 
-    public void onRender2D(GuiGraphics context) {
+    public void onRender2D(GuiGraphicsExtractor context) {
         if (!Managers.WAYPOINT.getWayPoints().isEmpty() && !fullNullCheck()) {
             for (WayPointManager.WayPoint wp : Managers.WAYPOINT.getWayPoints()) {
                 if (wp.getName() == null) continue;

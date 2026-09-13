@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.game.ServerboundInteractPacket;
+import net.minecraft.network.protocol.game.ServerboundAttackPacket;
 import net.minecraft.network.protocol.game.ServerboundSwingPacket;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffects;
@@ -145,7 +146,7 @@ public abstract class PlaceModule extends Module {
         }
 
         if (breakCrystalMode.getValue() == InteractMode.Packet)
-            sendPacket(ServerboundInteractPacket.createAttackPacket(entity, mc.player.isShiftKeyDown()));
+            sendPacket(new ServerboundAttackPacket(entity.getId()));
 
         if (breakCrystalMode.getValue() == InteractMode.Normal)
             mc.gameMode.attack(mc.player, entity);

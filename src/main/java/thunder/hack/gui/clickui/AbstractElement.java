@@ -2,7 +2,7 @@ package thunder.hack.gui.clickui;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import org.lwjgl.glfw.GLFW;
 import thunder.hack.setting.Setting;
 import thunder.hack.setting.impl.ColorSetting;
@@ -20,7 +20,7 @@ public abstract class AbstractElement {
         this.setting = setting;
     }
 
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         hovered = Render2DEngine.isHovered(mouseX, mouseY, x, y, width, height);
     }
 

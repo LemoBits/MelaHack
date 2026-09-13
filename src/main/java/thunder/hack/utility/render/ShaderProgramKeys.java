@@ -2,7 +2,9 @@ package thunder.hack.utility.render;
 
 import com.mojang.blaze3d.pipeline.BlendFunction;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
-import com.mojang.blaze3d.platform.DepthTestFunction;
+import com.mojang.blaze3d.pipeline.ColorTargetState;
+import com.mojang.blaze3d.pipeline.DepthStencilState;
+import com.mojang.blaze3d.platform.CompareOp;
 import com.mojang.blaze3d.shaders.UniformType;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
@@ -19,9 +21,8 @@ public final class ShaderProgramKeys {
             .withSampler("Sampler0")
             .withUniform("Projection", UniformType.UNIFORM_BUFFER)
             .withUniform("DynamicTransforms", UniformType.UNIFORM_BUFFER)
-            .withBlend(BlendFunction.TRANSLUCENT)
-            .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
-            .withDepthWrite(false)
+            .withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT))
+            .withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false))
             .withVertexFormat(DefaultVertexFormat.POSITION_TEX, VertexFormat.Mode.QUADS)
             .build();
     public static final RenderPipeline POSITION_TEX_ADDITIVE = RenderPipeline.builder()
@@ -31,9 +32,8 @@ public final class ShaderProgramKeys {
             .withSampler("Sampler0")
             .withUniform("Projection", UniformType.UNIFORM_BUFFER)
             .withUniform("DynamicTransforms", UniformType.UNIFORM_BUFFER)
-            .withBlend(BlendFunction.ADDITIVE)
-            .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
-            .withDepthWrite(false)
+            .withColorTargetState(new ColorTargetState(BlendFunction.ADDITIVE))
+            .withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false))
             .withVertexFormat(DefaultVertexFormat.POSITION_TEX, VertexFormat.Mode.QUADS)
             .build();
     public static final RenderPipeline POSITION_TEX_COLOR = RenderPipelines.GUI_TEXTURED;
@@ -44,9 +44,8 @@ public final class ShaderProgramKeys {
             .withSampler("Sampler0")
             .withUniform("Projection", UniformType.UNIFORM_BUFFER)
             .withUniform("DynamicTransforms", UniformType.UNIFORM_BUFFER)
-            .withBlend(BlendFunction.ADDITIVE)
-            .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
-            .withDepthWrite(false)
+            .withColorTargetState(new ColorTargetState(BlendFunction.ADDITIVE))
+            .withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false))
             .withVertexFormat(DefaultVertexFormat.POSITION_TEX_COLOR, VertexFormat.Mode.QUADS)
             .build();
     public static final RenderPipeline POSITION_TEX_COLOR_DST_ALPHA = RenderPipeline.builder()
@@ -56,13 +55,12 @@ public final class ShaderProgramKeys {
             .withSampler("Sampler0")
             .withUniform("Projection", UniformType.UNIFORM_BUFFER)
             .withUniform("DynamicTransforms", UniformType.UNIFORM_BUFFER)
-            .withBlend(new BlendFunction(
+            .withColorTargetState(new ColorTargetState(new BlendFunction(
                     com.mojang.blaze3d.platform.SourceFactor.DST_ALPHA,
                     com.mojang.blaze3d.platform.DestFactor.ONE_MINUS_DST_ALPHA,
                     com.mojang.blaze3d.platform.SourceFactor.ONE,
-                    com.mojang.blaze3d.platform.DestFactor.ZERO))
-            .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
-            .withDepthWrite(false)
+                    com.mojang.blaze3d.platform.DestFactor.ZERO)))
+            .withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false))
             .withVertexFormat(DefaultVertexFormat.POSITION_TEX_COLOR, VertexFormat.Mode.QUADS)
             .build();
     public static final RenderPipeline RENDERTYPE_LINES = RenderPipelines.LINES;

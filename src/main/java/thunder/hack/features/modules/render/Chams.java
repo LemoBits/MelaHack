@@ -85,7 +85,7 @@ public class Chams extends Module {
         }
 
         Identifier texture = crystalMode.getValue() == CMode.Two ? TextureStorage.crystalTexture2 : crystalTexture;
-        RenderType layer = RenderTypes.entityCutoutNoCull(texture);
+        RenderType layer = RenderTypes.entityCutout(texture);
 
         matrixStack.pushPose();
         matrixStack.scale(2.0f, 2.0f, 2.0f);

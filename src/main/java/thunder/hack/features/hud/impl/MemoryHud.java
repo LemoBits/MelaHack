@@ -10,14 +10,14 @@ import thunder.hack.utility.render.TextureStorage;
 
 import java.awt.*;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 public class MemoryHud extends HudElement {
     public MemoryHud() {
         super("MemoryHud", 100, 10);
     }
 
-    public void onRender2D(GuiGraphics context) {
+    public void onRender2D(GuiGraphicsExtractor context) {
         super.onRender2D(context);
         long m = Runtime.getRuntime().maxMemory();
         long t = Runtime.getRuntime().totalMemory();

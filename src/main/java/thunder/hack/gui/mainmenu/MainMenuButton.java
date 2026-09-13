@@ -6,7 +6,7 @@ import thunder.hack.utility.render.Render2DEngine;
 
 import static thunder.hack.features.modules.Module.mc;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 public class MainMenuButton {
     private final float posX, posY, width, height;
@@ -28,7 +28,7 @@ public class MainMenuButton {
         this(posX, posY, name, action, false);
     }
 
-    public void onRender(GuiGraphics context, float mouseX, float mouseY) {
+    public void onRender(GuiGraphicsExtractor context, float mouseX, float mouseY) {
         float halfOfWidth = mc.getWindow().getGuiScaledWidth() / 2f;
         float halfOfHeight = mc.getWindow().getGuiScaledHeight() / 2f;
         Render2DEngine.drawHudBase(context.pose(), halfOfWidth + posX, halfOfHeight + posY, width, height, 10);

@@ -2,7 +2,7 @@ package thunder.hack.features.hud.impl;
 
 import thunder.hack.utility.render.compat.RenderSystem;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -22,7 +22,7 @@ public class TotemCounter extends HudElement {
 
     private float angle, prevAngle;
 
-    public void onRender2D(GuiGraphics context) {
+    public void onRender2D(GuiGraphicsExtractor context) {
         if (getItemCount(Items.TOTEM_OF_UNDYING) == 0)
             return;
 
@@ -38,7 +38,7 @@ public class TotemCounter extends HudElement {
 
         RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
         context.pose().translate((float) (xPos - 36), (float) (yPos - 9));
-        context.renderItem(Items.TOTEM_OF_UNDYING.getDefaultInstance(), 0, 0);
+        context.item(Items.TOTEM_OF_UNDYING.getDefaultInstance(), 0, 0);
         context.pose().translate((float) (-(xPos - 36)), (float) (-(yPos - 9)));
         RenderSystem.setShaderColor(1f, 1f - factor, 1f - factor, 1f);
 

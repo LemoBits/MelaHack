@@ -57,7 +57,7 @@ public final class ReloadableShaderEffectManager implements ShaderEffectManager 
 
     @Override
     public ManagedCoreShader manageCoreShader(Identifier location) {
-        return manageCoreShader(location, DefaultVertexFormat.NEW_ENTITY);
+        return manageCoreShader(location, DefaultVertexFormat.ENTITY);
     }
 
     @Override

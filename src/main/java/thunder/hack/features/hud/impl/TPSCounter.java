@@ -12,7 +12,7 @@ import thunder.hack.utility.render.TextureStorage;
 
 import java.awt.*;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 public class TPSCounter extends HudElement {
     public TPSCounter() {
@@ -21,7 +21,7 @@ public class TPSCounter extends HudElement {
 
     private final Setting<Boolean> extraTps = new Setting<>("ExtraTPS", true);
 
-    public void onRender2D(GuiGraphics context) {
+    public void onRender2D(GuiGraphicsExtractor context) {
         super.onRender2D(context);
         String str = "TPS " + ChatFormatting.WHITE + Managers.SERVER.getTPS() + (extraTps.getValue() ? " [" + Managers.SERVER.getTPS2() + "]" : "");
 

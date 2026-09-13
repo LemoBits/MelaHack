@@ -1,20 +1,20 @@
 package thunder.hack.events.impl;
 
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import thunder.hack.events.Event;
 
 public class EventClickSlot extends Event {
-    private final ClickType slotActionType;
+    private final ContainerInput slotActionType;
     private final int slot, button, id;
 
-    public EventClickSlot(ClickType slotActionType, int slot, int button, int id) {
+    public EventClickSlot(ContainerInput slotActionType, int slot, int button, int id) {
         this.slot = slot;
         this.button = button;
         this.id = id;
         this.slotActionType = slotActionType;
     }
 
-    public ClickType getSlotActionType() {
+    public ContainerInput getSlotActionType() {
         return slotActionType;
     }
 

@@ -15,7 +15,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
 import java.util.Objects;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.Identifier;
 
@@ -104,7 +104,7 @@ public class FriendComponent {
     }
 
 
-    public void render(GuiGraphics context, int MouseX, int MouseY) {
+    public void render(GuiGraphicsExtractor context, int MouseX, int MouseY) {
         if (scrollPosY != posY) {
             scroll_animation = AnimationUtility.fast(scroll_animation, 1, 15f);
             posY = (int) Render2DEngine.interpolate(prevPosY, scrollPosY, scroll_animation);

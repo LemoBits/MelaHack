@@ -5,7 +5,7 @@ import meteordevelopment.orbit.EventHandler;
 import net.minecraft.network.HashedStack;
 import net.minecraft.network.protocol.game.ServerboundContainerClickPacket;
 import net.minecraft.network.protocol.game.ServerboundEditBookPacket;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.item.Items;
 import thunder.hack.features.modules.Module;
 import thunder.hack.events.impl.EventPostTick;
@@ -32,7 +32,7 @@ public class PastedPaperDupe extends Module {
                     mc.player.containerMenu.getStateId(),
                     (short) i,
                     (byte) 1,
-                    ClickType.THROW,
+                    ContainerInput.THROW,
                     Int2ObjectMaps.emptyMap(),
                     HashedStack.EMPTY
             ));

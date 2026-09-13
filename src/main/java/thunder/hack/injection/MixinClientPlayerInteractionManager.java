@@ -7,7 +7,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.phys.BlockHitResult;
@@ -112,8 +112,8 @@ public class MixinClientPlayerInteractionManager {
             cir.setReturnValue(false);
     }
 
-    @Inject(method = "handleInventoryMouseClick", at = @At("HEAD"), cancellable = true)
-    public void clickSlotHook(int syncId, int slotId, int button, ClickType actionType, Player player, CallbackInfo ci) {
+    @Inject(method = "handleContainerInput", at = @At("HEAD"), cancellable = true)
+    public void clickSlotHook(int syncId, int slotId, int button, ContainerInput actionType, Player player, CallbackInfo ci) {
         if(Module.fullNullCheck()) return;
         EventClickSlot event = new EventClickSlot(actionType, slotId, button, syncId);
         ThunderHack.EVENT_BUS.post(event);

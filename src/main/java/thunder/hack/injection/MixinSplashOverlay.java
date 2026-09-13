@@ -15,7 +15,7 @@ import thunder.hack.utility.render.TextureStorage;
 import java.awt.*;
 import java.util.Optional;
 import java.util.function.Consumer;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.LoadingOverlay;
 import net.minecraft.server.packs.resources.ReloadInstance;
 import net.minecraft.util.Mth;
@@ -33,14 +33,14 @@ public abstract class MixinSplashOverlay {
     @Final @Shadow private Consumer<Optional<Throwable>> onFinish;
 
     @Inject(method = "render", at = @At("HEAD"), cancellable = true)
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+    public void render(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (ModuleManager.unHook.isEnabled() || !ClientSettings.customLoadingScreen.getValue())
             return;
         ci.cancel();
         renderCustom(context, mouseX, mouseY, delta);
     }
 
-    public void renderCustom(GuiGraphics context, int mouseX, int mouseY, float delta) {
+    public void renderCustom(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         int i = mc.getWindow().getGuiScaledWidth();
         int j = mc.getWindow().getGuiScaledHeight();
         long l = Util.getMillis();
@@ -54,14 +54,14 @@ public abstract class MixinSplashOverlay {
         int k;
         if (f >= 1.0F) {
             if (mc.screen != null)
-                mc.screen.render(context, 0, 0, delta);
+                mc.screen.extractRenderState(context, 0, 0, delta);
 
             k = Mth.ceil((1.0F - Mth.clamp(f - 1.0F, 0.0F, 1.0F)) * 255.0F);
             context.fill(0, 0, i, j, withAlpha(new Color(0x070015).getRGB(), k));
             h = 1.0F - Mth.clamp(f - 1.0F, 0.0F, 1.0F);
         } else if (fadeIn) {
             if (mc.screen != null && g < 1.0F)
-                mc.screen.render(context, mouseX, mouseY, delta);
+                mc.screen.extractRenderState(context, mouseX, mouseY, delta);
 
             k = Mth.ceil(Mth.clamp((double) g, 0.15, 1.0) * 255.0);
             context.fill(0, 0, i, j, withAlpha(new Color(0x070015).getRGB(), k));

@@ -8,7 +8,7 @@ import thunder.hack.utility.render.Render2DEngine;
 import thunder.hack.utility.render.animation.AnimationUtility;
 
 import java.awt.*;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 public class ConfigComponent {
     float scroll_animation = 0f;
@@ -35,7 +35,7 @@ public class ConfigComponent {
     }
 
 
-    public void render(GuiGraphics context, int MouseX, int MouseY) {
+    public void render(GuiGraphicsExtractor context, int MouseX, int MouseY) {
         if (scrollPosY != posY) {
             scroll_animation = AnimationUtility.fast(scroll_animation, 1, 15f);
             posY = (int) Render2DEngine.interpolate(prevPosY, scrollPosY, scroll_animation);

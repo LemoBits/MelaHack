@@ -152,7 +152,7 @@ public final class PopChams extends Module {
 
         public Person(Player player, Identifier texture) {
             this.player = player;
-            modelPlayer = new PlayerModel(new EntityRendererProvider.Context(mc.getEntityRenderDispatcher(), mc.getItemModelResolver(), mc.getMapRenderer(), mc.getBlockRenderer(), mc.getResourceManager(), mc.getEntityModels(), ((IEntityRenderDispatcher) mc.getEntityRenderDispatcher()).getEquipmentModelLoader(), mc.getAtlasManager(), mc.font, mc.playerSkinRenderCache()).bakeLayer(ModelLayers.PLAYER), false);
+            modelPlayer = new PlayerModel(new EntityRendererProvider.Context(mc.getEntityRenderDispatcher(), ((thunder.hack.injection.accesors.IMinecraftClient) mc).getBlockModelResolver(), mc.getItemModelResolver(), mc.getMapRenderer(), mc.getResourceManager(), mc.getEntityModels(), ((IEntityRenderDispatcher) mc.getEntityRenderDispatcher()).getEquipmentModelLoader(), mc.getAtlasManager(), mc.font, mc.playerSkinRenderCache()).bakeLayer(ModelLayers.PLAYER), false);
             modelPlayer.getHead().offsetScale(new Vector3f(-0.3f, -0.3f, -0.3f));
             alpha = color.getValue().getAlpha();
             this.texture = texture;

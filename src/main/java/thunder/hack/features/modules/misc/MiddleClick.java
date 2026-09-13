@@ -11,7 +11,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.alchemy.PotionContents;
@@ -156,14 +156,14 @@ public class MiddleClick extends Module {
                 AsyncManager.sleep(delay);
                 InventoryUtility.switchTo(originalSlot);
             } else {
-                mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, epSlot, originalSlot, ClickType.SWAP, mc.player);
+                mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, epSlot, originalSlot, ContainerInput.SWAP, mc.player);
                 AsyncManager.sleep(delay);
                 if (ModuleManager.aura.isEnabled() && Aura.target != null)
                     mc.player.connection.send(new ServerboundMovePlayerPacket.Rot(mc.player.getYRot(), mc.player.getXRot(), mc.player.onGround(), mc.player.horizontalCollision));
                 InteractionUtility.sendSequencedPacket(id -> new ServerboundUseItemPacket(InteractionHand.MAIN_HAND, id, mc.player.getYRot(), mc.player.getXRot()));
                 mc.player.connection.send(new ServerboundSwingPacket(InteractionHand.MAIN_HAND));
                 AsyncManager.sleep(delay);
-                mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, epSlot, originalSlot, ClickType.SWAP, mc.player);
+                mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, epSlot, originalSlot, ContainerInput.SWAP, mc.player);
             }
             super.run();
         }
@@ -183,10 +183,10 @@ public class MiddleClick extends Module {
                 } else {
                     int hpSlot = findHpInInventory();
                     if (hpSlot != -1) {
-                        mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, hpSlot, mc.player.getInventory().getSelectedSlot(), ClickType.SWAP, mc.player);
+                        mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, hpSlot, mc.player.getInventory().getSelectedSlot(), ContainerInput.SWAP, mc.player);
                         InteractionUtility.sendSequencedPacket(id -> new ServerboundUseItemPacket(InteractionHand.MAIN_HAND, id, mc.player.getYRot(), mc.player.getXRot()));
                         mc.player.connection.send(new ServerboundSwingPacket(InteractionHand.MAIN_HAND));
-                        mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, hpSlot, mc.player.getInventory().getSelectedSlot(), ClickType.SWAP, mc.player);
+                        mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, hpSlot, mc.player.getInventory().getSelectedSlot(), ContainerInput.SWAP, mc.player);
                     }
                 }
             }
@@ -209,10 +209,10 @@ public class MiddleClick extends Module {
                     } else {
                         int epSlot = InventoryUtility.findItemInInventory(Items.FIREWORK_ROCKET).slot();
                         if (epSlot != -1) {
-                            mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, epSlot, mc.player.getInventory().getSelectedSlot(), ClickType.SWAP, mc.player);
+                            mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, epSlot, mc.player.getInventory().getSelectedSlot(), ContainerInput.SWAP, mc.player);
                             InteractionUtility.sendSequencedPacket(id -> new ServerboundUseItemPacket(InteractionHand.MAIN_HAND, id, mc.player.getYRot(), mc.player.getXRot()));
                             mc.player.connection.send(new ServerboundSwingPacket(InteractionHand.MAIN_HAND));
-                            mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, epSlot, mc.player.getInventory().getSelectedSlot(), ClickType.SWAP, mc.player);
+                            mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, epSlot, mc.player.getInventory().getSelectedSlot(), ContainerInput.SWAP, mc.player);
                         }
                     }
                 } else {
@@ -261,10 +261,10 @@ public class MiddleClick extends Module {
                     } else {
                         int epSlot = InventoryUtility.findItemInInventory(Items.ENDER_PEARL).slot();
                         if (epSlot != -1) {
-                            mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, epSlot, mc.player.getInventory().getSelectedSlot(), ClickType.SWAP, mc.player);
+                            mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, epSlot, mc.player.getInventory().getSelectedSlot(), ContainerInput.SWAP, mc.player);
                             InteractionUtility.sendSequencedPacket(id -> new ServerboundUseItemPacket(InteractionHand.MAIN_HAND, id, mc.player.getYRot(), mc.player.getXRot()));
                             mc.player.connection.send(new ServerboundSwingPacket(InteractionHand.MAIN_HAND));
-                            mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, epSlot, mc.player.getInventory().getSelectedSlot(), ClickType.SWAP, mc.player);
+                            mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, epSlot, mc.player.getInventory().getSelectedSlot(), ContainerInput.SWAP, mc.player);
                         }
                     }
                 } else {

@@ -2,7 +2,7 @@ package thunder.hack.features.modules.misc;
 
 import thunder.hack.utility.render.compat.RenderSystem;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
 import net.minecraft.network.protocol.game.ClientboundSetTimePacket;
 import thunder.hack.core.Managers;
@@ -55,7 +55,7 @@ public class LagNotifier extends Module {
         if (e.getPacket() instanceof ClientboundSetTimePacket) packetTimer.reset();
     }
 
-    public void onRender2D(GuiGraphics context) {
+    public void onRender2D(GuiGraphicsExtractor context) {
         Render2DEngine.setupRender();
         RenderSystem.defaultBlendFunc();
 

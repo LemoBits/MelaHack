@@ -19,6 +19,6 @@ public class Tooltips extends Module {
 
     public static boolean hasItems(ItemStack itemStack) {
         ItemContainerContents compoundTag = itemStack.get(DataComponents.CONTAINER);
-        return compoundTag != null && !compoundTag.stream().toList().isEmpty();
+        return compoundTag != null && !compoundTag.allItemsCopyStream().toList().isEmpty();
     }
 }

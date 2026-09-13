@@ -32,7 +32,7 @@ public abstract class Command {
 
     public static void sendMessage(String message) {
         if (mc.player == null) return;
-        mc.player.displayClientMessage(Component.nullToEmpty(thunder.hack.core.manager.client.CommandManager.getClientMessage() + " " + message), false);
+        mc.player.sendSystemMessage(Component.nullToEmpty(thunder.hack.core.manager.client.CommandManager.getClientMessage() + " " + message));
     }
 
     protected static <T> @NotNull RequiredArgumentBuilder<SharedSuggestionProvider, T> arg(final String name, final ArgumentType<T> type) {

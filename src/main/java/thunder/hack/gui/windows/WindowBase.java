@@ -11,7 +11,7 @@ import thunder.hack.utility.render.Render3DEngine;
 import thunder.hack.utility.render.animation.AnimationUtility;
 
 import java.awt.*;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.CommonColors;
 
@@ -46,7 +46,7 @@ public class WindowBase {
         this.icon = icon;
     }
 
-    protected void render(GuiGraphics context, int mouseX, int mouseY) {
+    protected void render(GuiGraphicsExtractor context, int mouseX, int mouseY) {
         prevScrollOffset = AnimationUtility.fast(prevScrollOffset, scrollOffset, 12);
         Color color2 = new Color(0xC55B5B5B, true);
 

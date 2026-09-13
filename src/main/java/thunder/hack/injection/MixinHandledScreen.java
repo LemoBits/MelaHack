@@ -1,7 +1,7 @@
 package thunder.hack.injection;
 import thunder.hack.utility.render.compat.RenderSystem;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.MenuAccess;
@@ -11,7 +11,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.ShulkerBoxMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.*;
@@ -63,16 +63,16 @@ public abstract class MixinHandledScreen<T extends AbstractContainerMenu> extend
     protected abstract boolean isHovering(Slot slotIn, double mouseX, double mouseY);
 
     @Shadow
-    protected abstract void slotClicked(Slot slotIn, int slotId, int mouseButton, ClickType type);
+    protected abstract void slotClicked(Slot slotIn, int slotId, int mouseButton, ContainerInput type);
 
     @Inject(method = "render", at = @At("HEAD"))
-    private void drawScreenHook(GuiGraphics context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+    private void drawScreenHook(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (Module.fullNullCheck()) return;
         for (int i1 = 0; i1 < mc.player.containerMenu.slots.size(); ++i1) {
             Slot slot = mc.player.containerMenu.slots.get(i1);
             if (isHovering(slot, mouseX, mouseY) && slot.isActive()) {
                 if (ModuleManager.itemScroller.isEnabled() && shit() && attack() && delayTimer.passedMs(ModuleManager.itemScroller.delay.getValue())) {
-                    this.slotClicked(slot, slot.index, 0, ClickType.QUICK_MOVE);
+                    this.slotClicked(slot, slot.index, 0, ContainerInput.QUICK_MOVE);
                     delayTimer.reset();
                 }
             }
@@ -100,7 +100,7 @@ public abstract class MixinHandledScreen<T extends AbstractContainerMenu> extend
     private Map<Render2DEngine.Rectangle, Integer> clickableRects = new HashMap<>();
 
     @Inject(method = "render", at = @At("TAIL"))
-    private void onRender(GuiGraphics context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+    private void onRender(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (Module.fullNullCheck()) return;
         if (hoveredSlot != null && !hoveredSlot.getItem().isEmpty() && minecraft.player.inventoryMenu.getCarried().isEmpty()) {
             if (hasItems(hoveredSlot.getItem()) && Tooltips.storage.getValue()) {
@@ -153,13 +153,13 @@ public abstract class MixinHandledScreen<T extends AbstractContainerMenu> extend
         }
     }
 
-    @Inject(method = "drawSlot(Lnet/minecraft/client/gui/GuiGraphics;Lnet/minecraft/world/inventory/Slot;)V", at = @At("TAIL"))
-    protected void drawSlotHook(GuiGraphics context, Slot slot, CallbackInfo ci) {
+    @Inject(method = "drawSlot(Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/world/inventory/Slot;)V", at = @At("TAIL"))
+    protected void drawSlotHook(GuiGraphicsExtractor context, Slot slot, CallbackInfo ci) {
         if (ModuleManager.serverHelper.isEnabled() && ModuleManager.serverHelper.aucHelper.getValue())
             ModuleManager.serverHelper.onRenderChest(context, slot);
     }
 
-    public boolean renderShulkerToolTip(GuiGraphics context, int offsetX, int offsetY, int mouseX, int mouseY, ItemStack stack) {
+    public boolean renderShulkerToolTip(GuiGraphicsExtractor context, int offsetX, int offsetY, int mouseX, int mouseY, ItemStack stack) {
         try {
             ItemContainerContents compoundTag = stack.get(DataComponents.CONTAINER);
             if (compoundTag == null)
@@ -175,7 +175,7 @@ public abstract class MixinHandledScreen<T extends AbstractContainerMenu> extend
                     colors = new float[]{1F, 1F, 1F};
                 }
             }
-            draw(context, compoundTag.stream().toList(), offsetX, offsetY, mouseX, mouseY, colors);
+            draw(context, compoundTag.allItemsCopyStream().toList(), offsetX, offsetY, mouseX, mouseY, colors);
         } catch (Exception ignore) {
             return false;
         }
@@ -183,7 +183,7 @@ public abstract class MixinHandledScreen<T extends AbstractContainerMenu> extend
     }
 
     @Inject(method = "renderTooltip", at = @At("HEAD"), cancellable = true)
-    private void onDrawMouseoverTooltip(GuiGraphics context, int x, int y, CallbackInfo ci) {
+    private void onDrawMouseoverTooltip(GuiGraphicsExtractor context, int x, int y, CallbackInfo ci) {
         if (Module.fullNullCheck()) return;
         if (hoveredSlot != null && !hoveredSlot.getItem().isEmpty() && minecraft.player.inventoryMenu.getCarried().isEmpty()) {
             if (hoveredSlot.getItem().getItem() == Items.FILLED_MAP && Tooltips.maps.getValue()) ci.cancel();
@@ -191,7 +191,7 @@ public abstract class MixinHandledScreen<T extends AbstractContainerMenu> extend
     }
 
     @Unique
-    private void draw(GuiGraphics context, List<ItemStack> itemStacks, int offsetX, int offsetY, int mouseX, int mouseY, float[] colors) {
+    private void draw(GuiGraphicsExtractor context, List<ItemStack> itemStacks, int offsetX, int offsetY, int mouseX, int mouseY, float[] colors) {
         RenderSystem.disableDepthTest();
         GL11.glClear(GL11.GL_DEPTH_BUFFER_BIT);
 
@@ -204,8 +204,8 @@ public abstract class MixinHandledScreen<T extends AbstractContainerMenu> extend
         int row = 0;
         int i = 0;
         for (ItemStack itemStack : itemStacks) {
-            context.renderItem(itemStack, offsetX + 8 + i * 18, offsetY + 7 + row * 18);
-            context.renderItemDecorations(mc.font, itemStack, offsetX + 8 + i * 18, offsetY + 7 + row * 18);
+            context.item(itemStack, offsetX + 8 + i * 18, offsetY + 7 + row * 18);
+            context.itemDecorations(mc.font, itemStack, offsetX + 8 + i * 18, offsetY + 7 + row * 18);
 
             if (mouseX > offsetX + 8 + i * 18 && mouseX < offsetX + 28 + i * 18 && mouseY > offsetY + 7 + row * 18 && mouseY < offsetY + 27 + row * 18)
                 postRender = () -> context.setTooltipForNextFrame(font, getTooltipFromItem(mc, itemStack), itemStack.getTooltipImage(), mouseX, mouseY);
@@ -219,7 +219,7 @@ public abstract class MixinHandledScreen<T extends AbstractContainerMenu> extend
         RenderSystem.enableDepthTest();
     }
 
-    private void drawBackground(GuiGraphics context, int x, int y, float[] colors) {
+    private void drawBackground(GuiGraphicsExtractor context, int x, int y, float[] colors) {
         RenderSystem.disableBlend();
         RenderSystem.setShaderColor(colors[0], colors[1], colors[2], 1F);
         RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
@@ -228,7 +228,7 @@ public abstract class MixinHandledScreen<T extends AbstractContainerMenu> extend
         RenderSystem.enableBlend();
     }
 
-    private void drawMapPreview(GuiGraphics context, ItemStack stack, int x, int y) {
+    private void drawMapPreview(GuiGraphicsExtractor context, ItemStack stack, int x, int y) {
         RenderSystem.enableBlend();
         context.pose().pushMatrix();
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
@@ -250,7 +250,7 @@ public abstract class MixinHandledScreen<T extends AbstractContainerMenu> extend
             context.pose().scale((float) scale, (float) scale);
             MapRenderState renderState = new MapRenderState();
             minecraft.getMapRenderer().extractRenderState((MapId) stack.get(DataComponents.MAP_ID), mapState, renderState);
-            context.submitMapRenderState(renderState);
+            context.map(renderState);
         }
         context.pose().popMatrix();
     }
@@ -267,7 +267,7 @@ public abstract class MixinHandledScreen<T extends AbstractContainerMenu> extend
                 ItemContainerContents nbt = itemStack.get(DataComponents.CONTAINER);
 
                 if (nbt != null) {
-                    List<ItemStack> list = nbt.stream().toList();
+                    List<ItemStack> list = nbt.allItemsCopyStream().toList();
                     for (int i = 0; i < list.size(); i++)
                         ITEMS[i] = list.get(i);
                 }
@@ -279,9 +279,9 @@ public abstract class MixinHandledScreen<T extends AbstractContainerMenu> extend
         for (Render2DEngine.Rectangle rect : clickableRects.keySet()) {
             if (rect.contains(mouseX, mouseY)) {
                 if (ModuleManager.tooltips.shulkerRegearShiftMode.getValue()) {
-                    mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, clickableRects.get(rect), 0, ClickType.QUICK_MOVE, mc.player);
+                    mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, clickableRects.get(rect), 0, ContainerInput.QUICK_MOVE, mc.player);
                 } else {
-                    mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, clickableRects.get(rect), 0, ClickType.PICKUP, mc.player);
+                    mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, clickableRects.get(rect), 0, ContainerInput.PICKUP, mc.player);
                 }
             }
         }

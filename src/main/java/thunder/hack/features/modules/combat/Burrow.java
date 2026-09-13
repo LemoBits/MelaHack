@@ -6,6 +6,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.network.protocol.game.ClientboundExplodePacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
 import net.minecraft.network.protocol.game.ServerboundInteractPacket;
+import net.minecraft.network.protocol.game.ServerboundAttackPacket;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.network.protocol.game.ServerboundSwingPacket;
 import net.minecraft.world.InteractionHand;
@@ -121,9 +122,7 @@ public final class Burrow extends Module {
         for (Entity entity : mc.level.getEntitiesOfClass(Entity.class, new AABB(pos))) {
             if (entity != null && !mc.player.equals(entity)) {
                 if (entity instanceof EndCrystal && attack.getValue()) {
-                    ServerboundInteractPacket attackPacket = ServerboundInteractPacket.createAttackPacket(mc.player, ((mc.player)).isShiftKeyDown());
-                    changeId(attackPacket, entity.getId());
-                    sendPacket(attackPacket);
+                    sendPacket(new ServerboundAttackPacket(entity.getId()));
                     sendPacket(new ServerboundSwingPacket(InteractionHand.MAIN_HAND));
                     continue;
                 }

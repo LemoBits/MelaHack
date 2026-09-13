@@ -18,7 +18,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
@@ -68,7 +68,7 @@ public class LegacyHud extends Module {
         Minecraft, Comfortaa, Monsterrat, SF
     }
 
-    public void onRender2D(GuiGraphics context) {
+    public void onRender2D(GuiGraphicsExtractor context) {
         if (fullNullCheck())
             return;
 
@@ -132,7 +132,7 @@ public class LegacyHud extends Module {
         }
 
         if(worldTime.getValue()) {
-            String str2 = "WorldTime: " + ChatFormatting.WHITE + mc.level.getDayTime() % 24000;
+            String str2 = "WorldTime: " + ChatFormatting.WHITE + mc.level.getDefaultClockTime() % 24000;
             drawText(context, str2, width - getStringWidth(str2) - 2, renderingUp.getValue() ? (height - 2 - (i += offset)) : (2 + i++ * offset));
         }
 
@@ -206,7 +206,7 @@ public class LegacyHud extends Module {
         if (greeter.getValue()) renderGreeter(context);
     }
 
-    private void drawText(GuiGraphics context, String str, int x, int y, int color) {
+    private void drawText(GuiGraphicsExtractor context, String str, int x, int y, int color) {
         if (!customFont.getValue().equals(Font.Minecraft)) {
             FontRenderer adapter;
             switch (customFont.getValue()) {
@@ -218,10 +218,10 @@ public class LegacyHud extends Module {
             adapter.drawString(context.pose(), str, x, y, color);
             return;
         }
-        context.drawString(mc.font, str, x, y, color, true);
+        context.text(mc.font, str, x, y, color, true);
     }
 
-    private void drawText(GuiGraphics context, String str, int x, int y) {
+    private void drawText(GuiGraphicsExtractor context, String str, int x, int y) {
         if (!customFont.getValue().equals(Font.Minecraft)) {
             FontRenderer adapter;
             switch (customFont.getValue()) {
@@ -233,7 +233,7 @@ public class LegacyHud extends Module {
             adapter.drawString(context.pose(), str, x, y, color);
             return;
         }
-        context.drawString(mc.font, str, x, y, color, true);
+        context.text(mc.font, str, x, y, color, true);
     }
 
     private int getStringWidth(String str) {
@@ -253,7 +253,7 @@ public class LegacyHud extends Module {
         }
     }
 
-    public void renderGreeter(GuiGraphics context) {
+    public void renderGreeter(GuiGraphicsExtractor context) {
         String text = "Good " + getTimeOfDay() + mc.player.getName().getString();
         drawText(context, text, (int) (mc.getWindow().getGuiScaledWidth() / 2.0F - getStringWidth(text) / 2.0F + 2.0F), 2);
     }
@@ -266,7 +266,7 @@ public class LegacyHud extends Module {
         return "Night ";
     }
 
-    public void renderTotemHUD(GuiGraphics context) {
+    public void renderTotemHUD(GuiGraphicsExtractor context) {
         int width = mc.getWindow().getGuiScaledWidth();
         int height = mc.getWindow().getGuiScaledHeight();
         int totems = InventoryUtility.getItemCount(Items.TOTEM_OF_UNDYING);
@@ -278,8 +278,8 @@ public class LegacyHud extends Module {
             int i = width / 2;
             int y = height - 55 - (mc.player.isUnderWater() || v < u ? 10 : 0);
             int x = i - 189 + 180 + 2;
-            context.renderItem(totem, x, y);
-            context.renderItemDecorations(mc.font, totem, x, y);
+            context.item(totem, x, y);
+            context.itemDecorations(mc.font, totem, x, y);
             drawText(context, totems + "", 8 + (int) (x - (float) getStringWidth(totems + "") / 2f), (y - 7), 16777215);
         }
     }
@@ -291,7 +291,7 @@ public class LegacyHud extends Module {
         return (Arrays.stream(id.getPath().split("_")).map(StringUtils::capitalize).collect(Collectors.joining(" ")));
     }
 
-    public void renderArmorHUD(boolean percent, GuiGraphics context) {
+    public void renderArmorHUD(boolean percent, GuiGraphicsExtractor context) {
         int i = 0;
         int u = mc.player.getMaxAirSupply();
         int v = Math.min(mc.player.getAirSupply(), u);
@@ -302,8 +302,8 @@ public class LegacyHud extends Module {
             if (is.isEmpty())
                 continue;
             int x = (mc.getWindow().getGuiScaledWidth() / 2) - 90 + (9 - i) * 20 + 2;
-            context.renderItem(is, x, y);
-            context.renderItemDecorations(mc.font, is, x, y);
+            context.item(is, x, y);
+            context.itemDecorations(mc.font, is, x, y);
             String s = (is.getCount() > 1) ? (is.getCount() + "") : "";
             drawText(context, s, (x + 19 - 2 - getStringWidth(s)), (y + 9), 16777215);
             if (percent) {

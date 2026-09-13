@@ -27,7 +27,7 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.resources.language.I18n;
 
 import static thunder.hack.features.modules.Module.mc;
@@ -80,7 +80,7 @@ public class ModuleButton extends AbstractButton {
         elements.forEach(AbstractElement::init);
     }
 
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         hovered = Render2DEngine.isHovered(mouseX, mouseY, x, y, width, height);
         animation = fast(animation, module.isEnabled() ? 1 : 0, 8f);
         animation2 = fast(animation2, 1f, 10f);

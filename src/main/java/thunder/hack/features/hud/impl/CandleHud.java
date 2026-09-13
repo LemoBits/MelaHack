@@ -9,7 +9,7 @@ import thunder.hack.utility.render.TextureStorage;
 import thunder.hack.utility.render.animation.AnimationUtility;
 
 import java.awt.*;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 public class CandleHud extends HudElement {
     public CandleHud() {
@@ -21,7 +21,7 @@ public class CandleHud extends HudElement {
 
     private float xAnim, yAnim, prevPitch;
 
-    public void onRender2D(GuiGraphics context) {
+    public void onRender2D(GuiGraphicsExtractor context) {
         super.onRender2D(context);
 
         float yDelta = ((thunder.hack.injection.accesors.ILivingEntity) mc.player).getLastHeadYaw() - mc.player.getYHeadRot();

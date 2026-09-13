@@ -42,7 +42,7 @@ public abstract class LegacyInputScreen extends Screen {
 
     @Override
     public final boolean charTyped(CharacterEvent event) {
-        return charTyped((char) event.codepoint(), event.modifiers());
+        return charTyped((char) event.codepoint(), 0);
     }
 
     public boolean mouseClicked(double mouseX, double mouseY, int button) { return false; }

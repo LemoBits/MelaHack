@@ -163,7 +163,7 @@ public final class RenderSystem {
     }
 
     public static void colorMask(boolean red, boolean green, boolean blue, boolean alpha) {
-        com.mojang.blaze3d.opengl.GlStateManager._colorMask(red, green, blue, alpha);
+        com.mojang.blaze3d.opengl.GlStateManager._colorMask((red ? 1 : 0) | (green ? 2 : 0) | (blue ? 4 : 0) | (alpha ? 8 : 0));
     }
 
     public static void lineWidth(float width) {

@@ -3,7 +3,7 @@ package thunder.hack.core;
 import thunder.hack.utility.render.compat.RenderSystem;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundLoginPacket;
@@ -125,7 +125,7 @@ public final class Core {
         Render3DEngine.updateTargetESP();
     }
 
-    public void onRender2D(GuiGraphics e) {
+    public void onRender2D(GuiGraphicsExtractor e) {
         drawGps(e);
         drawSkull(e);
     }
@@ -161,7 +161,7 @@ public final class Core {
         });
     }*/
 
-    public void drawSkull(GuiGraphics e) {
+    public void drawSkull(GuiGraphicsExtractor e) {
         if (showSkull && !skullTimer.passedMs(3000) && ClientSettings.skullEmoji.getValue()) {
             int xPos = (int) (mc.getWindow().getGuiScaledWidth() / 2f - 150);
             int yPos = (int) (mc.getWindow().getGuiScaledHeight() / 2f - 150);
@@ -172,7 +172,7 @@ public final class Core {
         } else showSkull = false;
     }
 
-    public void drawGps(GuiGraphics e) {
+    public void drawGps(GuiGraphicsExtractor e) {
         if (ThunderHack.gps_position != null) {
             float dst = getDistance(ThunderHack.gps_position);
             float xOffset = mc.getWindow().getGuiScaledWidth() / 2f;

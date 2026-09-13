@@ -11,7 +11,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import thunder.hack.utility.render.compat.RenderSystem;
 import meteordevelopment.orbit.EventHandler;
 import thunder.hack.utility.render.ShaderProgramKeys;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.model.player.PlayerModel;
 import net.minecraft.client.player.RemotePlayer;
@@ -120,8 +120,8 @@ public class LogoutSpots extends Module {
                     Render3DEngine.OUTLINE_QUEUE.add(new Render3DEngine.OutlineAction(data.getBoundingBox(), color.getValue().getColorObject(), 2));
                 } else {
                     PlayerModel modelPlayer = new PlayerModel(new EntityRendererProvider.Context(
-                            mc.getEntityRenderDispatcher(), mc.getItemModelResolver(), mc.getMapRenderer(),
-                            mc.getBlockRenderer(), mc.getResourceManager(), mc.getEntityModels(),
+                            mc.getEntityRenderDispatcher(), ((thunder.hack.injection.accesors.IMinecraftClient) mc).getBlockModelResolver(),
+                            mc.getItemModelResolver(), mc.getMapRenderer(), mc.getResourceManager(), mc.getEntityModels(),
                             ((IEntityRenderDispatcher) mc.getEntityRenderDispatcher()).getEquipmentModelLoader(), mc.getAtlasManager(), mc.font, mc.playerSkinRenderCache()).bakeLayer(ModelLayers.PLAYER), false);
                     modelPlayer.getHead().offsetScale(new Vector3f(-0.3f, -0.3f, -0.3f));
 
@@ -133,7 +133,7 @@ public class LogoutSpots extends Module {
         RenderSystem.disableBlend();
     }
 
-    public void onRender2D(GuiGraphics context) {
+    public void onRender2D(GuiGraphicsExtractor context) {
         for (UUID uuid : logoutCache.keySet()) {
             final Player data = logoutCache.get(uuid);
             if (data != null) {

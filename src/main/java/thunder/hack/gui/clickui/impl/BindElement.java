@@ -8,7 +8,7 @@ import thunder.hack.setting.impl.Bind;
 import thunder.hack.utility.render.Render2DEngine;
 
 import java.awt.*;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 public class BindElement extends AbstractElement {
     public BindElement(Setting setting) {
@@ -18,7 +18,7 @@ public class BindElement extends AbstractElement {
     public boolean isListening;
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
         FontRenderers.sf_medium_mini.drawString(context.pose(), setting.getName(), getX() + 6, (getY() + height / 2 - 3) + 2, new Color(-1).getRGB());
 

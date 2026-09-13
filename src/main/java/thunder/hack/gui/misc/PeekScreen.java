@@ -34,7 +34,7 @@ public class PeekScreen extends ShulkerBoxScreen {
                 Arrays.fill(ITEMS, ItemStack.EMPTY);
                 ItemContainerContents nbt = itemStack.get(DataComponents.CONTAINER);
                 if (nbt != null) {
-                    List<ItemStack> list = nbt.stream().toList();
+                    List<ItemStack> list = nbt.allItemsCopyStream().toList();
                     for (int i = 0; i < list.size(); i++)
                         ITEMS[i] = list.get(i);
                 }

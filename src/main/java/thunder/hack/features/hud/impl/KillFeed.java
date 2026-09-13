@@ -3,7 +3,7 @@ package thunder.hack.features.hud.impl;
 import com.google.common.collect.Lists;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.protocol.game.ClientboundEntityEventPacket;
 import net.minecraft.world.entity.EntityEvent;
 import net.minecraft.world.entity.player.Player;
@@ -34,7 +34,7 @@ public class KillFeed extends HudElement {
 
     private float vAnimation, hAnimation;
 
-    public void onRender2D(GuiGraphics context) {
+    public void onRender2D(GuiGraphicsExtractor context) {
         super.onRender2D(context);
         int y_offset1 = 0;
         float scale_x = 30;

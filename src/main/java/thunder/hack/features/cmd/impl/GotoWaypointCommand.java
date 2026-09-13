@@ -4,7 +4,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import net.minecraft.commands.SharedSuggestionProvider;
 import thunder.hack.ThunderHack;
 import thunder.hack.features.cmd.Command;
-import baritone.api.BaritoneAPI;
+import thunder.hack.utility.BaritoneIntegration;
 import thunder.hack.features.cmd.args.WayPointArgumentType;
 import thunder.hack.core.manager.world.WayPointManager;
 
@@ -28,7 +28,7 @@ public class GotoWaypointCommand extends Command {
                 sendMessage(isRu() ? "Метка в другом измерении" : "Waypoint is in another dimension");
                 return SINGLE_SUCCESS;
             }
-            BaritoneAPI.getProvider().getPrimaryBaritone().getCommandManager().execute("goto " + wp.getX() + " " + wp.getY() + " " + wp.getZ());
+            BaritoneIntegration.execute("goto " + wp.getX() + " " + wp.getY() + " " + wp.getZ());
             return SINGLE_SUCCESS;
         }));
     }

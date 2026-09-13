@@ -14,7 +14,7 @@ import static thunder.hack.core.manager.IManager.mc;
 
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.scores.Objective;
 
@@ -22,7 +22,7 @@ import net.minecraft.world.scores.Objective;
 public abstract class MixinInGameHud {
 
     @Inject(at = @At(value = "HEAD"), method = "render")
-    public void renderHook(GuiGraphics context, DeltaTracker tickCounter, CallbackInfo ci) {
+    public void renderHook(GuiGraphicsExtractor context, DeltaTracker tickCounter, CallbackInfo ci) {
         if(Module.fullNullCheck()) return;
         Managers.MODULE.onRender2D(context);
         Managers.NOTIFICATION.onRender2D(context);
@@ -32,14 +32,14 @@ public abstract class MixinInGameHud {
     }
 
     @Inject(at = @At(value = "HEAD"), method = "renderPlayerHealth", cancellable = true)
-    private void renderStatusBarsHook(GuiGraphics context, CallbackInfo ci) {
+    private void renderStatusBarsHook(GuiGraphicsExtractor context, CallbackInfo ci) {
         if (mc != null && mc.screen instanceof WindowsScreen) {
             ci.cancel();
         }
     }
 
     @Inject(at = @At(value = "HEAD"), method = "renderItemHotbar", cancellable = true)
-    public void renderHotbarCustom(GuiGraphics context, DeltaTracker tickCounter, CallbackInfo ci) {
+    public void renderHotbarCustom(GuiGraphicsExtractor context, DeltaTracker tickCounter, CallbackInfo ci) {
         if (mc != null && mc.screen instanceof WindowsScreen)
             ci.cancel();
 
@@ -51,39 +51,39 @@ public abstract class MixinInGameHud {
 
 
     @Inject(at = @At(value = "HEAD"), method = "renderSelectedItemName", cancellable = true)
-    public void renderHeldItemTooltipHook(GuiGraphics context, CallbackInfo ci) {
+    public void renderHeldItemTooltipHook(GuiGraphicsExtractor context, CallbackInfo ci) {
         if (ModuleManager.noRender.isEnabled() && ModuleManager.noRender.hotbarItemName.getValue())
             ci.cancel();
     }
 
     @Inject(at = @At(value = "HEAD"), method = "renderEffects", cancellable = true)
-    public void renderStatusEffectOverlayHook(GuiGraphics context, DeltaTracker tickCounter, CallbackInfo ci) {
+    public void renderStatusEffectOverlayHook(GuiGraphicsExtractor context, DeltaTracker tickCounter, CallbackInfo ci) {
         if (ModuleManager.potionHud.isEnabled() || (ModuleManager.legacyHud.isEnabled() && ModuleManager.legacyHud.potions.getValue())) {
             ci.cancel();
         }
     }
 
-    @Inject(method = "displayScoreboardSidebar(Lnet/minecraft/client/gui/GuiGraphics;Lnet/minecraft/world/scores/Objective;)V", at = @At(value = "HEAD"), cancellable = true)
-    private void renderScoreboardSidebarHook(GuiGraphics context, Objective objective, CallbackInfo ci) {
+    @Inject(method = "displayScoreboardSidebar(Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/world/scores/Objective;)V", at = @At(value = "HEAD"), cancellable = true)
+    private void renderScoreboardSidebarHook(GuiGraphicsExtractor context, Objective objective, CallbackInfo ci) {
         if(ModuleManager.noRender.noScoreBoard.getValue() && ModuleManager.noRender.isEnabled()){
             ci.cancel();
         }
     }
 
     @Inject(method = "renderVignette", at = @At(value = "HEAD"), cancellable = true)
-    private void renderVignetteOverlayHook(GuiGraphics context, Entity entity, CallbackInfo ci) {
+    private void renderVignetteOverlayHook(GuiGraphicsExtractor context, Entity entity, CallbackInfo ci) {
         if(ModuleManager.noRender.vignette.getValue())
             ci.cancel();
     }
 
     @Inject(method = "renderPortalOverlay", at = @At(value = "HEAD"), cancellable = true)
-    private void renderPortalOverlayHook(GuiGraphics context, float nauseaStrength, CallbackInfo ci) {
+    private void renderPortalOverlayHook(GuiGraphicsExtractor context, float nauseaStrength, CallbackInfo ci) {
         if(ModuleManager.noRender.portal.getValue())
             ci.cancel();
     }
 
     @Inject(method = "renderCrosshair", at = @At(value = "HEAD"), cancellable = true)
-    public void renderCrosshair(GuiGraphics context, DeltaTracker tickCounter, CallbackInfo ci) {
+    public void renderCrosshair(GuiGraphicsExtractor context, DeltaTracker tickCounter, CallbackInfo ci) {
         if (ModuleManager.crosshair.isEnabled())
             ci.cancel();
     }

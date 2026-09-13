@@ -8,7 +8,7 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 
 import thunder.hack.utility.render.compat.RenderSystem;
 import thunder.hack.utility.render.ShaderProgramKeys;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import thunder.hack.utility.render.BufferRenderer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -44,7 +44,7 @@ public class ItemESP extends Module {
     private final Setting<ColorSetting> circleColor = new Setting<>("CircleColor", new ColorSetting(new Color(-1).getRGB()), v -> espMode.getValue() == ESPMode.Circle && !useHudColor.getValue());
     private final Setting<Integer> cPoints = new Setting<>("CirclePoints", 12, 3, 32, v -> espMode.getValue() == ESPMode.Circle);
 
-    public void onRender2D(GuiGraphics context) {
+    public void onRender2D(GuiGraphicsExtractor context) {
         for (Entity ent : mc.level.entitiesForRendering()) {
             if (!(ent instanceof ItemEntity)) continue;
             Vec3[] vectors = getPoints(ent);

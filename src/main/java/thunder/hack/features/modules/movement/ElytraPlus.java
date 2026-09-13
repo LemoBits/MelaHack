@@ -12,7 +12,7 @@ import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.ChatFormatting;
 import thunder.hack.utility.render.ShaderProgramKeys;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import thunder.hack.utility.render.BufferRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.common.ClientboundPingPacket;
@@ -24,7 +24,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -439,7 +439,7 @@ public class ElytraPlus extends Module {
         }
     }
 
-    public void onRender2D(GuiGraphics context) {
+    public void onRender2D(GuiGraphicsExtractor context) {
         if (mode.is(Mode.FireWork) && grim.getValue().isEnabled() && fireWorkExtender.getValue() && flying) {
             if (!pingTimer.passedMs(50000)) {
                 if (pingTimer.passedMs(1000)) {
@@ -602,13 +602,13 @@ public class ElytraPlus extends Module {
     public void matrixDisabler(int elytra) {
         elytra = elytra >= 0 && elytra < 9 ? elytra + 36 : elytra;
         if (elytra != -2) {
-            mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, elytra, 1, ClickType.PICKUP, mc.player);
-            mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, 6, 1, ClickType.PICKUP, mc.player);
+            mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, elytra, 1, ContainerInput.PICKUP, mc.player);
+            mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, 6, 1, ContainerInput.PICKUP, mc.player);
         }
         mc.player.connection.send(new ServerboundPlayerCommandPacket(mc.player, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING));
         if (elytra != -2) {
-            mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, 6, 1, ClickType.PICKUP, mc.player);
-            mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, elytra, 1, ClickType.PICKUP, mc.player);
+            mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, 6, 1, ContainerInput.PICKUP, mc.player);
+            mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, elytra, 1, ContainerInput.PICKUP, mc.player);
         }
         disablerTicks = disablerDelay.getValue();
     }

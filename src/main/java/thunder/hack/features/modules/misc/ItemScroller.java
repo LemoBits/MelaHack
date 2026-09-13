@@ -1,7 +1,7 @@
 package thunder.hack.features.modules.misc;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.item.Item;
 import org.lwjgl.glfw.GLFW;
 import thunder.hack.events.impl.EventClickSlot;
@@ -22,13 +22,13 @@ public class ItemScroller extends Module {
     public void onClick(EventClickSlot e) {
         if ((isKeyPressed(GLFW.GLFW_KEY_LEFT_SHIFT) || isKeyPressed(GLFW.GLFW_KEY_RIGHT_SHIFT))
                 && (isKeyPressed(GLFW.GLFW_KEY_LEFT_CONTROL) || isKeyPressed(GLFW.GLFW_KEY_RIGHT_CONTROL))
-                && e.getSlotActionType() == ClickType.THROW
+                && e.getSlotActionType() == ContainerInput.THROW
                 && !pauseListening) {
             Item copy = mc.player.containerMenu.slots.get(e.getSlot()).getItem().getItem();
             pauseListening = true;
             for (int i2 = 0; i2 < mc.player.containerMenu.slots.size(); ++i2) {
                 if (mc.player.containerMenu.slots.get(i2).getItem().getItem() == copy)
-                    mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, i2, 1, ClickType.THROW, mc.player);
+                    mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, i2, 1, ContainerInput.THROW, mc.player);
             }
             pauseListening = false;
         }

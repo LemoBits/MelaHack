@@ -9,7 +9,7 @@ import net.minecraft.network.protocol.game.ServerboundContainerClosePacket;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import org.lwjgl.glfw.GLFW;
 import thunder.hack.events.impl.EventClickSlot;
 import thunder.hack.events.impl.PacketEvent;
@@ -118,7 +118,7 @@ public class GuiMove extends Module {
         if (e.getPacket() instanceof ServerboundContainerClickPacket click) {
             switch (clickBypass.getValue()) {
                 case GrimSwap -> {
-                    if (click.clickType() != ClickType.PICKUP && click.clickType() != ClickType.PICKUP_ALL)
+                    if (click.containerInput() != ContainerInput.PICKUP && click.containerInput() != ContainerInput.PICKUP_ALL)
                         sendPacket(new ServerboundContainerClosePacket(0));
                 }
 

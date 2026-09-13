@@ -12,7 +12,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.core.*;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -482,7 +482,7 @@ public final class AutoAnchor extends Module {
             case INVENTORY -> {
                 if (resultInv.found()) {
                     prevSlot = resultInv.slot();
-                    mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, prevSlot, mc.player.getInventory().getSelectedSlot(), ClickType.SWAP, mc.player);
+                    mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, prevSlot, mc.player.getInventory().getSelectedSlot(), ContainerInput.SWAP, mc.player);
                     sendPacket(new ServerboundContainerClosePacket(mc.player.containerMenu.containerId));
                 }
             }
@@ -550,7 +550,7 @@ public final class AutoAnchor extends Module {
             InventoryUtility.switchTo(slot);
 
         if (autoSwitch.getValue() == Switch.INVENTORY && slot != -1) {
-            mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, slot, mc.player.getInventory().getSelectedSlot(), ClickType.SWAP, mc.player);
+            mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, slot, mc.player.getInventory().getSelectedSlot(), ContainerInput.SWAP, mc.player);
             sendPacket(new ServerboundContainerClosePacket(mc.player.containerMenu.containerId));
         }
     }

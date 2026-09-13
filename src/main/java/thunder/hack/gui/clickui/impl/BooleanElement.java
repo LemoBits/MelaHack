@@ -10,7 +10,7 @@ import thunder.hack.setting.Setting;
 import thunder.hack.utility.render.Render2DEngine;
 
 import java.awt.*;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 import static thunder.hack.core.manager.IManager.mc;
 import static thunder.hack.utility.render.animation.AnimationUtility.fast;
@@ -24,7 +24,7 @@ public class BooleanElement extends AbstractElement {
     float animation2 = 0f;
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
 
         Render2DEngine.drawRound(context.pose(), x + width - 21, y + height / 2 - 4, 15, 8, 1, 7f * animation > 4 ? HudEditor.getColor(0) : new Color(0x28FFFFFF, true));

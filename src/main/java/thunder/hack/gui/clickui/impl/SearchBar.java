@@ -10,7 +10,7 @@ import thunder.hack.utility.render.Render2DEngine;
 import static thunder.hack.features.modules.Module.mc;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.util.StringUtil;
 
 public class SearchBar extends AbstractButton {
@@ -18,7 +18,7 @@ public class SearchBar extends AbstractButton {
     public static boolean listening;
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
         Render2DEngine.drawGuiBase(context.pose(), x + 4, y + 1f, width - 8, height - 2, 1f, Render2DEngine.isHovered(mouseX, mouseY, x, y, width, height) ? 0.8f : 0f);
         if (!listening)

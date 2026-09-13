@@ -25,7 +25,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
@@ -100,7 +100,7 @@ public class NameTags extends Module {
     private final Setting<Health> health = new Setting<>("Health", Health.Number);
 
 
-    public void onRender2D(GuiGraphics context) {
+    public void onRender2D(GuiGraphicsExtractor context) {
         if (mc.options.hideGui) return;
         for (Player ent : mc.level.players()) {
             if (ent == mc.player && (mc.options.getCameraType().isFirstPerson() || !self.getValue())) continue;
@@ -175,8 +175,8 @@ public class NameTags extends Module {
                             context.pose().pushMatrix();
                             context.pose().translate((float) (posX - 55 + item_offset), (float) ((float) (posY - 33f)));
                             context.pose().scale(1.1f, 1.1f);
-                            context.renderItem(armorComponent, 0, 0);
-                            context.renderItemDecorations(mc.font, armorComponent, 0, 0);
+                            context.item(armorComponent, 0, 0);
+                            context.itemDecorations(mc.font, armorComponent, 0, 0);
                             context.pose().popMatrix();
                         } else {
                             context.pose().pushMatrix();
@@ -194,7 +194,7 @@ public class NameTags extends Module {
                             } else {
                                 color = Color.GREEN;
                             }
-                            context.drawString(mc.font, percent + "%", 0, 0, color.getRGB(), false);
+                            context.text(mc.font, percent + "%", 0, 0, color.getRGB(), false);
                             context.pose().popMatrix();
                         }
 
@@ -217,7 +217,7 @@ public class NameTags extends Module {
                                         } else {
                                             context.pose().pushMatrix();
                                             context.pose().translate((float) ((posX - 50f + item_offset)), (float) ((posY - 45f + enchantmentY)));
-                                            context.drawString(mc.font, encName, 0, 0, -1, false);
+                                            context.text(mc.font, encName, 0, 0, -1, false);
                                             context.pose().popMatrix();
                                         }
                                         enchantmentY -= 8;
@@ -276,7 +276,7 @@ public class NameTags extends Module {
                 } else {
                     context.pose().pushMatrix();
                     context.pose().translate((float) (tagX), (float) (((float) posY - 11)));
-                    context.drawString(mc.font, final_string, 0, 0, -1, false);
+                    context.text(mc.font, final_string, 0, 0, -1, false);
                     context.pose().popMatrix();
                 }
 
@@ -306,7 +306,7 @@ public class NameTags extends Module {
         if (entityOwner.getValue()) drawEntityOwner(context);
     }
 
-    private void drawSpawnerNameTag(GuiGraphics context) {
+    private void drawSpawnerNameTag(GuiGraphicsExtractor context) {
         for (BlockEntity blockEntity : StorageEsp.getBlockEntities()) {
             if (blockEntity instanceof SpawnerBlockEntity spawner) {
                 Vec3 vector = new Vec3(spawner.getBlockPos().getX() + 0.5, spawner.getBlockPos().getY() + 1.5, spawner.getBlockPos().getZ() + 0.5);
@@ -362,7 +362,7 @@ public class NameTags extends Module {
         }
     }
 
-    public void drawEntityOwner(GuiGraphics context) {
+    public void drawEntityOwner(GuiGraphicsExtractor context) {
         for (Entity ent : mc.level.entitiesForRendering()) {
             String ownerName = "";
             if (ent instanceof Projectile pe) {
@@ -465,7 +465,7 @@ public class NameTags extends Module {
         } else return ent.getHealth() + ent.getAbsorptionAmount();
     }
 
-    private void renderHealthBar(GuiGraphics context, Player player, float maxHealth, int lastHealth, int absorption) {
+    private void renderHealthBar(GuiGraphicsExtractor context, Player player, float maxHealth, int lastHealth, int absorption) {
         int i = Mth.ceil((double) maxHealth / 2.0);
         int j = Mth.ceil((double) absorption / 2.0);
         int k = i * 2;
@@ -498,7 +498,7 @@ public class NameTags extends Module {
 
     }
 
-    private void drawHeart(GuiGraphics context, HeartType type, int x, boolean half, Player player) {
+    private void drawHeart(GuiGraphicsExtractor context, HeartType type, int x, boolean half, Player player) {
         if (health.is(Health.Dots)) {
 
             Color color = Managers.FRIEND.isFriend(player) ? fillColorF.getValue().getColorObject() : fillColorA.getValue().getColorObject();
@@ -556,7 +556,7 @@ public class NameTags extends Module {
         return bd.floatValue();
     }
 
-    private void renderStatusEffectOverlay(GuiGraphics context, float x, float y, Player player) {
+    private void renderStatusEffectOverlay(GuiGraphicsExtractor context, float x, float y, Player player) {
         ArrayList<MobEffectInstance> effects = new ArrayList<>(player.getActiveEffects());
         if (effects.isEmpty()) return;
         x += effects.size() * 12.5f;
@@ -584,7 +584,7 @@ public class NameTags extends Module {
         RenderSystem.disableBlend();
     }
 
-    public boolean renderShulkerToolTip(GuiGraphics context, int offsetX, int offsetY, ItemStack stack) {
+    public boolean renderShulkerToolTip(GuiGraphicsExtractor context, int offsetX, int offsetY, ItemStack stack) {
         try {
             ItemContainerContents compoundTag = stack.get(DataComponents.CONTAINER);
             if (compoundTag == null) return false;
@@ -601,14 +601,14 @@ public class NameTags extends Module {
             } else {
                 return false;
             }
-            draw(context, compoundTag.stream().toList(), offsetX, offsetY, colors);
+            draw(context, compoundTag.allItemsCopyStream().toList(), offsetX, offsetY, colors);
         } catch (Exception ignore) {
             return false;
         }
         return true;
     }
 
-    private void draw(GuiGraphics context, List<ItemStack> itemStacks, int offsetX, int offsetY, float[] colors) {
+    private void draw(GuiGraphicsExtractor context, List<ItemStack> itemStacks, int offsetX, int offsetY, float[] colors) {
         RenderSystem.disableDepthTest();
         GL11.glClear(GL11.GL_DEPTH_BUFFER_BIT);
 
@@ -621,8 +621,8 @@ public class NameTags extends Module {
         int row = 0;
         int i = 0;
         for (ItemStack itemStack : itemStacks) {
-            context.renderItem(itemStack, offsetX + 8 + i * 18, offsetY + 7 + row * 18);
-            context.renderItemDecorations(mc.font, itemStack, offsetX + 8 + i * 18, offsetY + 7 + row * 18);
+            context.item(itemStack, offsetX + 8 + i * 18, offsetY + 7 + row * 18);
+            context.itemDecorations(mc.font, itemStack, offsetX + 8 + i * 18, offsetY + 7 + row * 18);
             i++;
             if (i >= 9) {
                 i = 0;
@@ -632,7 +632,7 @@ public class NameTags extends Module {
         RenderSystem.enableDepthTest();
     }
 
-    private void drawBackground(GuiGraphics context, int x, int y, float[] colors) {
+    private void drawBackground(GuiGraphicsExtractor context, int x, int y, float[] colors) {
         RenderSystem.disableBlend();
         RenderSystem.setShaderColor(colors[0], colors[1], colors[2], 1F);
         RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);

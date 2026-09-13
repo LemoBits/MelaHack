@@ -13,7 +13,7 @@ import thunder.hack.utility.render.Render2DEngine;
 
 import java.awt.*;
 import java.util.Objects;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.util.Mth;
 import net.minecraft.util.StringUtil;
 
@@ -32,7 +32,7 @@ public class SliderElement extends AbstractElement {
     }
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
         animation = Render2DEngine.scrollAnimate(animation, (((Number) setting.getValue()).floatValue() - min) / (max - min), 0.4f);
 

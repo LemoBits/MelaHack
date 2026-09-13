@@ -4,7 +4,7 @@ import meteordevelopment.orbit.EventHandler;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.inventory.ChestMenu;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -58,7 +58,7 @@ public class ChestStealer extends Module {
                 if (slot.hasItem() && isAllowed(slot.getItem())
                         && timer.every(delay.getValue() + (random.getValue() && delay.getValue() != 0 ? rnd.nextInt(delay.getValue()) : 0))
                         && !(mc.screen.getTitle().getString().contains("Аукцион") || mc.screen.getTitle().getString().contains("покупки"))) {
-                    mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, i, 0, ClickType.QUICK_MOVE, mc.player);
+                    mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, i, 0, ContainerInput.QUICK_MOVE, mc.player);
                     autoMystDelay.reset();
                 }
             }

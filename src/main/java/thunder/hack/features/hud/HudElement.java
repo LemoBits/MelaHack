@@ -1,7 +1,7 @@
 package thunder.hack.features.hud;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.ChatScreen;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
@@ -33,7 +33,7 @@ public class HudElement extends Module {
     }
 
     @Override
-    public void onRender2D(GuiGraphics context) {
+    public void onRender2D(GuiGraphicsExtractor context) {
         y = mc.getWindow().getGuiScaledHeight() * pos.getValue().getY();
         x = mc.getWindow().getGuiScaledWidth() * pos.getValue().getX();
 

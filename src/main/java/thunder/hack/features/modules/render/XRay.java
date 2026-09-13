@@ -1,7 +1,7 @@
 package thunder.hack.features.modules.render;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket;
 import net.minecraft.network.protocol.game.ServerboundSwingPacket;
@@ -194,7 +194,7 @@ public class XRay extends Module {
         Render3DEngine.OUTLINE_QUEUE.add(new Render3DEngine.OutlineAction(new AABB(pos), new Color(r, g, b, 200), 2));
     }
 
-    public void onRender2D(GuiGraphics context) {
+    public void onRender2D(GuiGraphicsExtractor context) {
         if (brutForce.getValue()) {
 
             float posX = mc.getWindow().getGuiScaledWidth() / 2f - 68;

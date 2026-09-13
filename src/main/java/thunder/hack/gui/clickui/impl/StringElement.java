@@ -9,7 +9,7 @@ import thunder.hack.setting.Setting;
 import thunder.hack.utility.render.Render2DEngine;
 
 import java.awt.*;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.util.StringUtil;
 
 import static thunder.hack.features.modules.Module.mc;
@@ -23,7 +23,7 @@ public class StringElement extends AbstractElement {
     private String currentString = "";
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
 
         Render2DEngine.drawRect(context.pose(), getX() + 5, getY() + 2, getWidth() - 11f, 10, new Color(0x94000000, true));

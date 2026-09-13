@@ -12,7 +12,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.block.Block;
@@ -587,7 +587,7 @@ public class AutoCrystal extends Module {
             if (weaknessEffect != null && (strengthEffect == null || strengthEffect.getAmplifier() < weaknessEffect.getAmplifier()))
                 prevSlot = switchTo(antiWeaknessResult, antiWeaknessResultInv, antiWeakness);
 
-        sendPacket(ServerboundInteractPacket.createAttackPacket(crystal, mc.player.isShiftKeyDown()));
+        sendPacket(new ServerboundAttackPacket(crystal.getId()));
         swingHand(false, true);
 
         if (rotate.getValue().needSeparate() && !Managers.PLAYER.checkRtx(rotationYaw, rotationPitch, explodeRange.getValue(), explodeWallRange.getValue(), crystal))
@@ -615,7 +615,7 @@ public class AutoCrystal extends Module {
                 sendPacket(new ServerboundSetCarriedItemPacket(prevSlot));
             }
             if (antiWeakness.getValue() == Switch.INVENTORY) {
-                mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, prevSlot, mc.player.getInventory().getSelectedSlot(), ClickType.SWAP, mc.player);
+                mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, prevSlot, mc.player.getInventory().getSelectedSlot(), ContainerInput.SWAP, mc.player);
                 sendPacket(new ServerboundContainerClosePacket(mc.player.containerMenu.containerId));
             }
         }
@@ -657,7 +657,7 @@ public class AutoCrystal extends Module {
             case INVENTORY -> {
                 if (resultInv.found()) {
                     prevSlot = resultInv.slot();
-                    mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, prevSlot, mc.player.getInventory().getSelectedSlot(), ClickType.SWAP, mc.player);
+                    mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, prevSlot, mc.player.getInventory().getSelectedSlot(), ContainerInput.SWAP, mc.player);
                     sendPacket(new ServerboundContainerClosePacket(mc.player.containerMenu.containerId));
                 }
             }
@@ -732,7 +732,7 @@ public class AutoCrystal extends Module {
         }
 
         if (autoSwitch.getValue() == Switch.INVENTORY && slot != -1) {
-            mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, slot, mc.player.getInventory().getSelectedSlot(), ClickType.SWAP, mc.player);
+            mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, slot, mc.player.getInventory().getSelectedSlot(), ContainerInput.SWAP, mc.player);
             sendPacket(new ServerboundContainerClosePacket(mc.player.containerMenu.containerId));
         }
     }
@@ -1139,9 +1139,7 @@ public class AutoCrystal extends Module {
             int id = (int) (currentId + i);
             Entity entity = mc.level.getEntity(id);
             if (entity == null || entity instanceof EndCrystal) {
-                ServerboundInteractPacket attackPacket = ServerboundInteractPacket.createAttackPacket(mc.player, mc.player.isShiftKeyDown());
-                changeId(attackPacket, id);
-                sendPacket(attackPacket);
+                sendPacket(new ServerboundAttackPacket(id));
                 sendPacket(new ServerboundSwingPacket(InteractionHand.MAIN_HAND));
             }
         }

@@ -14,7 +14,7 @@ import thunder.hack.utility.render.animation.AnimationUtility;
 
 import java.awt.*;
 import java.util.Objects;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 public class KeyBinds extends HudElement {
     public final Setting<ColorSetting> oncolor = new Setting<>("OnColor", new ColorSetting(-1));
@@ -27,7 +27,7 @@ public class KeyBinds extends HudElement {
 
     private float vAnimation, hAnimation;
 
-    public void onRender2D(GuiGraphics context) {
+    public void onRender2D(GuiGraphicsExtractor context) {
         super.onRender2D(context);
 
         int y_offset1 = 0;

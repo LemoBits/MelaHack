@@ -1,6 +1,6 @@
 package thunder.hack.features.modules.misc;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
@@ -12,7 +12,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ChestMenu;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -245,7 +245,7 @@ public class ServerHelper extends Module {
         }
     }
 
-    public void onRenderChest(GuiGraphics context, Slot slot) {
+    public void onRenderChest(GuiGraphicsExtractor context, Slot slot) {
         if (mc.player.containerMenu instanceof ChestMenu chest)
             if (mc.screen.getTitle().getString().contains("Аукцион") || mc.screen.getTitle().getString().contains("Поиск"))
                 for (AucItem item : result)
@@ -283,9 +283,9 @@ public class ServerHelper extends Module {
             sendSequencedPacket(id -> new ServerboundUseItemPacket(InteractionHand.MAIN_HAND, id, mc.player.getYRot(), mc.player.getXRot()));
             InventoryUtility.returnSlot();
         } else if (invResult.found()) {
-            clickSlot(invResult.slot(), mc.player.getInventory().getSelectedSlot(), ClickType.SWAP);
+            clickSlot(invResult.slot(), mc.player.getInventory().getSelectedSlot(), ContainerInput.SWAP);
             sendSequencedPacket(id -> new ServerboundUseItemPacket(InteractionHand.MAIN_HAND, id, mc.player.getYRot(), mc.player.getXRot()));
-            clickSlot(invResult.slot(), mc.player.getInventory().getSelectedSlot(), ClickType.SWAP);
+            clickSlot(invResult.slot(), mc.player.getInventory().getSelectedSlot(), ContainerInput.SWAP);
             sendPacket(new ServerboundContainerClosePacket(mc.player.containerMenu.containerId));
         }
         disorientTimer.reset();

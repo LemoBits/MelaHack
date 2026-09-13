@@ -1,13 +1,13 @@
 package thunder.hack.features.modules.combat;
 
 import meteordevelopment.orbit.EventHandler;
+import net.minecraft.network.protocol.game.ServerboundAttackPacket;
 import net.minecraft.network.protocol.game.ServerboundInteractPacket;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.events.impl.PacketEvent;
-import thunder.hack.injection.accesors.IPlayerInteractEntityC2SPacket;
 import thunder.hack.injection.accesors.IClientPlayerEntity;
 import thunder.hack.injection.accesors.IEntity;
 import thunder.hack.features.modules.Module;
@@ -24,8 +24,8 @@ public final class Criticals extends Module {
 
     @EventHandler
     public void onPacketSend(PacketEvent.@NotNull Send event) {
-        if (event.getPacket() instanceof ServerboundInteractPacket && getInteractType(event.getPacket()) == InteractType.ATTACK) {
-            Entity ent = getEntity(event.getPacket());
+        if (event.getPacket() instanceof ServerboundAttackPacket attackPacket) {
+            Entity ent = mc.level.getEntity(attackPacket.entityId());
             if (ent == null || ent instanceof EndCrystal || cancelCrit)
                 return;
             doCrit();
@@ -73,16 +73,14 @@ public final class Criticals extends Module {
     }
 
     public static Entity getEntity(@NotNull ServerboundInteractPacket packet) {
-        return mc.level.getEntity(((IPlayerInteractEntityC2SPacket) packet).getEntityId());
+        return mc.level.getEntity(packet.entityId());
     }
 
     public static InteractType getInteractType(@NotNull ServerboundInteractPacket packet) {
-        return InteractType.valueOf(((IPlayerInteractEntityC2SPacket) packet).getType().getType().name());
+        return packet.location() == null ? InteractType.INTERACT : InteractType.INTERACT_AT;
     }
 
-    public enum InteractType {
-        INTERACT, ATTACK, INTERACT_AT
-    }
+    public enum InteractType { INTERACT, ATTACK, INTERACT_AT }
 
     public enum Mode {
         Ncp, Strict, OldNCP, UpdatedNCP, Grim

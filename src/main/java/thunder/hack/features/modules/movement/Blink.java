@@ -80,7 +80,7 @@ public class Blink extends Module {
         prevVelocity = mc.player.getDeltaMovement();
         prevYaw = mc.player.getYRot();
         prevSprinting = mc.player.isSprinting();
-        mc.level.addFreshEntity(new LocalPlayer(mc, mc.level, mc.getConnection(), mc.player.getStats(), mc.player.getRecipeBook(), mc.player.input.keyPresses, mc.player.wasSprinting));
+        mc.level.addFreshEntity(new LocalPlayer(mc, mc.level, mc.getConnection(), mc.player.getStats(), mc.player.getRecipeBook(), mc.player.input.keyPresses, mc.player.wasSprinting, mc.player.chatAbilities()));
         sending.set(false);
         storedPackets.clear();
     }
@@ -105,7 +105,7 @@ public class Blink extends Module {
 
     @EventHandler
     public void onPacketReceive(PacketEvent.Receive event) {
-        if (event.getPacket() instanceof ClientboundSetEntityMotionPacket vel && vel.getId() == mc.player.getId() && disableOnVelocity.getValue())
+        if (event.getPacket() instanceof ClientboundSetEntityMotionPacket vel && vel.id() == mc.player.getId() && disableOnVelocity.getValue())
             disable(isRu() ? "Выключенно из-за велосити!" : "Disabled due to velocity!");
     }
 

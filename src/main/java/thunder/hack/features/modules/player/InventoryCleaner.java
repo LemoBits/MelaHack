@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.network.protocol.game.ServerboundContainerClosePacket;
 import net.minecraft.world.inventory.ChestMenu;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
@@ -34,7 +34,7 @@ public class InventoryCleaner extends Module {
                 Slot slot = chest.getSlot(i);
                 if (slot.hasItem() && dropThisShit(slot.getItem()) && !(mc.screen.getTitle().getString().contains("Аукцион") || mc.screen.getTitle().getString().contains("покупки")))
                     if (delayTimer.every(delay.getValue())) {
-                        mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, i, 1, ClickType.THROW, mc.player);
+                        mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, i, 1, ContainerInput.THROW, mc.player);
                         dirty = true;
                     }
             }
@@ -57,7 +57,7 @@ public class InventoryCleaner extends Module {
 
     private void drop(int slot) {
         if (delayTimer.every(delay.getValue())) {
-            mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, slot < 9 ? slot + 36 : slot, 1, ClickType.THROW, mc.player);
+            mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, slot < 9 ? slot + 36 : slot, 1, ContainerInput.THROW, mc.player);
             dirty = true;
         }
     }

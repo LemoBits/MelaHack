@@ -13,7 +13,7 @@ import net.minecraft.util.context.ContextKeySet;
 import net.minecraft.util.context.ContextMap;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.CraftingMenu;
 import net.minecraft.world.item.BedItem;
 import net.minecraft.world.item.ItemStack;
@@ -147,7 +147,7 @@ public final class AutoBed extends Module {
             } else if (switchToHotbar.getValue()) {
                 SearchInvResult invResult = InventoryUtility.findBed();
                 if (invResult.found() && !(mc.screen instanceof CraftingScreen)) {
-                    mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, invResult.slot(), mc.player.getInventory().getSelectedSlot(), ClickType.SWAP, mc.player);
+                    mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, invResult.slot(), mc.player.getInventory().getSelectedSlot(), ContainerInput.SWAP, mc.player);
                     sendPacket(new ServerboundContainerClosePacket(mc.player.containerMenu.containerId));
                 }
             }
@@ -323,7 +323,7 @@ public final class AutoBed extends Module {
                                     RecipeDisplayId recipeId = recipe.id();
                                     for (int i = 0; i < bedsPerCraft.getValue(); i++)
                                         mc.gameMode.handlePlaceRecipe(mc.player.containerMenu.containerId, recipeId, false);
-                                    mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, 0, 0, ClickType.QUICK_MOVE, mc.player);
+                                    mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, 0, 0, ContainerInput.QUICK_MOVE, mc.player);
                                     break;
                                 }
                             }

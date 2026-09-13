@@ -8,7 +8,7 @@ import thunder.hack.utility.render.Render2DEngine;
 import thunder.hack.utility.render.animation.EaseOutCirc;
 
 import java.awt.*;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 public class TimerIndicator extends HudElement {
     private final EaseOutCirc timerAnimation = new EaseOutCirc();
@@ -18,7 +18,7 @@ public class TimerIndicator extends HudElement {
     }
 
     @Override
-    public void onRender2D(GuiGraphics context) {
+    public void onRender2D(GuiGraphicsExtractor context) {
         super.onRender2D(context);
 
         if (HudEditor.hudStyle.is(HudEditor.HudStyle.Blurry)) {

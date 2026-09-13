@@ -14,7 +14,7 @@ import thunder.hack.utility.render.TextureStorage;
 
 import java.awt.*;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 public class Speedometer extends HudElement {
     public float speed = 0f;
@@ -25,7 +25,7 @@ public class Speedometer extends HudElement {
         super("Speedometer", 50, 10);
     }
 
-    public void onRender2D(GuiGraphics context) {
+    public void onRender2D(GuiGraphicsExtractor context) {
         super.onRender2D(context);
 
         String str = "Speed " + ChatFormatting.WHITE;

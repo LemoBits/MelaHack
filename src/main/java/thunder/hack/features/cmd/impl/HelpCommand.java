@@ -26,7 +26,7 @@ public class HelpCommand extends Command {
             AtomicBoolean flip = new AtomicBoolean(false);
 
             Managers.COMMAND.getCommands().forEach(command -> {
-                        mc.player.displayClientMessage(Component.nullToEmpty(
+                        mc.player.sendSystemMessage(Component.nullToEmpty(
                                 (flip.get() ? ChatFormatting.LIGHT_PURPLE : ChatFormatting.DARK_PURPLE)
                                         + Managers.COMMAND.getPrefix()
                                         + (flip.get() ? ChatFormatting.AQUA : ChatFormatting.DARK_AQUA)
@@ -35,7 +35,7 @@ public class HelpCommand extends Command {
                                         + ChatFormatting.DARK_GRAY + " -> "
                                         + (flip.get() ? ChatFormatting.WHITE : ChatFormatting.GRAY)
                                         + command.getDescription()
-                        ), false);
+                        ));
                         flip.set(!flip.get());
                     }
             );

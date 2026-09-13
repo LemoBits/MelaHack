@@ -27,7 +27,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Style;
 
@@ -112,7 +112,7 @@ public abstract class MixinScreen {
     }
 
     @Inject(method = "renderPanorama", at = @At("HEAD"), cancellable = true)
-    public void renderPanoramaBackgroundHook(GuiGraphics context, float delta, CallbackInfo ci) {
+    public void renderPanoramaBackgroundHook(GuiGraphicsExtractor context, float delta, CallbackInfo ci) {
         if (ClientSettings.customPanorama.getValue() && mc.level == null) {
             ci.cancel();
             Render2DEngine.drawMainMenuShader(context.pose(), 0, 0, mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight());
@@ -133,8 +133,8 @@ public abstract class MixinScreen {
         }
     }
 
-    @Inject(method = "renderBackground(Lnet/minecraft/client/gui/GuiGraphics;IIF)V", at = @At("HEAD"), cancellable = true)
-    public void onRenderBackground(GuiGraphics context, int mouseX, int mouseY, float partialTicks, CallbackInfo ci) {
+    @Inject(method = "renderBackground(Lnet/minecraft/client/gui/GuiGraphicsExtractor;IIF)V", at = @At("HEAD"), cancellable = true)
+    public void onRenderBackground(GuiGraphicsExtractor context, int mouseX, int mouseY, float partialTicks, CallbackInfo ci) {
         if (ModuleManager.noRender.isEnabled() && ModuleManager.noRender.disableGuiBackGround.getValue() && mc.level != null) {
             ci.cancel();
         }

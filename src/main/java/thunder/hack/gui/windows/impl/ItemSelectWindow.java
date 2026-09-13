@@ -10,7 +10,7 @@ import com.google.common.collect.Lists;
 import thunder.hack.utility.render.compat.RenderSystem;
 import net.minecraft.ChatFormatting;
 import thunder.hack.utility.render.ShaderProgramKeys;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import thunder.hack.utility.render.BufferRenderer;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -64,7 +64,7 @@ public class ItemSelectWindow extends WindowBase {
     }
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY) {
+    public void render(GuiGraphicsExtractor context, int mouseX, int mouseY) {
         super.render(context, mouseX, mouseY);
         boolean hover1 = Render2DEngine.isHovered(mouseX, mouseY, getX() + getWidth() - 90, getY() + 3, 70, 10);
 
@@ -104,7 +104,7 @@ public class ItemSelectWindow extends WindowBase {
 
             context.pose().pushMatrix();
             context.pose().translate((float) (getX() + 6), (float) (itemPlate.offset + getY() + 32 + getScrollOffset()));
-            context.renderItem(itemPlate.item().getDefaultInstance(), 0, 0);
+            context.item(itemPlate.item().getDefaultInstance(), 0, 0);
             context.pose().popMatrix();
 
             FontRenderers.sf_medium.drawString(context.pose(), I18n.get(itemPlate.key()), getX() + 26, itemPlate.offset + getY() + 38 + getScrollOffset(), new Color(0xBDBDBD).getRGB());
@@ -243,7 +243,7 @@ public class ItemSelectWindow extends WindowBase {
         }
 
         for (Item item : BuiltInRegistries.ITEM) {
-            if (search.equals("Search") || search.isEmpty() || item.getDescriptionId().contains(search) || item.getName().getString().toLowerCase().contains(search.toLowerCase())) {
+            if (search.equals("Search") || search.isEmpty() || item.getDescriptionId().contains(search) || item.getName(item.getDefaultInstance()).getString().toLowerCase().contains(search.toLowerCase())) {
                 allItems.add(new ItemPlate(id1, id1 * 20, item, item.getDescriptionId()));
                 id1++;
             }

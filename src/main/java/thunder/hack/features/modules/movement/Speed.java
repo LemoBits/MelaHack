@@ -11,7 +11,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.vehicle.boat.Boat;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.BlockHitResult;
@@ -173,14 +173,14 @@ public class Speed extends Module {
             if (fireSlot == -1) {
                 int fireInInv = InventoryUtility.findItemInInventory(Items.FIREWORK_ROCKET).slot();
                 if (fireInInv != -1)
-                    mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, fireInInv, fireWorkSlot.getValue() - 1, ClickType.SWAP, mc.player);
+                    mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, fireInInv, fireWorkSlot.getValue() - 1, ContainerInput.SWAP, mc.player);
             }
 
             if (ellySlot != -1 && (fireSlot != -1 || inOffHand) && !mc.player.onGround() && mc.player.fallDistance > 0) {
                 if (ticks <= 0) {
                     if (ellySlot != -2) {
-                        mc.gameMode.handleInventoryMouseClick(0, ellySlot, 1, ClickType.PICKUP, mc.player);
-                        mc.gameMode.handleInventoryMouseClick(0, 6, 1, ClickType.PICKUP, mc.player);
+                        mc.gameMode.handleContainerInput(0, ellySlot, 1, ContainerInput.PICKUP, mc.player);
+                        mc.gameMode.handleContainerInput(0, 6, 1, ContainerInput.PICKUP, mc.player);
                     }
                     mc.player.connection.send(new ServerboundPlayerCommandPacket(mc.player, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING));
                     int prevSlot = mc.player.getInventory().getSelectedSlot();
@@ -191,8 +191,8 @@ public class Speed extends Module {
                         sendPacket(new ServerboundSetCarriedItemPacket(prevSlot));
 
                     if (ellySlot != -2) {
-                        mc.gameMode.handleInventoryMouseClick(0, 6, 1, ClickType.PICKUP, mc.player);
-                        mc.gameMode.handleInventoryMouseClick(0, ellySlot, 1, ClickType.PICKUP, mc.player);
+                        mc.gameMode.handleContainerInput(0, 6, 1, ContainerInput.PICKUP, mc.player);
+                        mc.gameMode.handleContainerInput(0, ellySlot, 1, ContainerInput.PICKUP, mc.player);
                     }
                     mc.player.connection.send(new ServerboundContainerClosePacket(mc.player.containerMenu.containerId));
                     ticks = delay.getValue();

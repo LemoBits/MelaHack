@@ -18,7 +18,7 @@ import thunder.hack.utility.render.animation.EaseOutBack;
 
 import java.util.List;
 import java.util.Objects;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
@@ -140,7 +140,7 @@ public class ClickGUI extends LegacyInputScreen {
     }
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         Render2DEngine.resetScissorStack();
 
         // 1.21.8 applies screen blur before custom screens render.
@@ -178,7 +178,7 @@ public class ClickGUI extends LegacyInputScreen {
 
 
         if (Module.fullNullCheck())
-            renderBackground(context, mouseX, mouseY, delta);
+            extractBackground(context, mouseX, mouseY, delta);
 
         if (ModuleManager.clickGui.scrollMode.getValue() == ClickGui.scrollModeEn.Old) {
             for (AbstractCategory window : windows) {

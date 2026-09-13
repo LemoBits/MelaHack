@@ -8,7 +8,7 @@ import thunder.hack.setting.impl.SettingGroup;
 import thunder.hack.utility.render.TextureStorage;
 
 import java.awt.*;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 import static thunder.hack.utility.render.animation.AnimationUtility.fast;
 
@@ -22,7 +22,7 @@ public class ParentElement extends AbstractElement {
     }
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
 
         var matrixStack = context.pose();

@@ -5,14 +5,14 @@ import thunder.hack.utility.math.MathUtility;
 import thunder.hack.utility.render.Render2DEngine;
 
 import java.awt.*;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 public class DamageTint extends Module {
     public DamageTint() {
         super("DamageTint", Category.RENDER);
     }
 
-    public void onRender2D(GuiGraphics context) {
+    public void onRender2D(GuiGraphicsExtractor context) {
         float factor = 1f - MathUtility.clamp(mc.player.getHealth(), 0f, 12f) / 12f;
         Color red = new Color(0xFF0000, true);
 

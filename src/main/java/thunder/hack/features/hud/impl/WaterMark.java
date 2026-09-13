@@ -20,7 +20,7 @@ import java.awt.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 public class WaterMark extends HudElement {
     public WaterMark() {
@@ -46,7 +46,7 @@ public class WaterMark extends HudElement {
         Big, Small, Classic, BaltikaClient, Rifk
     }
 
-    public void onRender2D(GuiGraphics context) {
+    public void onRender2D(GuiGraphicsExtractor context) {
         super.onRender2D(context);
         String username = ((ModuleManager.media.isEnabled() && Media.nickProtect.getValue()) || ModuleManager.nameProtect.isEnabled()) ? (ModuleManager.nameProtect.isEnabled() ? NameProtect.getCustomName() : "Protected") : mc.getUser().getName();
 

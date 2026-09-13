@@ -18,7 +18,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.stream.Collectors;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import thunder.hack.features.modules.render.Particles;
 import thunder.hack.features.modules.movement.Timer;
 
@@ -333,7 +333,7 @@ public class ModuleManager implements IManager {
         modules.stream().filter(Module::isEnabled).forEach(Module::onUpdate);
     }
 
-    public void onRender2D(GuiGraphics context) {
+    public void onRender2D(GuiGraphicsExtractor context) {
         if (mc.getDebugOverlay().showDebugScreen() || mc.options.hideGui) return;
         Render2DEngine.BLUR_PROGRAM.invalidateCapture();
         HudElement.anyHovered = false;

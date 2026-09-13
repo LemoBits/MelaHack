@@ -6,12 +6,12 @@ import com.mojang.logging.LogUtils;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.multiplayer.prediction.BlockStatePredictionHandler;
 import net.minecraft.client.multiplayer.prediction.PredictiveAction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.Packet;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import thunder.hack.ThunderHack;
@@ -71,7 +71,7 @@ public abstract class Module {
     public void onUpdate() {
     }
 
-    public void onRender2D(GuiGraphics event) {
+    public void onRender2D(GuiGraphicsExtractor event) {
     }
 
 
@@ -272,26 +272,26 @@ public abstract class Module {
 
     public static void clickSlot(int id) {
         if (id == -1 || mc.gameMode == null || mc.player == null) return;
-        mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, id, 0, ClickType.PICKUP, mc.player);
+        mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, id, 0, ContainerInput.PICKUP, mc.player);
     }
 
-    public static void clickSlot(int id, ClickType type) {
+    public static void clickSlot(int id, ContainerInput type) {
         if (id == -1 || mc.gameMode == null || mc.player == null) return;
-        mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, id, 0, type, mc.player);
+        mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, id, 0, type, mc.player);
     }
 
-    public static void clickSlot(int id, int button, ClickType type) {
+    public static void clickSlot(int id, int button, ContainerInput type) {
         if (id == -1 || mc.gameMode == null || mc.player == null) return;
-        mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, id, button, type, mc.player);
+        mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, id, button, type, mc.player);
     }
 
     public void sendMessage(String message) {
         if (fullNullCheck() || !ClientSettings.clientMessages.getValue() || ModuleManager.unHook.isEnabled()) return;
         if (mc.isSameThread()) {
-            mc.player.displayClientMessage(Component.nullToEmpty(CommandManager.getClientMessage() + " " + ChatFormatting.GRAY + "[" + ChatFormatting.DARK_PURPLE + getDisplayName() + ChatFormatting.GRAY + "] " + message), false);
+            mc.player.sendSystemMessage(Component.nullToEmpty(CommandManager.getClientMessage() + " " + ChatFormatting.GRAY + "[" + ChatFormatting.DARK_PURPLE + getDisplayName() + ChatFormatting.GRAY + "] " + message));
         } else {
             mc.executeIfPossible(() ->
-                mc.player.displayClientMessage(Component.nullToEmpty(CommandManager.getClientMessage() + " " + ChatFormatting.GRAY + "[" + ChatFormatting.DARK_PURPLE + getDisplayName() + ChatFormatting.GRAY + "] " + message), false)
+                mc.player.sendSystemMessage(Component.nullToEmpty(CommandManager.getClientMessage() + " " + ChatFormatting.GRAY + "[" + ChatFormatting.DARK_PURPLE + getDisplayName() + ChatFormatting.GRAY + "] " + message))
             );
         }
     }
@@ -310,10 +310,10 @@ public abstract class Module {
     public void debug(String message) {
         if (fullNullCheck() || !ClientSettings.debug.getValue()) return;
         if (mc.isSameThread()) {
-            mc.player.displayClientMessage(Component.nullToEmpty(CommandManager.getClientMessage() + " " + ChatFormatting.GRAY + "[" + ChatFormatting.DARK_PURPLE + getDisplayName() + ChatFormatting.GRAY + "] [\uD83D\uDD27] " + message), false);
+            mc.player.sendSystemMessage(Component.nullToEmpty(CommandManager.getClientMessage() + " " + ChatFormatting.GRAY + "[" + ChatFormatting.DARK_PURPLE + getDisplayName() + ChatFormatting.GRAY + "] [\uD83D\uDD27] " + message));
         } else {
             mc.executeIfPossible(() -> {
-                mc.player.displayClientMessage(Component.nullToEmpty(CommandManager.getClientMessage() + " " + ChatFormatting.GRAY + "[" + ChatFormatting.DARK_PURPLE + getDisplayName() + ChatFormatting.GRAY + "] [\uD83D\uDD27] " + message), false);
+                mc.player.sendSystemMessage(Component.nullToEmpty(CommandManager.getClientMessage() + " " + ChatFormatting.GRAY + "[" + ChatFormatting.DARK_PURPLE + getDisplayName() + ChatFormatting.GRAY + "] [\uD83D\uDD27] " + message));
             });
         }
     }

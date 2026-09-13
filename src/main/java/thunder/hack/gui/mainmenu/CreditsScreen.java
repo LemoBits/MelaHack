@@ -18,7 +18,7 @@ import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Objects;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.network.chat.Component;
@@ -61,7 +61,7 @@ public class CreditsScreen extends LegacyInputScreen {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics context, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         float halfOfWidth = mc.getWindow().getGuiScaledWidth() / 2f;
         float halfOfHeight = mc.getWindow().getGuiScaledHeight() / 2f;
         float globalOffset = (contributors.size() * 150) / 2f;

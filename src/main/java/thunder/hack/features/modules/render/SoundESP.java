@@ -11,7 +11,7 @@ import thunder.hack.utility.render.Render3DEngine;
 
 import java.util.ArrayList;
 import java.util.List;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.phys.Vec3;
 
 public class SoundESP extends Module {
@@ -28,7 +28,7 @@ public class SoundESP extends Module {
         sounds.add(new Sound(x, y, z, name.replace("minecraft.block.", "").replace("minecraft.entity", "").replace(".", " ")));
     }
 
-    public void onRender2D(GuiGraphics context) {
+    public void onRender2D(GuiGraphicsExtractor context) {
         for (Sound s : Lists.newArrayList(sounds)) {
             Vec3 vector = new Vec3(s.x, s.y, s.z);
             Vector4d position = null;

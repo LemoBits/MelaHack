@@ -3,7 +3,7 @@ package thunder.hack.features.modules.render;
 import thunder.hack.utility.render.compat.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
@@ -36,7 +36,7 @@ public class TotemAnimation extends Module {
         }
     }
 
-    public void renderFloatingItem(GuiGraphics context, float tickDelta) {
+    public void renderFloatingItem(GuiGraphicsExtractor context, float tickDelta) {
         if (floatingItem != null && floatingItemTimeLeft > 0 && !mode.is(Mode.Off)) {
             int scaledWidth = mc.getWindow().getGuiScaledWidth();
             int scaledHeight = mc.getWindow().getGuiScaledHeight();
@@ -105,7 +105,7 @@ public class TotemAnimation extends Module {
             }
 
             RenderSystem.setShaderColor(1f, 1f, 1f, 1f - animationProgress);
-            context.renderItem(floatingItem, scaledWidth / 2 - 8, scaledHeight / 2 - 8);
+            context.item(floatingItem, scaledWidth / 2 - 8, scaledHeight / 2 - 8);
             matrixStack.popPose();
             RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
 

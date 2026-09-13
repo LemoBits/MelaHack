@@ -18,7 +18,7 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.Objects;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.util.StringUtil;
 
 import static thunder.hack.features.modules.Module.mc;
@@ -43,7 +43,7 @@ public class FriendsWindow extends WindowBase {
     }
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY) {
+    public void render(GuiGraphicsExtractor context, int mouseX, int mouseY) {
         super.render(context, mouseX, mouseY);
 
         Color color = new Color(0xC5333333, true);

@@ -1,6 +1,6 @@
 package thunder.hack.features.modules.client;
 
-import baritone.api.BaritoneAPI;
+import thunder.hack.utility.BaritoneIntegration;
 import meteordevelopment.orbit.EventHandler;
 import thunder.hack.ThunderHack;
 import thunder.hack.events.impl.EventSetting;
@@ -27,12 +27,12 @@ public final class BaritoneSettings extends Module {
             sendMessage(isRu() ? "Баритон не найден (можешь скачать на https://meteorclient.com)" : "Baritone not found (you can download it at https://meteorclient.com)");
             return;
         }
-        BaritoneAPI.getSettings().allowBreak.value = allowBreakBlock.getValue();
-        BaritoneAPI.getSettings().allowPlace.value = allowPlace.getValue();
-        BaritoneAPI.getSettings().allowSprint.value = allowSprint.getValue();
-        BaritoneAPI.getSettings().chatDebug.value = debug.getValue();
-        BaritoneAPI.getSettings().enterPortal.value = enterPortal.getValue();
-        BaritoneAPI.getSettings().desktopNotifications.value = desktopNotifications.getValue();
+        BaritoneIntegration.setBooleanSetting("allowBreak", allowBreakBlock.getValue());
+        BaritoneIntegration.setBooleanSetting("allowPlace", allowPlace.getValue());
+        BaritoneIntegration.setBooleanSetting("allowSprint", allowSprint.getValue());
+        BaritoneIntegration.setBooleanSetting("chatDebug", debug.getValue());
+        BaritoneIntegration.setBooleanSetting("enterPortal", enterPortal.getValue());
+        BaritoneIntegration.setBooleanSetting("desktopNotifications", desktopNotifications.getValue());
     }
 
     @Override

@@ -7,7 +7,7 @@ import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
 import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.phys.AABB;
 import thunder.hack.core.Core;
 import thunder.hack.core.manager.client.ModuleManager;
@@ -95,16 +95,16 @@ public class Strafe extends Module {
         if (elytra == -1) return;
         if (System.currentTimeMillis() - disableTime > 190L) {
             if (elytra != -2) {
-                mc.gameMode.handleInventoryMouseClick(0, elytra, 1, ClickType.PICKUP, mc.player);
-                mc.gameMode.handleInventoryMouseClick(0, 6, 1, ClickType.PICKUP, mc.player);
+                mc.gameMode.handleContainerInput(0, elytra, 1, ContainerInput.PICKUP, mc.player);
+                mc.gameMode.handleContainerInput(0, 6, 1, ContainerInput.PICKUP, mc.player);
             }
 
             mc.player.connection.send(new ServerboundPlayerCommandPacket(mc.player, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING));
             mc.player.connection.send(new ServerboundPlayerCommandPacket(mc.player, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING));
 
             if (elytra != -2) {
-                mc.gameMode.handleInventoryMouseClick(0, 6, 1, ClickType.PICKUP, mc.player);
-                mc.gameMode.handleInventoryMouseClick(0, elytra, 1, ClickType.PICKUP, mc.player);
+                mc.gameMode.handleContainerInput(0, 6, 1, ContainerInput.PICKUP, mc.player);
+                mc.gameMode.handleContainerInput(0, elytra, 1, ContainerInput.PICKUP, mc.player);
             }
             disableTime = System.currentTimeMillis();
         }
@@ -186,11 +186,11 @@ public class Strafe extends Module {
         }
         ClientboundSetEntityMotionPacket velocity;
 
-        if (e.getPacket() instanceof ClientboundSetEntityMotionPacket && (velocity = e.getPacket()).getId() == mc.player.getId() && boost.getValue() == Boost.Damage) {
+        if (e.getPacket() instanceof ClientboundSetEntityMotionPacket && (velocity = e.getPacket()).id() == mc.player.getId() && boost.getValue() == Boost.Damage) {
             if (mc.player.onGround()) return;
 
-            double vX = velocity.getMovement().x;
-            double vZ = velocity.getMovement().z;
+            double vX = velocity.movement().x;
+            double vZ = velocity.movement().z;
 
             if (vX < 0) vX *= -1;
             if (vZ < 0) vZ *= -1;
@@ -198,9 +198,9 @@ public class Strafe extends Module {
             oldSpeed = (vX + vZ) / (velReduction.getValue() * 1000f);
             oldSpeed = Math.min(oldSpeed, maxVelocitySpeed.getValue());
 
-            ((ISPacketEntityVelocity) velocity).setMotionX(0);
-            ((ISPacketEntityVelocity) velocity).setMotionY(0);
-            ((ISPacketEntityVelocity) velocity).setMotionZ(0);
+            ((ISPacketEntityVelocity) (Object) velocity).setMotionX(0);
+            ((ISPacketEntityVelocity) (Object) velocity).setMotionY(0);
+            ((ISPacketEntityVelocity) (Object) velocity).setMotionZ(0);
         }
     }
 

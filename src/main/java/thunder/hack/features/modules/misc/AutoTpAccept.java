@@ -1,7 +1,7 @@
 package thunder.hack.features.modules.misc;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
 import net.minecraft.world.entity.player.Player;
 import thunder.hack.core.Managers;
@@ -44,7 +44,7 @@ public class AutoTpAccept extends Module {
         }
     }
 
-    public void onRender2D(GuiGraphics context) {
+    public void onRender2D(GuiGraphicsExtractor context) {
         if (duo.getValue() && tpTask != null) {
             String text = (isRu() ? "Ждем таргета " : "Awaiting target ") + MathUtility.round((timeOut.getValue() * 1000 - (System.currentTimeMillis() - tpTask.time())) / 1000f, 1);
             FontRenderers.sf_bold.drawCenteredString(context.pose(), text, mc.getWindow().getGuiScaledWidth() / 2f, mc.getWindow().getGuiScaledHeight() / 2f + 30, HudEditor.getColor(1).getRGB());

@@ -17,17 +17,17 @@ public interface ISPacketEntityVelocity {
     }
 
     default void setMotionX(double velocityX) {
-        Vec3 movement = packet().getMovement();
+        Vec3 movement = packet().movement();
         setMovement(new Vec3(velocityX, movement.y, movement.z));
     }
 
     default void setMotionY(double velocityY) {
-        Vec3 movement = packet().getMovement();
+        Vec3 movement = packet().movement();
         setMovement(new Vec3(movement.x, velocityY, movement.z));
     }
 
     default void setMotionZ(double velocityZ) {
-        Vec3 movement = packet().getMovement();
+        Vec3 movement = packet().movement();
         setMovement(new Vec3(movement.x, movement.y, velocityZ));
     }
 }

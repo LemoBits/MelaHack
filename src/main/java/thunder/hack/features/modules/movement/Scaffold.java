@@ -4,7 +4,7 @@ import meteordevelopment.orbit.EventHandler;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.game.*;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
@@ -300,7 +300,7 @@ public class Scaffold extends Module {
                 case Inventory -> {
                     if (invResult.found()) {
                         prevSlot = invResult.slot();
-                        mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, prevSlot, mc.player.getInventory().getSelectedSlot(), ClickType.SWAP, mc.player);
+                        mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, prevSlot, mc.player.getInventory().getSelectedSlot(), ContainerInput.SWAP, mc.player);
                         sendPacket(new ServerboundContainerClosePacket(mc.player.containerMenu.containerId));
                     }
                 }
@@ -316,7 +316,7 @@ public class Scaffold extends Module {
 
         switch (autoSwitch.getValue()) {
             case Inventory -> {
-                mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, prevSlot, mc.player.getInventory().getSelectedSlot(), ClickType.SWAP, mc.player);
+                mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, prevSlot, mc.player.getInventory().getSelectedSlot(), ContainerInput.SWAP, mc.player);
                 sendPacket(new ServerboundContainerClosePacket(mc.player.containerMenu.containerId));
             }
             case Silent -> InventoryUtility.switchTo(prevSlot);

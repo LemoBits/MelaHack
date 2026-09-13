@@ -1,6 +1,6 @@
 package thunder.hack.features.modules.player;
 
-import baritone.api.BaritoneAPI;
+import thunder.hack.utility.BaritoneIntegration;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
 import net.minecraft.world.InteractionHand;
@@ -57,7 +57,7 @@ public class AutoEat extends Module {
             ((IMinecraftClient) mc).idoItemUse();
         else {
             if(pauseBaritone.getValue() && ThunderHack.baritone)
-                BaritoneAPI.getProvider().getPrimaryBaritone().getCommandManager().execute("pause");
+                BaritoneIntegration.execute("pause");
 
             mc.options.keyUse.setDown(true);
         }
@@ -70,7 +70,7 @@ public class AutoEat extends Module {
             mc.player.getInventory().setSelectedSlot(prevSlot);
 
         if (pauseBaritone.getValue() && ThunderHack.baritone)
-            BaritoneAPI.getProvider().getPrimaryBaritone().getCommandManager().execute("resume");
+            BaritoneIntegration.execute("resume");
     }
 
     public boolean switchToFood() {

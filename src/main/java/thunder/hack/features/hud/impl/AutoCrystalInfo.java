@@ -8,7 +8,7 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import thunder.hack.utility.render.compat.RenderSystem;
 import net.minecraft.ChatFormatting;
 import thunder.hack.utility.render.ShaderProgramKeys;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import thunder.hack.utility.render.BufferRenderer;
 import thunder.hack.core.manager.client.ModuleManager;
 import thunder.hack.gui.font.FontRenderers;
@@ -31,7 +31,7 @@ public class AutoCrystalInfo extends HudElement {
     private int max, min;
     private long time;
 
-    public void onRender2D(GuiGraphics context) {
+    public void onRender2D(GuiGraphicsExtractor context) {
         super.onRender2D(context);
 
         Render2DEngine.drawHudBase(context.pose(), getPosX(), getPosY(), getWidth(), getHeight(), HudEditor.hudRound.getValue());

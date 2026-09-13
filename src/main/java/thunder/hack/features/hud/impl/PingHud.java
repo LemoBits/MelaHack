@@ -11,14 +11,14 @@ import thunder.hack.utility.render.TextureStorage;
 
 import java.awt.*;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 public class PingHud extends HudElement {
     public PingHud() {
         super("Ping", 50, 10);
     }
 
-    public void onRender2D(GuiGraphics context) {
+    public void onRender2D(GuiGraphicsExtractor context) {
         super.onRender2D(context);
 
         String str = "Ping " + ChatFormatting.WHITE + Managers.SERVER.getPing();

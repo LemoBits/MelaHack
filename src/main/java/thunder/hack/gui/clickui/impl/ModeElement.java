@@ -10,7 +10,7 @@ import thunder.hack.utility.render.TextureStorage;
 
 import java.awt.*;
 import java.util.Objects;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 import static thunder.hack.utility.render.animation.AnimationUtility.fast;
 
@@ -29,7 +29,7 @@ public class ModeElement extends AbstractElement {
     }
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         animation = fast(animation, open ? 0 : 1, 15f);
         animation2 = fast(animation2, 1f, 10f);
 

@@ -9,7 +9,7 @@ import thunder.hack.utility.Timer;
 import thunder.hack.utility.render.TextureStorage;
 
 import java.awt.*;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
@@ -53,7 +53,7 @@ public class DurabilityAlert extends Module {
         if (!flag && need_alert) need_alert = false;
     }
 
-    public void onRender2D(GuiGraphics context) {
+    public void onRender2D(GuiGraphicsExtractor context) {
         if (need_alert) {
             FontRenderers.sf_bold.drawCenteredString(context.pose(), isRu() ? "Срочно чини броню!" : "Fix your armor right now!", (float) mc.getWindow().getGuiScaledWidth() / 2f, (float) mc.getWindow().getGuiScaledHeight() / 3f, new Color(0xFFDF00).getRGB());
 

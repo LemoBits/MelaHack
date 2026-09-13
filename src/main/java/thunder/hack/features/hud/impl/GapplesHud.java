@@ -2,7 +2,7 @@ package thunder.hack.features.hud.impl;
 
 import thunder.hack.utility.render.compat.RenderSystem;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -26,7 +26,7 @@ public class GapplesHud extends HudElement {
 
     private final Setting<Boolean> crapple = new Setting<>("Crapple", true);
 
-    public void onRender2D(GuiGraphics context) {
+    public void onRender2D(GuiGraphicsExtractor context) {
         Item targetItem = crapple.getValue() ? Items.GOLDEN_APPLE : Items.ENCHANTED_GOLDEN_APPLE;
 
         if (getItemCount(targetItem) == 0)
@@ -50,13 +50,13 @@ public class GapplesHud extends HudElement {
 
         RenderSystem.setShaderColor(0.3f, 0.3f, 0.3f, 1f);
         context.pose().translate((float) (xPos + 20), (float) (yPos - 9));
-        context.renderItem(targetItem.getDefaultInstance(), 0, 0);
+        context.item(targetItem.getDefaultInstance(), 0, 0);
         context.pose().translate((float) (-(xPos + 20)), (float) (-(yPos - 9)));
         RenderSystem.setShaderColor(1f, 1f - factor, 1f - factor, 1f);
 
         context.pose().translate((float) ((xPos + 28)), (float) ((yPos - 1)));
         context.pose().scale(factor2, factor2);
-        context.renderItem(targetItem.getDefaultInstance(), -8, -8);
+        context.item(targetItem.getDefaultInstance(), -8, -8);
         context.pose().scale(factor2 != 0 ? 1f / factor2 : 1f, factor2 != 0 ? 1f / factor2 : 1f);
         context.pose().translate((float) (-(xPos + 28)), (float) (-(yPos - 1)));
 

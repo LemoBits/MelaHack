@@ -7,7 +7,7 @@ import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import org.jetbrains.annotations.NotNull;
@@ -118,8 +118,8 @@ public class EClipCommand extends Command {
             return;
         }
         if (elytra != -2) {
-            mc.gameMode.handleInventoryMouseClick(0, elytra, 1, ClickType.PICKUP, mc.player);
-            mc.gameMode.handleInventoryMouseClick(0, 6, 1, ClickType.PICKUP, mc.player);
+            mc.gameMode.handleContainerInput(0, elytra, 1, ContainerInput.PICKUP, mc.player);
+            mc.gameMode.handleContainerInput(0, 6, 1, ContainerInput.PICKUP, mc.player);
         }
 
         mc.player.connection.send(new ServerboundMovePlayerPacket.Pos(mc.player.getX(), mc.player.getY(), mc.player.getZ(), false, mc.player.horizontalCollision));
@@ -129,8 +129,8 @@ public class EClipCommand extends Command {
         mc.player.connection.send(new ServerboundPlayerCommandPacket(mc.player, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING));
 
         if (elytra != -2) {
-            mc.gameMode.handleInventoryMouseClick(0, 6, 1, ClickType.PICKUP, mc.player);
-            mc.gameMode.handleInventoryMouseClick(0, elytra, 1, ClickType.PICKUP, mc.player);
+            mc.gameMode.handleContainerInput(0, 6, 1, ContainerInput.PICKUP, mc.player);
+            mc.gameMode.handleContainerInput(0, elytra, 1, ContainerInput.PICKUP, mc.player);
         }
 
         mc.player.setPos(mc.player.getX(), mc.player.getY() + (double) y, mc.player.getZ());

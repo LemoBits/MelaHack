@@ -12,7 +12,7 @@ import thunder.hack.utility.render.Render2DEngine;
 import thunder.hack.utility.render.animation.AnimationUtility;
 
 import java.awt.*;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.entity.player.Player;
 
 import static thunder.hack.features.hud.impl.RadarRewrite.getRotations;
@@ -35,7 +35,7 @@ public class CrosshairArrows extends HudElement {
 
     private float smoothYaw = 0;
 
-    public void onRender2D(GuiGraphics context) {
+    public void onRender2D(GuiGraphicsExtractor context) {
         super.onRender2D(context);
         if (fullNullCheck()) return;
 

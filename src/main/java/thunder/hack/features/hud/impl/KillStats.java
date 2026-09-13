@@ -3,7 +3,7 @@ package thunder.hack.features.hud.impl;
 import thunder.hack.utility.render.compat.RenderSystem;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.protocol.game.ClientboundEntityEventPacket;
 import net.minecraft.world.entity.player.Player;
 import thunder.hack.events.impl.PacketEvent;
@@ -46,7 +46,7 @@ public class KillStats extends HudElement {
         }
     }
 
-    public void onRender2D(GuiGraphics context) {
+    public void onRender2D(GuiGraphicsExtractor context) {
         super.onRender2D(context);
 
         String streak = "KillStreak: " + ChatFormatting.WHITE + killstreak;
