@@ -95,10 +95,10 @@ public class HoleSnap extends Module {
             mc.player.jumpFromGround();
 
         if (mode.getValue() == Mode.Move && hole != null) {
-            final double newYaw = Math.cos(Math.toRadians(getNewYaw(hole.getCenter()) + 90.0f));
-            final double newPitch = Math.sin(Math.toRadians(getNewYaw(hole.getCenter()) + 90.0f));
-            final double diffX = hole.getCenter().x() - mc.player.getX();
-            final double diffZ = hole.getCenter().z() - mc.player.getZ();
+            final double newYaw = Math.cos(Math.toRadians(getNewYaw(net.minecraft.world.phys.Vec3.atBottomCenterOf(hole)) + 90.0f));
+            final double newPitch = Math.sin(Math.toRadians(getNewYaw(net.minecraft.world.phys.Vec3.atBottomCenterOf(hole)) + 90.0f));
+            final double diffX = net.minecraft.world.phys.Vec3.atBottomCenterOf(hole).x() - mc.player.getX();
+            final double diffZ = net.minecraft.world.phys.Vec3.atBottomCenterOf(hole).z() - mc.player.getZ();
             final double x = 0.29 * newYaw;
             final double z = 0.29 * newPitch;
 
@@ -145,7 +145,7 @@ public class HoleSnap extends Module {
             for (int j = centerPos.getY() - 4; j < centerPos.getY() + 2; j++) {
                 for (int k = centerPos.getZ() - searchRange.getValue(); k < centerPos.getZ() + searchRange.getValue(); k++) {
                     BlockPos pos = new BlockPos(i, j, k);;
-                    if (HoleUtility.isSingleHole(pos) && InteractionUtility.isVecInFOV(pos.getCenter(), searchFOV.getValue() / 2)) {
+                    if (HoleUtility.isSingleHole(pos) && InteractionUtility.isVecInFOV(net.minecraft.world.phys.Vec3.atBottomCenterOf(pos), searchFOV.getValue() / 2)) {
                         blocks.add(new BlockPos(pos));
                     }
                 }
@@ -160,8 +160,8 @@ public class HoleSnap extends Module {
                 disable(isRu() ? "Ты в холке! Отключаю.." : "You're in a hole already! Disabling..");
                 return null;
             }
-            if (mc.player.distanceToSqr(bp.getCenter()) < nearestDistance) {
-                nearestDistance = (float) mc.player.distanceToSqr(bp.getCenter());
+            if (mc.player.distanceToSqr(net.minecraft.world.phys.Vec3.atBottomCenterOf(bp)) < nearestDistance) {
+                nearestDistance = (float) mc.player.distanceToSqr(net.minecraft.world.phys.Vec3.atBottomCenterOf(bp));
                 fbp = bp;
             }
         }
@@ -184,7 +184,7 @@ public class HoleSnap extends Module {
 
         if (isPreEvent) {
             prevClientYaw = mc.player.getYRot();
-            mc.player.setYRot(InteractionUtility.calculateAngle(hole.getCenter())[0]);
+            mc.player.setYRot(InteractionUtility.calculateAngle(net.minecraft.world.phys.Vec3.atBottomCenterOf(hole))[0]);
         } else
             mc.player.setYRot(prevClientYaw);
     }

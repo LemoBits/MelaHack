@@ -3,7 +3,7 @@ package thunder.hack.features.modules.render;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
+import thunder.hack.utility.render.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Axis;
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -91,7 +91,7 @@ public class JumpCircle extends Module {
         }
 
         RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX_COLOR);
-        BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        BufferBuilder buffer = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
 
         for (Circle c : circles) {
             float colorAnim = (float) (c.timer.getPassedTimeMs()) / 6000f;

@@ -60,32 +60,29 @@ public class BreakHighLight extends Module {
                 default -> prevProgress = 1f;
             }
         }
-        ((IWorldRenderer) mc.levelRenderer).getBlockBreakingInfos().forEach(((integer, destroyBlockProgress) -> {
-            Entity object = mc.level.getEntity(integer);
-            if (object != null && otherPlayer.getValue() && !object.getName().equals(mc.player.getName())) {
-                BlockPos pos = destroyBlockProgress.getPos();
-                Render3DEngine.drawTextIn3D(String.valueOf(object.getName().getString()),pos.getCenter(),0,0.1,0,textColor.getValue().getColorObject());
+        if (otherPlayer.getValue()) {
+            ((IWorldRenderer) mc.levelRenderer).getLevelRenderState().blockBreakingRenderStates.forEach(destroyBlockProgress -> {
+                BlockPos pos = destroyBlockProgress.blockPos();
                 AABB shrunkMineBox = new AABB(pos.getX(), pos.getY(), pos.getZ(), pos.getX(), pos.getY(), pos.getZ());
 
                 float noom;
                 switch (mode.getValue()) {
-                    case Grow -> noom = MathUtility.clamp((destroyBlockProgress.getProgress() / 10f), 0f, 1f);
-                    case Shrink -> noom = 1f - (destroyBlockProgress.getProgress() / 10f);
+                    case Grow -> noom = MathUtility.clamp((destroyBlockProgress.progress() / 10f), 0f, 1f);
+                    case Shrink -> noom = 1f - (destroyBlockProgress.progress() / 10f);
                     default -> noom = 1;
                 }
 
                 Render3DEngine.FILLED_QUEUE.add(new Render3DEngine.FillAction(
                         shrunkMineBox.contract(noom, noom, noom).move(0.5 + noom * 0.5, 0.5 + noom * 0.5, 0.5 + noom * 0.5),
-                        Render2DEngine.interpolateColorC(color.getValue().getColorObject(),color2.getValue().getColorObject(),noom)
+                        Render2DEngine.interpolateColorC(color.getValue().getColorObject(), color2.getValue().getColorObject(), noom)
                 ));
-
                 Render3DEngine.OUTLINE_QUEUE.add(new Render3DEngine.OutlineAction(
                         shrunkMineBox.contract(noom, noom, noom).move(0.5 + noom * 0.5, 0.5 + noom * 0.5, 0.5 + noom * 0.5),
-                        Render2DEngine.interpolateColorC(ocolor.getValue().getColorObject(),ocolor2.getValue().getColorObject(),noom),
+                        Render2DEngine.interpolateColorC(ocolor.getValue().getColorObject(), ocolor2.getValue().getColorObject(), noom),
                         lineWidth.getValue()
                 ));
-            }
-        }));
+            });
+        }
     }
 
     private enum Mode {

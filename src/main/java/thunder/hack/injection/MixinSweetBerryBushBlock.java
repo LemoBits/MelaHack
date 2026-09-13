@@ -15,7 +15,7 @@ import thunder.hack.core.manager.client.ModuleManager;
 @Mixin(SweetBerryBushBlock.class)
 public class MixinSweetBerryBushBlock {
     @Inject(method = "entityInside", at = @At("HEAD"), cancellable = true)
-    public void onEntityCollisionHook(BlockState state, Level world, BlockPos pos, Entity entity, InsideBlockEffectApplier handler, CallbackInfo ci) {
+    public void onEntityCollisionHook(BlockState state, Level world, BlockPos pos, Entity entity, InsideBlockEffectApplier handler, boolean isClient, CallbackInfo ci) {
         if(ModuleManager.noSlow.isEnabled() && ModuleManager.noSlow.sweetBerryBush.getValue())
             ci.cancel();
     }

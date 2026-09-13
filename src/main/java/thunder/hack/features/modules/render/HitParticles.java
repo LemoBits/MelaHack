@@ -185,8 +185,8 @@ public class HitParticles extends Module {
             matrixStack.scale(scale, scale, scale);
 
             matrixStack.translate(size / 2, size / 2, size / 2);
-            matrixStack.mulPose(Axis.YP.rotationDegrees(-mc.gameRenderer.getMainCamera().yRot()));
-            matrixStack.mulPose(Axis.XP.rotationDegrees(mc.gameRenderer.getMainCamera().xRot()));
+            matrixStack.mulPose(Axis.YP.rotationDegrees(-mc.gameRenderer.mainCamera().yRot()));
+            matrixStack.mulPose(Axis.XP.rotationDegrees(mc.gameRenderer.mainCamera().xRot()));
 
             if (mode.is(Mode.Text))
                 matrixStack.mulPose(Axis.ZP.rotationDegrees(180));

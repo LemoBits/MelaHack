@@ -36,10 +36,7 @@ import static thunder.hack.features.modules.client.ClientSettings.isRu;
 
 @Mixin(Screen.class)
 public abstract class MixinScreen {
-    @Shadow
-    public abstract void init(Minecraft client, int width, int height);
-
-    @Inject(method = "handleComponentClicked", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "handleComponentClicked", at = @At("HEAD"), cancellable = true, require = 0)
     private void onRunCommand(Style style, CallbackInfoReturnable<Boolean> cir) {
         if (Objects.requireNonNull(style.getClickEvent()) instanceof ClientClickEvent clientClickEvent && clientClickEvent.getValue().startsWith(Managers.COMMAND.getPrefix()))
             try {
@@ -67,9 +64,9 @@ public abstract class MixinScreen {
                         Managers.MODULE.onUnload("none");
                         Managers.CONFIG.load(cfgFile);
                         Managers.MODULE.onLoad("none");
-                        mc.setScreen(null);
-                    }, () -> mc.setScreen(null));
-            mc.setScreen(dialogScreen);
+                        mc.gui.setScreen(null);
+                    }, () -> mc.gui.setScreen(null));
+            mc.gui.setScreen(dialogScreen);
 
         } else if (fileName.contains(".txt")){
             DialogScreen dialogScreen2 = new DialogScreen(
@@ -102,16 +99,16 @@ public abstract class MixinScreen {
                             }
                         } catch (Exception ignored) {
                         }
-                        mc.setScreen(null);
+                        mc.gui.setScreen(null);
                     },
                     () -> {
-                        mc.setScreen(null);
+                        mc.gui.setScreen(null);
                     });
-            mc.setScreen(dialogScreen2);
+            mc.gui.setScreen(dialogScreen2);
         }
     }
 
-    @Inject(method = "renderPanorama", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "extractPanorama", at = @At("HEAD"), cancellable = true)
     public void renderPanoramaBackgroundHook(GuiGraphicsExtractor context, float delta, CallbackInfo ci) {
         if (ClientSettings.customPanorama.getValue() && mc.level == null) {
             ci.cancel();
@@ -119,21 +116,21 @@ public abstract class MixinScreen {
         }
     }
 
-    @Inject(method = "renderTransparentBackground", at = @At("HEAD"), cancellable = true)
-    private void renderInGameBackground(CallbackInfo info) {
+    @Inject(method = "extractTransparentBackground", at = @At("HEAD"), cancellable = true)
+    private void renderInGameBackground(GuiGraphicsExtractor context, CallbackInfo info) {
         Render2DEngine.resetScissorStack();
         if (ModuleManager.noRender.isEnabled() && ModuleManager.noRender.disableGuiBackGround.getValue()) {
             info.cancel();
         }
         // Custom GUIs render their own background — skip vanilla to avoid double dark gradient
-        if (mc.screen instanceof thunder.hack.gui.clickui.ClickGUI
-            || mc.screen instanceof thunder.hack.gui.thundergui.ThunderGui
-            || mc.screen instanceof thunder.hack.gui.windows.WindowsScreen) {
+        if (mc.gui.screen() instanceof thunder.hack.gui.clickui.ClickGUI
+            || mc.gui.screen() instanceof thunder.hack.gui.thundergui.ThunderGui
+            || mc.gui.screen() instanceof thunder.hack.gui.windows.WindowsScreen) {
             info.cancel();
         }
     }
 
-    @Inject(method = "renderBackground(Lnet/minecraft/client/gui/GuiGraphicsExtractor;IIF)V", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "extractBackground(Lnet/minecraft/client/gui/GuiGraphicsExtractor;IIF)V", at = @At("HEAD"), cancellable = true)
     public void onRenderBackground(GuiGraphicsExtractor context, int mouseX, int mouseY, float partialTicks, CallbackInfo ci) {
         if (ModuleManager.noRender.isEnabled() && ModuleManager.noRender.disableGuiBackGround.getValue() && mc.level != null) {
             ci.cancel();

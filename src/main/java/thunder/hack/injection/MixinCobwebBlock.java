@@ -22,7 +22,7 @@ import net.minecraft.world.level.block.state.BlockState;
 @Mixin(WebBlock.class)
 public class MixinCobwebBlock {
     @Inject(method = "entityInside", at = @At("HEAD"), cancellable = true)
-    public void onEntityCollisionHook(BlockState state, Level world, BlockPos pos, Entity entity, InsideBlockEffectApplier handler, CallbackInfo ci) {
+    public void onEntityCollisionHook(BlockState state, Level world, BlockPos pos, Entity entity, InsideBlockEffectApplier handler, boolean isClient, CallbackInfo ci) {
         if (ModuleManager.antiWeb.isEnabled() && AntiWeb.mode.getValue() == AntiWeb.Mode.Ignore && entity == mc.player) {
             ci.cancel();
             if (AntiWeb.grim.getValue())

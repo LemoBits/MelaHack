@@ -3,7 +3,7 @@ package thunder.hack.utility.render;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
+import thunder.hack.utility.render.Tesselator;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Axis;
@@ -55,7 +55,7 @@ public class Render3DEngine {
     public static void onRender3D(PoseStack stack) {
         if (!FILLED_QUEUE.isEmpty() || !FADE_QUEUE.isEmpty() || !FILLED_SIDE_QUEUE.isEmpty()) {
             Tesselator tessellator = Tesselator.getInstance();
-            BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+            BufferBuilder bufferBuilder = tessellator.begin(com.mojang.blaze3d.PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION_COLOR);
             RenderSystem.disableDepthTest();
             setupRender();
             RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
@@ -78,7 +78,7 @@ public class Render3DEngine {
         if (!OUTLINE_QUEUE.isEmpty() || !OUTLINE_SIDE_QUEUE.isEmpty()) {
             setupRender();
             Tesselator tessellator = Tesselator.getInstance();
-            BufferBuilder buffer = tessellator.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR);
+            BufferBuilder buffer = tessellator.begin(com.mojang.blaze3d.PrimitiveTopology.LINES, DefaultVertexFormat.POSITION_COLOR);
             RenderSystem.disableCull();
             RenderSystem.disableDepthTest();
             RenderSystem.setShader(ShaderProgramKeys.RENDERTYPE_LINES);
@@ -106,7 +106,7 @@ public class Render3DEngine {
             setupRender();
             RenderSystem.disableDepthTest();
             Tesselator tessellator = Tesselator.getInstance();
-            BufferBuilder buffer = tessellator.begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
+            BufferBuilder buffer = tessellator.begin(com.mojang.blaze3d.PrimitiveTopology.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
 
             RenderSystem.disableCull();
             RenderSystem.setShader(ShaderProgramKeys.RENDERTYPE_LINES);
@@ -128,7 +128,7 @@ public class Render3DEngine {
             RenderSystem.setShader(ShaderProgramKeys.RENDERTYPE_LINES);
             RenderSystem.lineWidth(2f);
             RenderSystem.disableDepthTest();
-            BufferBuilder buffer = tessellator.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR);
+            BufferBuilder buffer = tessellator.begin(com.mojang.blaze3d.PrimitiveTopology.LINES, DefaultVertexFormat.POSITION_COLOR);
             LINE_QUEUE.forEach(action -> {
                 PoseStack matrices = matrixFrom(action.start.x(), action.start.y(), action.start.z());
                 vertexLine(matrices, buffer, 0f, 0f, 0f, (float) (action.end.x() - action.start.x()), (float) (action.end.y() - action.start.y()), (float) (action.end.z() - action.start.z()), action.color);
@@ -254,7 +254,7 @@ public class Render3DEngine {
 
     public static void drawTextIn3D(String text, @NotNull Vec3 pos, double offX, double offY, double textOffset, @NotNull Color color) {
         PoseStack matrices = new PoseStack();
-        Camera camera = mc.gameRenderer.getMainCamera();
+        Camera camera = mc.gameRenderer.mainCamera();
         RenderSystem.disableDepthTest();
         RenderSystem.disableCull();
         matrices.mulPose(Axis.XP.rotationDegrees(camera.xRot()));
@@ -432,7 +432,7 @@ public class Render3DEngine {
         setupRender();
         PoseStack matrices = matrixFrom(box.minX, box.minY, box.minZ);
         Tesselator tessellator = Tesselator.getInstance();
-        BufferBuilder buffer = tessellator.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR);
+        BufferBuilder buffer = tessellator.begin(com.mojang.blaze3d.PrimitiveTopology.LINES, DefaultVertexFormat.POSITION_COLOR);
 
         RenderSystem.disableCull();
             RenderSystem.setShader(ShaderProgramKeys.RENDERTYPE_LINES);
@@ -482,7 +482,7 @@ public class Render3DEngine {
     public static @NotNull PoseStack matrixFrom(double x, double y, double z) {
         PoseStack matrices = new PoseStack();
 
-        Camera camera = Minecraft.getInstance().gameRenderer.getMainCamera();
+        Camera camera = Minecraft.getInstance().gameRenderer.mainCamera();
         matrices.mulPose(Axis.XP.rotationDegrees(camera.xRot()));
         matrices.mulPose(Axis.YP.rotationDegrees(camera.yRot() + 180.0F));
 
@@ -542,7 +542,7 @@ public class Render3DEngine {
         RenderSystem.disableDepthTest();
 
         RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
-        bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
+        bufferBuilder = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
 
         Matrix4f matrix = stack.last().pose();
 
@@ -554,7 +554,7 @@ public class Render3DEngine {
         Render2DEngine.endBuilding(bufferBuilder);
 
         RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
-        bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
+        bufferBuilder = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
         for (int j = 0; j < vecs1.size() - 1; ++j) {
             float alpha = 1f - (((float) j + ((System.currentTimeMillis() - ThunderHack.initTime) / 5f)) % 360) / 60f;
             bufferBuilder.addVertex(matrix, (float) vecs1.get(j).x, (float) vecs1.get(j).y, (float) vecs1.get(j).z).setColor(Render2DEngine.injectAlpha(HudEditor.getColor((int) (j / 20f)), (int) (alpha * 255)).getRGB());
@@ -563,7 +563,7 @@ public class Render3DEngine {
         Render2DEngine.endBuilding(bufferBuilder);
 
         RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
-        bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
+        bufferBuilder = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
         for (int j = 0; j < vecs2.size() - 1; ++j) {
             float alpha = 1f - (((float) j + ((System.currentTimeMillis() - ThunderHack.initTime) / 5f)) % 360) / 60f;
             bufferBuilder.addVertex(matrix, (float) vecs2.get(j).x, (float) vecs2.get(j).y, (float) vecs2.get(j).z).setColor(Render2DEngine.injectAlpha(HudEditor.getColor((int) (j / 20f)), (int) (alpha * 255)).getRGB());
@@ -584,7 +584,7 @@ public class Render3DEngine {
         RenderSystem.disableCull();
         RenderSystem.setShader(ShaderProgramKeys.RENDERTYPE_LINES);
         RenderSystem.lineWidth(lineWidth);
-        BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR);
+        BufferBuilder buffer = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.LINES, DefaultVertexFormat.POSITION_COLOR);
 
         box = box.move(new Vec3(box.minX, box.minY, box.minZ).reverse());
 
@@ -610,7 +610,7 @@ public class Render3DEngine {
         for (i = 1; i < stacks; ++i) {
             rho = (float) i * drho;
 
-            BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.DEBUG_LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
+            BufferBuilder buffer = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.DEBUG_LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
             RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
 
             for (j = 0; j < slices; ++j) {
@@ -626,7 +626,7 @@ public class Render3DEngine {
         for (j = 0; j < slices; ++j) {
             theta = (float) j * dtheta;
 
-            BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.DEBUG_LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
+            BufferBuilder buffer = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.DEBUG_LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
 
             RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
 
@@ -647,7 +647,7 @@ public class Render3DEngine {
         final float da = (float) ((Math.PI * 2f) / slices);
         final float dz = height / stacks;
 
-        BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.DEBUG_LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
+        BufferBuilder buffer = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.DEBUG_LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
         RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
 
         float y = 0;
@@ -663,7 +663,7 @@ public class Render3DEngine {
 
         BufferRenderer.drawWithGlobalProgram(buffer.buildOrThrow());
 
-        buffer = Tesselator.getInstance().begin(VertexFormat.Mode.DEBUG_LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
+        buffer = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.DEBUG_LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
         RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
 
         for (int i = 0; i <= slices; ++i) {
@@ -681,7 +681,7 @@ public class Render3DEngine {
     public static void drawCircle3D(PoseStack stack, Entity ent, float radius, int color, int points, boolean hudColor, int colorOffset) {
         setupRender();
         RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
-        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.DEBUG_LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
+        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.DEBUG_LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
         double x = ent.xo + (ent.getX() - ent.xo) * getTickDelta() - mc.getEntityRenderDispatcher().camera.position().x;
         double y = ent.yo + (ent.getY() - ent.yo) * getTickDelta() - mc.getEntityRenderDispatcher().camera.position().y;
         double z = ent.zo + (ent.getZ() - ent.zo) * getTickDelta() - mc.getEntityRenderDispatcher().camera.position().z;
@@ -714,7 +714,7 @@ public class Render3DEngine {
         setupRender();
         RenderSystem.disableCull();
         RenderSystem.disableDepthTest();
-        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
+        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
 
         RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
         float cos;
@@ -735,7 +735,7 @@ public class Render3DEngine {
     // Kalry не пасть
     // anti yg protection
     public static void renderGhosts(int espLength, int factor, float shaking, float amplitude, Entity target) {
-        Camera camera = mc.gameRenderer.getMainCamera();
+        Camera camera = mc.gameRenderer.mainCamera();
 
         double tPosX = Render2DEngine.interpolate(target.xo, target.getX(), Render3DEngine.getTickDelta()) - camera.position().x;
         double tPosY = Render2DEngine.interpolate(target.yo, target.getY(), Render3DEngine.getTickDelta()) - camera.position().y;
@@ -746,7 +746,7 @@ public class Render3DEngine {
         RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE);
         RenderSystem.setShaderTexture(0, TextureStorage.firefly);
         RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX_COLOR);
-        BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        BufferBuilder buffer = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
 
         boolean canSee = mc.player.hasLineOfSight(target);
 

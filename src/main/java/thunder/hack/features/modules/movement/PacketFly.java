@@ -122,7 +122,7 @@ public class PacketFly extends Module {
             if (
                     mc.player.isAlive()
                     && mc.level.hasChunk((int) mc.player.getX() >> 4, (int) mc.player.getZ() >> 4)
-                    && !(mc.screen instanceof LevelLoadingScreen)
+                    && !(mc.gui.screen() instanceof LevelLoadingScreen)
                     && mode.getValue() != Mode.Rubber
                     && teleport != null
                     && teleport.x == pos.x

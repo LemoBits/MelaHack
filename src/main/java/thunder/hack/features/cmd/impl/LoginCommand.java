@@ -55,7 +55,7 @@ public class LoginCommand extends Command {
         UserApiService apiService;
         apiService = UserApiService.OFFLINE;
         mca.setUserApiService(apiService);
-        mca.setSocialInteractionsManagerT(new PlayerSocialManager(mc, apiService));
+        // The 26.2 GUI owns social-manager reconstruction.
         mca.setProfileKeys(ProfileKeyPairManager.create(apiService, session, mc.gameDirectory.toPath()));
         mca.setAbuseReportContextT(ReportingContext.create(ReportEnvironment.local(), apiService));
     }

@@ -63,7 +63,7 @@ public class MiddleClick extends Module {
 
     @EventHandler
     private void onSync(EventSync event) {
-        if (mc.screen == null) {
+        if (mc.gui.screen() == null) {
             HitResult target = mc.hitResult;
 
             if (mc.player.isFallFlying()) {

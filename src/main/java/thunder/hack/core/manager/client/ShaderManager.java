@@ -45,7 +45,7 @@ public class ShaderManager implements IManager {
 
     public void renderShaders() {
         if (DEFAULT == null) {
-            shaderBuffer = new ThunderHackFramebuffer(mc.getMainRenderTarget().width, mc.getMainRenderTarget().height);
+            shaderBuffer = new ThunderHackFramebuffer(mc.gameRenderer.mainRenderTarget().width, mc.gameRenderer.mainRenderTarget().height);
             reloadShaders();
         }
 
@@ -57,13 +57,13 @@ public class ShaderManager implements IManager {
     }
 
     public void applyShader(Runnable runnable, Shader mode) {
-        RenderTarget MCBuffer = Minecraft.getInstance().getMainRenderTarget();
+        RenderTarget MCBuffer = Minecraft.getInstance().gameRenderer.mainRenderTarget();
         RenderSystem.assertOnRenderThreadOrInit();
         if (shaderBuffer.width != MCBuffer.width || shaderBuffer.height != MCBuffer.height)
             shaderBuffer.resize(MCBuffer.width, MCBuffer.height);
         runnable.run();
         ManagedShaderEffect shader = getShader(mode);
-        RenderTarget mainBuffer = Minecraft.getInstance().getMainRenderTarget();
+        RenderTarget mainBuffer = Minecraft.getInstance().gameRenderer.mainRenderTarget();
         PostChain effect = shader.getShaderEffect();
 
         setupShader(mode, shader);
@@ -76,7 +76,7 @@ public class ShaderManager implements IManager {
         }
         RenderSystem.enableBlend();
         RenderSystem.backupProjectionMatrix();
-        shaderBuffer.blitToScreen();
+        shaderBuffer.blitAndBlendToTexture(mainBuffer.getColorTextureView(), mainBuffer.getDepthTextureView());
         RenderSystem.restoreProjectionMatrix();
         RenderSystem.defaultBlendFunc();
         RenderSystem.disableBlend();
@@ -171,7 +171,7 @@ public class ShaderManager implements IManager {
 
     public static class ThunderHackFramebuffer extends TextureTarget {
         public ThunderHackFramebuffer(int width, int height) {
-            super("melahack_shader", width, height, false);
+            super("melahack_shader", width, height, false, com.mojang.blaze3d.GpuFormat.RGBA8_UNORM);
             RenderSystem.assertOnRenderThreadOrInit();
             resize(width, height);
         }
@@ -179,7 +179,7 @@ public class ShaderManager implements IManager {
 
     public boolean fullNullCheck() {
         if (GRADIENT == null || SMOKE == null || DEFAULT == null) {
-            shaderBuffer = new ThunderHackFramebuffer(mc.getMainRenderTarget().width, mc.getMainRenderTarget().height);
+            shaderBuffer = new ThunderHackFramebuffer(mc.gameRenderer.mainRenderTarget().width, mc.gameRenderer.mainRenderTarget().height);
             reloadShaders();
             return true;
         }

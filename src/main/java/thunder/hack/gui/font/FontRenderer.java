@@ -2,7 +2,7 @@ package thunder.hack.gui.font;
 
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.Tesselator;
+import thunder.hack.utility.render.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 
 import thunder.hack.utility.render.compat.RenderSystem;
@@ -250,7 +250,7 @@ public class FontRenderer implements Closeable {
                 GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
                 List<DrawEntry> objects = GLYPH_PAGE_CACHE.get(identifier);
 
-                bb = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+                bb = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
 
                 for (DrawEntry object : objects) {
                     float xo = object.atX;

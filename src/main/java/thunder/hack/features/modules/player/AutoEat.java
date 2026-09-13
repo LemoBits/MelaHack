@@ -53,7 +53,7 @@ public class AutoEat extends Module {
     public void startEating() {
         eating = true;
 
-        if (mc.screen != null && !mc.player.isUsingItem())
+        if (mc.gui.screen() != null && !mc.player.isUsingItem())
             ((IMinecraftClient) mc).idoItemUse();
         else {
             if(pauseBaritone.getValue() && ThunderHack.baritone)

@@ -165,7 +165,7 @@ public class ServerHelper extends Module {
         }
 
         if (mc.player.containerMenu instanceof ChestMenu chest && aucHelper.getValue()) {
-            if (mc.screen.getTitle().getString().contains("Аукцион") || mc.screen.getTitle().getString().contains("Поиск")) {
+            if (mc.gui.screen().getTitle().getString().contains("Аукцион") || mc.gui.screen().getTitle().getString().contains("Поиск")) {
 
                 result.clear();
                 Map<String, Integer> itemMap = new HashMap<>();
@@ -224,13 +224,13 @@ public class ServerHelper extends Module {
     private void onSync(EventSync event) {
         if (fullNullCheck()) return;
 
-        if (isKeyPressed(desorient.getValue().getKey()) && disorientTimer.passedMs(3000) && mc.screen == null) {
+        if (isKeyPressed(desorient.getValue().getKey()) && disorientTimer.passedMs(3000) && mc.gui.screen() == null) {
             use(InventoryUtility.findInHotBar(i -> i.getItem() == Items.ENDER_EYE),
                     InventoryUtility.findInInventory(i -> i.getItem() == Items.ENDER_EYE));
             disorientTimer.reset();
         }
 
-        if (isKeyPressed(trap.getValue().getKey()) && trapTimer.passedMs(3000) && mc.screen == null) {
+        if (isKeyPressed(trap.getValue().getKey()) && trapTimer.passedMs(3000) && mc.gui.screen() == null) {
             use(InventoryUtility.findInHotBar(i -> i.getItem() == Items.NETHERITE_SCRAP),
                     InventoryUtility.findInInventory(i -> i.getItem() == Items.NETHERITE_SCRAP));
             trapTimer.reset();
@@ -247,7 +247,7 @@ public class ServerHelper extends Module {
 
     public void onRenderChest(GuiGraphicsExtractor context, Slot slot) {
         if (mc.player.containerMenu instanceof ChestMenu chest)
-            if (mc.screen.getTitle().getString().contains("Аукцион") || mc.screen.getTitle().getString().contains("Поиск"))
+            if (mc.gui.screen().getTitle().getString().contains("Аукцион") || mc.gui.screen().getTitle().getString().contains("Поиск"))
                 for (AucItem item : result)
                     if (item.id == slot.index && slot.index <= 44 && !slot.getItem().isEmpty()) {
                         float ratio = (float) (Math.pow(item.lowestPrice, contrast.getValue()) / Math.pow(item.price, contrast.getValue()));

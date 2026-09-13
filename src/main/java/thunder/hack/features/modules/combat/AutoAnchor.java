@@ -261,7 +261,7 @@ public final class AutoAnchor extends Module {
         if (e.getPrevState() == null || e.getState() == null)
             return;
 
-        if (target != null && target.distanceToSqr(e.getPos().getCenter()) <= 4 && e.getState().getBlock() instanceof RespawnAnchorBlock && e.getPrevState().canBeReplaced()) {
+        if (target != null && target.distanceToSqr(net.minecraft.world.phys.Vec3.atBottomCenterOf(e.getPos())) <= 4 && e.getState().getBlock() instanceof RespawnAnchorBlock && e.getPrevState().canBeReplaced()) {
             debug("Detected change of state " + e.getPos() + ", exploding...");
             //explodeAnchor(getInteractResult(e.getPos()));
         }
@@ -326,7 +326,7 @@ public final class AutoAnchor extends Module {
                         Render3DEngine.OUTLINE_QUEUE.add(new Render3DEngine.OutlineAction(new AABB(pos), Render2DEngine.injectAlpha(lineColor.getValue().getColorObject(), alpha), lineWidth.getValue()));
 
                         if (drawDamage.getValue())
-                            Render3DEngine.drawTextIn3D(dmg, pos.getCenter(), 0, 0.1, 0, Render2DEngine.applyOpacity(textColor.getValue().getColorObject(), alpha / 100f));
+                            Render3DEngine.drawTextIn3D(dmg, net.minecraft.world.phys.Vec3.atBottomCenterOf(pos), 0, 0.1, 0, Render2DEngine.applyOpacity(textColor.getValue().getColorObject(), alpha / 100f));
                     }
                 });
             } else if (renderMode.getValue() == Render.Slide && renderPos != null) {
@@ -683,7 +683,7 @@ public final class AutoAnchor extends Module {
         if (mc.player == null || mc.level == null)
             return null;
 
-        if (target != null && target.position().distanceToSqr(bp.getCenter()) > 144)
+        if (target != null && target.position().distanceToSqr(net.minecraft.world.phys.Vec3.atBottomCenterOf(bp)) > 144)
             return null;
 
         BlockState state = mc.level.getBlockState(bp);
@@ -703,21 +703,21 @@ public final class AutoAnchor extends Module {
             return null;
         }
 
-        float damage = target == null ? 10f : ExplosionUtility.getAutoCrystalDamage(bp.getCenter(), target, predictTicks.getValue(), useOptimizedCalc.getValue());
+        float damage = target == null ? 10f : ExplosionUtility.getAutoCrystalDamage(net.minecraft.world.phys.Vec3.atBottomCenterOf(bp), target, predictTicks.getValue(), useOptimizedCalc.getValue());
         if (damage < 1.5f) {
             if (isAnchor)
                 mc.level.setBlockAndUpdate(bp, state);
             return null;
         }
 
-        float selfDamage = ExplosionUtility.getAutoCrystalDamage(bp.getCenter(), mc.player, selfPredictTicks.getValue(), useOptimizedCalc.getValue());
+        float selfDamage = ExplosionUtility.getAutoCrystalDamage(net.minecraft.world.phys.Vec3.atBottomCenterOf(bp), mc.player, selfPredictTicks.getValue(), useOptimizedCalc.getValue());
         boolean overrideDamage = shouldOverrideDamage(damage, selfDamage);
 
         if (protectFriends.getValue()) {
             List<Player> players = Lists.newArrayList(mc.level.players());
             for (Player pl : players) {
                 if (!Managers.FRIEND.isFriend(pl)) continue;
-                float fdamage = ExplosionUtility.getAutoCrystalDamage(bp.getCenter(), pl, selfPredictTicks.getValue(), useOptimizedCalc.getValue());
+                float fdamage = ExplosionUtility.getAutoCrystalDamage(net.minecraft.world.phys.Vec3.atBottomCenterOf(bp), pl, selfPredictTicks.getValue(), useOptimizedCalc.getValue());
                 if (fdamage > selfDamage) {
                     selfDamage = fdamage;
                 }
@@ -780,7 +780,7 @@ public final class AutoAnchor extends Module {
     private @Nullable BlockHitResult getDefaultInteract(BlockPos bp) {
         if (mc.player == null || mc.level == null) return null;
 
-        Vec3 vec = bp.getCenter().add(0, -0.5, 0);
+        Vec3 vec = net.minecraft.world.phys.Vec3.atBottomCenterOf(bp).add(0, -0.5, 0);
 
         if (PlayerUtility.squaredDistanceFromEyes(vec) > placeRange.getPow2Value())
             return null;

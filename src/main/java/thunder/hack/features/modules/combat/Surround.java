@@ -9,6 +9,7 @@ import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
 import net.minecraft.world.phys.*;
@@ -116,7 +117,7 @@ public final class Surround extends PlaceModule {
     private void onPacketReceive(PacketEvent.@NotNull Receive event) {
         if (!getBlockResult().found()) disable(isRu() ? "Нет блоков!" : "No blocks!");
 
-        if (event.getPacket() instanceof ClientboundAddEntityPacket spawn && spawn.getType() == EntityType.END_CRYSTAL) {
+        if (event.getPacket() instanceof ClientboundAddEntityPacket spawn && spawn.getType() == EntityTypes.END_CRYSTAL) {
 
             EndCrystal cr = new EndCrystal(mc.level, spawn.getX(), spawn.getY(), spawn.getZ());
             cr.setId(spawn.getId());
@@ -125,7 +126,7 @@ public final class Surround extends PlaceModule {
                 handlePacket();
         }
 
-        if (event.getPacket() instanceof ClientboundBlockUpdatePacket pac && mc.player.distanceToSqr(pac.getPos().getCenter()) < range.getPow2Value() && pac.getBlockState().canBeReplaced())
+        if (event.getPacket() instanceof ClientboundBlockUpdatePacket pac && mc.player.distanceToSqr(net.minecraft.world.phys.Vec3.atBottomCenterOf(pac.getPos())) < range.getPow2Value() && pac.getBlockState().canBeReplaced())
             handlePacket();
 
         if (event.getPacket() instanceof ClientboundPlayerPositionPacket && onTp.getValue() == OnTpAction.Disable)

@@ -202,7 +202,7 @@ public class WaypointWindow extends WindowBase {
         }
 
         if (Render2DEngine.isHovered(mouseX, mouseY, getX() + getWidth() - 15, getY() + 3, 10, 10))
-            mc.setScreen(ClickGUI.getClickGui());
+            mc.gui.setScreen(ClickGUI.getClickGui());
 
         float nameX = getX() + 11;
         float nameWidth = getWidth() / 5.5f;

@@ -70,7 +70,7 @@ public class CrystalManager implements IManager {
 
         awaitingPositions.compute(blockPos, (pos, attempt) -> {
             if (attempt == null) {
-                return new Attempt(System.currentTimeMillis(), 1, blockPos.getCenter());
+                return new Attempt(System.currentTimeMillis(), 1, net.minecraft.world.phys.Vec3.atBottomCenterOf(blockPos));
             } else {
                 if (!blocked && ModuleManager.autoCrystal.placeFailsafe.getValue())
                     attempt.addAttempt();

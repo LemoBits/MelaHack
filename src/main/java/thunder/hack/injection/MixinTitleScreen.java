@@ -34,7 +34,7 @@ public class MixinTitleScreen extends Screen {
     @Inject(method = "init", at = @At("RETURN"))
     public void postInitHook(CallbackInfo ci) {
         if (ClientSettings.customMainMenu.getValue() && !MainMenuScreen.getInstance().confirm && ModuleManager.clickGui.getBind().getKey() != -1) {
-            mc.setScreen(MainMenuScreen.getInstance());
+            mc.gui.setScreen(MainMenuScreen.getInstance());
         }
         if (ModuleManager.clickGui.getBind().getKey() == -1) {
             DialogScreen dialogScreen2 = new DialogScreen(
@@ -45,11 +45,11 @@ public class MixinTitleScreen extends Screen {
                     isRu() ? "Закрыть майн" : "Close minecraft",
                     () -> {
                         ModuleManager.clickGui.setBind(InputConstants.getKey("key.keyboard.p").getValue(), false, false);
-                        mc.setScreen(MainMenuScreen.getInstance());
+                        mc.gui.setScreen(MainMenuScreen.getInstance());
                     },
                     () -> {
                         ModuleManager.clickGui.setBind(InputConstants.getKey("key.keyboard.p").getValue(), false, false);
-                        mc.destroy();
+                        mc.stop();
                     }
             );
             DialogScreen dialogScreen1 = new DialogScreen(
@@ -60,21 +60,21 @@ public class MixinTitleScreen extends Screen {
                     "English",
                     () -> {
                         ClientSettings.language.setValue(ClientSettings.Language.RU);
-                        mc.setScreen(dialogScreen2);
+                        mc.gui.setScreen(dialogScreen2);
                     },
                     () -> {
                         ClientSettings.language.setValue(ClientSettings.Language.ENG);
-                        mc.setScreen(dialogScreen2);
+                        mc.gui.setScreen(dialogScreen2);
                     }
             );
-            mc.setScreen(dialogScreen1);
+            mc.gui.setScreen(dialogScreen1);
         }
 
         if (ThunderHack.isOutdated && !FabricLoader.getInstance().isDevelopmentEnvironment()) {
-            mc.setScreen(new ConfirmScreen(
+            mc.gui.setScreen(new ConfirmScreen(
                     confirm -> {
                         if (confirm) Util.getPlatform().openUri(URI.create("https://github.com/Pan4ur/ThunderHack-Recode/releases/download/latest/thunderhack-1.7.jar/"));
-                        else mc.destroy();
+                        else mc.stop();
                     },
                     Component.nullToEmpty(ChatFormatting.RED + "You are using an outdated version of ThunderHack Recode"), Component.nullToEmpty("Please update to the latest release"), Component.nullToEmpty("Download"), Component.nullToEmpty("Quit Game")));
         }

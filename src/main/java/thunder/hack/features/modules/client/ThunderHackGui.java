@@ -18,7 +18,7 @@ public final class ThunderHackGui extends Module {
 
     @Override
     public void onEnable() {
-        mc.setScreen(ThunderGui.getThunderGui());
+        mc.gui.setScreen(ThunderGui.getThunderGui());
         disable();
     }
 

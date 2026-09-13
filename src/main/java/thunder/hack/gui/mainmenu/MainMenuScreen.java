@@ -33,11 +33,11 @@ public class MainMenuScreen extends LegacyInputScreen {
         super(Component.nullToEmpty("THMainMenuScreen"));
         INSTANCE = this;
 
-        buttons.add(new MainMenuButton(-110, -70, I18n.get("menu.singleplayer").toUpperCase(Locale.ROOT), () -> mc.setScreen(new SelectWorldScreen(this))));
-        buttons.add(new MainMenuButton(4, -70, I18n.get("menu.multiplayer").toUpperCase(Locale.ROOT), () -> mc.setScreen(new JoinMultiplayerScreen(this))));
+        buttons.add(new MainMenuButton(-110, -70, I18n.get("menu.singleplayer").toUpperCase(Locale.ROOT), () -> mc.gui.setScreen(new SelectWorldScreen(this))));
+        buttons.add(new MainMenuButton(4, -70, I18n.get("menu.multiplayer").toUpperCase(Locale.ROOT), () -> mc.gui.setScreen(new JoinMultiplayerScreen(this))));
         buttons.add(new MainMenuButton(-110, -29, I18n.get("menu.options")
                 .toUpperCase(Locale.ROOT)
-                .replace(".", ""), () -> mc.setScreen(new OptionsScreen(this, mc.options, false))));
+                .replace(".", ""), () -> mc.gui.setScreen(new OptionsScreen(this, mc.options, false))));
         buttons.add(new MainMenuButton(4, -29, "CLICKGUI", () -> ModuleManager.clickGui.setGui()));
         buttons.add(new MainMenuButton(-110, 12, I18n.get("menu.quit").toUpperCase(Locale.ROOT), mc::stop, true));
     }
@@ -115,7 +115,7 @@ public class MainMenuScreen extends LegacyInputScreen {
     }
 
     private void renderCustomBackground(GuiGraphicsExtractor context, float width, float height) {
-        if (mc.getOverlay() == null) {
+        if (mc.gui.overlay() == null) {
             Render2DEngine.drawMainMenuShader(context.pose(), 0, 0, width, height);
         } else {
             context.fill(0, 0, Math.round(width), Math.round(height), 0xFF070015);
@@ -148,7 +148,7 @@ public class MainMenuScreen extends LegacyInputScreen {
 
         if (Render2DEngine.isHovered(mouseX, mouseY, halfOfWidth - 50, halfOfHeight + 70, 100, 10)) {
             confirm = true;
-            mc.setScreen(new TitleScreen());
+            mc.gui.setScreen(new TitleScreen());
             confirm = false;
         }
 

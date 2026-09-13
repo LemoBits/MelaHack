@@ -22,7 +22,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
-import net.minecraft.util.Tuple;
+import thunder.hack.utility.Tuple;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.item.ItemStack;
@@ -34,8 +34,6 @@ public class LegacyHud extends Module {
     public LegacyHud() {
         super("LegacyHud", Category.HUD);
     }
-
-    private static final ItemStack totem = new ItemStack(Items.TOTEM_OF_UNDYING);
 
     private final Setting<Font> customFont = new Setting<>("Font", Font.Minecraft);
     private final Setting<ColorSetting> colorSetting = new Setting<>("Color", new ColorSetting(new Color(0x0077FF)));
@@ -87,7 +85,7 @@ public class LegacyHud extends Module {
         if (waterMark.getValue())
             drawText(context, "thunderhack v" + ThunderHack.VERSION, 2, waterMarkY.getValue());
 
-        int j = (mc.screen instanceof ChatScreen && !renderingUp.getValue()) ? 14 : 0;
+        int j = (mc.gui.screen() instanceof ChatScreen && !renderingUp.getValue()) ? 14 : 0;
 
         if (arrayList.getValue())
             for (Module module : Managers.MODULE.getEnabledModules().stream().filter(Module::isDrawn).sorted(Comparator.comparing(module -> getStringWidth(module.getFullArrayString()) * -1)).toList()) {
@@ -104,7 +102,7 @@ public class LegacyHud extends Module {
                 }
             }
 
-        int i = (mc.screen instanceof ChatScreen && renderingUp.getValue()) ? 13 : (renderingUp.getValue() ? -2 : 0);
+        int i = (mc.gui.screen() instanceof ChatScreen && renderingUp.getValue()) ? 13 : (renderingUp.getValue() ? -2 : 0);
 
         if (potions.getValue()) {
             List<MobEffectInstance> effects = new ArrayList<>(mc.player.getActiveEffects());
@@ -184,7 +182,7 @@ public class LegacyHud extends Module {
         float nether = !inHell ? 0.125F : 8.0F;
         int hposX = (int) (mc.player.getX() * nether);
         int hposZ = (int) (mc.player.getZ() * nether);
-        i = (mc.screen instanceof ChatScreen) ? 14 : 0;
+        i = (mc.gui.screen() instanceof ChatScreen) ? 14 : 0;
         String coordinates = ChatFormatting.WHITE + "XYZ " + ChatFormatting.RESET + (inHell ? (posX + ", " + posY + ", " + posZ + ChatFormatting.WHITE + " [" + ChatFormatting.RESET + hposX + ", " + hposZ + ChatFormatting.WHITE + "]" + ChatFormatting.RESET) : (posX + ", " + posY + ", " + posZ + ChatFormatting.WHITE + " [" + ChatFormatting.RESET + hposX + ", " + hposZ + ChatFormatting.WHITE + "]"));
         String direction1 = "";
 
@@ -275,6 +273,7 @@ public class LegacyHud extends Module {
         if (mc.player.getOffhandItem().getItem() == Items.TOTEM_OF_UNDYING)
             totems += mc.player.getOffhandItem().getCount();
         if (totems > 0) {
+            ItemStack totem = new ItemStack(Items.TOTEM_OF_UNDYING);
             int i = width / 2;
             int y = height - 55 - (mc.player.isUnderWater() || v < u ? 10 : 0);
             int x = i - 189 + 180 + 2;

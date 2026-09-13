@@ -3,7 +3,7 @@ package thunder.hack.utility.render.animation;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
+import thunder.hack.utility.render.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Axis;
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -26,7 +26,7 @@ public class CaptureMark {
     private static boolean flipSpeed;
 
     public static void render(Entity target) {
-        Camera camera = mc.gameRenderer.getMainCamera();
+        Camera camera = mc.gameRenderer.mainCamera();
 
         double tPosX = Render2DEngine.interpolate(target.xo, target.getX(), Render3DEngine.getTickDelta()) - camera.position().x;
         double tPosY = Render2DEngine.interpolate(target.yo, target.getY(), Render3DEngine.getTickDelta()) - camera.position().y;
@@ -47,7 +47,7 @@ public class CaptureMark {
         matrices.translate(-0.75, -0.75, -0.01);
         Matrix4f matrix = matrices.last().pose();
         RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX_COLOR);
-        BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        BufferBuilder buffer = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
         buffer.addVertex(matrix, 0, 1.5f, 0).setUv(0f, 1f).setColor(HudEditor.getColor(90).getRGB());
         buffer.addVertex(matrix, 1.5f, 1.5f, 0).setUv(1f, 1f).setColor(HudEditor.getColor(0).getRGB());
         buffer.addVertex(matrix, 1.5f, 0, 0).setUv(1f, 0).setColor(HudEditor.getColor(180).getRGB());

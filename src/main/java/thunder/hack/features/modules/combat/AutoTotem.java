@@ -9,6 +9,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
 import net.minecraft.world.entity.item.PrimedTnt;
 import net.minecraft.world.entity.monster.Creeper;
@@ -116,7 +117,7 @@ public final class AutoTotem extends Module {
     @EventHandler
     public void onPacketReceive(PacketEvent.@NotNull Receive e) {
         if (e.getPacket() instanceof ClientboundAddEntityPacket spawn)
-            if (spawn.getType() == EntityType.END_CRYSTAL)
+            if (spawn.getType() == EntityTypes.END_CRYSTAL)
                 if (getPlayerPos().distanceToSqr(spawn.getX(), spawn.getY(), spawn.getZ()) < 36) {
                     if (hotbarFallBack.getValue()) {
                         if (fallBackCalc.getValue() && ExplosionUtility.getExplosionDamageWPredict(new Vec3(spawn.getX(), spawn.getY(), spawn.getZ()), mc.player, PredictUtility.createBox(getPlayerPos(), mc.player), false) < getTriggerHealth() + 4f)
@@ -143,7 +144,7 @@ public final class AutoTotem extends Module {
 
         if (e.getPacket() instanceof ClientboundBlockUpdatePacket blockUpdate)
             if (blockUpdate.getBlockState().getBlock() == Blocks.OBSIDIAN && onObsidianPlace.getValue())
-                if (getPlayerPos().distanceToSqr(blockUpdate.getPos().getCenter()) < 36 && delay <= 0)
+                if (getPlayerPos().distanceToSqr(net.minecraft.world.phys.Vec3.atBottomCenterOf(blockUpdate.getPos())) < 36 && delay <= 0)
                     runInstant();
     }
 
@@ -167,7 +168,7 @@ public final class AutoTotem extends Module {
 
     public void swapTo(int slot) {
         if (slot != -1 && delay <= 0) {
-            if (mc.screen instanceof ContainerScreen) return;
+            if (mc.gui.screen() instanceof ContainerScreen) return;
 
             if (stopMotion.getValue()) mc.player.setDeltaMovement(0, mc.player.getDeltaMovement().y(), 0);
 

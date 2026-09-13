@@ -11,7 +11,7 @@ import thunder.hack.utility.render.TextureStorage;
 import java.awt.*;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.util.Tuple;
+import thunder.hack.utility.Tuple;
 import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;

@@ -31,7 +31,7 @@ public class AutoRespawn extends Module {
             timer.reset();
         }
 
-        if (mc.screen instanceof DeathScreen) {
+        if (mc.gui.screen() instanceof DeathScreen) {
             if (flag){
                 waypointCount += 1;
                 if(deathcoords.getValue())
@@ -41,7 +41,7 @@ public class AutoRespawn extends Module {
                     Managers.WAYPOINT.addWayPoint(wp);
                 }
                 mc.player.respawn();
-                mc.setScreen(null);
+                mc.gui.setScreen(null);
 
                 Managers.ASYNC.run(()-> {
                     if (autokit.getValue() && mc.player != null) {

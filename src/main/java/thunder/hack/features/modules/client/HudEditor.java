@@ -49,7 +49,7 @@ public final class HudEditor extends Module {
 
     @Override
     public void onEnable() {
-        mc.setScreen(HudEditorGui.getHudGui());
+        mc.gui.setScreen(HudEditorGui.getHudGui());
         disable();
     }
 

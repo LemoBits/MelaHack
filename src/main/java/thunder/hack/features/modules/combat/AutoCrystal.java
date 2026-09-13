@@ -326,7 +326,7 @@ public class AutoCrystal extends Module {
                 BlockPos bp = entry.getKey();
                 CrystalManager.Attempt attempt = entry.getValue();
 
-                if (cr.distanceToSqr(bp.getCenter()) < 0.3) {
+                if (cr.distanceToSqr(net.minecraft.world.phys.Vec3.atBottomCenterOf(bp)) < 0.3) {
                     confirmTime = now - attempt.getTime();
                     ModuleManager.autoCrystalInfo.onSpawn();
                     crystalManager.confirmSpawn(bp);
@@ -355,8 +355,8 @@ public class AutoCrystal extends Module {
 
     @EventHandler
     public void onBlockBreakClient(EventBreakBlock e) {
-        if (target != null && target.distanceToSqr(e.getPos().getCenter()) <= 4)
-            calcPosition(2f, e.getPos().getCenter());
+        if (target != null && target.distanceToSqr(net.minecraft.world.phys.Vec3.atBottomCenterOf(e.getPos())) <= 4)
+            calcPosition(2f, net.minecraft.world.phys.Vec3.atBottomCenterOf(e.getPos()));
     }
 
     private void handleSpawn(EndCrystal crystal) {
@@ -453,7 +453,7 @@ public class AutoCrystal extends Module {
                         Render3DEngine.OUTLINE_QUEUE.add(new Render3DEngine.OutlineAction(new AABB(pos), Render2DEngine.injectAlpha(lineColor.getValue().getColorObject(), alpha), lineWidth.getValue()));
 
                         if (drawDamage.getValue())
-                            Render3DEngine.drawTextIn3D(dmg, pos.getCenter(), 0, 0.1, 0, Render2DEngine.applyOpacity(textColor.getValue().getColorObject(), alpha / 100f));
+                            Render3DEngine.drawTextIn3D(dmg, net.minecraft.world.phys.Vec3.atBottomCenterOf(pos), 0, 0.1, 0, Render2DEngine.applyOpacity(textColor.getValue().getColorObject(), alpha / 100f));
                     }
                 });
             } else if (renderMode.getValue() == Render.Slide && renderPos != null) {
@@ -924,7 +924,7 @@ public class AutoCrystal extends Module {
 
         if (!predictCrystalSpawn(bp, predictedPlayerPos)) return null;
 
-        if (target != null && target.position().distanceToSqr(bp.getCenter().add(0, 0.5, 0)) > 144) return null;
+        if (target != null && target.position().distanceToSqr(net.minecraft.world.phys.Vec3.atBottomCenterOf(bp).add(0, 0.5, 0)) > 144) return null;
 
         Block base = mc.level.getBlockState(bp).getBlock();
 
@@ -963,7 +963,7 @@ public class AutoCrystal extends Module {
     }
 
     public boolean predictCrystalSpawn(BlockPos bp, Vec3 predictedPlayerPos) {
-        Vec3 predictedPos = bp.getCenter().add(0, 1.5f, 0);
+        Vec3 predictedPos = net.minecraft.world.phys.Vec3.atBottomCenterOf(bp).add(0, 1.5f, 0);
 
         float distance = (float) predictedPlayerPos.add(0, mc.player.getEyeHeight(mc.player.getPose()), 0).distanceToSqr(predictedPos);
 
@@ -1088,7 +1088,7 @@ public class AutoCrystal extends Module {
         float bestDistance = Float.MAX_VALUE;
         Direction bestDirection = null;
 
-        float upPoint = strictCenter.getValue() ? (float) bp.getCenter().y() : bp.above().getY();
+        float upPoint = strictCenter.getValue() ? (float) net.minecraft.world.phys.Vec3.atBottomCenterOf(bp).y() : bp.above().getY();
 
         if (mc.player.getEyePosition().y() > upPoint) {
             bestDirection = Direction.UP;
@@ -1237,7 +1237,7 @@ public class AutoCrystal extends Module {
         }
 
         public Vec3 getVector(BlockHitResult vec) {
-            return vecMod ? vec.getBlockPos().getCenter().add(0, 0.475, 0) : vec.getLocation();
+            return vecMod ? net.minecraft.world.phys.Vec3.atBottomCenterOf(vec.getBlockPos()).add(0, 0.475, 0) : vec.getLocation();
         }
 
         public boolean needSeparate() {

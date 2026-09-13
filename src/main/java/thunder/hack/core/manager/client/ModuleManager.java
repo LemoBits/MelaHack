@@ -334,7 +334,7 @@ public class ModuleManager implements IManager {
     }
 
     public void onRender2D(GuiGraphicsExtractor context) {
-        if (mc.getDebugOverlay().showDebugScreen() || mc.options.hideGui) return;
+        if (mc.getDebugOverlay().showDebugScreen() || false) return;
         Render2DEngine.BLUR_PROGRAM.invalidateCapture();
         HudElement.anyHovered = false;
         modules.stream().filter(Module::isEnabled).forEach(module -> module.onRender2D(context));
@@ -374,7 +374,7 @@ public class ModuleManager implements IManager {
     }
 
     public void onKeyPressed(int eventKey) {
-        if (eventKey == -1 || eventKey == 0 || mc.screen instanceof ClickGUI) {
+        if (eventKey == -1 || eventKey == 0 || mc.gui.screen() instanceof ClickGUI) {
             return;
         }
         modules.forEach(module -> {
@@ -384,7 +384,7 @@ public class ModuleManager implements IManager {
     }
 
     public void onKeyReleased(int eventKey) {
-        if (eventKey == -1 || eventKey == 0 || mc.screen instanceof ClickGUI)
+        if (eventKey == -1 || eventKey == 0 || mc.gui.screen() instanceof ClickGUI)
             return;
 
         modules.forEach(module -> {
@@ -394,7 +394,7 @@ public class ModuleManager implements IManager {
     }
 
     public void onMoseKeyPressed(int eventKey) {
-        if (eventKey == -1 || mc.screen instanceof ClickGUI) {
+        if (eventKey == -1 || mc.gui.screen() instanceof ClickGUI) {
             return;
         }
 
@@ -406,7 +406,7 @@ public class ModuleManager implements IManager {
     }
 
     public void onMoseKeyReleased(int eventKey) {
-        if (eventKey == -1 || mc.screen instanceof ClickGUI)
+        if (eventKey == -1 || mc.gui.screen() instanceof ClickGUI)
             return;
 
         activeMouseKeys.add(eventKey);

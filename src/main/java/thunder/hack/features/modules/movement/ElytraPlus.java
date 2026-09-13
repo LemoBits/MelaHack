@@ -4,7 +4,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
+import thunder.hack.utility.render.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 
 import thunder.hack.utility.render.compat.RenderSystem;
@@ -422,7 +422,7 @@ public class ElytraPlus extends Module {
             RenderSystem.disableCull();
             Tesselator tessellator = Tesselator.getInstance();
             RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
-            BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
+            BufferBuilder bufferBuilder = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
 
             float cos;
             float sin;

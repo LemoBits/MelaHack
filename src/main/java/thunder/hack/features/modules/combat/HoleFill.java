@@ -137,8 +137,8 @@ public final class HoleFill extends Module {
             if (mode.getValue() == Mode.Target) {
                 pos = holes.stream()
                         .filter(this::isHole)
-                        .filter(p -> mc.player.position().distanceTo(p.getCenter()) <= placeRange.getValue())
-                        .filter(p -> predicted.position().distanceTo(p.getCenter()) <= rangeToTarget.getValue())
+                        .filter(p -> mc.player.position().distanceTo(net.minecraft.world.phys.Vec3.atBottomCenterOf(p)) <= placeRange.getValue())
+                        .filter(p -> predicted.position().distanceTo(net.minecraft.world.phys.Vec3.atBottomCenterOf(p)) <= rangeToTarget.getValue())
                         .filter(p -> {
                             if (p.equals(mc.player.blockPosition()) && selfFill.getValue()) {
                                 selfFillNeed = true;
@@ -146,12 +146,12 @@ public final class HoleFill extends Module {
                             }
                             return InteractionUtility.canPlaceBlock(p, interactMode.getValue(), false);
                         })
-                        .min(Comparator.comparing(p -> mc.player.position().distanceTo(p.getCenter())))
+                        .min(Comparator.comparing(p -> mc.player.position().distanceTo(net.minecraft.world.phys.Vec3.atBottomCenterOf(p))))
                         .orElse(null);
             } else {
                 pos = holes.stream()
                         .filter(this::isHole)
-                        .filter(p -> mc.player.position().distanceTo(p.getCenter()) <= placeRange.getValue())
+                        .filter(p -> mc.player.position().distanceTo(net.minecraft.world.phys.Vec3.atBottomCenterOf(p)) <= placeRange.getValue())
                         .filter(p -> {
                             if (p.equals(mc.player.blockPosition()) && selfFill.getValue()) {
                                 selfFillNeed = true;
@@ -159,13 +159,13 @@ public final class HoleFill extends Module {
                             }
                             return InteractionUtility.canPlaceBlock(p, interactMode.getValue(), false);
                         })
-                        .min(Comparator.comparing(p -> mc.player.position().distanceTo(p.getCenter())))
+                        .min(Comparator.comparing(p -> mc.player.position().distanceTo(net.minecraft.world.phys.Vec3.atBottomCenterOf(p))))
                         .orElse(null);
             }
 
             if (pos != null) {
                 List<BlockPos> poses = getHolePoses(pos).stream()
-                        .filter(blockPos -> mc.player.position().distanceTo(blockPos.getCenter()) <= placeRange.getValue())
+                        .filter(blockPos -> mc.player.position().distanceTo(net.minecraft.world.phys.Vec3.atBottomCenterOf(blockPos)) <= placeRange.getValue())
                         .toList();
                 boolean broke = false;
 
@@ -292,9 +292,9 @@ public final class HoleFill extends Module {
                         if (foundEntity)
                             continue;
 
-                        BlockHitResult wallCheck = mc.level.clip(new ClipContext(InteractionUtility.getEyesPos(mc.player), pos.getCenter().relative(Direction.UP, 0.5f), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player));
+                        BlockHitResult wallCheck = mc.level.clip(new ClipContext(InteractionUtility.getEyesPos(mc.player), net.minecraft.world.phys.Vec3.atBottomCenterOf(pos).relative(Direction.UP, 0.5f), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player));
                         if (wallCheck != null && wallCheck.getType() == HitResult.Type.BLOCK && wallCheck.getBlockPos() != pos)
-                            if (InteractionUtility.squaredDistanceFromEyes(pos.getCenter()) > placeWallRange.getPow2Value())
+                            if (InteractionUtility.squaredDistanceFromEyes(net.minecraft.world.phys.Vec3.atBottomCenterOf(pos)) > placeWallRange.getPow2Value())
                                 continue;
                         positions.add(pos);
                     }

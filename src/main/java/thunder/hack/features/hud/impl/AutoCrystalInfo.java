@@ -2,7 +2,7 @@ package thunder.hack.features.hud.impl;
 
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.Tesselator;
+import thunder.hack.utility.render.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 
 import thunder.hack.utility.render.compat.RenderSystem;
@@ -46,7 +46,7 @@ public class AutoCrystalInfo extends HudElement {
 
         RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
 
-        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.DEBUG_LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
+        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.DEBUG_LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
 
         float offset = 0;
 
@@ -57,7 +57,7 @@ public class AutoCrystalInfo extends HudElement {
 
         Render2DEngine.endBuilding(bufferBuilder);
 
-        BufferBuilder bufferBuilder2 = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
+        BufferBuilder bufferBuilder2 = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
 
         offset = 0;
 

@@ -82,7 +82,7 @@ public class Shaders extends Module {
 
     public void onRender3D(PoseStack matrices) {
         if (hands.getValue())
-            Managers.SHADER.renderShader(() -> ((IGameRenderer) mc.gameRenderer).irenderHand(Render3DEngine.getTickDelta(), false, matrices.last().pose()), handsMode.getValue());
+            Managers.SHADER.renderShader(() -> ((IGameRenderer) mc.gameRenderer).irenderHand(mc.gameRenderer.gameRenderState().levelRenderState.cameraRenderState, Render3DEngine.getTickDelta(), matrices.last().pose()), handsMode.getValue());
     }
 
     @Override

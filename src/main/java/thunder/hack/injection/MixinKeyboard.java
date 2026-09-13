@@ -15,14 +15,17 @@ import thunder.hack.features.modules.Module;
 import static thunder.hack.features.modules.Module.mc;
 
 import net.minecraft.client.KeyboardHandler;
+import net.minecraft.client.input.KeyEvent;
 
 @Mixin(KeyboardHandler.class)
 public class MixinKeyboard {
 
     @Inject(method = "keyPress", at = @At("HEAD"), cancellable = true)
-    private void onKey(long windowPointer, int key, int scanCode, int action, int modifiers, CallbackInfo ci) {
+    private void onKey(long windowPointer, int action, KeyEvent keyEvent, CallbackInfo ci) {
+        int key = keyEvent.key();
+        int scanCode = keyEvent.scancode();
         if(Module.fullNullCheck()) return;
-        boolean whitelist = mc.screen == null || mc.screen instanceof ClickGUI || mc.screen instanceof HudEditorGui;
+        boolean whitelist = mc.gui.screen() == null || mc.gui.screen() instanceof ClickGUI || mc.gui.screen() instanceof HudEditorGui;
         if (!whitelist) return;
 
         if (action == 0) Managers.MODULE.onKeyReleased(key);

@@ -38,8 +38,8 @@ public class MixinPlayerEntity {
         }
     }
 
-    @Inject(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;setSprinting(Z)V", shift = At.Shift.AFTER))
-    public void attackAHook(CallbackInfo callbackInfo) {
+    @Inject(method = "attack", at = @At("RETURN"))
+    public void attackAHook(Entity target, CallbackInfo callbackInfo) {
         if (ModuleManager.autoSprint.isEnabled() && AutoSprint.sprint.getValue()) {
             final float multiplier = 0.6f + 0.4f * AutoSprint.motion.getValue();
             mc.player.setDeltaMovement(mc.player.getDeltaMovement().x / 0.6 * multiplier, mc.player.getDeltaMovement().y, mc.player.getDeltaMovement().z / 0.6 * multiplier);

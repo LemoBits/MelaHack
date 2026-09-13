@@ -60,7 +60,7 @@ public class StorageEsp extends Module {
     private final Setting<ColorSetting> minecartColor = new Setting<>("MinecartColor", new ColorSetting(0x8800FF00));
 
     public void onRender3D(PoseStack stack) {
-        if (mc.options.hideGui) return;
+        if (false) return;
         for (BlockEntity blockEntity : getBlockEntities()) {
             Color color = getColor(blockEntity);
 
@@ -121,7 +121,7 @@ public class StorageEsp extends Module {
 
         if (bEnt instanceof TrappedChestBlockEntity && trappedChest.getValue())
             color = trappedChestColor.getValue().getColorObject();
-        else if (bEnt instanceof ChestBlockEntity && chest.getValue() && bEnt.getType() != BlockEntityType.TRAPPED_CHEST)
+        else if (bEnt instanceof ChestBlockEntity && chest.getValue() && bEnt.getType() != BlockEntityTypes.TRAPPED_CHEST)
             color = chestColor.getValue().getColorObject();
         else if (bEnt instanceof EnderChestBlockEntity && echest.getValue())
             color = echestColor.getValue().getColorObject();

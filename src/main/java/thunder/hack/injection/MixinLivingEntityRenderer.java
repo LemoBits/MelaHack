@@ -25,7 +25,8 @@ import static thunder.hack.features.modules.Module.mc;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.EntityModel;
-import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import net.minecraft.core.Direction;
@@ -50,7 +51,7 @@ public abstract class MixinLivingEntityRenderer {
     }
 
     @Inject(method = "submit", at = @At("HEAD"), cancellable = true)
-    public void onRenderPre(LivingEntityRenderState state, PoseStack matrixStack, MultiBufferSource vertexConsumerProvider, int i, CallbackInfo ci) {
+    public void onRenderPre(LivingEntityRenderState state, PoseStack matrixStack, SubmitNodeCollector vertexConsumerProvider, CameraRenderState cameraState, CallbackInfo ci) {
         if (Module.fullNullCheck()) return;
         if (lastEntity == null) return;
 
@@ -75,7 +76,7 @@ public abstract class MixinLivingEntityRenderer {
         }
 
         if (livingEntity instanceof Player pe && ModuleManager.chams.isEnabled() && ModuleManager.chams.players.getValue()) {
-            ModuleManager.chams.renderPlayer(pe, state.bodyRot, Render3DEngine.getTickDelta(), matrixStack, i, model, ci, () -> postRender(livingEntity));
+            ModuleManager.chams.renderPlayer(pe, state.bodyRot, Render3DEngine.getTickDelta(), matrixStack, state.lightCoords, model, ci, () -> postRender(livingEntity));
 
             if (!pe.isSpectator()) {
                 float g = Render3DEngine.getTickDelta();
@@ -145,26 +146,11 @@ public abstract class MixinLivingEntityRenderer {
     }
 
     @Inject(method = "submit", at = @At("TAIL"))
-    public void onRenderPost(LivingEntityRenderState state, PoseStack matrixStack, MultiBufferSource vertexConsumerProvider, int i, CallbackInfo ci) {
+    public void onRenderPost(LivingEntityRenderState state, PoseStack matrixStack, SubmitNodeCollector vertexConsumerProvider, CameraRenderState cameraState, CallbackInfo ci) {
         if (Module.fullNullCheck()) return;
         if (lastEntity != null) {
             postRender(lastEntity);
         }
     }
 
-    @ModifyArgs(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/entity/model/EntityModel;render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumer;III)V"))
-    private void renderHook(Args args) {
-        if (Module.fullNullCheck()) return;
-
-        float alpha = -1f;
-
-        if (ModuleManager.noRender.isEnabled() && ModuleManager.noRender.antiPlayerCollision.getValue() && lastEntity != mc.player && lastEntity instanceof Player pl && !pl.isInvisible())
-            alpha = MathUtility.clamp((float) (mc.player.distanceToSqr(lastEntity.position()) / 3f) + 0.2f, 0f, 1f);
-
-        if (lastEntity != mc.player && lastEntity instanceof Player pl && pl.isInvisible() && ModuleManager.serverHelper.isEnabled() && ModuleManager.serverHelper.trueSight.getValue())
-            alpha = 0.3f;
-
-        if (alpha != -1)
-            args.set(4, Render2DEngine.applyOpacity(0x26FFFFFF, alpha));
-    }
 }

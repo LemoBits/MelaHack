@@ -59,7 +59,7 @@ public class AutoTrader extends Module {
                 villagers.remove(id);
         });
 
-        if (mc.screen instanceof MerchantScreen merch) {
+        if (mc.gui.screen() instanceof MerchantScreen merch) {
             MerchantMenu msh = merch.getMenu();
             MerchantOffers offers = msh.getOffers();
 
@@ -85,7 +85,7 @@ public class AutoTrader extends Module {
                 }
             }
             mc.player.closeContainer();
-        } else if (interactTicks <= 0 && !(mc.screen instanceof ClickGUI)) {
+        } else if (interactTicks <= 0 && !(mc.gui.screen() instanceof ClickGUI)) {
             Entity ent = Lists.newArrayList(mc.level.entitiesForRendering()).stream()
                     .filter(e -> (e instanceof Villager))
                     .filter(e -> mc.player.distanceToSqr(e) < 4f * 4f)

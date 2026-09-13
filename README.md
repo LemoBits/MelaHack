@@ -27,15 +27,24 @@ This fork is mainly focused on anarchy and hvh features. Won't update bypasses o
 
 ## Information
 
-- Minecraft version: ```Fabric``` 1.21.8
+- Minecraft version: **Java Edition 26.2** (`Fabric`)
 - Default ClickGui keybind - **```P```**
 - Default prefix - **```@```**
 - Middle click the module to bind it.
 
 ## Requires these mods:
 
-- [FabricApi 1.21.8](https://www.curseforge.com/minecraft/mc-mods/fabric-api/files)
-- [Java 21+ (use jdk)](https://adoptium.net/temurin/releases/)
+- [Fabric API for 26.2](https://www.curseforge.com/minecraft/mc-mods/fabric-api/files)
+- [Java 25+ (JDK)](https://adoptium.net/temurin/releases/)
+
+## Development
+
+- Gradle 9.5.1 (wrapper)
+- Fabric Loom 1.17
+- Official Mojang mappings (non-remapping Loom)
+- Build with `./gradlew clean build`
+
+Baritone is optional. When a compatible Baritone build is present, MelaHack discovers it reflectively at runtime; it is not required to compile or launch the mod.
 
 ## Recommended to read:
 

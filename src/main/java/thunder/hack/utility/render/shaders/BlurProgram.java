@@ -36,11 +36,7 @@ public class BlurProgram {
             .withFragmentShader(Identifier.fromNamespaceAndPath("minecraft", "core/blur"))
             .withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT))
             .withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false))
-            .withSampler("InputSampler")
-            .withUniform("Projection", UniformType.UNIFORM_BUFFER)
-            .withUniform("DynamicTransforms", UniformType.UNIFORM_BUFFER)
-            .withUniform("ThunderHackCustom", UniformType.UNIFORM_BUFFER)
-            .withVertexFormat(DefaultVertexFormat.POSITION, VertexFormat.Mode.QUADS)
+            .withVertexBinding(0, DefaultVertexFormat.POSITION).withPrimitiveTopology(com.mojang.blaze3d.PrimitiveTopology.QUADS)
             .build();
 
     public BlurProgram() {
@@ -48,7 +44,7 @@ public class BlurProgram {
 
     public void setParameters(float x, float y, float width, float height, float r, Color c1, float blurStrenth, float blurOpacity) {
         if (input == null) {
-            input = new TextureTarget("thunderhack_blur", mc.getWindow().getWidth(), mc.getWindow().getHeight(), false);
+            input = new TextureTarget("thunderhack_blur", mc.getWindow().getWidth(), mc.getWindow().getHeight(), false, com.mojang.blaze3d.GpuFormat.RGBA8_UNORM);
         }
 
         float i = (float) mc.getWindow().getGuiScale();
@@ -63,9 +59,9 @@ public class BlurProgram {
     }
 
     public void use() {
-        RenderTarget framebuffer = Minecraft.getInstance().getMainRenderTarget();
+        RenderTarget framebuffer = Minecraft.getInstance().gameRenderer.mainRenderTarget();
         if (input == null) {
-            input = new TextureTarget("thunderhack_blur", framebuffer.width, framebuffer.height, false);
+            input = new TextureTarget("thunderhack_blur", framebuffer.width, framebuffer.height, false, com.mojang.blaze3d.GpuFormat.RGBA8_UNORM);
         }
         if (input.width != framebuffer.width || input.height != framebuffer.height) {
             input.resize(framebuffer.width, framebuffer.height);
@@ -73,7 +69,7 @@ public class BlurProgram {
         }
 
         if (!captureValid) {
-            input.blitAndBlendToTexture(framebuffer.getColorTextureView());
+            input.blitAndBlendToTexture(framebuffer.getColorTextureView(), framebuffer.getDepthTextureView());
             captureValid = true;
         }
 

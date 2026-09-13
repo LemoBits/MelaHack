@@ -31,7 +31,7 @@ public class Ghost extends Module {
         if (mc.player.getHealth() == 0.0f) {
             mc.player.setHealth(20.0f);
             bypass = true;
-            mc.setScreen(null);
+            mc.gui.setScreen(null);
             mc.player.setPos(mc.player.getX(), mc.player.getY(), mc.player.getZ());
             sendMessage(isRu() ? "Для возрождения выключи модуль!" : "To revive, turn off the module!");
         }

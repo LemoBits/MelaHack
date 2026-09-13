@@ -32,7 +32,7 @@ public class ItemSelectElement extends AbstractElement {
     @Override
     public void mouseClicked(int mouseX, int mouseY, int button) {
         if (hovered) {
-            mc.setScreen(new WindowsScreen(new ItemSelectWindow(getItemSetting())));
+            mc.gui.setScreen(new WindowsScreen(new ItemSelectWindow(getItemSetting())));
             Managers.SOUND.playSwipeIn();
         }
         super.mouseClicked(mouseX, mouseY, button);

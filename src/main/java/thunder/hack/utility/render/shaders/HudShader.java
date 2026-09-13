@@ -12,6 +12,7 @@ import thunder.hack.utility.render.compat.RenderSystem;
 
 import java.awt.*;
 import net.minecraft.resources.Identifier;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.util.Mth;
 
 import static thunder.hack.features.modules.Module.mc;
@@ -31,17 +32,7 @@ public class HudShader {
     private Color color3 = Color.WHITE;
     private Color color4 = Color.WHITE;
 
-    public static final RenderPipeline HUD_SHADER = RenderPipeline.builder()
-            .withLocation(Identifier.fromNamespaceAndPath("thunderhack", "pipeline/hudshader"))
-            .withVertexShader(Identifier.fromNamespaceAndPath("minecraft", "core/position_only"))
-            .withFragmentShader(Identifier.fromNamespaceAndPath("minecraft", "core/hudshader"))
-            .withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT))
-            .withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false))
-            .withUniform("Projection", UniformType.UNIFORM_BUFFER)
-            .withUniform("DynamicTransforms", UniformType.UNIFORM_BUFFER)
-            .withUniform("ThunderHackCustom", UniformType.UNIFORM_BUFFER)
-            .withVertexFormat(DefaultVertexFormat.POSITION, VertexFormat.Mode.QUADS)
-            .build();
+    public static final RenderPipeline HUD_SHADER = RenderPipelines.DEBUG_QUADS;
 
     public HudShader() {
     }

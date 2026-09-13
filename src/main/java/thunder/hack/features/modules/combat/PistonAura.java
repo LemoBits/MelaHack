@@ -376,7 +376,7 @@ public final class PistonAura extends Module {
             }
 
 
-            final float angle2 = InteractionUtility.calculateAngle(pistonHeadPos.getCenter(), pistonPos.getCenter())[0];
+            final float angle2 = InteractionUtility.calculateAngle(net.minecraft.world.phys.Vec3.atBottomCenterOf(pistonHeadPos), net.minecraft.world.phys.Vec3.atBottomCenterOf(pistonPos))[0];
 
             sendPacket(new ServerboundMovePlayerPacket.Rot(angle2, 0, mc.player.onGround(), mc.player.horizontalCollision));
             float prevYaw = mc.player.getYRot();
@@ -929,12 +929,12 @@ public final class PistonAura extends Module {
 
         public double getMaxRange() {
             if (this.pistonPos == null || this.crystalPos == null || this.redStonePos == null) return 999;
-            final double piston = InteractionUtility.squaredDistanceFromEyes(this.pistonPos.getCenter());
-            final double crystal = InteractionUtility.squaredDistanceFromEyes(this.crystalPos.getCenter());
-            final double redStone = InteractionUtility.squaredDistanceFromEyes(this.redStonePos.getCenter());
+            final double piston = InteractionUtility.squaredDistanceFromEyes(net.minecraft.world.phys.Vec3.atBottomCenterOf(this.pistonPos));
+            final double crystal = InteractionUtility.squaredDistanceFromEyes(net.minecraft.world.phys.Vec3.atBottomCenterOf(this.crystalPos));
+            final double redStone = InteractionUtility.squaredDistanceFromEyes(net.minecraft.world.phys.Vec3.atBottomCenterOf(this.redStonePos));
 
             BlockPos firePos = this.firePos != null ? this.firePos : this.pistonPos;
-            final double fire = InteractionUtility.squaredDistanceFromEyes(firePos.getCenter());
+            final double fire = InteractionUtility.squaredDistanceFromEyes(net.minecraft.world.phys.Vec3.atBottomCenterOf(firePos));
             return Math.max(Math.max(fire, crystal), Math.max(redStone, piston));
         }
     }

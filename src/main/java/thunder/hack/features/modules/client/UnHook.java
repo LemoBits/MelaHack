@@ -34,7 +34,7 @@ public class UnHook extends Module { // Йо фабос, засунь в о4ко
 
         list = Managers.MODULE.getEnabledModules();
 
-        mc.setScreen(null);
+        mc.gui.setScreen(null);
 
         Managers.ASYNC.run(() -> {
             mc.executeIfPossible(() -> {
@@ -52,7 +52,7 @@ public class UnHook extends Module { // Йо фабос, засунь в о4ко
                 }
 
                 // Clean chat
-                mc.gui.getChat().clearMessages(true);
+                // Chat display ownership moved into the 26.2 GUI renderer.
                 setEnabled(true);
 
                 // Clean log

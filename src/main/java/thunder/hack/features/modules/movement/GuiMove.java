@@ -48,7 +48,7 @@ public class GuiMove extends Module {
 
     @Override
     public void onUpdate() {
-        if (mc.screen != null && !(mc.screen instanceof ChatScreen)) {
+        if (mc.gui.screen() != null && !(mc.gui.screen() instanceof ChatScreen)) {
             for (KeyMapping k : new KeyMapping[]{mc.options.keyUp, mc.options.keyDown, mc.options.keyLeft, mc.options.keyRight, mc.options.keyJump, mc.options.keySprint})
                 k.setDown(isKeyPressed(InputConstants.getKey(k.saveString()).getValue()));
 
@@ -86,17 +86,17 @@ public class GuiMove extends Module {
     public void closeWithoutPacket() {
         if (isKeyPressed(closeBind) && bindDelay.every(250)) {
 
-            if (mc.screen instanceof ChatScreen) {
+            if (mc.gui.screen() instanceof ChatScreen) {
                 return;
             }
 
-            if (mc.screen != null) {
-                screen = mc.screen;
+            if (mc.gui.screen() != null) {
+                screen = mc.gui.screen();
                 screenHandler = mc.player.containerMenu;
-                mc.setScreen(null);
-                if (mc.screen != screen) sendMessage(isRu() ? "Интерфейс сохранен! Нажмите еще раз чтобы открыть" : "GUI have been saved! Press again to open.");
+                mc.gui.setScreen(null);
+                if (mc.gui.screen() != screen) sendMessage(isRu() ? "Интерфейс сохранен! Нажмите еще раз чтобы открыть" : "GUI have been saved! Press again to open.");
             } else {
-                mc.setScreen(screen);
+                mc.gui.setScreen(screen);
                 mc.player.containerMenu = screenHandler;
                 sendMessage(isRu() ? "Интерфейс открыт." : "GUI Opened.");
             }

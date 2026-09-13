@@ -23,7 +23,7 @@ public class BlockESPCommand extends Command {
         builder.then(literal("reset").executes(context -> {
             ModuleManager.blockESP.selectedBlocks.getValue().clear();
             sendMessage(isRu() ? "BlockESP был очищен!" : "BlockESP got reset.");
-            mc.levelRenderer.allChanged();
+            mc.levelRenderer.invalidateCompiledGeometry(mc.level, mc.options, mc.gameRenderer.mainCamera(), mc.getBlockColors());
             return SINGLE_SUCCESS;
         }));
 
@@ -38,7 +38,7 @@ public class BlockESPCommand extends Command {
                 sendMessage(ChatFormatting.RED + (isRu() ? "Такого блока нет!" : "There is no such block!"));
             }
 
-            mc.levelRenderer.allChanged();
+            mc.levelRenderer.invalidateCompiledGeometry(mc.level, mc.options, mc.gameRenderer.mainCamera(), mc.getBlockColors());
 
             return SINGLE_SUCCESS;
         })));
@@ -54,7 +54,7 @@ public class BlockESPCommand extends Command {
                 sendMessage(ChatFormatting.RED + (isRu() ? "Такого блока нет!" : "There is no such block!"));
             }
 
-            mc.levelRenderer.allChanged();
+            mc.levelRenderer.invalidateCompiledGeometry(mc.level, mc.options, mc.gameRenderer.mainCamera(), mc.getBlockColors());
 
             return SINGLE_SUCCESS;
         })));

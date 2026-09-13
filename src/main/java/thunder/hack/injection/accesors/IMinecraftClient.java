@@ -2,7 +2,6 @@ package thunder.hack.injection.accesors;
 
 import com.mojang.authlib.minecraft.UserApiService;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.block.BlockModelResolver;
 import net.minecraft.client.User;
 import net.minecraft.client.gui.screens.social.PlayerSocialManager;
 import net.minecraft.client.multiplayer.ProfileKeyPairManager;
@@ -14,8 +13,6 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(Minecraft.class)
 public interface IMinecraftClient {
-    @Accessor("blockModelResolver")
-    BlockModelResolver getBlockModelResolver();
 
     @Accessor("rightClickDelay")
     int getUseCooldown();

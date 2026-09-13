@@ -11,11 +11,13 @@ import thunder.hack.events.impl.EventMouse;
 import static thunder.hack.features.modules.Module.mc;
 
 import net.minecraft.client.MouseHandler;
+import net.minecraft.client.input.MouseButtonInfo;
 
 @Mixin(MouseHandler.class)
 public class MixinMouse {
     @Inject(method = "onButton", at = @At("HEAD"))
-    public void onMouseButtonHook(long window, int button, int action, int mods, CallbackInfo ci) {
+    public void onMouseButtonHook(long window, MouseButtonInfo info, int action, CallbackInfo ci) {
+        int button = info.button();
         if (window == mc.getWindow().handle()) {
             if (action == 0) Managers.MODULE.onMoseKeyReleased(button);
             if (action == 1) Managers.MODULE.onMoseKeyPressed(button);

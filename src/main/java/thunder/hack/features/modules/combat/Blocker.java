@@ -68,14 +68,14 @@ public final class Blocker extends PlaceModule {
         if (!getBlockResult().found() || placePositions.isEmpty())
             return;
 
-        placePositions.removeIf(b -> PlayerUtility.squaredDistanceFromEyes(b.getCenter()) > range.getPow2Value());
+        placePositions.removeIf(b -> PlayerUtility.squaredDistanceFromEyes(net.minecraft.world.phys.Vec3.atBottomCenterOf(b)) > range.getPow2Value());
 
         int blocksPlaced = 0;
 
         while (blocksPlaced < actionShift.getValue()) {
             BlockPos pos = placePositions.stream()
                     .filter(p -> InteractionUtility.canPlaceBlock(p, interact.getValue(), true))
-                    .min(Comparator.comparing(p -> mc.player.position().distanceTo(p.getCenter())))
+                    .min(Comparator.comparing(p -> mc.player.position().distanceTo(net.minecraft.world.phys.Vec3.atBottomCenterOf(p))))
                     .orElse(null);
 
             if (pos != null && mc.player.onGround() && placeBlock(pos)) {

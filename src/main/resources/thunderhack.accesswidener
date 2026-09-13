@@ -1,7 +1,5 @@
 accessWidener	v1	official
 
-accessible class net/minecraft/network/protocol/game/ServerboundInteractPacket$Action
-accessible class net/minecraft/network/protocol/game/ServerboundInteractPacket$ActionType
 accessible class net/minecraft/network/protocol/game/ServerboundInteractPacket
 accessible field net/minecraft/client/player/LocalPlayer wasSprinting Z
 accessible field net/minecraft/world/entity/projectile/FishingHook DATA_BITING Lnet/minecraft/network/syncher/EntityDataAccessor;
@@ -15,5 +13,4 @@ accessible field net/minecraft/client/MouseHandler accumulatedDX D
 accessible field net/minecraft/world/entity/Entity hasVisualFire Z
 accessible field net/minecraft/network/protocol/game/ClientboundSystemChatPacket content Lnet/minecraft/network/chat/Component;
 accessible field net/minecraft/world/level/BaseSpawner spawnDelay I
-accessible class net/minecraft/client/gui/Gui$HeartType
 accessible method net/minecraft/client/multiplayer/ClientLevel getBlockStatePredictionHandler ()Lnet/minecraft/client/multiplayer/prediction/BlockStatePredictionHandler;

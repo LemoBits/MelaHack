@@ -7,26 +7,26 @@ import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(ClientboundSetEntityMotionPacket.class)
-public interface ISPacketEntityVelocity {
+public abstract class ISPacketEntityVelocity {
     @Mutable
     @Accessor("movement")
-    void setMovement(Vec3 movement);
+    abstract void setMovement(Vec3 movement);
 
     private ClientboundSetEntityMotionPacket packet() {
         return (ClientboundSetEntityMotionPacket) (Object) this;
     }
 
-    default void setMotionX(double velocityX) {
+    public void setMotionX(double velocityX) {
         Vec3 movement = packet().movement();
         setMovement(new Vec3(velocityX, movement.y, movement.z));
     }
 
-    default void setMotionY(double velocityY) {
+    public void setMotionY(double velocityY) {
         Vec3 movement = packet().movement();
         setMovement(new Vec3(movement.x, velocityY, movement.z));
     }
 
-    default void setMotionZ(double velocityZ) {
+    public void setMotionZ(double velocityZ) {
         Vec3 movement = packet().movement();
         setMovement(new Vec3(movement.x, movement.y, velocityZ));
     }

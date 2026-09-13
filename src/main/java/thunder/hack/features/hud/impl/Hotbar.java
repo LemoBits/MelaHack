@@ -24,7 +24,7 @@ public class Hotbar extends HudElement {
     }
 
     public void onRender2D(GuiGraphicsExtractor context) {
-        if (mc.screen instanceof WindowsScreen)
+        if (mc.gui.screen() instanceof WindowsScreen)
             return;
 
         Player playerEntity = mc.player;
@@ -56,7 +56,7 @@ public class Hotbar extends HudElement {
 
     // Bake only items
     public static void renderHotBarItems(float tickDelta, GuiGraphicsExtractor context) {
-        if (mc.screen instanceof WindowsScreen)
+        if (mc.gui.screen() instanceof WindowsScreen)
             return;
 
         Player playerEntity = mc.player;

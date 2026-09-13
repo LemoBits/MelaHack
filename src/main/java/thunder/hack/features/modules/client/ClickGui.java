@@ -51,12 +51,12 @@ public class ClickGui extends Module {
     }
 
     public void setGui() {
-        mc.setScreen(ClickGUI.getClickGui());
+        mc.gui.setScreen(ClickGUI.getClickGui());
     }
 
     @Override
     public void onUpdate() {
-        if (!(ClickGui.mc.screen instanceof ClickGUI))
+        if (!(ClickGui.mc.gui.screen() instanceof ClickGUI))
             disable();
     }
 

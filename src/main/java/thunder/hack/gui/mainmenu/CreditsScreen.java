@@ -117,7 +117,7 @@ public class CreditsScreen extends LegacyInputScreen {
         }
 
         if (Render2DEngine.isHovered(mouseX, mouseY, mc.getWindow().getGuiScaledWidth() - 40, mc.getWindow().getGuiScaledHeight() - 40, 40, 40))
-            mc.setScreen(MainMenuScreen.getInstance());
+            mc.gui.setScreen(MainMenuScreen.getInstance());
 
         return super.mouseClicked(mouseX, mouseY, button);
     }

@@ -2,10 +2,11 @@ package thunder.hack.injection;
 import thunder.hack.utility.render.compat.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.MenuAccess;
-import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.state.MapRenderState;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
@@ -65,7 +66,7 @@ public abstract class MixinHandledScreen<T extends AbstractContainerMenu> extend
     @Shadow
     protected abstract void slotClicked(Slot slotIn, int slotId, int mouseButton, ContainerInput type);
 
-    @Inject(method = "render", at = @At("HEAD"))
+    @Inject(method = "extractRenderState", at = @At("HEAD"))
     private void drawScreenHook(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (Module.fullNullCheck()) return;
         for (int i1 = 0; i1 < mc.player.containerMenu.slots.size(); ++i1) {
@@ -99,7 +100,7 @@ public abstract class MixinHandledScreen<T extends AbstractContainerMenu> extend
 
     private Map<Render2DEngine.Rectangle, Integer> clickableRects = new HashMap<>();
 
-    @Inject(method = "render", at = @At("TAIL"))
+    @Inject(method = "extractRenderState", at = @At("TAIL"))
     private void onRender(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (Module.fullNullCheck()) return;
         if (hoveredSlot != null && !hoveredSlot.getItem().isEmpty() && minecraft.player.inventoryMenu.getCarried().isEmpty()) {
@@ -153,8 +154,8 @@ public abstract class MixinHandledScreen<T extends AbstractContainerMenu> extend
         }
     }
 
-    @Inject(method = "drawSlot(Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/world/inventory/Slot;)V", at = @At("TAIL"))
-    protected void drawSlotHook(GuiGraphicsExtractor context, Slot slot, CallbackInfo ci) {
+    @Inject(method = "extractSlot", at = @At("TAIL"))
+    protected void drawSlotHook(GuiGraphicsExtractor context, Slot slot, int mouseX, int mouseY, CallbackInfo ci) {
         if (ModuleManager.serverHelper.isEnabled() && ModuleManager.serverHelper.aucHelper.getValue())
             ModuleManager.serverHelper.onRenderChest(context, slot);
     }
@@ -182,7 +183,7 @@ public abstract class MixinHandledScreen<T extends AbstractContainerMenu> extend
         return true;
     }
 
-    @Inject(method = "renderTooltip", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "extractTooltip", at = @At("HEAD"), cancellable = true)
     private void onDrawMouseoverTooltip(GuiGraphicsExtractor context, int x, int y, CallbackInfo ci) {
         if (Module.fullNullCheck()) return;
         if (hoveredSlot != null && !hoveredSlot.getItem().isEmpty() && minecraft.player.inventoryMenu.getCarried().isEmpty()) {
@@ -256,7 +257,10 @@ public abstract class MixinHandledScreen<T extends AbstractContainerMenu> extend
     }
 
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
-    private void mouseClicked(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
+    private void mouseClicked(MouseButtonEvent event, boolean doubleClick, CallbackInfoReturnable<Boolean> cir) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
         if (Module.fullNullCheck()) return;
         if (button == GLFW.GLFW_MOUSE_BUTTON_MIDDLE && hoveredSlot != null && !hoveredSlot.getItem().isEmpty() && minecraft.player.inventoryMenu.getCarried().isEmpty()) {
             ItemStack itemStack = hoveredSlot.getItem();
@@ -272,7 +276,7 @@ public abstract class MixinHandledScreen<T extends AbstractContainerMenu> extend
                         ITEMS[i] = list.get(i);
                 }
 
-                minecraft.setScreen(new PeekScreen(new ShulkerBoxMenu(0, minecraft.player.getInventory(), new SimpleContainer(ITEMS)), minecraft.player.getInventory(), hoveredSlot.getItem().getHoverName(), ((BlockItem) hoveredSlot.getItem().getItem()).getBlock()));
+                minecraft.gui.setScreen(new PeekScreen(new ShulkerBoxMenu(0, minecraft.player.getInventory(), new SimpleContainer(ITEMS)), minecraft.player.getInventory(), hoveredSlot.getItem().getHoverName(), ((BlockItem) hoveredSlot.getItem().getItem()).getBlock()));
                 cir.setReturnValue(true);
             }
         }

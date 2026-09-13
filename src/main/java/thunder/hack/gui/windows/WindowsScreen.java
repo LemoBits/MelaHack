@@ -93,7 +93,7 @@ public class WindowsScreen extends LegacyInputScreen {
         float offset = (windows.size() * 20f) / -2f - 23;
 
         if (Render2DEngine.isHovered(mouseX, mouseY, (i + offset) + 1, mc.getWindow().getGuiScaledHeight() - 23, 15, 15))
-            mc.setScreen(ClickGUI.getClickGui());
+            mc.gui.setScreen(ClickGUI.getClickGui());
 
         offset += 23;
         for (WindowBase w : windows) {

@@ -47,7 +47,7 @@ public class AutoSign extends Module {
                     InventoryUtility.saveSlot();
                     result.switchTo();
                     mc.gameMode.useItemOn(mc.player, offhand ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND,
-                            new BlockHitResult(((ISignEditScreen) ses).getBlockEntity().getBlockPos().getCenter().add(0, 0.5, 0), Direction.UP, ((ISignEditScreen) ses).getBlockEntity().getBlockPos(), false));
+                            new BlockHitResult(net.minecraft.world.phys.Vec3.atBottomCenterOf(((ISignEditScreen) ses).getBlockEntity().getBlockPos()).add(0, 0.5, 0), Direction.UP, ((ISignEditScreen) ses).getBlockEntity().getBlockPos(), false));
                     sendPacket(new ServerboundSwingPacket(offhand ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND));
                     InventoryUtility.returnSlot();
                 }

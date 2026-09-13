@@ -3,7 +3,7 @@ package thunder.hack.features.modules.render;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
+import thunder.hack.utility.render.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Axis;
 import thunder.hack.utility.render.compat.RenderSystem;
@@ -98,7 +98,7 @@ public class ESP extends Module {
     private float dizorentAnimation = 0f;
 
     public void onRender3D(PoseStack stack) {
-        if(mc.options.hideGui) return;
+        if(false) return;
         if (lingeringPotions.getValue()) {
             for (Entity ent : mc.level.entitiesForRendering()) {
                 if (ent instanceof AreaEffectCloud aece) {
@@ -114,7 +114,7 @@ public class ESP extends Module {
                     Render3DEngine.setupRender();
                     RenderSystem.disableDepthTest();
                     RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
-                    BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
+                    BufferBuilder bufferBuilder = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
 
                     for (int i = 0; i <= 360; i += 6) {
                         double v = Math.sin(Math.toRadians(i));
@@ -125,7 +125,7 @@ public class ESP extends Module {
                     Render2DEngine.endBuilding(bufferBuilder);
 
                     RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
-                    bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
+                    bufferBuilder = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
                     for (int i = 0; i <= 360; i += 6) {
                         double v = Math.sin(Math.toRadians(i));
                         double u = Math.cos(Math.toRadians(i));
@@ -141,7 +141,7 @@ public class ESP extends Module {
 
                     RenderSystem.disableDepthTest();
                     PoseStack matrices = new PoseStack();
-                    Camera camera = mc.gameRenderer.getMainCamera();
+                    Camera camera = mc.gameRenderer.mainCamera();
                     matrices.mulPose(Axis.XP.rotationDegrees(camera.xRot()));
                     matrices.mulPose(Axis.YP.rotationDegrees(camera.yRot() + 180.0F));
                     matrices.translate(x, y, z);
@@ -173,7 +173,7 @@ public class ESP extends Module {
                 Render3DEngine.setupRender();
                 RenderSystem.disableDepthTest();
                 RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
-                BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
+                BufferBuilder bufferBuilder = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
 
                 for (int i = 0; i <= 360; i += 6) {
                     double v = Math.sin(Math.toRadians(i));
@@ -184,7 +184,7 @@ public class ESP extends Module {
                 Render2DEngine.endBuilding(bufferBuilder);
 
                 RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
-                bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
+                bufferBuilder = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
                 for (int i = 0; i <= 360; i += 6) {
                     double v = Math.sin(Math.toRadians(i));
                     double u = Math.cos(Math.toRadians(i));
@@ -245,7 +245,7 @@ public class ESP extends Module {
                     Render3DEngine.OUTLINE_QUEUE.add(new Render3DEngine.OutlineAction(new AABB(blockPos), burrowColor.getValue().getColorObject(), 2));
                     RenderSystem.disableDepthTest();
                     PoseStack matrices = new PoseStack();
-                    Camera camera = mc.gameRenderer.getMainCamera();
+                    Camera camera = mc.gameRenderer.mainCamera();
                     matrices.mulPose(Axis.XP.rotationDegrees(camera.xRot()));
                     matrices.mulPose(Axis.YP.rotationDegrees(camera.yRot() + 180.0F));
                     matrices.translate(x + 0.5f, y + 0.5f, z + 0.5f);
@@ -272,7 +272,7 @@ public class ESP extends Module {
                     if (tntFuse.getValue()) {
                         RenderSystem.disableDepthTest();
                         PoseStack matrices = new PoseStack();
-                        Camera camera = mc.gameRenderer.getMainCamera();
+                        Camera camera = mc.gameRenderer.mainCamera();
                         matrices.mulPose(Axis.XP.rotationDegrees(camera.xRot()));
                         matrices.mulPose(Axis.YP.rotationDegrees(camera.yRot() + 180.0F));
                         matrices.translate(x, y + 0.5f, z);
@@ -300,7 +300,7 @@ public class ESP extends Module {
     }
 
     public void onRender2D(GuiGraphicsExtractor context) {
-        if(mc.options.hideGui) return;
+        if(false) return;
         if (pearls.getValue()) {
             for (Entity ent : mc.level.entitiesForRendering()) {
                 if (ent instanceof ThrownEnderpearl pearl) {
@@ -327,7 +327,7 @@ public class ESP extends Module {
         Matrix4f matrix = thunder.hack.utility.render.GuiMatrix.positionMatrix(context.pose());
         Render2DEngine.setupRender();
         RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
-        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION_COLOR);
 
         for (Entity ent : mc.level.entitiesForRendering())
             if (shouldRender(ent))

@@ -57,7 +57,7 @@ public class ChestStealer extends Module {
                 Slot slot = chest.getSlot(i);
                 if (slot.hasItem() && isAllowed(slot.getItem())
                         && timer.every(delay.getValue() + (random.getValue() && delay.getValue() != 0 ? rnd.nextInt(delay.getValue()) : 0))
-                        && !(mc.screen.getTitle().getString().contains("Аукцион") || mc.screen.getTitle().getString().contains("покупки"))) {
+                        && !(mc.gui.screen().getTitle().getString().contains("Аукцион") || mc.gui.screen().getTitle().getString().contains("покупки"))) {
                     mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, i, 0, ContainerInput.QUICK_MOVE, mc.player);
                     autoMystDelay.reset();
                 }
@@ -69,12 +69,12 @@ public class ChestStealer extends Module {
 
     @EventHandler
     public void onPlayerUpdate(PlayerUpdateEvent event) {
-        if (autoMyst.getValue() && mc.screen == null && autoMystDelay.passedMs(3000)) {
+        if (autoMyst.getValue() && mc.gui.screen() == null && autoMystDelay.passedMs(3000)) {
             for (BlockEntity be : getBlockEntities()) {
                 if (be instanceof EnderChestBlockEntity) {
-                    if (mc.player.distanceToSqr(be.getBlockPos().getCenter()) > 39)
+                    if (mc.player.distanceToSqr(net.minecraft.world.phys.Vec3.atBottomCenterOf(be.getBlockPos())) > 39)
                         continue;
-                    mc.gameMode.useItemOn(mc.player, InteractionHand.MAIN_HAND, new BlockHitResult(be.getBlockPos().getCenter().add(MathUtility.random(-0.4, 0.4), 0.375, MathUtility.random(-0.4, 0.4)), Direction.UP, be.getBlockPos(), false));
+                    mc.gameMode.useItemOn(mc.player, InteractionHand.MAIN_HAND, new BlockHitResult(net.minecraft.world.phys.Vec3.atBottomCenterOf(be.getBlockPos()).add(MathUtility.random(-0.4, 0.4), 0.375, MathUtility.random(-0.4, 0.4)), Direction.UP, be.getBlockPos(), false));
                     mc.player.swing(InteractionHand.MAIN_HAND);
                     break;
                 }

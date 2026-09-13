@@ -276,7 +276,7 @@ public final class SpeedMine extends Module {
     }
 
     private boolean canBreak(BlockPos pos) {
-        if (mc.level == null || PlayerUtility.squaredDistanceFromEyes(pos.getCenter()) > range.getPow2Value())
+        if (mc.level == null || PlayerUtility.squaredDistanceFromEyes(net.minecraft.world.phys.Vec3.atBottomCenterOf(pos)) > range.getPow2Value())
             return false;
 
         final BlockState blockState = mc.level.getBlockState(pos);
@@ -305,7 +305,7 @@ public final class SpeedMine extends Module {
 
         for (MineAction action : actions) {
             if (mc.level.isEmptyBlock(action.getPos().below())) {
-                if (ExplosionUtility.getSelfExplosionDamage(action.getPos().getCenter().add(0, 0.5, 0), 0, false) > ModuleManager.autoCrystal.maxSelfDamage.getValue())
+                if (ExplosionUtility.getSelfExplosionDamage(net.minecraft.world.phys.Vec3.atBottomCenterOf(action.getPos()).add(0, 0.5, 0), 0, false) > ModuleManager.autoCrystal.maxSelfDamage.getValue())
                     return null;
 
                 return ModuleManager.autoCrystal.getPlaceData(action.getPos(), null, mc.player.position());
@@ -321,7 +321,7 @@ public final class SpeedMine extends Module {
 
             for (Direction dir : Direction.values()) {
                 if (dir == Direction.UP || dir == Direction.DOWN) continue;
-                if (ExplosionUtility.getSelfExplosionDamage(action.getPos().below().relative(dir).getCenter().add(0, 0.5, 0), 0, false) > ModuleManager.autoCrystal.maxSelfDamage.getValue())
+                if (ExplosionUtility.getSelfExplosionDamage(net.minecraft.world.phys.Vec3.atBottomCenterOf(action.getPos().below().relative(dir)).add(0, 0.5, 0), 0, false) > ModuleManager.autoCrystal.maxSelfDamage.getValue())
                     continue;
 
                 AutoCrystal.PlaceData autoMineData = ModuleManager.autoCrystal.getPlaceData(action.getPos().below().relative(dir), null, mc.player.position());
@@ -331,7 +331,7 @@ public final class SpeedMine extends Module {
                 }
             }
 
-            float selfDmg = ExplosionUtility.getSelfExplosionDamage(action.getPos().getCenter().add(0, 0.5, 0), 0, false);
+            float selfDmg = ExplosionUtility.getSelfExplosionDamage(net.minecraft.world.phys.Vec3.atBottomCenterOf(action.getPos()).add(0, 0.5, 0), 0, false);
             mc.level.setBlockAndUpdate(action.getPos(), prevState);
 
             AutoCrystal.PlaceData autoMineData = ModuleManager.autoCrystal.getPlaceData(action.getPos(), null, mc.player.position());
@@ -347,7 +347,7 @@ public final class SpeedMine extends Module {
     public boolean isBlockDrop(Entity ent) {
         if (ent instanceof ItemEntity && isOn() && ent.tickCount < 3)
             for (MineAction a : actions)
-                if (a.getPos().getCenter().distanceToSqr(ent.position()) <= 1f)
+                if (net.minecraft.world.phys.Vec3.atBottomCenterOf(a.getPos()).distanceToSqr(ent.position()) <= 1f)
                     return true;
 
         return false;
@@ -389,7 +389,7 @@ public final class SpeedMine extends Module {
             if (mineBreaks >= breakAttempts.getValue() && mode.not(Mode.GrimInstant))
                 return true;
 
-            if (PlayerUtility.squaredDistanceFromEyes(pos.getCenter()) > range.getPow2Value()) {
+            if (PlayerUtility.squaredDistanceFromEyes(net.minecraft.world.phys.Vec3.atBottomCenterOf(pos)) > range.getPow2Value()) {
                 cancel();
                 return true;
             }
@@ -471,7 +471,7 @@ public final class SpeedMine extends Module {
 
         public void fixMovement() {
             if (rotate.getValue() && progress > 0.95)
-                ModuleManager.rotations.fixRotation = PlayerManager.calcAngle(mc.player.getEyePosition(), pos.getCenter())[0];
+                ModuleManager.rotations.fixRotation = PlayerManager.calcAngle(mc.player.getEyePosition(), net.minecraft.world.phys.Vec3.atBottomCenterOf(pos))[0];
         }
 
         public BlockPos getPos() {
@@ -488,7 +488,7 @@ public final class SpeedMine extends Module {
 
         public void onSync() {
             if (rotate.getValue() && progress > 0.95) {
-                float[] angle = PlayerManager.calcAngle(mc.player.getEyePosition(), pos.getCenter().add(0, -0.25f, 0));
+                float[] angle = PlayerManager.calcAngle(mc.player.getEyePosition(), net.minecraft.world.phys.Vec3.atBottomCenterOf(pos).add(0, -0.25f, 0));
                 mc.player.setYRot(angle[0]);
                 mc.player.setXRot(angle[1]);
             }

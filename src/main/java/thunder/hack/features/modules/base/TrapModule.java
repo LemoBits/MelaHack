@@ -105,7 +105,7 @@ public abstract class TrapModule extends PlaceModule {
         return getBlocks(target).stream()
                 .filter(pos -> pos.distToCenterSqr(mc.player.position()) < range.getPow2Value())
                 .filter(pos -> InteractionUtility.canPlaceBlock(pos, interact.getValue(), true))
-                .max(Comparator.comparing(pos -> mc.player.distanceToSqr(pos.getCenter())))
+                .max(Comparator.comparing(pos -> mc.player.distanceToSqr(net.minecraft.world.phys.Vec3.atBottomCenterOf(pos))))
                 .orElse(null);
     }
 
@@ -135,7 +135,7 @@ public abstract class TrapModule extends PlaceModule {
                     surroundPoses.stream()
                             .map(pos -> pos.above(2))
                             .filter(pos -> pos.distToCenterSqr(mc.player.position()) < range.getPow2Value())
-                            .max(Comparator.comparing(pos -> mc.player.distanceToSqr(pos.getCenter())))
+                            .max(Comparator.comparing(pos -> mc.player.distanceToSqr(net.minecraft.world.phys.Vec3.atBottomCenterOf(pos))))
                             .ifPresent(pos -> {
                                 offsets.add(pos);
                                 offsets.add(pos.below());
@@ -153,7 +153,7 @@ public abstract class TrapModule extends PlaceModule {
                 if (interact.getValue() != InteractionUtility.Interact.AirPlace) {
                     surroundPoses.stream()
                             .filter(pos -> pos.distToCenterSqr(mc.player.position()) < range.getPow2Value())
-                            .max(Comparator.comparing(pos -> player.distanceToSqr(pos.getCenter())))
+                            .max(Comparator.comparing(pos -> player.distanceToSqr(net.minecraft.world.phys.Vec3.atBottomCenterOf(pos))))
                             .ifPresent(pos -> {
                                 offsets.add(pos);
                                 offsets.add(pos.above());
@@ -174,7 +174,7 @@ public abstract class TrapModule extends PlaceModule {
                     surroundPoses.stream()
                             .map(BlockPos::below)
                             .filter(pos -> pos.distToCenterSqr(mc.player.position()) < range.getPow2Value())
-                            .max(Comparator.comparing(pos -> player.distanceToSqr(pos.getCenter())))
+                            .max(Comparator.comparing(pos -> player.distanceToSqr(net.minecraft.world.phys.Vec3.atBottomCenterOf(pos))))
                             .ifPresent(pos -> {
                                 offsets.add(pos);
                                 offsets.add(pos.above());

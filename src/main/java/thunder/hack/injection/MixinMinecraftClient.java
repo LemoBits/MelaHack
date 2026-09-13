@@ -49,9 +49,6 @@ public abstract class MixinMinecraftClient {
     @Final
     private Window window;
 
-    @Shadow
-    public abstract void setScreen(@Nullable Screen screen);
-
     @Unique
     private String[] shittyServers = {
             "mineblaze",
@@ -98,48 +95,16 @@ public abstract class MixinMinecraftClient {
         if (!Module.fullNullCheck()) ThunderHack.EVENT_BUS.post(new EventPostTick());
     }
 
-    @Inject(method = "resizeDisplay", at = @At("TAIL"))
+    @Inject(method = "resizeGui", at = @At("TAIL"))
     private void captureResize(CallbackInfo ci) {
         WindowResizeCallback.EVENT.invoker().onResized((Minecraft) (Object) this, this.window);
     }
 
 
-    @Inject(method = "pickBlock", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "pickBlockOrEntity", at = @At("HEAD"), cancellable = true)
     private void doItemPickHook(CallbackInfo ci) {
         if (ModuleManager.middleClick.isEnabled() && ModuleManager.middleClick.antiPickUp.getValue())
             ci.cancel();
-    }
-
-    @Inject(method = "setOverlay", at = @At("HEAD"))
-    public void setOverlay(Overlay overlay, CallbackInfo ci) {
-        //   if (overlay instanceof SplashOverlay)
-        //  Managers.SHADER.reloadShaders();
-    }
-
-    @Inject(method = "setScreen", at = @At("HEAD"), cancellable = true)
-    public void setScreenHookPre(Screen screen, CallbackInfo ci) {
-        if (Module.fullNullCheck()) return;
-        EventScreen event = new EventScreen(screen);
-        ThunderHack.EVENT_BUS.post(event);
-        if (event.isCancelled() || (ClickGUI.close && screen == null)) ci.cancel();
-    }
-
-    @Inject(method = "setScreen", at = @At("RETURN"))
-    public void setScreenHookPost(Screen screen, CallbackInfo ci) {
-        if (Module.fullNullCheck()) return;
-        if (screen instanceof JoinMultiplayerScreen mScreen && ModuleManager.antiServerAdd.isEnabled() && mScreen.getServers() != null) {
-            for (int i = 0; i < mScreen.getServers().size(); i++) {
-                ServerData info = mScreen.getServers().get(i);
-                for (String server : shittyServers) {
-                    if (info != null && info.ip != null && info.ip.toLowerCase().contains(server.toLowerCase())) {
-                        mScreen.getServers().remove(info);
-                        mScreen.getServers().save();
-                        setScreen(screen);
-                        break;
-                    }
-                }
-            }
-        }
     }
 
     @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/Window;setIcon(Lnet/minecraft/server/packs/PackResources;Lcom/mojang/blaze3d/platform/IconSet;)V"))

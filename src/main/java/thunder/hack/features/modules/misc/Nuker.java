@@ -129,7 +129,7 @@ public class Nuker extends Module {
     public void onPlayerUpdate(PlayerUpdateEvent e) {
         if (blockData != null) {
             if ((mc.level.getBlockState(blockData.bp).getBlock() != targetBlockType && blocks.getValue().equals(BlockSelection.Select))
-                    || PlayerUtility.squaredDistanceFromEyes(blockData.bp.getCenter()) > range.getPow2Value()
+                    || PlayerUtility.squaredDistanceFromEyes(net.minecraft.world.phys.Vec3.atBottomCenterOf(blockData.bp)) > range.getPow2Value()
                     || mc.level.isEmptyBlock(blockData.bp))
                 blockData = null;
         }
@@ -158,7 +158,7 @@ public class Nuker extends Module {
 
                 BlockState state = mc.level.getBlockState(b);
 
-                if (PlayerUtility.squaredDistanceFromEyes(b.getCenter()) <= range.getPow2Value()) {
+                if (PlayerUtility.squaredDistanceFromEyes(net.minecraft.world.phys.Vec3.atBottomCenterOf(b)) <= range.getPow2Value()) {
                     if (isAllowed(state.getBlock())) {
                         try {
                             sendSequencedPacket(id -> new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, b, Direction.UP, id));
@@ -214,12 +214,12 @@ public class Nuker extends Module {
             BlockState state = mc.level.getBlockState(b);
             if (flatten.getValue() && b.getY() < mc.player.getY())
                 continue;
-            if (PlayerUtility.squaredDistanceFromEyes(b.getCenter()) <= range.getPow2Value()) {
+            if (PlayerUtility.squaredDistanceFromEyes(net.minecraft.world.phys.Vec3.atBottomCenterOf(b)) <= range.getPow2Value()) {
                 if (avoidLava.getValue() && checkLava(b))
                     continue;
                 if (isAllowed(state.getBlock())) {
                     if (ignoreWalls.getValue()) {
-                        BlockHitResult result = ExplosionUtility.rayCastBlock(new ClipContext(InteractionUtility.getEyesPos(mc.player), b.getCenter(), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player), b);
+                        BlockHitResult result = ExplosionUtility.rayCastBlock(new ClipContext(InteractionUtility.getEyesPos(mc.player), net.minecraft.world.phys.Vec3.atBottomCenterOf(b), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player), b);
                         if(result != null)
                             return new BlockData(b, result.getLocation(), result.getDirection());
                     } else {

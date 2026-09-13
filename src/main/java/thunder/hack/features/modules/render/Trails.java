@@ -3,7 +3,7 @@ package thunder.hack.features.modules.render;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
+import thunder.hack.utility.render.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Axis;
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -91,7 +91,7 @@ public class Trails extends Module {
                     RenderSystem.depthFunc(GL11.GL_LEQUAL);
 
                     RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
-                    BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
+                    BufferBuilder bufferBuilder = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
 
                     for (int i = 0; i < ((IEntity) entity).getTrails().size(); i++) {
                         Trail ctx = ((IEntity) entity).getTrails().get(i);
@@ -113,7 +113,7 @@ public class Trails extends Module {
                 if (entity != mc.player && onlySelf.getValue())
                     continue;
                 float alpha = color.getValue().getAlpha();
-                Camera camera = mc.gameRenderer.getMainCamera();
+                Camera camera = mc.gameRenderer.mainCamera();
                 stack.pushPose();
                 RenderSystem.setShaderTexture(0, TextureStorage.firefly);
                 RenderSystem.enableBlend();
@@ -121,7 +121,7 @@ public class Trails extends Module {
                 RenderSystem.enableDepthTest();
                 RenderSystem.depthMask(false);
                 RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX_COLOR);
-                BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+                BufferBuilder bufferBuilder = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
 
                 int size = ((IEntity) entity).getTrails().size();
                 if (!((IEntity) entity).getTrails().isEmpty()) {
@@ -176,7 +176,7 @@ public class Trails extends Module {
                     float step = (float) (mc.player.getBoundingBox().getYsize() / 5f);
 
                     RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
-                    BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
+                    BufferBuilder bufferBuilder = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
 
 
                     for (int i = 0; i < ((IEntity) entity).getTrails().size(); i++) {
@@ -188,7 +188,7 @@ public class Trails extends Module {
                     Render2DEngine.endBuilding(bufferBuilder);
 
                     RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
-                    bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
+                    bufferBuilder = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
                     for (int i = 0; i < ((IEntity) entity).getTrails().size(); i++) {
                         Trail ctx = ((IEntity) entity).getTrails().get(i);
                         Vec3 pos = ctx.interpolate(Render3DEngine.getTickDelta());
@@ -198,7 +198,7 @@ public class Trails extends Module {
                     Render2DEngine.endBuilding(bufferBuilder);
 
                     RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
-                    bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
+                    bufferBuilder = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
                     for (int i = 0; i < ((IEntity) entity).getTrails().size(); i++) {
                         Trail ctx = ((IEntity) entity).getTrails().get(i);
                         Vec3 pos = ctx.interpolate(Render3DEngine.getTickDelta());
@@ -208,7 +208,7 @@ public class Trails extends Module {
                     Render2DEngine.endBuilding(bufferBuilder);
 
                     RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
-                    bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
+                    bufferBuilder = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
                     for (int i = 0; i < ((IEntity) entity).getTrails().size(); i++) {
                         Trail ctx = ((IEntity) entity).getTrails().get(i);
                         Vec3 pos = ctx.interpolate(Render3DEngine.getTickDelta());
@@ -218,7 +218,7 @@ public class Trails extends Module {
                     Render2DEngine.endBuilding(bufferBuilder);
 
                     RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
-                    bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
+                    bufferBuilder = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
                     for (int i = 0; i < ((IEntity) entity).getTrails().size(); i++) {
                         Trail ctx = ((IEntity) entity).getTrails().get(i);
                         Vec3 pos = ctx.interpolate(Render3DEngine.getTickDelta());
@@ -252,7 +252,7 @@ public class Trails extends Module {
             }
 
             RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX_COLOR);
-            BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+            BufferBuilder bufferBuilder = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
 
             if (mc.player != null && mc.level != null)
                 particles.forEach(p -> p.render(stack, bufferBuilder));
@@ -440,7 +440,7 @@ public class Trails extends Module {
             final double posY = y - mc.getEntityRenderDispatcher().camera.position().y;
             final double posZ = z - mc.getEntityRenderDispatcher().camera.position().z;
 
-            Camera camera = mc.gameRenderer.getMainCamera();
+            Camera camera = mc.gameRenderer.mainCamera();
 
             PoseStack matrices = new PoseStack();
             matrices.mulPose(Axis.XP.rotationDegrees(camera.xRot()));

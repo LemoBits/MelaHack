@@ -14,6 +14,7 @@ import net.minecraft.network.protocol.game.ServerboundPlayerInputPacket;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.vehicle.boat.Boat;
 import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.item.Items;
@@ -217,7 +218,7 @@ public class BoatFly extends Module {
 
         if (spoofpackets.getValue()) {
             Vec3 vec3d = entity.position().add(0.0, randomizeYOffset(), 0.0);
-            Boat entityBoat = new Boat(EntityType.OAK_BOAT, mc.level, () -> Items.OAK_BOAT);
+            Boat entityBoat = new Boat(EntityTypes.OAK_BOAT, mc.level, () -> Items.OAK_BOAT);
             entityBoat.setPos(vec3d);
             entityBoat.setYRot(entity.getYRot());
             entityBoat.setXRot(entity.getXRot());

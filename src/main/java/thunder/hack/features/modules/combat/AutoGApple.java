@@ -32,7 +32,7 @@ public final class AutoGApple extends Module {
         if (GapInOffHand()) {
             if (mc.player.getHealth() + (absorption.getValue() ? mc.player.getAbsorptionAmount() : 0) <= health.getValue() && useDelay.passedMs(Delay.getValue())) {
                 isActive = true;
-                if (mc.screen != null && !mc.player.isUsingItem())
+                if (mc.gui.screen() != null && !mc.player.isUsingItem())
                     ((IMinecraftClient) mc).idoItemUse();
                 else
                     mc.options.keyUse.setDown(true);

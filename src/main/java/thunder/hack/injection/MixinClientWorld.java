@@ -53,7 +53,7 @@ public class MixinClientWorld {
         ThunderHack.EVENT_BUS.post(eer);
     }
 
-    @Inject(method = "getSkyColor", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "getSkyColor", at = @At("HEAD"), cancellable = true, require = 0)
     private void getSkyColorHook(Vec3 cameraPos, float tickDelta, CallbackInfoReturnable<Integer> cir) {
         if (ModuleManager.worldTweaks.isEnabled() && WorldTweaks.fogModify.getValue().isEnabled()) {
             ColorSetting c = WorldTweaks.fogColor.getValue();

@@ -76,13 +76,13 @@ public class XRay extends Module {
         all = toCheck.size();
         done = 0;
         mc.smartCull = false;
-        mc.levelRenderer.allChanged();
+        mc.levelRenderer.invalidateCompiledGeometry(mc.level, mc.options, mc.gameRenderer.mainCamera(), mc.getBlockColors());
         area = getArea();
     }
 
     @Override
     public void onDisable() {
-        mc.levelRenderer.allChanged();
+        mc.levelRenderer.invalidateCompiledGeometry(mc.level, mc.options, mc.gameRenderer.mainCamera(), mc.getBlockColors());
         mc.smartCull = true;
     }
 
@@ -97,7 +97,7 @@ public class XRay extends Module {
     @EventHandler
     public void onSettingChange(EventSetting e) {
         if (e.getSetting() == wallHack) {
-            mc.levelRenderer.allChanged();
+            mc.levelRenderer.invalidateCompiledGeometry(mc.level, mc.options, mc.gameRenderer.mainCamera(), mc.getBlockColors());
         }
     }
 

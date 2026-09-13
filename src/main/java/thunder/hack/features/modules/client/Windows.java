@@ -20,7 +20,7 @@ public class Windows extends Module {
 
     @Override
     public void onEnable() {
-        mc.setScreen(new WindowsScreen(
+        mc.gui.setScreen(new WindowsScreen(
                 MacroWindow.get(macroPos.getValue().getX() * mc.getWindow().getGuiScaledWidth(), macroPos.getValue().getY() * mc.getWindow().getGuiScaledHeight(), macroPos),
                 ConfigWindow.get(configPos.getValue().getX() * mc.getWindow().getGuiScaledWidth(), configPos.getValue().getY() * mc.getWindow().getGuiScaledHeight(), configPos),
                 FriendsWindow.get(friendPos.getValue().getX() * mc.getWindow().getGuiScaledWidth(), friendPos.getValue().getY() * mc.getWindow().getGuiScaledHeight(), friendPos),

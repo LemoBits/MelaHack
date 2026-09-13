@@ -72,11 +72,11 @@ public final class ResettableManagedShaderEffect extends ResettableManagedShader
             RenderSystem.resetTextureMatrix();
             Minecraft client = Minecraft.getInstance();
             Map<Identifier, com.mojang.blaze3d.pipeline.RenderTarget> externalTargets = Map.of(
-                PostChain.MAIN_TARGET_ID, client.getMainRenderTarget(),
-                BUF_IN, client.getMainRenderTarget(),
-                BUF_OUT, client.getMainRenderTarget()
+                PostChain.MAIN_TARGET_ID, client.gameRenderer.mainRenderTarget(),
+                BUF_IN, client.gameRenderer.mainRenderTarget(),
+                BUF_OUT, client.gameRenderer.mainRenderTarget()
             );
-            PostEffectRenderUtil.render(sg, client.getMainRenderTarget().width, client.getMainRenderTarget().height, externalTargets, GraphicsResourceAllocator.UNPOOLED);
+            PostEffectRenderUtil.render(sg, client.gameRenderer.mainRenderTarget().width, client.gameRenderer.mainRenderTarget().height, externalTargets, GraphicsResourceAllocator.UNPOOLED);
             RenderSystem.disableBlend();
             RenderSystem.blendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             RenderSystem.enableDepthTest();

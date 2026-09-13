@@ -27,12 +27,12 @@ public class InventoryCleaner extends Module {
     private boolean dirty;
 
     public void onRender3D(PoseStack stack) {
-        boolean inInv = mc.screen instanceof InventoryScreen;
+        boolean inInv = mc.gui.screen() instanceof InventoryScreen;
 
         if (mc.player.containerMenu instanceof ChestMenu chest && cleanChests.getValue())
             for (int i = 0; i < chest.getContainer().getContainerSize(); i++) {
                 Slot slot = chest.getSlot(i);
-                if (slot.hasItem() && dropThisShit(slot.getItem()) && !(mc.screen.getTitle().getString().contains("Аукцион") || mc.screen.getTitle().getString().contains("покупки")))
+                if (slot.hasItem() && dropThisShit(slot.getItem()) && !(mc.gui.screen().getTitle().getString().contains("Аукцион") || mc.gui.screen().getTitle().getString().contains("покупки")))
                     if (delayTimer.every(delay.getValue())) {
                         mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, i, 1, ContainerInput.THROW, mc.player);
                         dirty = true;

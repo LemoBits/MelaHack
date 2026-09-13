@@ -178,7 +178,7 @@ public final class PistonPush extends Module {
         }
 
         placeRunnable = () -> {
-            final float angle = InteractionUtility.calculateAngle(target.getEyePosition(), pistonPos.getCenter())[0];
+            final float angle = InteractionUtility.calculateAngle(target.getEyePosition(), net.minecraft.world.phys.Vec3.atBottomCenterOf(pistonPos))[0];
             sendPacket(new ServerboundMovePlayerPacket.Rot(angle, 0, mc.player.onGround(), mc.player.horizontalCollision));
             float prevYaw = mc.player.getYRot();
             mc.player.setYRot(angle);

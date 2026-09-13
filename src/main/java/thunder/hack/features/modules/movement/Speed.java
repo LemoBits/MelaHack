@@ -145,7 +145,7 @@ public class Speed extends Module {
             }
 
             sendPacket(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, pos, Direction.UP));
-            sendSequencedPacket(id -> new ServerboundUseItemOnPacket(InteractionHand.MAIN_HAND, new BlockHitResult(pos.below().getCenter().add(0, 0.5, 0), Direction.UP, pos.below(), false), id));
+            sendSequencedPacket(id -> new ServerboundUseItemOnPacket(InteractionHand.MAIN_HAND, new BlockHitResult(net.minecraft.world.phys.Vec3.atBottomCenterOf(pos.below()).add(0, 0.5, 0), Direction.UP, pos.below(), false), id));
             mc.level.setBlockAndUpdate(pos, Blocks.ICE.defaultBlockState());
         }
     }

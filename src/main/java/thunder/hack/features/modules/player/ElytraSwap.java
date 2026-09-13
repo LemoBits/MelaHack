@@ -53,7 +53,7 @@ public class ElytraSwap extends Module {
 
     @Override
     public void onUpdate() {
-        if (mode.getValue() == Mode.Bind && mc.screen == null) {
+        if (mode.getValue() == Mode.Bind && mc.gui.screen() == null) {
             if (switchButton.getValue().getKey() != -1 && isKeyPressed(switchButton.getValue().getKey()) && switchTimer.every(500))
                 swapChest(false);
 

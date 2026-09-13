@@ -3,7 +3,7 @@ package thunder.hack.utility.render;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.MeshData;
-import com.mojang.blaze3d.vertex.Tesselator;
+import thunder.hack.utility.render.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -123,7 +123,7 @@ public class Render2DEngine {
         Matrix4f matrix = GuiMatrix.positionMatrix(matrices);
         setupRender();
         RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
-        BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        BufferBuilder buffer = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION_COLOR);
         buffer.addVertex(matrix, x1, y1, 0.0F).setColor(startColor.getRGB());
         buffer.addVertex(matrix, x1, y2, 0.0F).setColor(startColor.getRGB());
         buffer.addVertex(matrix, x2, y2, 0.0F).setColor(endColor.getRGB());
@@ -136,7 +136,7 @@ public class Render2DEngine {
         Matrix4f matrix = GuiMatrix.positionMatrix(matrices);
         setupRender();
         RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
-        BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        BufferBuilder buffer = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION_COLOR);
         buffer.addVertex(matrix, left, top, 0.0F).setColor(startColor.getRGB());
         buffer.addVertex(matrix, left, bottom, 0.0F).setColor(endColor.getRGB());
         buffer.addVertex(matrix, right, bottom, 0.0F).setColor(endColor.getRGB());
@@ -149,7 +149,7 @@ public class Render2DEngine {
         Matrix4f matrix = GuiMatrix.positionMatrix(matrices);
         setupRender();
         RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
-        BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        BufferBuilder buffer = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION_COLOR);
         buffer.addVertex(matrix, x, y + height, 0.0F).setColor(c.getRGB());
         buffer.addVertex(matrix, x + width, y + height, 0.0F).setColor(c.getRGB());
         buffer.addVertex(matrix, x + width, y, 0.0F).setColor(c.getRGB());
@@ -162,14 +162,14 @@ public class Render2DEngine {
         Matrix4f matrix = GuiMatrix.positionMatrix(matrices);
         setupRender();
         RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
-        BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        BufferBuilder buffer = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION_COLOR);
         buffer.addVertex(matrix, x, y + height, 0.0F).setColor(c.getRGB());
         buffer.addVertex(matrix, x + width, y + height, 0.0F).setColor(c.getRGB());
         buffer.addVertex(matrix, x + width, y, 0.0F).setColor(c.getRGB());
         buffer.addVertex(matrix, x, y, 0.0F).setColor(c.getRGB());
         BufferRenderer.drawWithGlobalProgram(buffer.buildOrThrow());
 
-        buffer = Tesselator.getInstance().begin(VertexFormat.Mode.DEBUG_LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
+        buffer = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.DEBUG_LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
         buffer.addVertex(matrix, x, y + height, 0.0F).setColor(c2.getRGB());
         buffer.addVertex(matrix, x + width, y + height, 0.0F).setColor(c2.getRGB());
         buffer.addVertex(matrix, x + width, y, 0.0F).setColor(c2.getRGB());
@@ -183,7 +183,7 @@ public class Render2DEngine {
         Matrix4f matrix = GuiMatrix.positionMatrix(matrices);
         setupRender();
         RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
-        BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        BufferBuilder buffer = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION_COLOR);
         buffer.addVertex(matrix, x, y1, 0.0F).setColor(c1.getRGB());
         buffer.addVertex(matrix, x1, y1, 0.0F).setColor(c1.getRGB());
         buffer.addVertex(matrix, x1, y, 0.0F).setColor(c1.getRGB());
@@ -324,7 +324,7 @@ public class Render2DEngine {
         double z = 0;
         Matrix4f matrix = GuiMatrix.positionMatrix(matrices);
         RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX);
-        BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+        BufferBuilder buffer = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION_TEX);
         buffer.addVertex(matrix, (float) x0, (float) y1, (float) z).setUv((u) / (float) textureWidth, (v + (float) regionHeight) / (float) textureHeight);
         buffer.addVertex(matrix, (float) x1, (float) y1, (float) z).setUv((u + (float) regionWidth) / (float) textureWidth, (v + (float) regionHeight) / (float) textureHeight);
         buffer.addVertex(matrix, (float) x1, (float) y0, (float) z).setUv((u + (float) regionWidth) / (float) textureWidth, (v) / (float) textureHeight);
@@ -334,7 +334,7 @@ public class Render2DEngine {
 
     public static void renderGradientTexture(Object matrices, double x0, double y0, double width, double height, float u, float v, double regionWidth, double regionHeight, double textureWidth, double textureHeight, Color c1, Color c2, Color c3, Color c4) {
         RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX_COLOR);
-        BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        BufferBuilder buffer = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
         renderGradientTextureInternal(buffer, matrices, x0, y0, width, height, u, v, regionWidth, regionHeight, textureWidth, textureHeight, c1, c2, c3, c4);
         BufferRenderer.drawWithGlobalProgram(buffer.buildOrThrow());
     }
@@ -360,7 +360,7 @@ public class Render2DEngine {
         Render2DEngine.drawRound(matrices, x, y, width, height, Radius, color1);
         setupRender();
         RenderSystem.blendFunc(GL40C.GL_DST_ALPHA, GL40C.GL_ONE_MINUS_DST_ALPHA);
-        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLE_FAN, DefaultVertexFormat.POSITION_COLOR);
+        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.TRIANGLE_FAN, DefaultVertexFormat.POSITION_COLOR);
         bufferBuilder.addVertex(matrix, x, y + height, 0.0F).setColor(color1.getRGB());
         bufferBuilder.addVertex(matrix, x + width, y + height, 0.0F).setColor(color2.getRGB());
         bufferBuilder.addVertex(matrix, x + width, y, 0.0F).setColor(color3.getRGB());
@@ -388,7 +388,7 @@ public class Render2DEngine {
     }
 
     public static void renderRoundedQuadInternal(Matrix4f matrix, float cr, float cg, float cb, float ca, double fromX, double fromY, double toX, double toY, double radius, double samples) {
-        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLE_FAN, DefaultVertexFormat.POSITION_COLOR);
+        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.TRIANGLE_FAN, DefaultVertexFormat.POSITION_COLOR);
         double[][] map = new double[][]{new double[]{toX - radius, toY - radius, radius}, new double[]{toX - radius, fromY + radius, radius}, new double[]{fromX + radius, fromY + radius, radius}, new double[]{fromX + radius, toY - radius, radius}};
         for (int i = 0; i < 4; i++) {
             double[] current = map[i];
@@ -408,7 +408,7 @@ public class Render2DEngine {
     }
 
     public static void renderRoundedQuadInternal2(Matrix4f matrix, float cr, float cg, float cb, float ca, float cr1, float cg1, float cb1, float ca1, float cr2, float cg2, float cb2, float ca2, float cr3, float cg3, float cb3, float ca3, double fromX, double fromY, double toX, double toY, double radC1) {
-        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLE_FAN, DefaultVertexFormat.POSITION_COLOR);
+        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.TRIANGLE_FAN, DefaultVertexFormat.POSITION_COLOR);
 
         double[][] map = new double[][]{new double[]{toX - radC1, toY - radC1, radC1}, new double[]{toX - radC1, fromY + radC1, radC1}, new double[]{fromX + radC1, fromY + radC1, radC1}, new double[]{fromX + radC1, toY - radC1, radC1}};
 
@@ -438,7 +438,7 @@ public class Render2DEngine {
         Matrix4f matrix = GuiMatrix.positionMatrix(matrices);
         setupRender();
         RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
-        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION_COLOR);
         bufferBuilder.addVertex(matrix, right, top, 0.0F).setColor(rightTopColor.getRGB());
         bufferBuilder.addVertex(matrix, left, top, 0.0F).setColor(leftTopColor.getRGB());
         bufferBuilder.addVertex(matrix, left, bottom, 0.0F).setColor(leftBottomColor.getRGB());
@@ -468,7 +468,7 @@ public class Render2DEngine {
         RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE);
         Matrix4f matrix = GuiMatrix.positionMatrix(matrices);
         RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX);
-        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION_TEX);
         bufferBuilder.addVertex(matrix, x - (size / 2f), y + size, 0).setUv(0f, 1f);
         bufferBuilder.addVertex(matrix, x + size / 2f, y + size, 0).setUv(1f, 1f);
         bufferBuilder.addVertex(matrix, x + size / 2f, y, 0).setUv(1f, 0);
@@ -489,7 +489,7 @@ public class Render2DEngine {
         Matrix4f matrix = GuiMatrix.positionMatrix(matrices);
 
         RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
-        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION_COLOR);
         bufferBuilder.addVertex(matrix, x, y, 0.0F).setColor(color);
         bufferBuilder.addVertex(matrix, (x - size * tracerWidth), (y + size), 0.0F).setColor(color);
         bufferBuilder.addVertex(matrix, x, (y + size - downHeight), 0.0F).setColor(color);
@@ -743,7 +743,7 @@ public class Render2DEngine {
     public static BufferBuilder preShaderDraw(Object matrices, float x, float y, float width, float height) {
         setupRender();
         Matrix4f matrix = GuiMatrix.positionMatrix(matrices);
-        BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
+        BufferBuilder buffer = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION);
         setRectanglePoints(buffer, matrix, x, y, x + width, y + height);
         return buffer;
     }
@@ -759,7 +759,7 @@ public class Render2DEngine {
         Matrix4f matrix = GuiMatrix.positionMatrix(matrices);
         setupRender();
         RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
-        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLE_FAN, DefaultVertexFormat.POSITION_COLOR);
+        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.TRIANGLE_FAN, DefaultVertexFormat.POSITION_COLOR);
         for (int i = 0; i <= 20; i++) {
             final float x2 = (float) (Math.sin(((i * 56.548656f) / 180f)) * r);
             final float y2 = (float) (Math.cos(((i * 56.548656f) / 180f)) * r);
@@ -808,7 +808,7 @@ public class Render2DEngine {
 
     public static void drawLine(float x, float y, float x1, float y1, int color) {
         RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
-        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.DEBUG_LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
+        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.DEBUG_LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
         bufferBuilder.addVertex(x, y, 0f).setColor(color);
         bufferBuilder.addVertex(x1, y1, 0f).setColor(color);
         BufferRenderer.drawWithGlobalProgram(bufferBuilder.buildOrThrow());

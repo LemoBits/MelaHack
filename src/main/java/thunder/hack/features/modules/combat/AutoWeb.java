@@ -163,9 +163,9 @@ public final class AutoWeb extends Module {
             }
 
             for (BlockPos bp : positions) {
-                BlockHitResult wallCheck = mc.level.clip(new ClipContext(InteractionUtility.getEyesPos(mc.player), bp.getCenter().relative(Direction.UP, 0.5f), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player));
+                BlockHitResult wallCheck = mc.level.clip(new ClipContext(InteractionUtility.getEyesPos(mc.player), net.minecraft.world.phys.Vec3.atBottomCenterOf(bp).relative(Direction.UP, 0.5f), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player));
                 if (wallCheck != null && wallCheck.getType() == HitResult.Type.BLOCK && wallCheck.getBlockPos() != bp)
-                    if (squaredDistanceFromEyes(bp.getCenter()) > placeWallRange.getPow2Value()) continue;
+                    if (squaredDistanceFromEyes(net.minecraft.world.phys.Vec3.atBottomCenterOf(bp)) > placeWallRange.getPow2Value()) continue;
                 if (InteractionUtility.canPlaceBlock(bp, interact.getValue(), true) && mc.level.getBlockState(bp).canBeReplaced()) {
                     return bp;
                 }

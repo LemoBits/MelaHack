@@ -33,7 +33,7 @@ public class ClickTP extends Module {
         if (mc.options.keyPickItem.isDown() && delay < 0) {
             HitResult ray = mc.player.pick(256, Render3DEngine.getTickDelta(), false);
             if (ray instanceof BlockHitResult bhr && !mc.level.isEmptyBlock(bhr.getBlockPos())) {
-                Vec3 pos = bhr.getBlockPos().getCenter();
+                Vec3 pos = net.minecraft.world.phys.Vec3.atBottomCenterOf(bhr.getBlockPos());
                 for (int i = 0; i < spoofs.getValue(); ++i)
                     sendPacket(new ServerboundMovePlayerPacket.Pos(pos.x(), pos.y() + blockOffset.getValue(), pos.z(), ground.getValue(), mc.player.horizontalCollision));
                 mc.player.setPos(pos.x(), pos.y() + blockOffset.getValue(), pos.z());

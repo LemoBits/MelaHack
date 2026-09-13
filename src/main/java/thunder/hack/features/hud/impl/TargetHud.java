@@ -160,7 +160,7 @@ public class TargetHud extends HudElement {
                 AutoAnchor.target = null;
                 target = null;
             }
-        } else if (mc.screen instanceof ChatScreen || mc.screen instanceof HudEditorGui) {
+        } else if (mc.gui.screen() instanceof ChatScreen || mc.gui.screen() instanceof HudEditorGui) {
             target = mc.player;
             direction = true;
         } else {
@@ -547,7 +547,7 @@ public class TargetHud extends HudElement {
                 scoreBoard = (ent.level().getScoreboard()).getDisplayObjective(DisplaySlot.BELOW_NAME);
                 if (scoreBoard != null) {
                     ReadOnlyScoreInfo readableScoreboardScore = ent.level().getScoreboard().getPlayerScoreInfo(ent, scoreBoard);
-                    MutableComponent text2 = ReadOnlyScoreInfo.safeFormatValue(readableScoreboardScore, scoreBoard.numberFormatOrDefault(StyledFormat.NO_STYLE));
+                    MutableComponent text2 = readableScoreboardScore.formatValue( scoreBoard.numberFormatOrDefault(StyledFormat.NO_STYLE));
                     resolvedHp = text2.getString();
                 }
             }

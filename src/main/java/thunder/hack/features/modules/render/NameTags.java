@@ -101,7 +101,7 @@ public class NameTags extends Module {
 
 
     public void onRender2D(GuiGraphicsExtractor context) {
-        if (mc.options.hideGui) return;
+        if (false) return;
         for (Player ent : mc.level.players()) {
             if (ent == mc.player && (mc.options.getCameraType().isFirstPerson() || !self.getValue())) continue;
             if (getEntityPing(ent) <= 0 && ignoreBots.getValue()) continue;
@@ -452,7 +452,7 @@ public class NameTags extends Module {
                 scoreBoard = (ent.level().getScoreboard()).getDisplayObjective(DisplaySlot.BELOW_NAME);
                 if (scoreBoard != null) {
                     ReadOnlyScoreInfo readableScoreboardScore = ent.level().getScoreboard().getPlayerScoreInfo(ent, scoreBoard);
-                    MutableComponent text2 = ReadOnlyScoreInfo.safeFormatValue(readableScoreboardScore, scoreBoard.numberFormatOrDefault(StyledFormat.NO_STYLE));
+                    MutableComponent text2 = readableScoreboardScore.formatValue( scoreBoard.numberFormatOrDefault(StyledFormat.NO_STYLE));
                     resolvedHp = text2.getString();
                 }
             }
@@ -575,7 +575,7 @@ public class NameTags extends Module {
 
             context.pose().pushMatrix();
             context.pose().translate((float) (x), (float) (y));
-            context.blitSprite(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, net.minecraft.client.gui.Gui.getMobEffectSprite(statusEffectInstance.getEffect()), 0, 0, 18, 18);
+            context.blitSprite(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, statusEffectInstance.getEffect().unwrapKey().orElseThrow().identifier(), 0, 0, 18, 18);
             FontRenderers.sf_bold_mini.drawCenteredString(context.pose(), PotionHud.getDuration(statusEffectInstance), 9, -8, -1);
             FontRenderers.categories.drawCenteredString(context.pose(), power, 9, -16, -1);
             context.pose().popMatrix();

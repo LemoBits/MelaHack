@@ -37,7 +37,7 @@ public class HudElement extends Module {
         y = mc.getWindow().getGuiScaledHeight() * pos.getValue().getY();
         x = mc.getWindow().getGuiScaledWidth() * pos.getValue().getX();
 
-        if (mc.screen instanceof ChatScreen || mc.screen instanceof HudEditorGui) {
+        if (mc.gui.screen() instanceof ChatScreen || mc.gui.screen() instanceof HudEditorGui) {
             if (mouseButton && mouseState) {
                 pos.getValue().setX(Math.clamp(Render2DEngine.scrollAnimate((normaliseX() - dragX) / mc.getWindow().getGuiScaledWidth(), pos.getValue().getX(), .1f),
                         0, 1f));
@@ -84,7 +84,7 @@ public class HudElement extends Module {
             mouseState = false;
         }
 
-        if (isHovering() && (mc.screen instanceof ChatScreen || mc.screen instanceof HudEditorGui)) {
+        if (isHovering() && (mc.gui.screen() instanceof ChatScreen || mc.gui.screen() instanceof HudEditorGui)) {
             if (GLFW.glfwGetPlatform() != GLFW.GLFW_PLATFORM_WAYLAND) {
                 if (mouseState) {
                     if (CROSSHAIR_CURSOR == 0)
@@ -104,7 +104,7 @@ public class HudElement extends Module {
     @EventHandler
     @SuppressWarnings("unused")
     public void onMouse(@NotNull EventMouse event) {
-        if (event.getAction() == 0 && event.getButton() == 1 && isHovering() && mc.screen instanceof HudEditorGui)
+        if (event.getAction() == 0 && event.getButton() == 1 && isHovering() && mc.gui.screen() instanceof HudEditorGui)
             HudEditorGui.getHudGui().hudClicked(this);
 
         if (event.getAction() == 0) {

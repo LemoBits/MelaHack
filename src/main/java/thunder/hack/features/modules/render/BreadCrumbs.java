@@ -3,7 +3,7 @@ package thunder.hack.features.modules.render;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
+import thunder.hack.utility.render.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 
 import thunder.hack.utility.render.compat.RenderSystem;
@@ -47,7 +47,7 @@ public class BreadCrumbs extends Module {
         RenderSystem.disableCull();
         RenderSystem.lineWidth(1f);
         RenderSystem.setShader(ShaderProgramKeys.RENDERTYPE_LINES);
-        BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR);
+        BufferBuilder buffer = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.LINES, DefaultVertexFormat.POSITION_COLOR);
 
         for (int i = 0; i < positions.size(); i++) {
             Vec3 vec1 = null;

@@ -18,7 +18,7 @@ public class MSAAFramebuffer extends RenderTarget {
     private int rboDepth;
 
     public MSAAFramebuffer(int samples) {
-        super("melahack_msaa", true);
+        super("melahack_msaa", true, com.mojang.blaze3d.GpuFormat.RGBA8_UNORM);
         this.samples = samples;
     }
 
@@ -27,7 +27,7 @@ public class MSAAFramebuffer extends RenderTarget {
     }
 
     public static void use(boolean fancy, Runnable drawAction) {
-        use(Math.min(fancy ? 16 : 4, MAX_SAMPLES), Minecraft.getInstance().getMainRenderTarget(), drawAction);
+        use(Math.min(fancy ? 16 : 4, MAX_SAMPLES), Minecraft.getInstance().gameRenderer.mainRenderTarget(), drawAction);
     }
 
     public static void use(int samples, @NotNull RenderTarget mainBuffer, @NotNull Runnable drawAction) {
@@ -47,7 +47,7 @@ public class MSAAFramebuffer extends RenderTarget {
         this.width = width;
         this.height = height;
 
-        RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
+        RenderTarget main = Minecraft.getInstance().gameRenderer.mainRenderTarget();
         colorTexture = main.getColorTexture();
         colorTextureView = main.getColorTextureView();
         depthTexture = main.getDepthTexture();

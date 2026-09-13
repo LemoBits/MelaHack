@@ -3,7 +3,7 @@ package thunder.hack.gui.windows.impl;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.Tesselator;
+import thunder.hack.utility.render.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 
 import com.google.common.collect.Lists;
@@ -75,7 +75,7 @@ public class ItemSelectWindow extends WindowBase {
 
         int tabColor1 = allTab ? new Color(0xD5D5D5).getRGB() : Color.GRAY.getRGB();
         int tabColor2 = allTab ? Color.GRAY.getRGB() : new Color(0xBDBDBD).getRGB();
-        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.DEBUG_LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
+        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.DEBUG_LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
         bufferBuilder.addVertex(getX() + 1.5f, getY() + 29, 0f).setColor(Color.DARK_GRAY.getRGB());
         bufferBuilder.addVertex(getX() + 8, getY() + 29, 0f).setColor(tabColor1);
         bufferBuilder.addVertex(getX() + 8, getY() + 19, 0f).setColor(tabColor1);
@@ -148,7 +148,7 @@ public class ItemSelectWindow extends WindowBase {
         }
 
         if (Render2DEngine.isHovered(mouseX, mouseY, getX() + getWidth() - 15, getY() + 3, 10, 10))
-            mc.setScreen(ClickGUI.getClickGui());
+            mc.gui.setScreen(ClickGUI.getClickGui());
 
         ArrayList<ItemPlate> copy = Lists.newArrayList(allTab ? allItems : itemPlates);
         for (ItemPlate itemPlate : copy) {

@@ -57,7 +57,7 @@ public final class FramebufferWrapper implements ManagedFramebuffer {
     @Override
     public void draw(int width, int height, boolean disableBlend) {
         if (this.wrapped != null) {
-            this.wrapped.blitToScreen();
+            this.wrapped.blitAndBlendToTexture(Minecraft.getInstance().gameRenderer.mainRenderTarget().getColorTextureView(), Minecraft.getInstance().gameRenderer.mainRenderTarget().getDepthTextureView());
         }
     }
 

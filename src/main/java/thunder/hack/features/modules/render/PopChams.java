@@ -3,7 +3,7 @@ package thunder.hack.features.modules.render;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
+import thunder.hack.utility.render.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Axis;
 import com.mojang.authlib.GameProfile;
@@ -124,15 +124,15 @@ public final class PopChams extends Module {
         if (mode.is(Mode.Textured)) {
             RenderSystem.setShaderTexture(0, texture);
             RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX);
-            buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+            buffer = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION_TEX);
         } else {
             RenderSystem.setShader(ShaderProgramKeys.POSITION);
-            buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
+            buffer = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION);
         }
 
         RenderSystem.setShaderColor(color.getValue().getGlRed(), color.getValue().getGlGreen(), color.getValue().getGlBlue(), alpha / 255f);
 
-        modelBase.renderToBuffer(matrices, buffer, 10, 0);
+        modelBase.renderToBuffer(matrices, buffer, 10, 0, -1);
         Render2DEngine.endBuilding(buffer);
         RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
         matrices.popPose();
@@ -152,7 +152,7 @@ public final class PopChams extends Module {
 
         public Person(Player player, Identifier texture) {
             this.player = player;
-            modelPlayer = new PlayerModel(new EntityRendererProvider.Context(mc.getEntityRenderDispatcher(), ((thunder.hack.injection.accesors.IMinecraftClient) mc).getBlockModelResolver(), mc.getItemModelResolver(), mc.getMapRenderer(), mc.getResourceManager(), mc.getEntityModels(), ((IEntityRenderDispatcher) mc.getEntityRenderDispatcher()).getEquipmentModelLoader(), mc.getAtlasManager(), mc.font, mc.playerSkinRenderCache()).bakeLayer(ModelLayers.PLAYER), false);
+            modelPlayer = new PlayerModel(new EntityRendererProvider.Context(mc.getEntityRenderDispatcher(), new net.minecraft.client.renderer.block.BlockModelResolver(mc.getModelManager()), mc.getItemModelResolver(), mc.getMapRenderer(), mc.getResourceManager(), mc.getEntityModels(), ((IEntityRenderDispatcher) mc.getEntityRenderDispatcher()).getEquipmentModelLoader(), mc.getAtlasManager(), mc.font, mc.playerSkinRenderCache()).bakeLayer(ModelLayers.PLAYER), false);
             modelPlayer.getHead().offsetScale(new Vector3f(-0.3f, -0.3f, -0.3f));
             alpha = color.getValue().getAlpha();
             this.texture = texture;

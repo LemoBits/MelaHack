@@ -40,7 +40,7 @@ public class PeekScreen extends ShulkerBoxScreen {
                 }
 
 
-                minecraft.setScreen(new PeekScreen(new ShulkerBoxMenu(0, minecraft.player.getInventory(), new SimpleContainer(ITEMS)), minecraft.player.getInventory(), hoveredSlot.getItem().getHoverName(), ((BlockItem) hoveredSlot.getItem().getItem()).getBlock()));
+                minecraft.gui.setScreen(new PeekScreen(new ShulkerBoxMenu(0, minecraft.player.getInventory(), new SimpleContainer(ITEMS)), minecraft.player.getInventory(), hoveredSlot.getItem().getHoverName(), ((BlockItem) hoveredSlot.getItem().getItem()).getBlock()));
                 return true;
             }
         }

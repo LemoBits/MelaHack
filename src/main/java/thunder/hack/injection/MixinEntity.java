@@ -94,7 +94,7 @@ public abstract class MixinEntity implements IEntity, IEntityLiving {
         return prevServerZ;
     }
 
-    @ModifyArgs(method = "pushAwayFrom", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;addVelocity(DDD)V"))
+    @ModifyArgs(method = "push(Lnet/minecraft/world/entity/Entity;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;push(DDD)V"))
     public void pushAwayFromHook(Args args) {
 
         //Condition '...' is always 'false' is a lie!!! do not delete

@@ -65,7 +65,7 @@ public final class Breaker extends Module {
             return;
 
         if (blockPos != null) {
-            if (mc.level.isEmptyBlock(blockPos) || mc.player.distanceToSqr(blockPos.getCenter()) > (ModuleManager.speedMine.isEnabled() ? ModuleManager.speedMine.range.getPow2Value() : ModuleManager.reach.isEnabled() ? ModuleManager.reach.blocksRange.getPow2Value() : 9)) {
+            if (mc.level.isEmptyBlock(blockPos) || mc.player.distanceToSqr(net.minecraft.world.phys.Vec3.atBottomCenterOf(blockPos)) > (ModuleManager.speedMine.isEnabled() ? ModuleManager.speedMine.range.getPow2Value() : ModuleManager.reach.isEnabled() ? ModuleManager.reach.blocksRange.getPow2Value() : 9)) {
                 blockPos = null;
                 return;
             }
@@ -97,8 +97,8 @@ public final class Breaker extends Module {
                         continue;
                     BlockState currentState = mc.level.getBlockState(bp);
                     mc.level.setBlockAndUpdate(bp, Blocks.AIR.defaultBlockState());
-                    float damage = ExplosionUtility.getExplosionDamage(bp.getCenter().add(0, -0.5, 0), target, false);
-                    float selfDamage = ExplosionUtility.getExplosionDamage(bp.getCenter().add(0, -0.5, 0), mc.player, false);
+                    float damage = ExplosionUtility.getExplosionDamage(net.minecraft.world.phys.Vec3.atBottomCenterOf(bp).add(0, -0.5, 0), target, false);
+                    float selfDamage = ExplosionUtility.getExplosionDamage(net.minecraft.world.phys.Vec3.atBottomCenterOf(bp).add(0, -0.5, 0), mc.player, false);
                     mc.level.setBlockAndUpdate(bp, currentState);
                     if ((Float.isNaN(ModuleManager.autoCrystal.renderDamage) || ModuleManager.autoCrystal.renderDamage < damage) && selfDamage < maxSelfDamage.getValue() && damage >= minDamage.getValue())
                         list.add(new BreakData(bp, damage));
@@ -138,8 +138,8 @@ public final class Breaker extends Module {
 
                         BlockState currentState = mc.level.getBlockState(bp);
                         mc.level.setBlockAndUpdate(bp, Blocks.AIR.defaultBlockState());
-                        float damage = ExplosionUtility.getExplosionDamage(bp.getCenter().add(0, -0.5, 0), target, false);
-                        float selfDamage = ExplosionUtility.getExplosionDamage(bp.getCenter().add(0, -0.5, 0), mc.player, false);
+                        float damage = ExplosionUtility.getExplosionDamage(net.minecraft.world.phys.Vec3.atBottomCenterOf(bp).add(0, -0.5, 0), target, false);
+                        float selfDamage = ExplosionUtility.getExplosionDamage(net.minecraft.world.phys.Vec3.atBottomCenterOf(bp).add(0, -0.5, 0), mc.player, false);
                         mc.level.setBlockAndUpdate(bp, currentState);
 
                         if (ModuleManager.autoCrystal.renderDamage < damage && selfDamage <= maxSelfDamage.getValue() && damage >= minDamage.getValue() && bp != blockPos)

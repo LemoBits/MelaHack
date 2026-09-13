@@ -172,8 +172,8 @@ public class ThunderGui extends LegacyInputScreen {
         }
         if (open_animation.getAnimationd() <= 0.01 && !open_direction) {
             open_animation = new EaseOutBack();
-            mc.screen = null;
-            mc.setScreen(null);
+            mc.gui.setScreen(null);
+            mc.gui.setScreen(null);
         }
         context.pose().popMatrix();
     }

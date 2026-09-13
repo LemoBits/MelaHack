@@ -288,9 +288,9 @@ public class ModuleButton extends AbstractButton {
                                 else
                                     s.setValue(s.getDefaultValue());
                             }
-                            mc.setScreen(null);
-                        }, () -> mc.setScreen(null));
-                mc.setScreen(dialogScreen);
+                            mc.gui.setScreen(null);
+                        }, () -> mc.gui.setScreen(null));
+                mc.gui.setScreen(dialogScreen);
             }
 
             if (button == 0) {

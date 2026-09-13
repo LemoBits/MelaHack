@@ -171,7 +171,7 @@ public class Phase extends Module {
                 if (mc.options.keyShift.isDown())
                     return;
 
-                float[] angle = InteractionUtility.calculateAngle(block.getCenter());
+                float[] angle = InteractionUtility.calculateAngle(net.minecraft.world.phys.Vec3.atBottomCenterOf(block));
                 int epSlot = findEPSlot();
 
                 if (epSlot != -1) {

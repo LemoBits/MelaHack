@@ -172,7 +172,7 @@ public class TNTAura extends Module {
             }
         }
 
-        return blocks.stream().sorted(Comparator.comparing(b -> mc.player.distanceToSqr(b.getCenter()) * -1)).toList();
+        return blocks.stream().sorted(Comparator.comparing(b -> mc.player.distanceToSqr(net.minecraft.world.phys.Vec3.atBottomCenterOf(b)) * -1)).toList();
     }
 
     private int getObbySlot() {
@@ -223,10 +223,10 @@ public class TNTAura extends Module {
     private @Nullable BlockHitResult getIgniteResult(BlockPos bp) {
         if (mc.player == null || mc.level == null) return null;
 
-        if (PlayerUtility.squaredDistanceFromEyes(bp.getCenter()) > range.getPow2Value())
+        if (PlayerUtility.squaredDistanceFromEyes(net.minecraft.world.phys.Vec3.atBottomCenterOf(bp)) > range.getPow2Value())
             return null;
 
-        return new BlockHitResult(bp.getCenter().add(0, -0.5, 0), Direction.DOWN, bp, false);
+        return new BlockHitResult(net.minecraft.world.phys.Vec3.atBottomCenterOf(bp).add(0, -0.5, 0), Direction.DOWN, bp, false);
     }
 
     private List<BlockPos> getAffectedBlocks(Player pl) {

@@ -24,7 +24,7 @@ public class HotbarReplenish extends Module {
 
     @Override
     public void onUpdate() {
-        if (mc.screen != null) return;
+        if (mc.gui.screen() != null) return;
         if (!timer.passedMs(delay.getValue() * 1000)) return;
         for (int i = 0; i < 9; ++i) {
             if (!need(i)) continue;

@@ -31,20 +31,20 @@ import net.minecraft.world.item.MapItem;
 @Mixin(ItemInHandRenderer.class)
 public abstract class MixinHeldItemRenderer {
 
-    @Inject(method = "renderArmWithItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/ItemInHandRenderer;renderItem(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemDisplayContext;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;I)V"))
+    @Inject(method = "submitArmWithItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/ItemInHandRenderer;renderItem(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemDisplayContext;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;I)V"))
     private void onRenderItem(AbstractClientPlayer player, float tickDelta, float pitch, InteractionHand hand, float swingProgress, ItemStack item, float equipProgress, PoseStack matrices, SubmitNodeCollector vertexConsumers, int light, CallbackInfo ci) {
         if(Module.fullNullCheck()) return;
         EventHeldItemRenderer event = new EventHeldItemRenderer(hand, item, equipProgress, matrices);
         ThunderHack.EVENT_BUS.post(event);
     }
 
-    @Inject(method = "renderArmWithItem", at = @At(value = "RETURN"))
+    @Inject(method = "submitArmWithItem", at = @At(value = "RETURN"))
     private void onRenderItemPost(AbstractClientPlayer player, float tickDelta, float pitch, InteractionHand hand, float swingProgress, ItemStack item, float equipProgress, PoseStack matrices, SubmitNodeCollector vertexConsumers, int light, CallbackInfo ci) {
         if (ModuleManager.chams.isEnabled() && ModuleManager.chams.handItems.getValue())
             RenderSystem.setShaderColor(1f,1f,1f,1f);
     }
 
-    @Inject(method = "renderArmWithItem", at = @At(value = "HEAD"), cancellable = true)
+    @Inject(method = "submitArmWithItem", at = @At(value = "HEAD"), cancellable = true)
     private void onRenderItemHook(AbstractClientPlayer player, float tickDelta, float pitch, InteractionHand hand, float swingProgress, ItemStack item, float equipProgress, PoseStack matrices, SubmitNodeCollector vertexConsumers, int light, CallbackInfo ci) {
         if (Managers.MODULE != null && ModuleManager.animations.shouldAnimate() && !(item.isEmpty()) && !(item.getItem() instanceof MapItem)) {
             ci.cancel();
@@ -77,7 +77,7 @@ public abstract class MixinHeldItemRenderer {
             ci.cancel();
         }
     }
-    @ModifyArgs(method = "renderHandsWithItems", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/ItemInHandRenderer;renderArmWithItem(Lnet/minecraft/client/player/AbstractClientPlayer;FFLnet/minecraft/world/InteractionHand;FLnet/minecraft/world/item/ItemStack;FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;I)V"))
+    @ModifyArgs(method = "submitHandsWithItems", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/ItemInHandRenderer;submitArmWithItem(Lnet/minecraft/client/player/AbstractClientPlayer;FFLnet/minecraft/world/InteractionHand;FLnet/minecraft/world/item/ItemStack;FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;I)V"))
     private void renderItem(Args args) {
         if (ModuleManager.noRender.noSwing.getValue()) {
             args.set(4, 0.0F);

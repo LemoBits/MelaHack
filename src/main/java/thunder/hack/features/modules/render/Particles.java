@@ -3,7 +3,7 @@ package thunder.hack.features.modules.render;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
+import thunder.hack.utility.render.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Axis;
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -85,7 +85,7 @@ public class Particles extends Module {
             RenderSystem.enableDepthTest();
             RenderSystem.depthMask(false);
             RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX_COLOR);
-            BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+            BufferBuilder bufferBuilder = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
             fireFlies.forEach(p -> p.render(bufferBuilder));
             Render2DEngine.endBuilding(bufferBuilder);
             RenderSystem.depthMask(true);
@@ -101,7 +101,7 @@ public class Particles extends Module {
             RenderSystem.enableDepthTest();
             RenderSystem.depthMask(false);
             RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX_COLOR);
-            BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+            BufferBuilder bufferBuilder = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
             particles.forEach(p -> p.render(bufferBuilder));
             Render2DEngine.endBuilding(bufferBuilder);
             RenderSystem.depthMask(true);
@@ -152,7 +152,7 @@ public class Particles extends Module {
         public void render(BufferBuilder bufferBuilder) {
             RenderSystem.setShaderTexture(0, TextureStorage.firefly);
             if (!trails.isEmpty()) {
-                Camera camera = mc.gameRenderer.getMainCamera();
+                Camera camera = mc.gameRenderer.mainCamera();
                 for (Trails.Trail ctx : trails) {
                     Vec3 pos = ctx.interpolate(1f);
                     PoseStack matrices = new PoseStack();
@@ -225,7 +225,7 @@ public class Particles extends Module {
                 case Stars -> RenderSystem.setShaderTexture(0, TextureStorage.star);
             }
 
-            Camera camera = mc.gameRenderer.getMainCamera();
+            Camera camera = mc.gameRenderer.mainCamera();
             Color color1 = lmode.getValue() == ColorMode.Sync ? HudEditor.getColor(age * 2) : color.getValue().getColorObject();
             Vec3 pos = Render3DEngine.interpolatePos(prevposX, prevposY, prevposZ, posX, posY, posZ);
 

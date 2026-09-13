@@ -53,7 +53,7 @@ public class AutoArmor extends Module {
 
     @Override
     public void onUpdate() {
-        if (mc.screen != null && pauseInventory.getValue() && !(mc.screen instanceof ChatScreen) && !(mc.screen instanceof ClickGUI) && !(mc.screen instanceof HudEditorGui))
+        if (mc.gui.screen() != null && pauseInventory.getValue() && !(mc.gui.screen() instanceof ChatScreen) && !(mc.gui.screen() instanceof ClickGUI) && !(mc.gui.screen() instanceof HudEditorGui))
             return;
 
         if (tickDelay-- > 0)

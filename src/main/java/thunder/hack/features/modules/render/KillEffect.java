@@ -13,6 +13,7 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -64,7 +65,7 @@ public class KillEffect extends Module {
                 renderEntities.remove(entity);
             });
             case LightningBolt -> renderEntities.forEach((entity, time) -> {
-                LightningBolt lightningEntity = new LightningBolt(EntityType.LIGHTNING_BOLT, mc.level);
+                LightningBolt lightningEntity = new LightningBolt(EntityTypes.LIGHTNING_BOLT, mc.level);
                 lightningEntity.snapTo(entity.getX(), entity.getY(), entity.getZ());
                 mc.level.addEntity(lightningEntity);
                 renderEntities.remove(entity);

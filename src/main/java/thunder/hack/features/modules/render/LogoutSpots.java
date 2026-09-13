@@ -3,7 +3,7 @@ package thunder.hack.features.modules.render;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
+import thunder.hack.utility.render.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Axis;
 import com.google.common.collect.Maps;
@@ -120,7 +120,7 @@ public class LogoutSpots extends Module {
                     Render3DEngine.OUTLINE_QUEUE.add(new Render3DEngine.OutlineAction(data.getBoundingBox(), color.getValue().getColorObject(), 2));
                 } else {
                     PlayerModel modelPlayer = new PlayerModel(new EntityRendererProvider.Context(
-                            mc.getEntityRenderDispatcher(), ((thunder.hack.injection.accesors.IMinecraftClient) mc).getBlockModelResolver(),
+                            mc.getEntityRenderDispatcher(), new net.minecraft.client.renderer.block.BlockModelResolver(mc.getModelManager()),
                             mc.getItemModelResolver(), mc.getMapRenderer(), mc.getResourceManager(), mc.getEntityModels(),
                             ((IEntityRenderDispatcher) mc.getEntityRenderDispatcher()).getEquipmentModelLoader(), mc.getAtlasManager(), mc.font, mc.playerSkinRenderCache()).bakeLayer(ModelLayers.PLAYER), false);
                     modelPlayer.getHead().offsetScale(new Vector3f(-0.3f, -0.3f, -0.3f));
@@ -187,13 +187,13 @@ public class LogoutSpots extends Module {
         if (renderMode.is(RenderMode.TexturedChams)) {
             RenderSystem.setShaderTexture(0, texture);
             RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX);
-            buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+            buffer = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION_TEX);
         } else {
             RenderSystem.setShader(ShaderProgramKeys.POSITION);
-            buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
+            buffer = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION);
         }
         RenderSystem.setShaderColor(color.getValue().getGlRed(), color.getValue().getGlGreen(), color.getValue().getGlBlue(), alpha / 255f);
-        modelBase.renderToBuffer(matrices, buffer, 10, 0);
+        modelBase.renderToBuffer(matrices, buffer, 10, 0, -1);
         Render2DEngine.endBuilding(buffer);
         RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
         matrices.popPose();

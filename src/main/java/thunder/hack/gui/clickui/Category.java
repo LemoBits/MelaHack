@@ -9,7 +9,7 @@ import com.mojang.blaze3d.pipeline.DepthStencilState;
 import com.mojang.blaze3d.platform.CompareOp;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.Tesselator;
+import thunder.hack.utility.render.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import thunder.hack.utility.render.BufferRenderer;
@@ -37,12 +37,9 @@ public class Category extends AbstractCategory {
             .withLocation(Identifier.fromNamespaceAndPath("thunderhack", "pipeline/clickgui_header_icon"))
             .withVertexShader(Identifier.fromNamespaceAndPath("minecraft", "core/position_tex_color"))
             .withFragmentShader(Identifier.fromNamespaceAndPath("minecraft", "core/position_tex_color"))
-            .withSampler("Sampler0")
-            .withUniform("Projection", UniformType.UNIFORM_BUFFER)
-            .withUniform("DynamicTransforms", UniformType.UNIFORM_BUFFER)
             .withColorTargetState(new ColorTargetState(BlendFunction.ADDITIVE))
             .withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false))
-            .withVertexFormat(DefaultVertexFormat.POSITION_TEX_COLOR, VertexFormat.Mode.QUADS)
+            .withVertexBinding(0, DefaultVertexFormat.POSITION_TEX_COLOR).withPrimitiveTopology(com.mojang.blaze3d.PrimitiveTopology.QUADS)
             .build();
 
     private boolean scrollHover;
@@ -129,7 +126,7 @@ public class Category extends AbstractCategory {
             RenderSystem.enableBlend();
             RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE);
             RenderSystem.setShader(HEADER_ICON_PIPELINE);
-            BufferBuilder b = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+            BufferBuilder b = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
             float clipX0 = getX() + 2;
             float clipY0 = getY() - 5;
             float clipX1 = clipX0 + width - 4;

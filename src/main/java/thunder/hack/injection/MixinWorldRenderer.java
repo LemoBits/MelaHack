@@ -17,12 +17,7 @@ import static thunder.hack.features.modules.Module.mc;
 @Mixin(LevelRenderer.class)
 public abstract class MixinWorldRenderer {
 
-    @ModifyArg(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;setupRender(Lnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/culling/Frustum;ZZ)V"), index = 3)
-    private boolean renderSetupTerrainModifyArg(boolean spectator) {
-        return ModuleManager.freeCam.isEnabled() || spectator;
-    }
-
-    @Redirect(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/PostChain;addToFrame(Lcom/mojang/blaze3d/framegraph/FrameGraphBuilder;IILnet/minecraft/client/renderer/PostChain$TargetBundle;)V", ordinal = 0))
+    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/PostChain;addToFrame(Lcom/mojang/blaze3d/framegraph/FrameGraphBuilder;IILnet/minecraft/client/renderer/PostChain$TargetBundle;)V", ordinal = 0))
     private void replaceShaderHook(PostChain instance, FrameGraphBuilder frameGraphBuilder, int width, int height, PostChain.TargetBundle framebufferSet) {
         ShaderManager.Shader shaders = ModuleManager.shaders.mode.getValue();
         if (ModuleManager.shaders.isEnabled() && mc.level != null) {
@@ -34,7 +29,7 @@ public abstract class MixinWorldRenderer {
     }
 
     @Inject(method = "addWeatherPass", at = @At("HEAD"), cancellable = true)
-    private void renderWeatherHook(FrameGraphBuilder frameGraphBuilder, Vec3 cameraPos, float tickDelta, GpuBufferSlice fog, CallbackInfo ci) {
+    private void renderWeatherHook(FrameGraphBuilder frameGraphBuilder, GpuBufferSlice fog, CallbackInfo ci) {
         if (ModuleManager.noRender.isEnabled() && ModuleManager.noRender.noWeather.getValue()) {
             ci.cancel();
         }

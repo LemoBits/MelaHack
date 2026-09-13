@@ -3,7 +3,7 @@
   "minVersion": "0.8",
   "package": "thunder.hack.injection",
   "plugin": "thunder.hack.injection.MelaHackMixinPlugin",
-  "compatibilityLevel": "JAVA_21",
+  "compatibilityLevel": "JAVA_25",
   "client": [
     "JsonEffectGlShaderMixin",
     "MixinArmorFeatureRenderer",
@@ -24,6 +24,7 @@
     "MixinEndCrystalEntityRenderer",
     "MixinEntityRenderer",
     "MixinGameRenderer",
+    "MixinGuiManager",
     "MixinHandledScreen",
     "MixinHeldItemRenderer",
     "MixinInGameHud",
@@ -97,7 +98,6 @@
     "accesors.IHeldItemRenderer",
     "accesors.ILivingEntity",
     "accesors.IPlayerInteractBlockC2SPacket",
-    "accesors.IPlayerInteractEntityC2SPacket",
     "accesors.IPlayerMoveC2SPacket",
     "accesors.IPlayerPositionLookS2CPacket",
     "accesors.ISPacketEntityVelocity"

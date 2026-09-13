@@ -26,15 +26,15 @@ import java.util.*;
 import static thunder.hack.features.modules.Module.mc;
 
 public final class InteractionUtility {
-    private static final List<Block> SHIFT_BLOCKS = Arrays.asList(
-            Blocks.ENDER_CHEST, Blocks.CHEST, Blocks.TRAPPED_CHEST, Blocks.CRAFTING_TABLE,
-            Blocks.BIRCH_TRAPDOOR, Blocks.BAMBOO_TRAPDOOR, Blocks.DARK_OAK_TRAPDOOR, Blocks.CHERRY_TRAPDOOR,
-            Blocks.ANVIL, Blocks.BREWING_STAND, Blocks.HOPPER, Blocks.DROPPER, Blocks.DISPENSER,
-            Blocks.ACACIA_TRAPDOOR, Blocks.ENCHANTING_TABLE, Blocks.WHITE_SHULKER_BOX, Blocks.ORANGE_SHULKER_BOX,
-            Blocks.MAGENTA_SHULKER_BOX, Blocks.LIGHT_BLUE_SHULKER_BOX, Blocks.YELLOW_SHULKER_BOX, Blocks.LIME_SHULKER_BOX,
-            Blocks.PINK_SHULKER_BOX, Blocks.GRAY_SHULKER_BOX, Blocks.CYAN_SHULKER_BOX, Blocks.PURPLE_SHULKER_BOX,
-            Blocks.BLUE_SHULKER_BOX, Blocks.BROWN_SHULKER_BOX, Blocks.GREEN_SHULKER_BOX, Blocks.RED_SHULKER_BOX, Blocks.BLACK_SHULKER_BOX
-    );
+    private static final List<Block> SHIFT_BLOCKS = new ArrayList<>();
+    static {
+        SHIFT_BLOCKS.addAll(Arrays.asList(
+                Blocks.ENDER_CHEST, Blocks.CHEST, Blocks.TRAPPED_CHEST, Blocks.CRAFTING_TABLE,
+                Blocks.BIRCH_TRAPDOOR, Blocks.BAMBOO_TRAPDOOR, Blocks.DARK_OAK_TRAPDOOR, Blocks.CHERRY_TRAPDOOR,
+                Blocks.ANVIL, Blocks.BREWING_STAND, Blocks.HOPPER, Blocks.DROPPER, Blocks.DISPENSER,
+                Blocks.ACACIA_TRAPDOOR, Blocks.ENCHANTING_TABLE, Blocks.SHULKER_BOX));
+        SHIFT_BLOCKS.addAll(Blocks.DYED_SHULKER_BOX.asList());
+    }
 
     public static Map<BlockPos, Long> awaiting = new HashMap<>();
 
@@ -173,7 +173,7 @@ public final class InteractionUtility {
             return null;
 
         if (interact == Interact.AirPlace)
-            return ExplosionUtility.rayCastBlock(new ClipContext(InteractionUtility.getEyesPos(mc.player), bp.getCenter(), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player), bp);
+            return ExplosionUtility.rayCastBlock(new ClipContext(InteractionUtility.getEyesPos(mc.player), net.minecraft.world.phys.Vec3.atBottomCenterOf(bp), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player), bp);
 
         ArrayList<BlockPosWithFacing> supports = getSupportBlocks(bp);
         for (BlockPosWithFacing support : supports) {
@@ -257,7 +257,7 @@ public final class InteractionUtility {
 
     public static @NotNull List<Direction> getStrictDirections(@NotNull BlockPos bp) {
         List<Direction> visibleSides = new ArrayList<>();
-        Vec3 positionVector = bp.getCenter();
+        Vec3 positionVector = net.minecraft.world.phys.Vec3.atBottomCenterOf(bp);
 
         double westDelta = getEyesPos(mc.player).x - (positionVector.add(0.5, 0, 0).x);
         double eastDelta = getEyesPos(mc.player).x - (positionVector.add(-0.5, 0, 0).x);
@@ -302,7 +302,7 @@ public final class InteractionUtility {
 
     public static @NotNull List<Direction> getStrictBlockDirections(@NotNull BlockPos bp) {
         List<Direction> visibleSides = new ArrayList<>();
-        Vec3 pV = bp.getCenter();
+        Vec3 pV = net.minecraft.world.phys.Vec3.atBottomCenterOf(bp);
 
         double westDelta = getEyesPos(mc.player).x - (pV.add(0.5, 0, 0).x);
         double eastDelta = getEyesPos(mc.player).x - (pV.add(-0.5, 0, 0).x);
@@ -333,7 +333,7 @@ public final class InteractionUtility {
     }
 
     public static @Nullable BreakData getBreakData(BlockPos bp, Interact interact) {
-        if (interact == Interact.Vanilla) return new BreakData(Direction.UP, bp.getCenter().add(0, 0.5, 0));
+        if (interact == Interact.Vanilla) return new BreakData(Direction.UP, net.minecraft.world.phys.Vec3.atBottomCenterOf(bp).add(0, 0.5, 0));
         if (interact == Interact.Strict) {
             float bestDistance = 999f;
             Direction bestDirection = Direction.UP;
@@ -457,7 +457,7 @@ public final class InteractionUtility {
 
     public static void lookAt(BlockPos bp) {
         if (bp != null) {
-            float[] angle = calculateAngle(bp.getCenter());
+            float[] angle = calculateAngle(net.minecraft.world.phys.Vec3.atBottomCenterOf(bp));
             mc.player.setYRot(angle[0]);
             mc.player.setXRot(angle[1]);
         }

@@ -80,11 +80,11 @@ public final class RenderSystem {
     }
 
     public static void enableBlend() {
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
     }
 
     public static void disableBlend() {
-        com.mojang.blaze3d.opengl.GlStateManager._disableBlend();
+        com.mojang.blaze3d.opengl.GlStateManager._disableBlend(0);
     }
 
     public static void defaultBlendFunc() {
@@ -261,7 +261,7 @@ public final class RenderSystem {
     }
 
     public static Matrix4f getModelViewMatrix() {
-        return com.mojang.blaze3d.systems.RenderSystem.getModelViewMatrix();
+        return com.mojang.blaze3d.systems.RenderSystem.getModelViewMatrixCopy();
     }
 
     public static Matrix4fStack getModelViewStack() {

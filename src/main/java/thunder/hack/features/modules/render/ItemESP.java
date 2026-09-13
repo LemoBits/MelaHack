@@ -3,7 +3,7 @@ package thunder.hack.features.modules.render;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
+import thunder.hack.utility.render.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 
 import thunder.hack.utility.render.compat.RenderSystem;
@@ -110,7 +110,7 @@ public class ItemESP extends Module {
             Render2DEngine.setupRender();
             RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
 
-            BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+            BufferBuilder bufferBuilder = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION_COLOR);
 
             for (Entity ent : mc.level.entitiesForRendering()) {
                 if (!(ent instanceof ItemEntity)) continue;

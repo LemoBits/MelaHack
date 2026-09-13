@@ -110,14 +110,14 @@ public class PearlChaser extends Module {
             return;
 
         // Нет смысла кидать если кидают в нас
-        if (mc.player.distanceToSqr(targetBlock.getCenter()) < 49)
+        if (mc.player.distanceToSqr(net.minecraft.world.phys.Vec3.atBottomCenterOf(targetBlock)) < 49)
             return;
 
         float rotationPitch = (float) (-Math.toDegrees(calcTrajectory(targetBlock)));
         float rotationYaw = (float) Math.toDegrees(Math.atan2(targetBlock.getZ() + 0.5f - mc.player.getZ(), targetBlock.getX() + 0.5f - mc.player.getX())) - 90.0f;
         BlockPos tracedBP = checkTrajectory(rotationYaw, rotationPitch);
 
-        if (tracedBP == null || targetBlock.distToCenterSqr(tracedBP.getCenter()) > 36)
+        if (tracedBP == null || targetBlock.distToCenterSqr(net.minecraft.world.phys.Vec3.atBottomCenterOf(tracedBP)) > 36)
             return;
 
         if(pauseAura.getValue() && ModuleManager.aura.isEnabled())

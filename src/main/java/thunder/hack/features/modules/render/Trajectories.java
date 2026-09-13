@@ -56,7 +56,7 @@ public class Trajectories extends Module {
 
     @Override
     public void onRender3D(PoseStack stack) {
-        if (mc.options.hideGui) return;
+        if (false) return;
         if (mc.player == null || mc.level == null || !mc.options.getCameraType().isFirstPerson())
             return;
         InteractionHand hand;

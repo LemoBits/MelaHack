@@ -113,7 +113,7 @@ public class FriendsWindow extends WindowBase {
         }
 
         if (Render2DEngine.isHovered(mouseX, mouseY, getX() + getWidth() - 15, getY() + 3, 10, 10))
-            mc.setScreen(ClickGUI.getClickGui());
+            mc.gui.setScreen(ClickGUI.getClickGui());
 
         boolean hoveringName = Render2DEngine.isHovered(mouseX, mouseY, getX() + 11, getY() + 19, getWidth() - 28, 11);
         boolean hoveringAdd = Render2DEngine.isHovered(mouseX, mouseY, getX() + getWidth() - 15, getY() + 19, 11, 11);

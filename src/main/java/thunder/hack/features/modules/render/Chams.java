@@ -3,7 +3,7 @@ package thunder.hack.features.modules.render;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
+import thunder.hack.utility.render.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Axis;
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -14,7 +14,7 @@ import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.object.crystal.EndCrystalModel;
 import net.minecraft.client.player.AbstractClientPlayer;
 import thunder.hack.utility.render.BufferRenderer;
-import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.state.EndCrystalRenderState;
@@ -70,7 +70,7 @@ public class Chams extends Module {
     }
 
     private final Identifier crystalTexture = Identifier.parse("textures/entity/end_crystal/end_crystal.png");
-    public void renderCrystal(EndCrystalRenderState state, PoseStack matrixStack, MultiBufferSource vertexConsumerProvider, int light, EndCrystalModel model) {
+    public void renderCrystal(EndCrystalRenderState state, PoseStack matrixStack, SubmitNodeCollector vertexConsumerProvider, int light, EndCrystalModel model) {
         RenderSystem.enableBlend();
         if (alternativeBlending.getValue())
             RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE);
@@ -91,7 +91,7 @@ public class Chams extends Module {
         matrixStack.scale(2.0f, 2.0f, 2.0f);
         matrixStack.translate(0.0f, -0.5f, 0.0f);
         model.setupAnim(state);
-        model.renderToBuffer(matrixStack, vertexConsumerProvider.getBuffer(layer), light, OverlayTexture.NO_OVERLAY);
+        vertexConsumerProvider.submitModel(model, state, matrixStack, layer, light, OverlayTexture.NO_OVERLAY, -1, null);
         matrixStack.popPose();
 
         state.ageInTicks = originalAge;
@@ -113,10 +113,10 @@ public class Chams extends Module {
         if (!simple.getValue()) {
             RenderSystem.setShaderTexture(0, ((AbstractClientPlayer) pe).getSkin().body().texturePath());
             RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX);
-            buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+            buffer = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION_TEX);
         } else {
             RenderSystem.setShader(ShaderProgramKeys.POSITION);
-            buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
+            buffer = Tesselator.getInstance().begin(com.mojang.blaze3d.PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION);
         }
 
         float n;
@@ -189,7 +189,7 @@ public class Chams extends Module {
             EntityModel<LivingEntityRenderState> typedModel = (EntityModel<LivingEntityRenderState>) model;
             typedModel.setupAnim(renderState);
             int p = LivingEntityRenderer.getOverlayCoords(renderState, 0);
-            typedModel.renderToBuffer(matrixStack, buffer, i, p);
+            typedModel.renderToBuffer(matrixStack, buffer, i, p, -1);
         }
         Render2DEngine.endBuilding(buffer);
         RenderSystem.disableBlend();

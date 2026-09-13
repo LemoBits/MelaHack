@@ -146,7 +146,7 @@ public final class AutoBed extends Module {
                 hotBarResult.switchTo();
             } else if (switchToHotbar.getValue()) {
                 SearchInvResult invResult = InventoryUtility.findBed();
-                if (invResult.found() && !(mc.screen instanceof CraftingScreen)) {
+                if (invResult.found() && !(mc.gui.screen() instanceof CraftingScreen)) {
                     mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, invResult.slot(), mc.player.getInventory().getSelectedSlot(), ContainerInput.SWAP, mc.player);
                     sendPacket(new ServerboundContainerClosePacket(mc.player.containerMenu.containerId));
                 }
@@ -163,7 +163,7 @@ public final class AutoBed extends Module {
             return;
 
         if (bestPos != null && placeTimer.passedMs(placeDelay.getValue()) && !(mc.level.getBlockState(bestPos.hitResult().getBlockPos().above()).getBlock() instanceof BedBlock)) {
-            final float angle2 = InteractionUtility.calculateAngle(bestPos.hitResult.getBlockPos().getCenter(), bestPos.hitResult.getBlockPos().relative(bestPos.dir).getCenter())[0];
+            final float angle2 = InteractionUtility.calculateAngle(net.minecraft.world.phys.Vec3.atBottomCenterOf(bestPos.hitResult().getBlockPos()), net.minecraft.world.phys.Vec3.atBottomCenterOf(bestPos.hitResult().getBlockPos().relative(bestPos.dir())))[0];
             sendPacket(new ServerboundMovePlayerPacket.Rot(angle2, 0, mc.player.onGround(), mc.player.horizontalCollision));
             float prevYaw = mc.player.getYRot();
             mc.player.setYRot(angle2);
@@ -206,13 +206,13 @@ public final class AutoBed extends Module {
 
         for (BlockPos b : blocks_) {
             BlockState state = mc.level.getBlockState(b);
-            if (PlayerUtility.squaredDistanceFromEyes(b.getCenter()) <= range.getPow2Value()) {
+            if (PlayerUtility.squaredDistanceFromEyes(net.minecraft.world.phys.Vec3.atBottomCenterOf(b)) <= range.getPow2Value()) {
                 if (state.getBlock() instanceof BedBlock) {
                     BlockHitResult bhr = getInteractResult(b);
 
                     mc.level.removeBlock(b, false);
-                    float damage = ExplosionUtility.getExplosionDamage(b.getCenter().add(0, -0.5, 0), target, false);
-                    float selfDamage = ExplosionUtility.getExplosionDamage(b.getCenter().add(0, -0.5, 0), mc.player, false);
+                    float damage = ExplosionUtility.getExplosionDamage(net.minecraft.world.phys.Vec3.atBottomCenterOf(b).add(0, -0.5, 0), target, false);
+                    float selfDamage = ExplosionUtility.getExplosionDamage(net.minecraft.world.phys.Vec3.atBottomCenterOf(b).add(0, -0.5, 0), mc.player, false);
                     mc.level.setBlockAndUpdate(b, state);
 
                     if (damage < minDamage.getValue())
@@ -245,7 +245,7 @@ public final class AutoBed extends Module {
             BlockState state = mc.level.getBlockState(b);
             BlockState state2 = mc.level.getBlockState(b.above());
 
-            if (PlayerUtility.squaredDistanceFromEyes(b.getCenter()) <= range.getPow2Value()) {
+            if (PlayerUtility.squaredDistanceFromEyes(net.minecraft.world.phys.Vec3.atBottomCenterOf(b)) <= range.getPow2Value()) {
                 if (state2.getBlock() instanceof BedBlock && !placeTimer.passedMs(1500) && bestPos != null)
                     return bestPos;
 
@@ -257,8 +257,8 @@ public final class AutoBed extends Module {
                         if (wallCheck != null && wallCheck.getType() == HitResult.Type.BLOCK && wallCheck.getBlockPos() != b)
                             continue;
 
-                        float damage = ExplosionUtility.getExplosionDamage(b.above().getCenter().add(0, -0.5, 0), target, false);
-                        float selfDamage = ExplosionUtility.getExplosionDamage(b.above().getCenter().add(0, -0.5, 0), mc.player, false);
+                        float damage = ExplosionUtility.getExplosionDamage(net.minecraft.world.phys.Vec3.atBottomCenterOf(b.above()).add(0, -0.5, 0), target, false);
+                        float selfDamage = ExplosionUtility.getExplosionDamage(net.minecraft.world.phys.Vec3.atBottomCenterOf(b.above()).add(0, -0.5, 0), mc.player, false);
 
                         if (damage < minDamage.getValue())
                             continue;
@@ -287,8 +287,8 @@ public final class AutoBed extends Module {
                                 continue;
                             }
 
-                            float dirdamage = ExplosionUtility.getExplosionDamage(offset.getCenter().add(0, -0.5, 0), target, false);
-                            float dirSelfDamage = ExplosionUtility.getExplosionDamage(offset.getCenter().add(0, -0.5, 0), mc.player, false);
+                            float dirdamage = ExplosionUtility.getExplosionDamage(net.minecraft.world.phys.Vec3.atBottomCenterOf(offset).add(0, -0.5, 0), target, false);
+                            float dirSelfDamage = ExplosionUtility.getExplosionDamage(net.minecraft.world.phys.Vec3.atBottomCenterOf(offset).add(0, -0.5, 0), mc.player, false);
                             if (dirdamage > bestDirdmg && dirSelfDamage <= maxSelfDamage.getValue()) {
                                 bestDir = dir;
                                 bestDirdmg = dirdamage;

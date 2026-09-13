@@ -57,7 +57,7 @@ public class PlayerManager implements IManager {
         pitch = mc.player.getXRot();
         lastYaw = ((IEntity) mc.player).getLastYaw();
         lastPitch = ((IEntity) mc.player).getLastPitch();
-        if (mc.screen == null) inInventory = false;
+        if (mc.gui.screen() == null) inInventory = false;
         if (mc.player.isFallFlying() && mc.player.getItemBySlot(EquipmentSlot.CHEST).getItem() == Items.ELYTRA) {
             ticksElytraFlying++;
         } else ticksElytraFlying = 0;

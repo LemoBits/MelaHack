@@ -229,7 +229,7 @@ public class LegitHelper extends Module {
         if (event.getPacket() instanceof ServerboundPlayerActionPacket action && action.getAction() == ServerboundPlayerActionPacket.Action.RELEASE_USE_ITEM) {
             if (minecarts.getValue().isEnabled() && mc.player.getMainHandItem().getItem() == Items.BOW) {
                 BlockPos bp = calcTrajectory(mc.player.getYRot());
-                if (bp != null && PlayerUtility.squaredDistanceFromEyes(bp.getCenter()) <= maxDistance.getPow2Value() && PlayerUtility.squaredDistanceFromEyes(bp.getCenter()) > 3) {
+                if (bp != null && PlayerUtility.squaredDistanceFromEyes(net.minecraft.world.phys.Vec3.atBottomCenterOf(bp)) <= maxDistance.getPow2Value() && PlayerUtility.squaredDistanceFromEyes(net.minecraft.world.phys.Vec3.atBottomCenterOf(bp)) > 3) {
 
                     SearchInvResult baseResult = InventoryUtility.findItemInHotBar(Items.RAIL, Items.ACTIVATOR_RAIL, Items.DETECTOR_RAIL, Items.POWERED_RAIL);
                     SearchInvResult cartResult = InventoryUtility.findItemInHotBar(Items.TNT_MINECART);
@@ -243,7 +243,7 @@ public class LegitHelper extends Module {
                                         bp,
                                         false), s));
 
-                        rotationVec = bp.above().getCenter();
+                        rotationVec = net.minecraft.world.phys.Vec3.atBottomCenterOf(bp.above());
                         cartResult.switchTo();
                         sendSequencedPacket(s -> new ServerboundUseItemOnPacket(InteractionHand.MAIN_HAND,
                                 new BlockHitResult(new Vec3(bp.getX() + 0.5, bp.above().getY() + .125, bp.getZ() + 0.5)

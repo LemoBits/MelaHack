@@ -98,7 +98,7 @@ public final class RPC extends Module {
                         case Stats ->
                                 presence.state = "Hacks: " + Managers.MODULE.getEnabledModules().size() + " / " + Managers.MODULE.modules.size();
                         case Custom -> presence.state = state.getValue();
-                        case Version -> presence.state = "v" + ThunderHack.VERSION +" for mc 1.21";
+                        case Version -> presence.state = "v" + ThunderHack.VERSION + " for mc 26.2";
                     }
 
                     if (nickname.getValue()) {
@@ -138,7 +138,7 @@ public final class RPC extends Module {
     private String getDetails() {
         String result = "";
 
-        if (mc.screen instanceof JoinMultiplayerScreen || mc.screen instanceof ManageServerScreen || mc.screen instanceof TitleScreen) {
+        if (mc.gui == null || mc.gui.screen() instanceof JoinMultiplayerScreen || mc.gui.screen() instanceof ManageServerScreen || mc.gui.screen() instanceof TitleScreen) {
             if(timer_delay.passedMs(60 * 1000)){
                 randomInt = (int)(Math.random() * (5 - 0 + 1) + 0);
                 slov = isRu() ? rpc_perebor_ru[randomInt] : rpc_perebor_en[randomInt];
