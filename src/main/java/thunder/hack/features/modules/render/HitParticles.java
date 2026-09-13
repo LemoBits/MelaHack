@@ -175,9 +175,9 @@ public class HitParticles extends Module {
             float size = starsScale.getValue();
             float scale = mode.is(Mode.Text) ? 0.025f * size : 0.07f;
 
-            final double posX = Render2DEngine.interpolate(px, x, Render3DEngine.getTickDelta()) - mc.getEntityRenderDispatcher().camera.getPosition().x();
-            final double posY = Render2DEngine.interpolate(py, y, Render3DEngine.getTickDelta()) + 0.1 - mc.getEntityRenderDispatcher().camera.getPosition().y();
-            final double posZ = Render2DEngine.interpolate(pz, z, Render3DEngine.getTickDelta()) - mc.getEntityRenderDispatcher().camera.getPosition().z();
+            final double posX = Render2DEngine.interpolate(px, x, Render3DEngine.getTickDelta()) - mc.getEntityRenderDispatcher().camera.position().x;
+            final double posY = Render2DEngine.interpolate(py, y, Render3DEngine.getTickDelta()) + 0.1 - mc.getEntityRenderDispatcher().camera.position().y;
+            final double posZ = Render2DEngine.interpolate(pz, z, Render3DEngine.getTickDelta()) - mc.getEntityRenderDispatcher().camera.position().z;
 
             matrixStack.pushPose();
             matrixStack.translate(posX, posY, posZ);
@@ -185,8 +185,8 @@ public class HitParticles extends Module {
             matrixStack.scale(scale, scale, scale);
 
             matrixStack.translate(size / 2, size / 2, size / 2);
-            matrixStack.mulPose(Axis.YP.rotationDegrees(-mc.gameRenderer.getMainCamera().getYRot()));
-            matrixStack.mulPose(Axis.XP.rotationDegrees(mc.gameRenderer.getMainCamera().getXRot()));
+            matrixStack.mulPose(Axis.YP.rotationDegrees(-mc.gameRenderer.getMainCamera().yRot()));
+            matrixStack.mulPose(Axis.XP.rotationDegrees(mc.gameRenderer.getMainCamera().xRot()));
 
             if (mode.is(Mode.Text))
                 matrixStack.mulPose(Axis.ZP.rotationDegrees(180));

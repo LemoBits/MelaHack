@@ -1,4 +1,5 @@
 package thunder.hack.gui.misc;
+import thunder.hack.gui.LegacyInputScreen;
 
 import thunder.hack.core.manager.client.ModuleManager;
 import thunder.hack.features.modules.misc.NoCommentExploit;
@@ -13,7 +14,7 @@ import net.minecraft.network.chat.Component;
 
 import static thunder.hack.features.modules.Module.mc;
 
-public class GuiScanner extends Screen {
+public class GuiScanner extends LegacyInputScreen {
     public static boolean neartrack = false;
     public static boolean track = false;
     public static boolean busy = false;

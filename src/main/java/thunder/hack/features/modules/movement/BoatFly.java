@@ -14,7 +14,7 @@ import net.minecraft.network.protocol.game.ServerboundPlayerInputPacket;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.vehicle.Boat;
+import net.minecraft.world.entity.vehicle.boat.Boat;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
@@ -167,7 +167,7 @@ public class BoatFly extends Module {
         Entity entity = mc.player.getControlledVehicle();
 
 
-        if ((!mc.level.hasChunk((int) entity.position().x() >> 4, (int) entity.position().z() >> 4) || entity.position().y() < -60) && stopunloaded.getValue()) {
+        if ((!mc.level.hasChunk((int) entity.position().x >> 4, (int) entity.position().z >> 4) || entity.position().y < -60) && stopunloaded.getValue()) {
             returnGravity = true;
             return;
         }
@@ -181,7 +181,7 @@ public class BoatFly extends Module {
         double predictedZ = entity.getZ() + boatMotion[1];
         double predictedY = entity.getY();
 
-        if ((!mc.level.hasChunk((int) predictedX >> 4, (int) predictedZ >> 4) || entity.position().y() < -60) && stopunloaded.getValue()) {
+        if ((!mc.level.hasChunk((int) predictedX >> 4, (int) predictedZ >> 4) || entity.position().y < -60) && stopunloaded.getValue()) {
             returnGravity = true;
             return;
         }

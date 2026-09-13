@@ -9,9 +9,9 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import com.google.common.collect.Lists;
 import thunder.hack.utility.render.compat.RenderSystem;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gl.ShaderProgramKeys;
+import thunder.hack.utility.render.ShaderProgramKeys;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.render.*;
+import thunder.hack.utility.render.BufferRenderer;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.util.StringUtil;
@@ -176,7 +176,7 @@ public class ItemSelectWindow extends WindowBase {
 
     @Override
     public void keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (keyCode == GLFW.GLFW_KEY_F && (InputConstants.isKeyDown(mc.getWindow().getWindow(), GLFW.GLFW_KEY_LEFT_CONTROL) || InputConstants.isKeyDown(mc.getWindow().getWindow(), GLFW.GLFW_KEY_RIGHT_CONTROL))) {
+        if (keyCode == GLFW.GLFW_KEY_F && (InputConstants.isKeyDown(mc.getWindow(), GLFW.GLFW_KEY_LEFT_CONTROL) || InputConstants.isKeyDown(mc.getWindow(), GLFW.GLFW_KEY_RIGHT_CONTROL))) {
             listening = !listening;
             return;
         }

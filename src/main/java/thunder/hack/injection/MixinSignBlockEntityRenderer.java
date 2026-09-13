@@ -13,7 +13,7 @@ import thunder.hack.core.manager.client.ModuleManager;
 
 @Mixin(AbstractSignRenderer.class)
 public class MixinSignBlockEntityRenderer {
-    @Inject(method = "renderSignText", at = {@At("HEAD")}, cancellable = true)
+    @Inject(method = "submitSignText", at = {@At("HEAD")}, cancellable = true)
     public final void renderTextHook(BlockPos pos, SignText signText, PoseStack matrices, MultiBufferSource vertexConsumers, int light, int lineHeight, int lineWidth, boolean front, CallbackInfo ci) {
         if (ModuleManager.noRender.isEnabled() && ModuleManager.noRender.signText.getValue())
             ci.cancel();

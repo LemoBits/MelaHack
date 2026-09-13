@@ -2,8 +2,6 @@ package thunder.hack.features.modules.movement;
 
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.world.level.block.*;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.LiquidBlock;
 import thunder.hack.core.manager.client.ModuleManager;
 import thunder.hack.events.impl.EventCollision;
 import thunder.hack.features.modules.Module;

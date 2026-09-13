@@ -60,7 +60,7 @@ public class TabParseCommand extends Command {
                 });
 
                 for (PlayerInfo entry : sortedPlayers)
-                    writer.write(PlayerTeam.formatNameForTeam(entry.getTeam(), Component.literal(entry.getProfile().getName())).getString() + "\n");
+                    writer.write(PlayerTeam.formatNameForTeam(entry.getTeam(), Component.literal(entry.getProfile().name())).getString() + "\n");
 
                 writer.close();
                 sendMessage(isRu() ? ChatFormatting.GREEN + "Таб успешно сохранен в " + file.getPath() : ChatFormatting.GREEN + "Tab was successfully saved in " + file.getPath());

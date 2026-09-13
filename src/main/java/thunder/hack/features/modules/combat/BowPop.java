@@ -2,10 +2,6 @@ package thunder.hack.features.modules.combat;
 
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.network.protocol.game.*;
-import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
-import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
-import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
-import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.Items;
 import thunder.hack.events.impl.PacketEvent;

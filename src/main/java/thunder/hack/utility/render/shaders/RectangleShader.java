@@ -10,7 +10,7 @@ import thunder.hack.features.modules.client.HudEditor;
 import thunder.hack.utility.render.compat.RenderSystem;
 
 import java.awt.*;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 
 import static thunder.hack.features.modules.Module.mc;
@@ -27,9 +27,9 @@ public class RectangleShader {
     private Color color4 = Color.WHITE;
 
     public static final RenderPipeline RECTANGLE_SHADER = RenderPipeline.builder()
-            .withLocation(ResourceLocation.fromNamespaceAndPath("thunderhack", "pipeline/rectangle"))
-            .withVertexShader(ResourceLocation.fromNamespaceAndPath("minecraft", "core/position_only"))
-            .withFragmentShader(ResourceLocation.fromNamespaceAndPath("minecraft", "core/rectangle"))
+            .withLocation(Identifier.fromNamespaceAndPath("thunderhack", "pipeline/rectangle"))
+            .withVertexShader(Identifier.fromNamespaceAndPath("minecraft", "core/position_only"))
+            .withFragmentShader(Identifier.fromNamespaceAndPath("minecraft", "core/rectangle"))
             .withBlend(BlendFunction.TRANSLUCENT)
             .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
             .withDepthWrite(false)

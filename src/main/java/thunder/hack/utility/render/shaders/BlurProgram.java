@@ -12,7 +12,7 @@ import thunder.hack.utility.render.compat.RenderSystem;
 
 import java.awt.*;
 import net.minecraft.client.Minecraft;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import static thunder.hack.features.modules.Module.mc;
 
@@ -29,9 +29,9 @@ public class BlurProgram {
     private boolean captureValid = false;
 
     public static final RenderPipeline BLUR_SHADER = RenderPipeline.builder()
-            .withLocation(ResourceLocation.fromNamespaceAndPath("thunderhack", "pipeline/blur"))
-            .withVertexShader(ResourceLocation.fromNamespaceAndPath("minecraft", "core/position_only"))
-            .withFragmentShader(ResourceLocation.fromNamespaceAndPath("minecraft", "core/blur"))
+            .withLocation(Identifier.fromNamespaceAndPath("thunderhack", "pipeline/blur"))
+            .withVertexShader(Identifier.fromNamespaceAndPath("minecraft", "core/position_only"))
+            .withFragmentShader(Identifier.fromNamespaceAndPath("minecraft", "core/blur"))
             .withBlend(BlendFunction.TRANSLUCENT)
             .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
             .withDepthWrite(false)

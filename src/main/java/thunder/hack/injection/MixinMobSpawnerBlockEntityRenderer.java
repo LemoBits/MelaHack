@@ -11,7 +11,7 @@ import thunder.hack.features.modules.Module;
 @Mixin(SpawnerRenderer.class)
 public class MixinMobSpawnerBlockEntityRenderer {
 
-    @Inject(method = "renderEntityInSpawner(FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;ILnet/minecraft/world/entity/Entity;Lnet/minecraft/client/renderer/entity/EntityRenderDispatcher;DD)V", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "renderDisplayEntity(FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;ILnet/minecraft/world/entity/Entity;Lnet/minecraft/client/renderer/entity/EntityRenderDispatcher;DD)V", at = @At("HEAD"), cancellable = true)
     private static void renderHook(CallbackInfo ci) {
         if (!Module.fullNullCheck() && ModuleManager.noRender.isOn() && ModuleManager.noRender.spawnerEntity.getValue())
             ci.cancel();

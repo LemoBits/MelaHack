@@ -20,7 +20,7 @@ public class MixinWorldChunk {
 
     @Inject(method = "setBlockState", at = @At("RETURN"))
     private void setBlockStateHook(BlockPos pos, BlockState state, int flags, CallbackInfoReturnable<BlockState> cir) {
-        if (level.isClientSide) {
+        if (level.isClientSide()) {
             ThunderHack.EVENT_BUS.post(new EventSetBlockState(pos, cir.getReturnValue(), state));
         }
     }

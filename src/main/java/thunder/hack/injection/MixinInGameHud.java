@@ -26,6 +26,9 @@ public abstract class MixinInGameHud {
         if(Module.fullNullCheck()) return;
         Managers.MODULE.onRender2D(context);
         Managers.NOTIFICATION.onRender2D(context);
+        if (ModuleManager.totemAnimation.isEnabled()) {
+            ModuleManager.totemAnimation.renderFloatingItem(context, tickCounter.getGameTimeDeltaPartialTick(true));
+        }
     }
 
     @Inject(at = @At(value = "HEAD"), method = "renderPlayerHealth", cancellable = true)

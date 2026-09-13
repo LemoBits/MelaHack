@@ -17,11 +17,11 @@ import java.util.List;
 import java.util.Map;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.PostChain;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 public class ShaderManager implements IManager {
-    public static final ResourceLocation BUF_IN = ResourceLocation.fromNamespaceAndPath("thunderhack", "buf_in");
-    public static final ResourceLocation BUF_OUT = ResourceLocation.fromNamespaceAndPath("thunderhack", "buf_out");
+    public static final Identifier BUF_IN = Identifier.fromNamespaceAndPath("thunderhack", "buf_in");
+    public static final Identifier BUF_OUT = Identifier.fromNamespaceAndPath("thunderhack", "buf_out");
     private final static List<RenderTask> tasks = new ArrayList<>();
     private ThunderHackFramebuffer shaderBuffer;
 
@@ -68,7 +68,7 @@ public class ShaderManager implements IManager {
 
         setupShader(mode, shader);
         if (effect != null) {
-            Map<ResourceLocation, RenderTarget> externalTargets = new HashMap<>();
+            Map<Identifier, RenderTarget> externalTargets = new HashMap<>();
             externalTargets.put(PostChain.MAIN_TARGET_ID, shaderBuffer);
             externalTargets.put(BUF_IN, shaderBuffer);
             externalTargets.put(BUF_OUT, shaderBuffer);
@@ -156,17 +156,17 @@ public class ShaderManager implements IManager {
     }
 
     public void reloadShaders() {
-        DEFAULT = ShaderEffectManager.getInstance().manage(ResourceLocation.fromNamespaceAndPath("thunderhack", "outline"));
-        SMOKE = ShaderEffectManager.getInstance().manage(ResourceLocation.fromNamespaceAndPath("thunderhack", "smoke"));
-        GRADIENT = ShaderEffectManager.getInstance().manage(ResourceLocation.fromNamespaceAndPath("thunderhack", "gradient"));
-        SNOW = ShaderEffectManager.getInstance().manage(ResourceLocation.fromNamespaceAndPath("thunderhack", "snow"));
-        FADE = ShaderEffectManager.getInstance().manage(ResourceLocation.fromNamespaceAndPath("thunderhack", "fade"));
+        DEFAULT = ShaderEffectManager.getInstance().manage(Identifier.fromNamespaceAndPath("thunderhack", "outline"));
+        SMOKE = ShaderEffectManager.getInstance().manage(Identifier.fromNamespaceAndPath("thunderhack", "smoke"));
+        GRADIENT = ShaderEffectManager.getInstance().manage(Identifier.fromNamespaceAndPath("thunderhack", "gradient"));
+        SNOW = ShaderEffectManager.getInstance().manage(Identifier.fromNamespaceAndPath("thunderhack", "snow"));
+        FADE = ShaderEffectManager.getInstance().manage(Identifier.fromNamespaceAndPath("thunderhack", "fade"));
 
-        FADE_OUTLINE = ShaderEffectManager.getInstance().manage(ResourceLocation.fromNamespaceAndPath("thunderhack", "fade"));
-        DEFAULT_OUTLINE = ShaderEffectManager.getInstance().manage(ResourceLocation.fromNamespaceAndPath("thunderhack", "outline"));
-        SMOKE_OUTLINE = ShaderEffectManager.getInstance().manage(ResourceLocation.fromNamespaceAndPath("thunderhack", "smoke"));
-        GRADIENT_OUTLINE = ShaderEffectManager.getInstance().manage(ResourceLocation.fromNamespaceAndPath("thunderhack", "gradient"));
-        SNOW_OUTLINE = ShaderEffectManager.getInstance().manage(ResourceLocation.fromNamespaceAndPath("thunderhack", "snow"));
+        FADE_OUTLINE = ShaderEffectManager.getInstance().manage(Identifier.fromNamespaceAndPath("thunderhack", "fade"));
+        DEFAULT_OUTLINE = ShaderEffectManager.getInstance().manage(Identifier.fromNamespaceAndPath("thunderhack", "outline"));
+        SMOKE_OUTLINE = ShaderEffectManager.getInstance().manage(Identifier.fromNamespaceAndPath("thunderhack", "smoke"));
+        GRADIENT_OUTLINE = ShaderEffectManager.getInstance().manage(Identifier.fromNamespaceAndPath("thunderhack", "gradient"));
+        SNOW_OUTLINE = ShaderEffectManager.getInstance().manage(Identifier.fromNamespaceAndPath("thunderhack", "snow"));
     }
 
     public static class ThunderHackFramebuffer extends TextureTarget {

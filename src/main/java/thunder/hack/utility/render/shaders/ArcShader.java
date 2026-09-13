@@ -9,7 +9,7 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import thunder.hack.utility.render.compat.RenderSystem;
 
 import java.awt.*;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import static thunder.hack.features.modules.Module.mc;
 
@@ -27,9 +27,9 @@ public class ArcShader {
     private Color color2 = Color.WHITE;
 
     public static final RenderPipeline ARC_SHADER = RenderPipeline.builder()
-            .withLocation(ResourceLocation.fromNamespaceAndPath("thunderhack", "pipeline/arc"))
-            .withVertexShader(ResourceLocation.fromNamespaceAndPath("minecraft", "core/position_only"))
-            .withFragmentShader(ResourceLocation.fromNamespaceAndPath("minecraft", "core/arc"))
+            .withLocation(Identifier.fromNamespaceAndPath("thunderhack", "pipeline/arc"))
+            .withVertexShader(Identifier.fromNamespaceAndPath("minecraft", "core/position_only"))
+            .withFragmentShader(Identifier.fromNamespaceAndPath("minecraft", "core/arc"))
             .withBlend(BlendFunction.TRANSLUCENT)
             .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
             .withDepthWrite(false)

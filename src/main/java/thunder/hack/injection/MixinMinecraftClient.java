@@ -175,7 +175,7 @@ public abstract class MixinMinecraftClient {
 
             try {
                 if (GLFW.glfwGetPlatform() != GLFW.GLFW_PLATFORM_WAYLAND) {
-                    GLFW.glfwSetWindowIcon(mc.getWindow().getWindow(), buffer);
+                    GLFW.glfwSetWindowIcon(mc.getWindow().handle(), buffer);
                 }
             } catch (Exception ignored) {
             }

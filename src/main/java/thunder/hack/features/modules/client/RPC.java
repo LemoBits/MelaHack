@@ -11,7 +11,7 @@ import thunder.hack.utility.discord.DiscordRichPresence;
 
 import java.io.*;
 import java.util.Objects;
-import net.minecraft.client.gui.screens.EditServerScreen;
+import net.minecraft.client.gui.screens.ManageServerScreen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 
@@ -138,7 +138,7 @@ public final class RPC extends Module {
     private String getDetails() {
         String result = "";
 
-        if (mc.screen instanceof JoinMultiplayerScreen || mc.screen instanceof EditServerScreen || mc.screen instanceof TitleScreen) {
+        if (mc.screen instanceof JoinMultiplayerScreen || mc.screen instanceof ManageServerScreen || mc.screen instanceof TitleScreen) {
             if(timer_delay.passedMs(60 * 1000)){
                 randomInt = (int)(Math.random() * (5 - 0 + 1) + 0);
                 slov = isRu() ? rpc_perebor_ru[randomInt] : rpc_perebor_en[randomInt];

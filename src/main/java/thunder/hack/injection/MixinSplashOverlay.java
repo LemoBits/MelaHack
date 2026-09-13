@@ -15,11 +15,11 @@ import thunder.hack.utility.render.TextureStorage;
 import java.awt.*;
 import java.util.Optional;
 import java.util.function.Consumer;
-import net.minecraft.Util;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.LoadingOverlay;
 import net.minecraft.server.packs.resources.ReloadInstance;
 import net.minecraft.util.Mth;
+import net.minecraft.util.Util;
 
 import static thunder.hack.features.modules.Module.mc;
 
@@ -111,7 +111,7 @@ public abstract class MixinSplashOverlay {
 
             fadeOutStart = Util.getMillis();
             if (mc.screen != null) {
-                mc.screen.init(mc, mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight());
+                mc.screen.init(mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight());
             }
         }
     }

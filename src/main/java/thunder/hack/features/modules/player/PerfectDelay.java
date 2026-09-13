@@ -1,7 +1,7 @@
 package thunder.hack.features.modules.player;
 
 import net.minecraft.core.registries.Registries;
-import net.minecraft.world.entity.animal.horse.Horse;
+import net.minecraft.world.entity.animal.equine.Horse;
 import net.minecraft.world.item.BowItem;
 import net.minecraft.world.item.CrossbowItem;
 import net.minecraft.world.item.ItemStack;

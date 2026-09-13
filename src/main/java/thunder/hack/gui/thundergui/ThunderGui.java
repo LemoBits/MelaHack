@@ -1,4 +1,5 @@
 package thunder.hack.gui.thundergui;
+import thunder.hack.gui.LegacyInputScreen;
 
 import org.lwjgl.glfw.GLFW;
 import thunder.hack.ThunderHack;
@@ -34,7 +35,7 @@ import static thunder.hack.utility.render.animation.AnimationUtility.fast;
  *
  * @Copyright by Pan4ur#2144
  **/
-public class ThunderGui extends Screen {
+public class ThunderGui extends LegacyInputScreen {
     public static CurrentMode currentMode = CurrentMode.Modules;
     public static boolean scroll_lock = false;
     public static ModulePlate selected_plate, prev_selected_plate;
@@ -474,7 +475,7 @@ public class ThunderGui extends Screen {
         }
         if (isHoveringItem(main_posX + 105, main_posY + 14, 11, 11, (float) mouseX, (float) mouseY)) {
             try {
-                net.minecraft.Util.getPlatform().openUri(new File("ThunderHackRecode/configs/").toURI());
+                net.minecraft.util.Util.getPlatform().openUri(new File("ThunderHackRecode/configs/").toURI());
             } catch (Exception e) {
                 Command.sendMessage("Не удалось открыть проводник!");
             }

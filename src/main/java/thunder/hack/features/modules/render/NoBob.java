@@ -18,7 +18,7 @@ public class NoBob extends Module {
             return;
 
         float g = -(float) mc.player.getDeltaMovement().horizontalDistance();
-        float h = Mth.lerp(tickDelta, ((thunder.hack.injection.accesors.IPlayerEntity) mc.player).getLastStrideDistance(), mc.player.bob);
+        float h = mc.player.walkAnimation.speed(tickDelta);
         matrices.translate(0, -Math.abs(g * h * (mode.is(Mode.Sexy) ? 0.00035 : 0.)), 0);
     }
 

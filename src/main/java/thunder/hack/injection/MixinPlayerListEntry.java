@@ -16,10 +16,11 @@ import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URL;
 import java.util.Objects;
-import net.minecraft.Util;
 import net.minecraft.client.multiplayer.PlayerInfo;
-import net.minecraft.client.resources.PlayerSkin;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.ClientAsset;
+import net.minecraft.resources.Identifier;
+import net.minecraft.util.Util;
+import net.minecraft.world.entity.player.PlayerSkin;
 
 @Mixin(PlayerInfo.class)
 public class MixinPlayerListEntry {
@@ -28,7 +29,7 @@ public class MixinPlayerListEntry {
     private boolean loadedCapeTexture;
 
     @Unique
-    private ResourceLocation customCapeTexture;
+    private Identifier customCapeTexture;
 
     @Inject(method = "<init>(Lcom/mojang/authlib/GameProfile;Z)V", at = @At("TAIL"))
     private void initHook(GameProfile profile, boolean secureChatEnforced, CallbackInfo ci) {
@@ -39,7 +40,8 @@ public class MixinPlayerListEntry {
     private void getCapeTexture(CallbackInfoReturnable<PlayerSkin> cir) {
         if (customCapeTexture != null) {
             PlayerSkin prev = cir.getReturnValue();
-            PlayerSkin newTextures = new PlayerSkin(prev.texture(), prev.textureUrl(), customCapeTexture, customCapeTexture, prev.model(), prev.secure());
+            ClientAsset.Texture cape = new ClientAsset.ResourceTexture(customCapeTexture);
+            PlayerSkin newTextures = new PlayerSkin(prev.body(), cape, cape, prev.model(), prev.secure());
             cir.setReturnValue(newTextures);
         }
     }
@@ -58,8 +60,8 @@ public class MixinPlayerListEntry {
             if (!ModuleManager.capes.thCapes.getValue()) return;
 
             for (String str : ThunderUtility.starGazer) {
-                if (profile.getName().toLowerCase().equals(str.toLowerCase()))
-                    customCapeTexture = ResourceLocation.fromNamespaceAndPath("thunderhack", "textures/capes/starcape.png");
+                if (profile.name().toLowerCase().equals(str.toLowerCase()))
+                    customCapeTexture = Identifier.fromNamespaceAndPath("thunderhack", "textures/capes/starcape.png");
             }
 
             try {
@@ -70,8 +72,8 @@ public class MixinPlayerListEntry {
                     String colune = inputLine.trim();
                     String name = colune.split(":")[0];
                     String cape = colune.split(":")[1];
-                    if (Objects.equals(profile.getName(), name)) {
-                        customCapeTexture = ResourceLocation.fromNamespaceAndPath("thunderhack", "textures/capes/" + cape + ".png");
+                    if (Objects.equals(profile.name(), name)) {
+                        customCapeTexture = Identifier.fromNamespaceAndPath("thunderhack", "textures/capes/" + cape + ".png");
                         return;
                     }
                 }

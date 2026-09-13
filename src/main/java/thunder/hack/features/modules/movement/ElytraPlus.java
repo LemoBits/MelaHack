@@ -11,18 +11,12 @@ import thunder.hack.utility.render.compat.RenderSystem;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gl.ShaderProgramKeys;
+import thunder.hack.utility.render.ShaderProgramKeys;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.render.*;
+import thunder.hack.utility.render.BufferRenderer;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.protocol.game.*;
 import net.minecraft.network.protocol.common.ClientboundPingPacket;
-import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
-import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
-import net.minecraft.network.protocol.game.ServerboundInteractPacket;
-import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
-import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
-import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
+import net.minecraft.network.protocol.game.*;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -433,10 +427,10 @@ public class ElytraPlus extends Module {
             float cos;
             float sin;
             for (int i = 0; i <= 30; i++) {
-                cos = (float) ((flightZonePos.x() - mc.getEntityRenderDispatcher().camera.getPosition().x()) + Math.cos(i * (Math.PI * 2f) / 30f) * 95);
-                sin = (float) ((flightZonePos.z() - mc.getEntityRenderDispatcher().camera.getPosition().z()) + Math.sin(i * (Math.PI * 2f) / 30f) * 95);
-                bufferBuilder.addVertex(stack.last().pose(), cos, (float) -mc.getEntityRenderDispatcher().camera.getPosition().y(), sin).setColor(Render2DEngine.injectAlpha(HudEditor.getColor(i), 255).getRGB());
-                bufferBuilder.addVertex(stack.last().pose(), cos, (float) ((float) 128 - mc.getEntityRenderDispatcher().camera.getPosition().y()), sin).setColor(Render2DEngine.injectAlpha(HudEditor.getColor(i), 0).getRGB());
+                cos = (float) ((flightZonePos.x() - mc.getEntityRenderDispatcher().camera.position().x) + Math.cos(i * (Math.PI * 2f) / 30f) * 95);
+                sin = (float) ((flightZonePos.z() - mc.getEntityRenderDispatcher().camera.position().z) + Math.sin(i * (Math.PI * 2f) / 30f) * 95);
+                bufferBuilder.addVertex(stack.last().pose(), cos, (float) -mc.getEntityRenderDispatcher().camera.position().y, sin).setColor(Render2DEngine.injectAlpha(HudEditor.getColor(i), 255).getRGB());
+                bufferBuilder.addVertex(stack.last().pose(), cos, (float) ((float) 128 - mc.getEntityRenderDispatcher().camera.position().y), sin).setColor(Render2DEngine.injectAlpha(HudEditor.getColor(i), 0).getRGB());
             }
             Render2DEngine.endBuilding(bufferBuilder);
             RenderSystem.enableCull();
@@ -477,7 +471,7 @@ public class ElytraPlus extends Module {
             MovementUtility.setMotion(Math.min((acceleration = (acceleration + 11.0F / xzSpeed.getValue())) / 100.0F, xzSpeed.getValue()));
             if (!MovementUtility.isMoving()) acceleration = 0;
 
-            if (InputConstants.isKeyDown(mc.getWindow().getWindow(), bombKey.getValue().getKey())) {
+            if (InputConstants.isKeyDown(mc.getWindow(), bombKey.getValue().getKey())) {
                 MovementUtility.setMotion(0.8f);
                 mc.player.setDeltaMovement(mc.player.getDeltaMovement().x(), mc.player.tickCount % 2 == 0 ? 0.41999998688697815 : -0.41999998688697815, mc.player.getDeltaMovement().z());
                 acceleration = 70;

@@ -49,7 +49,7 @@ public abstract class MixinLivingEntityRenderer {
         lastEntity = entity;
     }
 
-    @Inject(method = "render", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "submit", at = @At("HEAD"), cancellable = true)
     public void onRenderPre(LivingEntityRenderState state, PoseStack matrixStack, MultiBufferSource vertexConsumerProvider, int i, CallbackInfo ci) {
         if (Module.fullNullCheck()) return;
         if (lastEntity == null) return;
@@ -104,7 +104,7 @@ public abstract class MixinLivingEntityRenderer {
                     k = j - h;
                 }
                 float m = Mth.lerp(g, ((IEntity) pe).getLastPitch(), pe.getXRot());
-                if (LivingEntityRenderer.isEntityUpsideDown(pe)) {
+                if (("Dinnerbone".equals(pe.getName().getString()) || "Grumm".equals(pe.getName().getString()))) {
                     m *= -1.0f;
                     k *= -1.0f;
                 }
@@ -144,7 +144,7 @@ public abstract class MixinLivingEntityRenderer {
         }
     }
 
-    @Inject(method = "render", at = @At("TAIL"))
+    @Inject(method = "submit", at = @At("TAIL"))
     public void onRenderPost(LivingEntityRenderState state, PoseStack matrixStack, MultiBufferSource vertexConsumerProvider, int i, CallbackInfo ci) {
         if (Module.fullNullCheck()) return;
         if (lastEntity != null) {

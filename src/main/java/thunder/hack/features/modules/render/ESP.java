@@ -8,30 +8,25 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Axis;
 import thunder.hack.utility.render.compat.RenderSystem;
 import net.minecraft.client.Camera;
-import net.minecraft.client.gl.ShaderProgramKeys;
+import thunder.hack.utility.render.ShaderProgramKeys;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.render.*;
-import net.minecraft.core.BlockPos;
+import thunder.hack.utility.render.BufferRenderer;
+import net.minecraft.core.*;
 import net.minecraft.core.particles.ColorParticleOption;
 import net.minecraft.core.particles.ParticleOptions;
-import net.minecraft.core.*;
-import net.minecraft.util.Mth;
-import net.minecraft.world.phys.*;
 import net.minecraft.world.entity.AreaEffectCloud;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
 import net.minecraft.world.entity.item.PrimedTnt;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.ThrownEnderpearl;
+import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrownEnderpearl;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BeaconBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.Vec2;
-import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.*;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 import org.joml.Vector4d;
@@ -107,9 +102,9 @@ public class ESP extends Module {
         if (lingeringPotions.getValue()) {
             for (Entity ent : mc.level.entitiesForRendering()) {
                 if (ent instanceof AreaEffectCloud aece) {
-                    double x = aece.getX() - mc.getEntityRenderDispatcher().camera.getPosition().x();
-                    double y = aece.getY() - mc.getEntityRenderDispatcher().camera.getPosition().y();
-                    double z = aece.getZ() - mc.getEntityRenderDispatcher().camera.getPosition().z();
+                    double x = aece.getX() - mc.getEntityRenderDispatcher().camera.position().x;
+                    double y = aece.getY() - mc.getEntityRenderDispatcher().camera.position().y;
+                    double z = aece.getZ() - mc.getEntityRenderDispatcher().camera.position().z;
 
                     float middle = aece.getRadius();
 
@@ -147,11 +142,11 @@ public class ESP extends Module {
                     RenderSystem.disableDepthTest();
                     PoseStack matrices = new PoseStack();
                     Camera camera = mc.gameRenderer.getMainCamera();
-                    matrices.mulPose(Axis.XP.rotationDegrees(camera.getXRot()));
-                    matrices.mulPose(Axis.YP.rotationDegrees(camera.getYRot() + 180.0F));
+                    matrices.mulPose(Axis.XP.rotationDegrees(camera.xRot()));
+                    matrices.mulPose(Axis.YP.rotationDegrees(camera.yRot() + 180.0F));
                     matrices.translate(x, y, z);
-                    matrices.mulPose(Axis.YP.rotationDegrees(-camera.getYRot()));
-                    matrices.mulPose(Axis.XP.rotationDegrees(camera.getXRot()));
+                    matrices.mulPose(Axis.YP.rotationDegrees(-camera.yRot()));
+                    matrices.mulPose(Axis.XP.rotationDegrees(camera.xRot()));
                     RenderSystem.enableBlend();
                     RenderSystem.defaultBlendFunc();
                     matrices.translate(0, 0, 0);
@@ -167,9 +162,9 @@ public class ESP extends Module {
             dizorentAnimation = fast(dizorentAnimation, mc.player.getMainHandItem().getItem() == Items.ENDER_EYE ? 10 : 0, 15f);
 
             if (mc.player.getMainHandItem().getItem() == Items.ENDER_EYE) {
-                double x = Render2DEngine.interpolate(mc.player.xo, mc.player.getX(), Render3DEngine.getTickDelta()) - mc.getEntityRenderDispatcher().camera.getPosition().x();
-                double y = Render2DEngine.interpolate(mc.player.yo, mc.player.getY(), Render3DEngine.getTickDelta()) - mc.getEntityRenderDispatcher().camera.getPosition().y();
-                double z = Render2DEngine.interpolate(mc.player.zo, mc.player.getZ(), Render3DEngine.getTickDelta()) - mc.getEntityRenderDispatcher().camera.getPosition().z();
+                double x = Render2DEngine.interpolate(mc.player.xo, mc.player.getX(), Render3DEngine.getTickDelta()) - mc.getEntityRenderDispatcher().camera.position().x;
+                double y = Render2DEngine.interpolate(mc.player.yo, mc.player.getY(), Render3DEngine.getTickDelta()) - mc.getEntityRenderDispatcher().camera.position().y;
+                double z = Render2DEngine.interpolate(mc.player.zo, mc.player.getZ(), Render3DEngine.getTickDelta()) - mc.getEntityRenderDispatcher().camera.position().z;
 
 
                 stack.pushPose();
@@ -214,9 +209,9 @@ public class ESP extends Module {
         if (beaconRadius.getValue()) {
             for (BlockEntity be : StorageEsp.getBlockEntities()) {
                 if (be instanceof BeaconBlockEntity bbe) {
-                    double x = be.getBlockPos().getX() - mc.getEntityRenderDispatcher().camera.getPosition().x();
-                    double y = be.getBlockPos().getY() - mc.getEntityRenderDispatcher().camera.getPosition().y();
-                    double z = be.getBlockPos().getZ() - mc.getEntityRenderDispatcher().camera.getPosition().z();
+                    double x = be.getBlockPos().getX() - mc.getEntityRenderDispatcher().camera.position().x;
+                    double y = be.getBlockPos().getY() - mc.getEntityRenderDispatcher().camera.position().y;
+                    double z = be.getBlockPos().getZ() - mc.getEntityRenderDispatcher().camera.position().z;
 
                     Render3DEngine.OUTLINE_QUEUE.add(new Render3DEngine.OutlineAction(new AABB(be.getBlockPos()), beakonColor.getValue().getColorObject(), 2));
                     float range = ((IBeaconBlockEntity) bbe).getLevel() * 10 + 11;
@@ -237,9 +232,9 @@ public class ESP extends Module {
                 BlockPos blockPos = BlockPos.containing(pl.position().add(0,0.15f,0));
                 Block block = mc.level.getBlockState(blockPos).getBlock();
 
-                double x = blockPos.getX() - mc.getEntityRenderDispatcher().camera.getPosition().x();
-                double y = blockPos.getY() - mc.getEntityRenderDispatcher().camera.getPosition().y();
-                double z = blockPos.getZ() - mc.getEntityRenderDispatcher().camera.getPosition().z();
+                double x = blockPos.getX() - mc.getEntityRenderDispatcher().camera.position().x;
+                double y = blockPos.getY() - mc.getEntityRenderDispatcher().camera.position().y;
+                double z = blockPos.getZ() - mc.getEntityRenderDispatcher().camera.position().z;
 
                 if (block == Blocks.OBSIDIAN
                         || block == Blocks.CRYING_OBSIDIAN
@@ -251,11 +246,11 @@ public class ESP extends Module {
                     RenderSystem.disableDepthTest();
                     PoseStack matrices = new PoseStack();
                     Camera camera = mc.gameRenderer.getMainCamera();
-                    matrices.mulPose(Axis.XP.rotationDegrees(camera.getXRot()));
-                    matrices.mulPose(Axis.YP.rotationDegrees(camera.getYRot() + 180.0F));
+                    matrices.mulPose(Axis.XP.rotationDegrees(camera.xRot()));
+                    matrices.mulPose(Axis.YP.rotationDegrees(camera.yRot() + 180.0F));
                     matrices.translate(x + 0.5f, y + 0.5f, z + 0.5f);
-                    matrices.mulPose(Axis.YP.rotationDegrees(-camera.getYRot()));
-                    matrices.mulPose(Axis.XP.rotationDegrees(camera.getXRot()));
+                    matrices.mulPose(Axis.YP.rotationDegrees(-camera.yRot()));
+                    matrices.mulPose(Axis.XP.rotationDegrees(camera.xRot()));
                     RenderSystem.enableBlend();
                     RenderSystem.defaultBlendFunc();
                     matrices.translate(0, 0, 0);
@@ -270,19 +265,19 @@ public class ESP extends Module {
         if (tntFuse.getValue() || tntRadius.getValue()) {
             for (Entity ent : mc.level.entitiesForRendering()) {
                 if (ent instanceof PrimedTnt tnt) {
-                    double x = tnt.xo + (tnt.position().x() - tnt.xo) * Render3DEngine.getTickDelta() - mc.getEntityRenderDispatcher().camera.getPosition().x();
-                    double y = tnt.yo + (tnt.position().y() - tnt.yo) * Render3DEngine.getTickDelta() - mc.getEntityRenderDispatcher().camera.getPosition().y();
-                    double z = tnt.zo + (tnt.position().z() - tnt.zo) * Render3DEngine.getTickDelta() - mc.getEntityRenderDispatcher().camera.getPosition().z();
+                    double x = tnt.xo + (tnt.position().x - tnt.xo) * Render3DEngine.getTickDelta() - mc.getEntityRenderDispatcher().camera.position().x;
+                    double y = tnt.yo + (tnt.position().y - tnt.yo) * Render3DEngine.getTickDelta() - mc.getEntityRenderDispatcher().camera.position().y;
+                    double z = tnt.zo + (tnt.position().z - tnt.zo) * Render3DEngine.getTickDelta() - mc.getEntityRenderDispatcher().camera.position().z;
 
                     if (tntFuse.getValue()) {
                         RenderSystem.disableDepthTest();
                         PoseStack matrices = new PoseStack();
                         Camera camera = mc.gameRenderer.getMainCamera();
-                        matrices.mulPose(Axis.XP.rotationDegrees(camera.getXRot()));
-                        matrices.mulPose(Axis.YP.rotationDegrees(camera.getYRot() + 180.0F));
+                        matrices.mulPose(Axis.XP.rotationDegrees(camera.xRot()));
+                        matrices.mulPose(Axis.YP.rotationDegrees(camera.yRot() + 180.0F));
                         matrices.translate(x, y + 0.5f, z);
-                        matrices.mulPose(Axis.YP.rotationDegrees(-camera.getYRot()));
-                        matrices.mulPose(Axis.XP.rotationDegrees(camera.getXRot()));
+                        matrices.mulPose(Axis.YP.rotationDegrees(-camera.yRot()));
+                        matrices.mulPose(Axis.XP.rotationDegrees(camera.xRot()));
                         RenderSystem.enableBlend();
                         RenderSystem.defaultBlendFunc();
                         matrices.translate(0, 0, 0);
@@ -312,8 +307,8 @@ public class ESP extends Module {
                     float xOffset = mc.getWindow().getGuiScaledWidth() / 2f;
                     float yOffset = mc.getWindow().getGuiScaledHeight() / 2f;
 
-                    float xPos = (float) (pearl.xo + (pearl.position().x() - pearl.xo) * Render3DEngine.getTickDelta());
-                    float zPos = (float) (pearl.zo + (pearl.position().z() - pearl.zo) * Render3DEngine.getTickDelta());
+                    float xPos = (float) (pearl.xo + (pearl.position().x - pearl.xo) * Render3DEngine.getTickDelta());
+                    float zPos = (float) (pearl.zo + (pearl.position().z - pearl.zo) * Render3DEngine.getTickDelta());
 
                     float yaw = getRotations(new Vec2(xPos, zPos)) - mc.player.getYRot();
                     context.pose().translate((float) (xOffset), (float) (yOffset));

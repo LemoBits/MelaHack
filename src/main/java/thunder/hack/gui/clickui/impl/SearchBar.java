@@ -28,7 +28,7 @@ public class SearchBar extends AbstractButton {
 
         if (Render2DEngine.isHovered(mouseX, mouseY, x, y, width, height)) {
             if (GLFW.glfwGetPlatform() != GLFW.GLFW_PLATFORM_WAYLAND) {
-                GLFW.glfwSetCursor(mc.getWindow().getWindow(),
+                GLFW.glfwSetCursor(mc.getWindow().handle(),
                         GLFW.glfwCreateStandardCursor(GLFW.GLFW_IBEAM_CURSOR));
             }
             ClickGUI.anyHovered = true;
@@ -60,7 +60,7 @@ public class SearchBar extends AbstractButton {
     public void keyTyped(int keyCode) {
         super.keyTyped(keyCode);
 
-        if (keyCode == GLFW.GLFW_KEY_F && (InputConstants.isKeyDown(mc.getWindow().getWindow(), GLFW.GLFW_KEY_LEFT_CONTROL) || InputConstants.isKeyDown(mc.getWindow().getWindow(), GLFW.GLFW_KEY_RIGHT_CONTROL))) {
+        if (keyCode == GLFW.GLFW_KEY_F && (InputConstants.isKeyDown(mc.getWindow(), GLFW.GLFW_KEY_LEFT_CONTROL) || InputConstants.isKeyDown(mc.getWindow(), GLFW.GLFW_KEY_RIGHT_CONTROL))) {
             listening = !listening;
             ThunderHack.currentKeyListener = ThunderHack.KeyListening.Search;
             return;

@@ -28,7 +28,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 import net.minecraft.client.Minecraft;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.ResourceProvider;
 
 public final class ResettableManagedCoreShader extends ResettableManagedShaderBase<GlProgram> implements ManagedCoreShader {
@@ -36,14 +36,14 @@ public final class ResettableManagedCoreShader extends ResettableManagedShaderBa
     private final VertexFormat vertexFormat;
     private final Map<String, ManagedSamplerUniformV1> managedSamplers = new HashMap<>();
 
-    public ResettableManagedCoreShader(ResourceLocation location, VertexFormat vertexFormat, Consumer<ManagedCoreShader> initCallback) {
+    public ResettableManagedCoreShader(Identifier location, VertexFormat vertexFormat, Consumer<ManagedCoreShader> initCallback) {
         super(location);
         this.vertexFormat = vertexFormat;
         this.initCallback = initCallback;
     }
 
     @Override
-    protected GlProgram parseShader(ResourceProvider resourceManager, Minecraft mc, ResourceLocation location) throws IOException {
+    protected GlProgram parseShader(ResourceProvider resourceManager, Minecraft mc, Identifier location) throws IOException {
         return GlProgram.INVALID_PROGRAM;
     }
 

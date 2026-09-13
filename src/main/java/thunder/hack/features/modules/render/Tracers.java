@@ -35,8 +35,8 @@ public class Tracers extends Module {
             double z1 = mc.player.zo + (mc.player.getZ() - mc.player.zo) * Render3DEngine.getTickDelta();
 
             Vec3 vec2 = new Vec3(0, 0, 75)
-                    .xRot(-(float) Math.toRadians(mc.gameRenderer.getMainCamera().getXRot()))
-                    .yRot(-(float) Math.toRadians(mc.gameRenderer.getMainCamera().getYRot()))
+                    .xRot(-(float) Math.toRadians(mc.gameRenderer.getMainCamera().xRot()))
+                    .yRot(-(float) Math.toRadians(mc.gameRenderer.getMainCamera().yRot()))
                     .add(x1, y1, z1);
 
             double x = player.xo + (player.getX() - player.xo) * Render3DEngine.getTickDelta();

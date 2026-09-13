@@ -12,12 +12,13 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientSuggestionProvider;
 import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.server.permissions.PermissionSet;
 
 public class CommandManager implements IManager {
     private String prefix = "@";
 
     private final CommandDispatcher<SharedSuggestionProvider> dispatcher = new CommandDispatcher<>();
-    private final SharedSuggestionProvider source = new ClientSuggestionProvider(null, Minecraft.getInstance(), false);
+    private final SharedSuggestionProvider source = new ClientSuggestionProvider(null, Minecraft.getInstance(), PermissionSet.NO_PERMISSIONS);
     private final List<Command> commands = new ArrayList<>();
 
     public CommandManager() {

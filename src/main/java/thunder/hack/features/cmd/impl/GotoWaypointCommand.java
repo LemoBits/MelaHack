@@ -24,7 +24,7 @@ public class GotoWaypointCommand extends Command {
                 return SINGLE_SUCCESS;
             }
             WayPointManager.WayPoint wp = context.getArgument("name", WayPointManager.WayPoint.class);
-            if (!mc.level.dimension().location().getPath().equals(wp.getDimension())) {
+            if (!mc.level.dimension().identifier().getPath().equals(wp.getDimension())) {
                 sendMessage(isRu() ? "Метка в другом измерении" : "Waypoint is in another dimension");
                 return SINGLE_SUCCESS;
             }

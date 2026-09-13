@@ -29,7 +29,7 @@ public class PlayerArgumentType implements ArgumentType<PlayerInfo> {
         String name = reader.readString();
 
         final PlayerInfo player = mc.getConnection().getOnlinePlayers().stream()
-                .filter(p -> name.equals(p.getProfile().getName()))
+                .filter(p -> name.equals(p.getProfile().name()))
                 .findFirst()
                 .orElse(null);
         if (player == null) {
@@ -40,7 +40,7 @@ public class PlayerArgumentType implements ArgumentType<PlayerInfo> {
 
     @Override
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
-        return SharedSuggestionProvider.suggest(mc.getConnection().getOnlinePlayers().stream().map(p -> p.getProfile().getName()), builder);
+        return SharedSuggestionProvider.suggest(mc.getConnection().getOnlinePlayers().stream().map(p -> p.getProfile().name()), builder);
     }
 
     @Override

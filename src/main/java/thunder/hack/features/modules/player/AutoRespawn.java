@@ -37,7 +37,7 @@ public class AutoRespawn extends Module {
                 if(deathcoords.getValue())
                     sendMessage(ChatFormatting.GOLD + "[PlayerDeath] " + ChatFormatting.YELLOW + (int) mc.player.getX() + " " + (int) mc.player.getY() + " " + (int) mc.player.getZ());
                 if(autowaypoint.getValue()) {
-                    WayPointManager.WayPoint wp = new WayPointManager.WayPoint((int) mc.player.getX(), (int) mc.player.getY(), (int) mc.player.getZ(), "Death №" + waypointCount, (mc.isLocalServer() ? "SinglePlayer" : mc.getConnection().getServerData().ip), mc.level.dimension().location().getPath());
+                    WayPointManager.WayPoint wp = new WayPointManager.WayPoint((int) mc.player.getX(), (int) mc.player.getY(), (int) mc.player.getZ(), "Death №" + waypointCount, (mc.isLocalServer() ? "SinglePlayer" : mc.getConnection().getServerData().ip), mc.level.dimension().identifier().getPath());
                     Managers.WAYPOINT.addWayPoint(wp);
                 }
                 mc.player.respawn();

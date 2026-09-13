@@ -11,7 +11,7 @@ import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
 import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
@@ -48,7 +48,7 @@ import com.mojang.math.Axis;
 
 public final class Core {
     public static boolean lockSprint, serverSprint, hold_mouse0, showSkull;
-    public static final Map<String, ResourceLocation> HEADS = new ConcurrentHashMap<>();
+    public static final Map<String, Identifier> HEADS = new ConcurrentHashMap<>();
     public ArrayList<Packet<?>> silentPackets = new ArrayList<>();
     private final Timer skullTimer = new Timer();
     private final Timer lastPacket = new Timer();
@@ -230,7 +230,7 @@ public final class Core {
         }
 
         float g = -Mth.lerp(tickDelta, prevHorizontalSpeed, horizontalSpeed);
-        float h = Mth.lerp(tickDelta, ((thunder.hack.injection.accesors.IPlayerEntity) playerEntity).getLastStrideDistance(), playerEntity.bob);
+        float h = playerEntity.walkAnimation.speed(tickDelta);
         matrices.translate(Mth.sin(g * (float) Math.PI) * h * 0.1f, -Math.abs(Mth.cos(g * (float) Math.PI) * h) * 0.3, 0.0f);
         matrices.mulPose(Axis.ZP.rotationDegrees(Mth.sin(g * (float) Math.PI) * h * 3.0f));
         matrices.mulPose(Axis.XP.rotationDegrees(Math.abs(Mth.cos(g * (float) Math.PI - 0.2f) * h) * 0.3f));

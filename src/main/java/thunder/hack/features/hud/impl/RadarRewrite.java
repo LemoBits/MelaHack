@@ -7,9 +7,9 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 
 import com.google.common.collect.Lists;
 import thunder.hack.utility.render.compat.RenderSystem;
-import net.minecraft.client.gl.ShaderProgramKeys;
+import thunder.hack.utility.render.ShaderProgramKeys;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.render.*;
+import thunder.hack.utility.render.BufferRenderer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import thunder.hack.core.Managers;

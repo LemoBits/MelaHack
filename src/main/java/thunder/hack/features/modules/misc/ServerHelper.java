@@ -1,6 +1,4 @@
 package thunder.hack.features.modules.misc;
-import java.util.List;
-
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.multiplayer.PlayerInfo;
@@ -33,6 +31,7 @@ import thunder.hack.utility.Timer;
 import thunder.hack.utility.player.InventoryUtility;
 import thunder.hack.utility.player.SearchInvResult;
 import thunder.hack.utility.render.Render2DEngine;
+import java.util.List;
 
 import java.awt.*;
 import java.util.*;
@@ -133,7 +132,7 @@ public class ServerHelper extends Module {
         if (inviteTimer.passedS(clanInviteDelay.getValue()) && clanInvite.getValue()) {
             ArrayList<String> playersNames = new ArrayList<>();
             for (PlayerInfo player : mc.player.connection.getOnlinePlayers()) {
-                playersNames.add(player.getProfile().getName());
+                playersNames.add(player.getProfile().name());
             }
             if (playersNames.size() > 1) {
                 int randomName = (int) Math.floor(Math.random() * playersNames.size());

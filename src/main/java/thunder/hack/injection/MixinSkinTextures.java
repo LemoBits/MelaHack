@@ -1,7 +1,7 @@
 package thunder.hack.injection;
 
-import net.minecraft.client.resources.PlayerSkin;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.player.PlayerSkin;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -12,8 +12,8 @@ import thunder.hack.utility.render.TextureStorage;
 
 @Mixin(PlayerSkin.class)
 public class MixinSkinTextures {
-    @Inject(method = "texture", at = @At("HEAD"), cancellable = true)
-    public void getSkinTextureHook(CallbackInfoReturnable<ResourceLocation> cir) {
+    @Inject(method = "body", at = @At("HEAD"), cancellable = true)
+    public void getSkinTextureHook(CallbackInfoReturnable<Identifier> cir) {
         if (ModuleManager.media.isEnabled() && Media.skinProtect.getValue()) {
             cir.setReturnValue(TextureStorage.sunRiseSkin);
         }

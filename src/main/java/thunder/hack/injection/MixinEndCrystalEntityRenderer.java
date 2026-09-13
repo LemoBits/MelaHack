@@ -1,7 +1,7 @@
 package thunder.hack.injection;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.model.EndCrystalModel;
+import net.minecraft.client.model.object.crystal.EndCrystalModel;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EndCrystalRenderer;
 import net.minecraft.client.renderer.entity.state.EndCrystalRenderState;

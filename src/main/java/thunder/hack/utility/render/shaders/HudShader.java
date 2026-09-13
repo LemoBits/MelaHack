@@ -9,7 +9,7 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import thunder.hack.utility.render.compat.RenderSystem;
 
 import java.awt.*;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 
 import static thunder.hack.features.modules.Module.mc;
@@ -30,9 +30,9 @@ public class HudShader {
     private Color color4 = Color.WHITE;
 
     public static final RenderPipeline HUD_SHADER = RenderPipeline.builder()
-            .withLocation(ResourceLocation.fromNamespaceAndPath("thunderhack", "pipeline/hudshader"))
-            .withVertexShader(ResourceLocation.fromNamespaceAndPath("minecraft", "core/position_only"))
-            .withFragmentShader(ResourceLocation.fromNamespaceAndPath("minecraft", "core/hudshader"))
+            .withLocation(Identifier.fromNamespaceAndPath("thunderhack", "pipeline/hudshader"))
+            .withVertexShader(Identifier.fromNamespaceAndPath("minecraft", "core/position_only"))
+            .withFragmentShader(Identifier.fromNamespaceAndPath("minecraft", "core/hudshader"))
             .withBlend(BlendFunction.TRANSLUCENT)
             .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
             .withDepthWrite(false)

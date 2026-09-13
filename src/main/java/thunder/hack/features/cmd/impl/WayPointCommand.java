@@ -40,7 +40,7 @@ public class WayPointCommand extends Command {
 
         builder.then(literal("add").then(arg("name", StringArgumentType.word()).executes(context -> {
             String name = context.getArgument("name", String.class);
-            WayPointManager.WayPoint wp = new WayPointManager.WayPoint((int) mc.player.getX(), (int) mc.player.getY(), (int) mc.player.getZ(), name, (mc.isLocalServer() ? "SinglePlayer" : mc.getConnection().getServerData().ip), mc.level.dimension().location().getPath());
+            WayPointManager.WayPoint wp = new WayPointManager.WayPoint((int) mc.player.getX(), (int) mc.player.getY(), (int) mc.player.getZ(), name, (mc.isLocalServer() ? "SinglePlayer" : mc.getConnection().getServerData().ip), mc.level.dimension().identifier().getPath());
             Managers.WAYPOINT.addWayPoint(wp);
 
             sendMessage((isRu() ? "Добавлена метка " + name + " с координатами" : "Added waypoint " + name + " with coords") + " X: " + ((int) mc.player.getX()) + " Y: " + ((int) mc.player.getY()) + " Z: " + ((int) mc.player.getZ()));
@@ -52,7 +52,7 @@ public class WayPointCommand extends Command {
                             String name = context.getArgument("name", String.class);
                             BlockPos pos = new BlockPos(context.getArgument("x", Integer.class), context.getArgument("y", Integer.class), context.getArgument("z", Integer.class));
 
-                            WayPointManager.WayPoint wp = new WayPointManager.WayPoint(pos.getX(), pos.getY(), pos.getZ(), name, (mc.isLocalServer() ? "SinglePlayer" : mc.getConnection().getServerData().ip), mc.level.dimension().location().getPath());
+                            WayPointManager.WayPoint wp = new WayPointManager.WayPoint(pos.getX(), pos.getY(), pos.getZ(), name, (mc.isLocalServer() ? "SinglePlayer" : mc.getConnection().getServerData().ip), mc.level.dimension().identifier().getPath());
                             Managers.WAYPOINT.addWayPoint(wp);
 
                             sendMessage((isRu() ? "Добавлена метка " + name + " с координатами X: " : "Added waypoint " + name + " with coords") + pos.getX() + " Y: " + pos.getY() + " Z: " + pos.getZ());

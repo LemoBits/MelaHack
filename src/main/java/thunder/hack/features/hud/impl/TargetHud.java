@@ -1,7 +1,7 @@
 package thunder.hack.features.hud.impl;
 
 import thunder.hack.utility.render.compat.RenderSystem;
-import net.minecraft.client.gl.ShaderProgramKeys;
+import thunder.hack.utility.render.ShaderProgramKeys;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -11,7 +11,7 @@ import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.numbers.StyledFormat;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.CommonColors;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -61,7 +61,7 @@ public class TargetHud extends HudElement {
     private final Setting<Boolean> mini = new Setting<>("Mini", false, v -> Mode.getValue() == ModeEn.NurikZapen);
     private final Setting<Boolean> absorp = new Setting<>("Absorption", true);
 
-    private static ResourceLocation custom;
+    private static Identifier custom;
 
     public EaseOutBack animation = new EaseOutBack();
     public static EaseOutCirc healthAnimation = new EaseOutCirc();
@@ -188,7 +188,7 @@ public class TargetHud extends HudElement {
         Render2DEngine.drawRect(context.pose(), getPosX() + 50, getPosY() + 30, MathUtility.clamp((int) (60 * (health / target.getMaxHealth())), 0, 60), 10, color.getValue().getColorObject().brighter().brighter().brighter());
 
         if (target instanceof Player) {
-            RenderSystem.setShaderTexture(0, ((AbstractClientPlayer) target).getSkin().texture());
+            RenderSystem.setShaderTexture(0, ((AbstractClientPlayer) target).getSkin().body().texturePath());
         } else {
             RenderSystem.setShaderTexture(0, getTargetTexture(target));
         }
@@ -227,7 +227,7 @@ public class TargetHud extends HudElement {
 
         // Бошка
         if (target instanceof Player) {
-            RenderSystem.setShaderTexture(0, ((AbstractClientPlayer) target).getSkin().texture());
+            RenderSystem.setShaderTexture(0, ((AbstractClientPlayer) target).getSkin().body().texturePath());
         } else {
             RenderSystem.setShaderTexture(0, getTargetTexture(target));
         }
@@ -305,7 +305,7 @@ public class TargetHud extends HudElement {
 
         // Бошка
         if (target instanceof Player) {
-            RenderSystem.setShaderTexture(0, ((AbstractClientPlayer) target).getSkin().texture());
+            RenderSystem.setShaderTexture(0, ((AbstractClientPlayer) target).getSkin().body().texturePath());
         } else {
             RenderSystem.setShaderTexture(0, getTargetTexture(target));
         }
@@ -437,7 +437,7 @@ public class TargetHud extends HudElement {
         headAnimation.setValue(hurtPercent2);
 
         if (target instanceof Player) {
-            RenderSystem.setShaderTexture(0, ((AbstractClientPlayer) target).getSkin().texture());
+            RenderSystem.setShaderTexture(0, ((AbstractClientPlayer) target).getSkin().body().texturePath());
         } else {
             RenderSystem.setShaderTexture(0, getTargetTexture(target));
         }
@@ -543,10 +543,10 @@ public class TargetHud extends HudElement {
         if (target instanceof Player ent && (mc.getConnection() != null && mc.getConnection().getServerData() != null && mc.getConnection().getServerData().ip.contains("funtime") || funTimeHP.getValue())) {
             Objective scoreBoard = null;
             String resolvedHp = "";
-            if ((ent.getScoreboard()).getDisplayObjective(DisplaySlot.BELOW_NAME) != null) {
-                scoreBoard = (ent.getScoreboard()).getDisplayObjective(DisplaySlot.BELOW_NAME);
+            if ((ent.level().getScoreboard()).getDisplayObjective(DisplaySlot.BELOW_NAME) != null) {
+                scoreBoard = (ent.level().getScoreboard()).getDisplayObjective(DisplaySlot.BELOW_NAME);
                 if (scoreBoard != null) {
-                    ReadOnlyScoreInfo readableScoreboardScore = ent.getScoreboard().getPlayerScoreInfo(ent, scoreBoard);
+                    ReadOnlyScoreInfo readableScoreboardScore = ent.level().getScoreboard().getPlayerScoreInfo(ent, scoreBoard);
                     MutableComponent text2 = ReadOnlyScoreInfo.safeFormatValue(readableScoreboardScore, scoreBoard.numberFormatOrDefault(StyledFormat.NO_STYLE));
                     resolvedHp = text2.getString();
                 }
@@ -576,7 +576,7 @@ public class TargetHud extends HudElement {
         return "pon";
     }
 
-    private ResourceLocation getTargetTexture(LivingEntity entity) {
+    private Identifier getTargetTexture(LivingEntity entity) {
         EntityRenderer<? super LivingEntity, ? extends EntityRenderState> renderer = mc.getEntityRenderDispatcher().getRenderer(entity);
         EntityRenderState renderState = renderer.createRenderState(entity, Render3DEngine.getTickDelta());
         if (renderer instanceof LivingEntityRenderer<?, ?, ?> livingRenderer && renderState instanceof LivingEntityRenderState livingState) {
@@ -585,7 +585,7 @@ public class TargetHud extends HudElement {
             return typedRenderer.getTextureLocation(livingState);
         }
         if (entity instanceof AbstractClientPlayer playerEntity) {
-            return playerEntity.getSkin().texture();
+            return playerEntity.getSkin().body().texturePath();
         }
         return null;
     }

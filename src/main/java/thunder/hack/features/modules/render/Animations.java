@@ -4,7 +4,8 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.player.AbstractClientPlayer;
-import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.network.protocol.game.ServerboundSwingPacket;
 import net.minecraft.util.Mth;
@@ -222,7 +223,7 @@ public class Animations extends Module {
     }
 
 
-    public void renderFirstPersonItemCustom(AbstractClientPlayer player, float tickDelta, float pitch, InteractionHand hand, float swingProgress, ItemStack item, float equipProgress, PoseStack matrices, MultiBufferSource vertexConsumers, int light) {
+    public void renderFirstPersonItemCustom(AbstractClientPlayer player, float tickDelta, float pitch, InteractionHand hand, float swingProgress, ItemStack item, float equipProgress, PoseStack matrices, SubmitNodeCollector vertexConsumers, int light) {
         if (!player.isScoping()) {
             boolean bl = hand == InteractionHand.MAIN_HAND;
             HumanoidArm arm = bl ? player.getMainArm() : player.getMainArm().getOpposite();
@@ -385,11 +386,13 @@ public class Animations extends Module {
         matrices.mulPose(Axis.YP.rotationDegrees((float) i * -45.0F));
     }
 
-    public void renderItem(LivingEntity entity, ItemStack stack, ItemDisplayContext renderMode, boolean leftHanded, PoseStack matrices, MultiBufferSource vertexConsumers, int light) {
+    public void renderItem(LivingEntity entity, ItemStack stack, ItemDisplayContext renderMode, boolean leftHanded, PoseStack matrices, SubmitNodeCollector collector, int light) {
         if (stack.isEmpty()) {
             return;
         }
-        mc.getItemRenderer().renderStatic(entity, stack, renderMode, matrices, vertexConsumers, entity.level(), light, OverlayTexture.NO_OVERLAY, entity.getId() + renderMode.ordinal());
+        ItemStackRenderState state = new ItemStackRenderState();
+        mc.getItemModelResolver().updateForLiving(state, stack, renderMode, entity);
+        state.submit(matrices, collector, light, OverlayTexture.NO_OVERLAY, entity.getId() + renderMode.ordinal());
     }
 
     private void applyEatOrDrinkTransformationCustom(PoseStack matrices, float tickDelta, HumanoidArm arm, @NotNull ItemStack stack) {

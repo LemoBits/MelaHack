@@ -42,7 +42,7 @@ public class LoginCommand extends Command {
 
     public void login(String name) {
         try {
-            setSession(new User(name, UUIDUtil.createOfflinePlayerUUID(name), "", Optional.empty(), Optional.empty(), User.Type.MOJANG));
+            setSession(new User(name, UUIDUtil.createOfflinePlayerUUID(name), "", Optional.empty(), Optional.empty()));
         } catch (Exception exception) {
             sendMessage((isRu() ? "Неверное имя! " : "Incorrect username! ") + exception);
         }
@@ -51,7 +51,7 @@ public class LoginCommand extends Command {
     public void setSession(User session) {
         IMinecraftClient mca = (IMinecraftClient) mc;
         mca.setSessionT(session);
-        mc.getGameProfile().getProperties().clear();
+        mc.getGameProfile().properties().clear();
         UserApiService apiService;
         apiService = UserApiService.OFFLINE;
         mca.setUserApiService(apiService);

@@ -18,7 +18,7 @@ import static thunder.hack.features.modules.Module.mc;
 
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
@@ -64,7 +64,7 @@ public class MixinClientWorld {
     @Inject(method = "playSound(DDDLnet/minecraft/sounds/SoundEvent;Lnet/minecraft/sounds/SoundSource;FFZJ)V", at = @At("HEAD"))
     private void playSoundHoof(double x, double y, double z, SoundEvent event, SoundSource category, float volume, float pitch, boolean useDistance, long seed, CallbackInfo ci) {
         if (ModuleManager.soundESP.isEnabled()) {
-            ResourceLocation id = BuiltInRegistries.SOUND_EVENT.getKey(event);
+            Identifier id = BuiltInRegistries.SOUND_EVENT.getKey(event);
             ModuleManager.soundESP.add(x, y, z, id != null ? id.toLanguageKey() : "unknown");
         }
     }

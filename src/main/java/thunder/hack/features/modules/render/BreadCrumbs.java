@@ -8,8 +8,8 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 
 import thunder.hack.utility.render.compat.RenderSystem;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.gl.ShaderProgramKeys;
-import net.minecraft.client.render.*;
+import thunder.hack.utility.render.ShaderProgramKeys;
+import thunder.hack.utility.render.BufferRenderer;
 import net.minecraft.world.phys.Vec3;
 import thunder.hack.events.impl.EventPostSync;
 import thunder.hack.features.modules.Module;

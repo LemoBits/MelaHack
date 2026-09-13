@@ -10,15 +10,15 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.blaze3d.platform.GlStateManager;
 import thunder.hack.utility.render.compat.RenderSystem;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.gl.ShaderProgramKeys;
-import net.minecraft.client.model.PlayerModel;
+import thunder.hack.utility.render.ShaderProgramKeys;
 import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.model.player.PlayerModel;
 import net.minecraft.client.player.AbstractClientPlayer;
-import net.minecraft.client.render.*;
+import thunder.hack.utility.render.BufferRenderer;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
-import net.minecraft.client.renderer.entity.state.PlayerRenderState;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.client.renderer.entity.state.AvatarRenderState;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -89,10 +89,10 @@ public final class PopChams extends Module {
         entity.swingTime = e.getEntity().swingTime;
         entity.setShiftKeyDown(e.getEntity().isShiftKeyDown());
         entity.walkAnimation.setSpeed(e.getEntity().walkAnimation.speed());
-        popList.add(new Person(entity, ((AbstractClientPlayer) e.getEntity()).getSkin().texture()));
+        popList.add(new Person(entity, ((AbstractClientPlayer) e.getEntity()).getSkin().body().texturePath()));
     }
 
-    private void renderEntity(@NotNull PoseStack matrices, @NotNull LivingEntity entity, @NotNull PlayerModel modelBase, ResourceLocation texture, int alpha) {
+    private void renderEntity(@NotNull PoseStack matrices, @NotNull LivingEntity entity, @NotNull PlayerModel modelBase, Identifier texture, int alpha) {
         modelBase.leftPants.visible = secondLayer.getValue();
         modelBase.rightPants.visible = secondLayer.getValue();
         modelBase.leftSleeve.visible = secondLayer.getValue();
@@ -100,9 +100,9 @@ public final class PopChams extends Module {
         modelBase.jacket.visible = secondLayer.getValue();
         modelBase.hat.visible = secondLayer.getValue();
 
-        double x = entity.getX() - mc.getEntityRenderDispatcher().camera.getPosition().x();
-        double y = entity.getY() - mc.getEntityRenderDispatcher().camera.getPosition().y();
-        double z = entity.getZ() - mc.getEntityRenderDispatcher().camera.getPosition().z();
+        double x = entity.getX() - mc.getEntityRenderDispatcher().camera.position().x;
+        double y = entity.getY() - mc.getEntityRenderDispatcher().camera.position().y;
+        double z = entity.getZ() - mc.getEntityRenderDispatcher().camera.position().z;
         ((IEntity) entity).setPos(entity.position().add(0, (double) ySpeed.getValue() / 50., 0));
 
         matrices.pushPose();
@@ -115,7 +115,7 @@ public final class PopChams extends Module {
         prepareScale(matrices);
 
         @SuppressWarnings("unchecked")
-        PlayerRenderState renderState = ((EntityRenderer<Player, PlayerRenderState>) mc.getEntityRenderDispatcher()
+        AvatarRenderState renderState = ((EntityRenderer<Player, AvatarRenderState>) mc.getEntityRenderDispatcher()
                 .getRenderer((Player) entity))
                 .createRenderState((Player) entity, Render3DEngine.getTickDelta());
         modelBase.setupAnim(renderState);
@@ -147,12 +147,12 @@ public final class PopChams extends Module {
     private class Person {
         private final Player player;
         private final PlayerModel modelPlayer;
-        private ResourceLocation texture;
+        private Identifier texture;
         private int alpha;
 
-        public Person(Player player, ResourceLocation texture) {
+        public Person(Player player, Identifier texture) {
             this.player = player;
-            modelPlayer = new PlayerModel(new EntityRendererProvider.Context(mc.getEntityRenderDispatcher(), mc.getItemModelResolver(), mc.getMapRenderer(), mc.getBlockRenderer(), mc.getResourceManager(), mc.getEntityModels(), ((IEntityRenderDispatcher) mc.getEntityRenderDispatcher()).getEquipmentModelLoader(), mc.font).bakeLayer(ModelLayers.PLAYER), false);
+            modelPlayer = new PlayerModel(new EntityRendererProvider.Context(mc.getEntityRenderDispatcher(), mc.getItemModelResolver(), mc.getMapRenderer(), mc.getBlockRenderer(), mc.getResourceManager(), mc.getEntityModels(), ((IEntityRenderDispatcher) mc.getEntityRenderDispatcher()).getEquipmentModelLoader(), mc.getAtlasManager(), mc.font, mc.playerSkinRenderCache()).bakeLayer(ModelLayers.PLAYER), false);
             modelPlayer.getHead().offsetScale(new Vector3f(-0.3f, -0.3f, -0.3f));
             alpha = color.getValue().getAlpha();
             this.texture = texture;
@@ -173,7 +173,7 @@ public final class PopChams extends Module {
             return MathUtility.clamp(alpha, 0, 255);
         }
 
-        public ResourceLocation getTexture() {
+        public Identifier getTexture() {
             return texture;
         }
     }

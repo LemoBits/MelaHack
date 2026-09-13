@@ -10,18 +10,18 @@ import com.google.common.collect.Maps;
 import com.mojang.blaze3d.platform.GlStateManager;
 import thunder.hack.utility.render.compat.RenderSystem;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.gl.ShaderProgramKeys;
+import thunder.hack.utility.render.ShaderProgramKeys;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.model.player.PlayerModel;
 import net.minecraft.client.player.RemotePlayer;
-import net.minecraft.client.render.*;
+import thunder.hack.utility.render.BufferRenderer;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
-import net.minecraft.client.renderer.entity.state.PlayerRenderState;
+import net.minecraft.client.renderer.entity.state.AvatarRenderState;
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
@@ -64,7 +64,7 @@ public class LogoutSpots extends Module {
             if (pac.actions().contains(ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER)) {
                 for (ClientboundPlayerInfoUpdatePacket.Entry ple : pac.newEntries()) {
                     for (UUID uuid : logoutCache.keySet()) {
-                        if (!uuid.equals(ple.profile().getId())) continue;
+                        if (!uuid.equals(ple.profile().id())) continue;
                         Player pl = logoutCache.get(uuid);
                         if (ignoreBots.getValue() && isABot(pl)) continue;
                         if (notifications.getValue())
@@ -104,7 +104,7 @@ public class LogoutSpots extends Module {
     public void onUpdate() {
         for (Player player : mc.level.players()) {
             if (player == null || player.equals(mc.player)) continue;
-            playerCache.put(player.getGameProfile().getId(), player);
+            playerCache.put(player.getGameProfile().id(), player);
         }
     }
 
@@ -122,10 +122,10 @@ public class LogoutSpots extends Module {
                     PlayerModel modelPlayer = new PlayerModel(new EntityRendererProvider.Context(
                             mc.getEntityRenderDispatcher(), mc.getItemModelResolver(), mc.getMapRenderer(),
                             mc.getBlockRenderer(), mc.getResourceManager(), mc.getEntityModels(),
-                            ((IEntityRenderDispatcher) mc.getEntityRenderDispatcher()).getEquipmentModelLoader(), mc.font).bakeLayer(ModelLayers.PLAYER), false);
+                            ((IEntityRenderDispatcher) mc.getEntityRenderDispatcher()).getEquipmentModelLoader(), mc.getAtlasManager(), mc.font, mc.playerSkinRenderCache()).bakeLayer(ModelLayers.PLAYER), false);
                     modelPlayer.getHead().offsetScale(new Vector3f(-0.3f, -0.3f, -0.3f));
 
-                    renderEntity(s, data, modelPlayer, ((RemotePlayer)data).getSkin().texture(), color.getValue().getAlpha());
+                    renderEntity(s, data, modelPlayer, ((RemotePlayer)data).getSkin().body().texturePath(), color.getValue().getAlpha());
                 }
             }
         }
@@ -162,7 +162,7 @@ public class LogoutSpots extends Module {
         }
     }
 
-    private void renderEntity(@NotNull PoseStack matrices, @NotNull LivingEntity entity, @NotNull PlayerModel modelBase, ResourceLocation texture, int alpha) {
+    private void renderEntity(@NotNull PoseStack matrices, @NotNull LivingEntity entity, @NotNull PlayerModel modelBase, Identifier texture, int alpha) {
         modelBase.leftPants.visible = true;
         modelBase.rightPants.visible = true;
         modelBase.leftSleeve.visible = true;
@@ -170,16 +170,16 @@ public class LogoutSpots extends Module {
         modelBase.jacket.visible = true;
         modelBase.hat.visible = true;
 
-        double x = entity.getX() - mc.getEntityRenderDispatcher().camera.getPosition().x();
-        double y = entity.getY() - mc.getEntityRenderDispatcher().camera.getPosition().y();
-        double z = entity.getZ() - mc.getEntityRenderDispatcher().camera.getPosition().z();
+        double x = entity.getX() - mc.getEntityRenderDispatcher().camera.position().x;
+        double y = entity.getY() - mc.getEntityRenderDispatcher().camera.position().y;
+        double z = entity.getZ() - mc.getEntityRenderDispatcher().camera.position().z;
         ((IEntity) entity).setPos(entity.position());
         matrices.pushPose();
         matrices.translate((float) x, (float) y, (float) z);
         matrices.mulPose(Axis.YP.rotation(MathUtility.rad(180 - entity.yBodyRot)));
         prepareScale(matrices);
         @SuppressWarnings("unchecked")
-        PlayerRenderState renderState = ((EntityRenderer<Player, PlayerRenderState>) mc.getEntityRenderDispatcher()
+        AvatarRenderState renderState = ((EntityRenderer<Player, AvatarRenderState>) mc.getEntityRenderDispatcher()
                 .getRenderer((Player) entity))
                 .createRenderState((Player) entity, Render3DEngine.getTickDelta());
         modelBase.setupAnim(renderState);

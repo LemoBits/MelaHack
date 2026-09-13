@@ -12,7 +12,7 @@ import thunder.hack.utility.render.animation.AnimationUtility;
 
 import java.awt.*;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.CommonColors;
 
 import static thunder.hack.core.manager.IManager.mc;
@@ -34,9 +34,9 @@ public class WindowBase {
     private boolean dragging, hoveringWindow, scaling, scrolling;
 
     private boolean visible = true;
-    private final ResourceLocation icon;
+    private final Identifier icon;
 
-    protected WindowBase(float x, float y, float width, float height, String name, Setting<PositionSetting> pos, ResourceLocation icon) {
+    protected WindowBase(float x, float y, float width, float height, String name, Setting<PositionSetting> pos, Identifier icon) {
         setX(x);
         setY(y);
         setWidth(width);
@@ -221,7 +221,7 @@ public class WindowBase {
         this.visible = visible;
     }
 
-    public ResourceLocation getIcon() {
+    public Identifier getIcon() {
         return icon;
     }
 }

@@ -1,4 +1,4 @@
-package net.minecraft.client.render;
+package thunder.hack.utility.render;
 
 import com.mojang.blaze3d.ProjectionType;
 import com.mojang.blaze3d.buffers.GpuBuffer;
@@ -10,7 +10,7 @@ import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.textures.GpuTextureView;
 import com.mojang.blaze3d.vertex.MeshData;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gl.ShaderProgramKeys;
+import thunder.hack.utility.render.ShaderProgramKeys;
 import net.minecraft.client.renderer.RenderPipelines;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -48,7 +48,7 @@ public final class BufferRenderer {
             pipeline = switch (parameters.mode()) {
                 case TRIANGLE_FAN -> RenderPipelines.DEBUG_TRIANGLE_FAN;
                 case TRIANGLE_STRIP -> RenderPipelines.DEBUG_FILLED_BOX;
-                case DEBUG_LINE_STRIP -> RenderPipelines.DEBUG_LINE_STRIP;
+                case DEBUG_LINE_STRIP -> RenderPipelines.LINES;
                 case LINES, DEBUG_LINES -> RenderPipelines.LINES;
                 default -> pipeline;
             };
@@ -87,9 +87,10 @@ public final class BufferRenderer {
             thunder.hack.utility.render.compat.RenderSystem.applyScissor(pass);
             setCommonUniforms(pass, thunderHackUniforms, guiProjection, guiTransforms);
             for (int i = 0; i < pipeline.getSamplers().size(); i++) {
-                GpuTextureView texture = com.mojang.blaze3d.systems.RenderSystem.getShaderTexture(i);
-                if (texture != null) {
-                    pass.bindSampler(pipeline.getSamplers().get(i), texture);
+                GpuTextureView texture = thunder.hack.utility.render.compat.RenderSystem.getShaderTexture(i);
+                var sampler = thunder.hack.utility.render.compat.RenderSystem.getShaderSampler(i);
+                if (texture != null && sampler != null) {
+                    pass.bindTexture(pipeline.getSamplers().get(i), texture, sampler);
                 }
             }
             pass.setVertexBuffer(0, vertices);

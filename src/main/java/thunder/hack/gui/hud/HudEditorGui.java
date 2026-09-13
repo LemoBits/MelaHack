@@ -1,4 +1,5 @@
 package thunder.hack.gui.hud;
+import thunder.hack.gui.LegacyInputScreen;
 
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -20,7 +21,7 @@ import net.minecraft.network.chat.Component;
 
 import static thunder.hack.features.modules.Module.mc;
 
-public class HudEditorGui extends Screen {
+public class HudEditorGui extends LegacyInputScreen {
     public static HudElement currentlyDragging;
     private final List<AbstractCategory> windows;
     private static HudEditorGui instance = new HudEditorGui();
@@ -58,13 +59,13 @@ public class HudEditorGui extends Screen {
 
         if (ModuleManager.clickGui.scrollMode.getValue() == ClickGui.scrollModeEn.Old) {
             for (AbstractCategory window : windows) {
-                if (InputConstants.isKeyDown(mc.getWindow().getWindow(), 264))
+                if (InputConstants.isKeyDown(mc.getWindow(), 264))
                     window.setY(window.getY() + 2);
-                if (InputConstants.isKeyDown(mc.getWindow().getWindow(), 265))
+                if (InputConstants.isKeyDown(mc.getWindow(), 265))
                     window.setY(window.getY() - 2);
-                if (InputConstants.isKeyDown(mc.getWindow().getWindow(), 262))
+                if (InputConstants.isKeyDown(mc.getWindow(), 262))
                     window.setX(window.getX() + 2);
-                if (InputConstants.isKeyDown(mc.getWindow().getWindow(), 263))
+                if (InputConstants.isKeyDown(mc.getWindow(), 263))
                     window.setX(window.getX() - 2);
                 if (dWheel != 0)
                     window.setY((float) (window.getY() + dWheel));

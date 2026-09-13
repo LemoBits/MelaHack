@@ -13,6 +13,6 @@ public class NameProtect extends Module {
     public static Setting<Boolean> hideFriends = new Setting<>("Hide friends", true);
 
     public static String getCustomName() {
-        return ModuleManager.nameProtect.isEnabled() ? newName.getValue().replaceAll("&", "\u00a7") : mc.getGameProfile().getName();
+        return ModuleManager.nameProtect.isEnabled() ? newName.getValue().replaceAll("&", "\u00a7") : mc.getGameProfile().name();
     }
 }

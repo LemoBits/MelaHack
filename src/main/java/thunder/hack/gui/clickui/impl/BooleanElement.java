@@ -42,7 +42,7 @@ public class BooleanElement extends AbstractElement {
 
         if (Render2DEngine.isHovered(mouseX, mouseY, x + width - 21, y + height / 2 - 4, 15, 8)) {
             if (GLFW.glfwGetPlatform() != GLFW.GLFW_PLATFORM_WAYLAND) {
-                GLFW.glfwSetCursor(mc.getWindow().getWindow(),
+                GLFW.glfwSetCursor(mc.getWindow().handle(),
                         GLFW.glfwCreateStandardCursor(GLFW.GLFW_HAND_CURSOR));
             }
             ClickGUI.anyHovered = true;

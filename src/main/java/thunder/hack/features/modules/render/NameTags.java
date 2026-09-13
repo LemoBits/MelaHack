@@ -1,6 +1,4 @@
 package thunder.hack.features.modules.render;
-import java.util.List;
-
 import com.google.common.collect.Ordering;
 import com.mojang.blaze3d.platform.GlStateManager;
 import thunder.hack.utility.render.compat.RenderSystem;
@@ -20,6 +18,7 @@ import thunder.hack.setting.impl.ColorSetting;
 import thunder.hack.utility.render.Render2DEngine;
 import thunder.hack.utility.render.Render3DEngine;
 import thunder.hack.utility.render.TextureStorage;
+import java.util.List;
 
 import java.awt.*;
 import java.math.BigDecimal;
@@ -32,14 +31,14 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.numbers.StyledFormat;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.animal.horse.Horse;
+import net.minecraft.world.entity.animal.equine.Horse;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.item.BlockItem;
@@ -241,7 +240,7 @@ public class NameTags extends Module {
                 else
                     Render2DEngine.drawRect(context.pose(), tagX - 2, (float) (posY - 13f), textWidth + 4, 11, color);
 
-                if (Managers.TELEMETRY.getOnlinePlayers().contains(ent.getGameProfile().getName())) {
+                if (Managers.TELEMETRY.getOnlinePlayers().contains(ent.getGameProfile().name())) {
                     Render2DEngine.drawRect(context.pose(), tagX - 14, (float) (posY - 13f), 12, 11, color.brighter().brighter());
                     RenderSystem.enableBlend();
                     RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE);
@@ -323,7 +322,7 @@ public class NameTags extends Module {
                     continue;
                 String final_string = spawner.getSpawner().getOrCreateDisplayEntity(mc.level, spawner.getBlockPos()).getName().getString() + " " + String.format("%.1f", ((float) spawner.getSpawner().spawnDelay / 20f)) + "s";
 
-                if (spawner.getSpawner().getSpin() == spawner.getSpawner().getoSpin() && spawner.getSpawner().getSpin() == 0f && (float) spawner.getSpawner().spawnDelay / 20f == 1f)
+                if (spawner.getSpawner().getSpin() == spawner.getSpawner().getOSpin() && spawner.getSpawner().getSpin() == 0f && (float) spawner.getSpawner().spawnDelay / 20f == 1f)
                     final_string = spawner.getSpawner().getOrCreateDisplayEntity(mc.level, spawner.getBlockPos()).getName().getString() + " loot!";
 
 
@@ -449,10 +448,10 @@ public class NameTags extends Module {
         if ((mc.getConnection() != null && mc.getConnection().getServerData() != null && mc.getConnection().getServerData().ip.contains("funtime") || funtimeHp.getValue())) {
             Objective scoreBoard = null;
             String resolvedHp = "";
-            if ((ent.getScoreboard()).getDisplayObjective(DisplaySlot.BELOW_NAME) != null) {
-                scoreBoard = (ent.getScoreboard()).getDisplayObjective(DisplaySlot.BELOW_NAME);
+            if ((ent.level().getScoreboard()).getDisplayObjective(DisplaySlot.BELOW_NAME) != null) {
+                scoreBoard = (ent.level().getScoreboard()).getDisplayObjective(DisplaySlot.BELOW_NAME);
                 if (scoreBoard != null) {
-                    ReadOnlyScoreInfo readableScoreboardScore = ent.getScoreboard().getPlayerScoreInfo(ent, scoreBoard);
+                    ReadOnlyScoreInfo readableScoreboardScore = ent.level().getScoreboard().getPlayerScoreInfo(ent, scoreBoard);
                     MutableComponent text2 = ReadOnlyScoreInfo.safeFormatValue(readableScoreboardScore, scoreBoard.numberFormatOrDefault(StyledFormat.NO_STYLE));
                     resolvedHp = text2.getString();
                 }
@@ -517,17 +516,17 @@ public class NameTags extends Module {
     }
 
     private enum HeartType {
-        CONTAINER(ResourceLocation.parse("hud/heart/container"), ResourceLocation.parse("hud/heart/container")), NORMAL(ResourceLocation.parse("hud/heart/full"), ResourceLocation.parse("hud/heart/half")), ABSORBING(ResourceLocation.parse("hud/heart/absorbing_full"), ResourceLocation.parse("hud/heart/absorbing_half"));
+        CONTAINER(Identifier.parse("hud/heart/container"), Identifier.parse("hud/heart/container")), NORMAL(Identifier.parse("hud/heart/full"), Identifier.parse("hud/heart/half")), ABSORBING(Identifier.parse("hud/heart/absorbing_full"), Identifier.parse("hud/heart/absorbing_half"));
 
-        private final ResourceLocation fullTexture;
-        private final ResourceLocation halfTexture;
+        private final Identifier fullTexture;
+        private final Identifier halfTexture;
 
-        HeartType(ResourceLocation fullTexture, ResourceLocation halfTexture) {
+        HeartType(Identifier fullTexture, Identifier halfTexture) {
             this.fullTexture = fullTexture;
             this.halfTexture = halfTexture;
         }
 
-        public ResourceLocation getTexture(boolean half) {
+        public Identifier getTexture(boolean half) {
             return half ? halfTexture : fullTexture;
         }
     }

@@ -23,18 +23,18 @@ import java.io.IOException;
 import java.util.*;
 import java.util.function.Function;
 import net.minecraft.client.Minecraft;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.ResourceProvider;
 
 public abstract class ResettableManagedShaderBase<S> implements UniformFinder {
 
-    private final ResourceLocation location;
+    private final Identifier location;
     private final Map<String, ManagedUniform> managedUniforms = new HashMap<>();
     private final List<ManagedUniformBase> allUniforms = new ArrayList<>();
     private boolean errored;
     protected S shader;
 
-    public ResettableManagedShaderBase(ResourceLocation location) {
+    public ResettableManagedShaderBase(Identifier location) {
         this.location = location;
     }
 
@@ -56,7 +56,7 @@ public abstract class ResettableManagedShaderBase<S> implements UniformFinder {
         this.setup(mc.getWindow().getWidth(), mc.getWindow().getHeight());
     }
 
-    protected abstract S parseShader(ResourceProvider resourceFactory, Minecraft mc, ResourceLocation location) throws IOException;
+    protected abstract S parseShader(ResourceProvider resourceFactory, Minecraft mc, Identifier location) throws IOException;
 
     public void release() {
         if (this.isInitialized()) {
@@ -87,7 +87,7 @@ public abstract class ResettableManagedShaderBase<S> implements UniformFinder {
         return this.errored;
     }
 
-    public ResourceLocation getLocation() {
+    public Identifier getLocation() {
         return location;
     }
 

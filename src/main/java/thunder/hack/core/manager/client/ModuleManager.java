@@ -1,7 +1,4 @@
 package thunder.hack.core.manager.client;
-import thunder.hack.features.modules.render.Particles;
-import thunder.hack.features.modules.movement.Timer;
-
 import org.lwjgl.glfw.GLFW;
 import thunder.hack.ThunderHack;
 import thunder.hack.core.manager.IManager;
@@ -22,6 +19,8 @@ import java.lang.reflect.Field;
 import java.util.*;
 import java.util.stream.Collectors;
 import net.minecraft.client.gui.GuiGraphics;
+import thunder.hack.features.modules.render.Particles;
+import thunder.hack.features.modules.movement.Timer;
 
 @SuppressWarnings("unused")
 public class ModuleManager implements IManager {
@@ -343,7 +342,7 @@ public class ModuleManager implements IManager {
             if (GLFW.glfwGetPlatform() != GLFW.GLFW_PLATFORM_WAYLAND) {
                 if (DEFAULT_CURSOR == 0)
                     DEFAULT_CURSOR = GLFW.glfwCreateStandardCursor(GLFW.GLFW_ARROW_CURSOR);
-                GLFW.glfwSetCursor(mc.getWindow().getWindow(), DEFAULT_CURSOR);
+                GLFW.glfwSetCursor(mc.getWindow().handle(), DEFAULT_CURSOR);
             }
         ThunderHack.core.onRender2D(context);
     }

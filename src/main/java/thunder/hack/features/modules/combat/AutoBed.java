@@ -1,4 +1,5 @@
 package thunder.hack.features.modules.combat;
+import net.minecraft.world.attribute.EnvironmentAttributes;
 
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.gui.screens.inventory.CraftingScreen;
@@ -102,7 +103,7 @@ public final class AutoBed extends Module {
     public void onPlayerUpdate(PlayerUpdateEvent e) {
         target = findTarget();
 
-        if (mc.level.dimensionType().bedWorks() && dimCheck.getValue()) {
+        if (!mc.level.environmentAttributes().getValue(EnvironmentAttributes.BED_RULE, mc.player.blockPosition()).explodes() && dimCheck.getValue()) {
             disable(isRu() ? "Кровати не взрываются в этом измерении!" : "Beds don't explode in this dimension!");
             return;
         }

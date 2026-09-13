@@ -1,4 +1,5 @@
 package thunder.hack.gui.windows;
+import thunder.hack.gui.LegacyInputScreen;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import thunder.hack.utility.render.compat.RenderSystem;
@@ -15,15 +16,15 @@ import java.util.List;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import static thunder.hack.core.manager.IManager.mc;
 
-public class WindowsScreen extends Screen {
+public class WindowsScreen extends LegacyInputScreen {
     private List<WindowBase> windows = new ArrayList<>();
     public static WindowBase lastClickedWindow;
     public static WindowBase draggingWindow;
-    private static final ResourceLocation clickGuiIcon = ResourceLocation.fromNamespaceAndPath("thunderhack", "textures/gui/elements/clickgui.png");
+    private static final Identifier clickGuiIcon = Identifier.fromNamespaceAndPath("thunderhack", "textures/gui/elements/clickgui.png");
 
     public WindowsScreen(WindowBase... windows) {
         super(Component.nullToEmpty("THWindows"));

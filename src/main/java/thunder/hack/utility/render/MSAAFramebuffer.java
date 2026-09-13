@@ -36,28 +36,31 @@ public class MSAAFramebuffer extends RenderTarget {
 
     @Override
     public void resize(int width, int height) {
-        if (width != width || height != height) {
-            super.resize(width, height);
+        if (this.width != width || this.height != height) {
+            createBuffers(width, height);
         }
     }
 
     @Override
     public void createBuffers(int width, int height) {
         RenderSystem.assertOnRenderThreadOrInit();
-        viewWidth = width;
-        viewHeight = height;
-        width = width;
-        height = height;
+        this.width = width;
+        this.height = height;
 
-        colorTexture = Minecraft.getInstance().getMainRenderTarget().getColorTexture();
-        depthTexture = Minecraft.getInstance().getMainRenderTarget().getDepthTexture();
+        RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
+        colorTexture = main.getColorTexture();
+        colorTextureView = main.getColorTextureView();
+        depthTexture = main.getDepthTexture();
+        depthTextureView = main.getDepthTextureView();
     }
 
     @Override
     public void destroyBuffers() {
         RenderSystem.assertOnRenderThreadOrInit();
         colorTexture = null;
+        colorTextureView = null;
         depthTexture = null;
+        depthTextureView = null;
         width = -1;
         height = -1;
     }

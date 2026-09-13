@@ -241,8 +241,8 @@ public class TargetStrafe extends Module {
         if (e.getPacket() instanceof ClientboundSetEntityMotionPacket && (velocity = e.getPacket()).getId() == mc.player.getId() && boost.getValue() == Boost.Damage) {
             if (mc.player.onGround()) return;
 
-            double vX = velocity.getXa();
-            double vZ = velocity.getZa();
+            double vX = velocity.getMovement().x;
+            double vZ = velocity.getMovement().z;
 
             if (vX < 0) vX *= -1;
             if (vZ < 0) vZ *= -1;

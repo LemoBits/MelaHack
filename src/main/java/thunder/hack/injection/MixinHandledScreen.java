@@ -1,6 +1,4 @@
 package thunder.hack.injection;
-import java.util.List;
-
 import thunder.hack.utility.render.compat.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -10,18 +8,13 @@ import net.minecraft.client.gui.screens.inventory.MenuAccess;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.state.MapRenderState;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.world.item.*;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.ShulkerBoxMenu;
 import net.minecraft.world.inventory.Slot;
-import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.item.MapItem;
+import net.minecraft.world.item.*;
 import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.level.block.ShulkerBoxBlock;
 import net.minecraft.world.level.saveddata.maps.MapId;
@@ -44,6 +37,7 @@ import thunder.hack.features.modules.render.Tooltips;
 import thunder.hack.utility.Timer;
 import thunder.hack.utility.render.Render2DEngine;
 import thunder.hack.utility.render.TextureStorage;
+import java.util.List;
 
 import java.awt.*;
 import java.util.*;
@@ -86,7 +80,7 @@ public abstract class MixinHandledScreen<T extends AbstractContainerMenu> extend
     }
 
     private boolean shit() {
-        return InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), 340) || InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), 344);
+        return InputConstants.isKeyDown(Minecraft.getInstance().getWindow(), 340) || InputConstants.isKeyDown(Minecraft.getInstance().getWindow(), 344);
     }
 
     private boolean attack() {
@@ -159,7 +153,7 @@ public abstract class MixinHandledScreen<T extends AbstractContainerMenu> extend
         }
     }
 
-    @Inject(method = "renderSlot(Lnet/minecraft/client/gui/GuiGraphics;Lnet/minecraft/world/inventory/Slot;)V", at = @At("TAIL"))
+    @Inject(method = "drawSlot(Lnet/minecraft/client/gui/GuiGraphics;Lnet/minecraft/world/inventory/Slot;)V", at = @At("TAIL"))
     protected void drawSlotHook(GuiGraphics context, Slot slot, CallbackInfo ci) {
         if (ModuleManager.serverHelper.isEnabled() && ModuleManager.serverHelper.aucHelper.getValue())
             ModuleManager.serverHelper.onRenderChest(context, slot);
@@ -254,10 +248,9 @@ public abstract class MixinHandledScreen<T extends AbstractContainerMenu> extend
             double scale = (double) (100 - 16) / 128.0D;
             context.pose().translate((float) (x1), (float) (y1));
             context.pose().scale((float) scale, (float) scale);
-            MultiBufferSource.BufferSource consumer = minecraft.renderBuffers().bufferSource();
             MapRenderState renderState = new MapRenderState();
             minecraft.getMapRenderer().extractRenderState((MapId) stack.get(DataComponents.MAP_ID), mapState, renderState);
-            minecraft.getMapRenderer().render(renderState, thunder.hack.utility.render.GuiMatrix.asMatrixStack(context.pose()), consumer, false, 0xF000F0);
+            context.submitMapRenderState(renderState);
         }
         context.pose().popMatrix();
     }

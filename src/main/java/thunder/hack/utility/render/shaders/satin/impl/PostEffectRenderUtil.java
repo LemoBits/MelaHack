@@ -7,27 +7,27 @@ import com.mojang.blaze3d.resource.ResourceHandle;
 import java.util.HashMap;
 import java.util.Map;
 import net.minecraft.client.renderer.PostChain;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 public final class PostEffectRenderUtil {
     private PostEffectRenderUtil() {
     }
 
-    public static void render(PostChain effect, int width, int height, Map<ResourceLocation, RenderTarget> externalTargets, GraphicsResourceAllocator allocator) {
+    public static void render(PostChain effect, int width, int height, Map<Identifier, RenderTarget> externalTargets, GraphicsResourceAllocator allocator) {
         FrameGraphBuilder frameGraphBuilder = new FrameGraphBuilder();
-        Map<ResourceLocation, ResourceHandle<RenderTarget>> handles = new HashMap<>(externalTargets.size());
-        for (Map.Entry<ResourceLocation, RenderTarget> entry : externalTargets.entrySet()) {
+        Map<Identifier, ResourceHandle<RenderTarget>> handles = new HashMap<>(externalTargets.size());
+        for (Map.Entry<Identifier, RenderTarget> entry : externalTargets.entrySet()) {
             handles.put(entry.getKey(), frameGraphBuilder.importExternal(entry.getKey().toString(), entry.getValue()));
         }
 
         PostChain.TargetBundle framebufferSet = new PostChain.TargetBundle() {
             @Override
-            public void replace(ResourceLocation id, ResourceHandle<RenderTarget> framebuffer) {
+            public void replace(Identifier id, ResourceHandle<RenderTarget> framebuffer) {
                 handles.put(id, framebuffer);
             }
 
             @Override
-            public ResourceHandle<RenderTarget> get(ResourceLocation id) {
+            public ResourceHandle<RenderTarget> get(Identifier id) {
                 return handles.get(id);
             }
         };

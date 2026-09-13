@@ -120,8 +120,8 @@ public class Flight extends Module {
 
         if (mode.is(Mode.Damage))
             if (e.getPacket() instanceof ClientboundSetEntityMotionPacket v)
-                if (v.getYa() / 8000.0 > 0.2) {
-                    velocityMotion = v.getYa() / 8000.0;
+                if (v.getMovement().y > 0.2) {
+                    velocityMotion = v.getMovement().y;
                     flyTicks = boostTicks.getValue();
                 }
     }

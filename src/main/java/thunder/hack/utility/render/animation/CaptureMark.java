@@ -9,8 +9,8 @@ import com.mojang.math.Axis;
 import com.mojang.blaze3d.platform.GlStateManager;
 import thunder.hack.utility.render.compat.RenderSystem;
 import net.minecraft.client.Camera;
-import net.minecraft.client.gl.ShaderProgramKeys;
-import net.minecraft.client.render.*;
+import thunder.hack.utility.render.ShaderProgramKeys;
+import thunder.hack.utility.render.BufferRenderer;
 import net.minecraft.world.entity.Entity;
 import org.joml.Matrix4f;
 import thunder.hack.features.modules.client.HudEditor;
@@ -28,18 +28,18 @@ public class CaptureMark {
     public static void render(Entity target) {
         Camera camera = mc.gameRenderer.getMainCamera();
 
-        double tPosX = Render2DEngine.interpolate(target.xo, target.getX(), Render3DEngine.getTickDelta()) - camera.getPosition().x;
-        double tPosY = Render2DEngine.interpolate(target.yo, target.getY(), Render3DEngine.getTickDelta()) - camera.getPosition().y;
-        double tPosZ = Render2DEngine.interpolate(target.zo, target.getZ(), Render3DEngine.getTickDelta()) - camera.getPosition().z;
+        double tPosX = Render2DEngine.interpolate(target.xo, target.getX(), Render3DEngine.getTickDelta()) - camera.position().x;
+        double tPosY = Render2DEngine.interpolate(target.yo, target.getY(), Render3DEngine.getTickDelta()) - camera.position().y;
+        double tPosZ = Render2DEngine.interpolate(target.zo, target.getZ(), Render3DEngine.getTickDelta()) - camera.position().z;
 
         PoseStack matrices = new PoseStack();
         RenderSystem.disableDepthTest();
         RenderSystem.disableCull();
-        matrices.mulPose(Axis.XP.rotationDegrees(camera.getXRot()));
-        matrices.mulPose(Axis.YP.rotationDegrees(camera.getYRot() + 180.0F));
+        matrices.mulPose(Axis.XP.rotationDegrees(camera.xRot()));
+        matrices.mulPose(Axis.YP.rotationDegrees(camera.yRot() + 180.0F));
         matrices.translate(tPosX, (tPosY + target.getEyeHeight(target.getPose()) / 2f), tPosZ);
-        matrices.mulPose(Axis.YP.rotationDegrees(-camera.getYRot()));
-        matrices.mulPose(Axis.XP.rotationDegrees(camera.getXRot()));
+        matrices.mulPose(Axis.YP.rotationDegrees(-camera.yRot()));
+        matrices.mulPose(Axis.XP.rotationDegrees(camera.xRot()));
         matrices.mulPose(Axis.ZP.rotationDegrees(Render2DEngine.interpolateFloat(prevEspValue, espValue, Render3DEngine.getTickDelta())));
         RenderSystem.enableBlend();
         RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE);

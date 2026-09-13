@@ -1,4 +1,5 @@
 package thunder.hack.gui.mainmenu;
+import thunder.hack.gui.LegacyInputScreen;
 
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.core.manager.client.ModuleManager;
@@ -11,7 +12,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import net.minecraft.ChatFormatting;
-import net.minecraft.Util;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
@@ -20,10 +20,11 @@ import net.minecraft.client.gui.screens.options.OptionsScreen;
 import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Util;
 
 import static thunder.hack.features.modules.Module.mc;
 
-public class MainMenuScreen extends Screen {
+public class MainMenuScreen extends LegacyInputScreen {
     private final List<MainMenuButton> buttons = new ArrayList<>();
     public boolean confirm = false;
     public static int ticksActive;

@@ -2,7 +2,7 @@ package thunder.hack.features.modules.client;
 
 import baritone.api.BaritoneAPI;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import thunder.hack.ThunderHack;
 import thunder.hack.events.impl.EventSetting;
 import thunder.hack.gui.clickui.ClickGUI;
@@ -115,14 +115,14 @@ public class ClickGui extends Module {
 
         public final int fileWidth;
         public final int fileHeight;
-        public final ResourceLocation file;
+        public final Identifier file;
         public final int[] pos;
         public final int size;
 
         Image(String file, int fileWidth, int fileHeight, int[] pos, int size) {
             this.fileHeight = fileHeight;
             this.fileWidth = fileWidth;
-            this.file = ResourceLocation.fromNamespaceAndPath("thunderhack", "textures/gui/images/" + file);
+            this.file = Identifier.fromNamespaceAndPath("thunderhack", "textures/gui/images/" + file);
             this.pos = pos;
             this.size = size;
         }

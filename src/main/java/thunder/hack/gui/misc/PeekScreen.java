@@ -6,6 +6,7 @@ import thunder.hack.features.modules.render.Tooltips;
 import java.util.Arrays;
 import java.util.List;
 import net.minecraft.client.gui.screens.inventory.ShulkerBoxScreen;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.SimpleContainer;
@@ -24,8 +25,8 @@ public class PeekScreen extends ShulkerBoxScreen {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (button == GLFW.GLFW_MOUSE_BUTTON_MIDDLE && hoveredSlot != null && !hoveredSlot.getItem().isEmpty() && minecraft.player.inventoryMenu.getCarried().isEmpty()) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        if (event.button() == GLFW.GLFW_MOUSE_BUTTON_MIDDLE && hoveredSlot != null && !hoveredSlot.getItem().isEmpty() && minecraft.player.inventoryMenu.getCarried().isEmpty()) {
             ItemStack itemStack = hoveredSlot.getItem();
 
             if (Tooltips.hasItems(itemStack) && Tooltips.middleClickOpen.getValue()) {
@@ -47,7 +48,7 @@ public class PeekScreen extends ShulkerBoxScreen {
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    public boolean mouseReleased(MouseButtonEvent event) {
         return false;
     }
 }

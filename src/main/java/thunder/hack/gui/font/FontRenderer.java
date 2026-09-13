@@ -6,15 +6,15 @@ import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 
 import thunder.hack.utility.render.compat.RenderSystem;
-import net.minecraft.client.gl.ShaderProgramKeys;
+import thunder.hack.utility.render.ShaderProgramKeys;
 import it.unimi.dsi.fastutil.chars.Char2IntArrayMap;
 import it.unimi.dsi.fastutil.chars.Char2ObjectArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectList;
-import net.minecraft.client.render.*;
-import net.minecraft.resources.ResourceLocation;
+import thunder.hack.utility.render.BufferRenderer;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -60,7 +60,7 @@ public class FontRenderer implements Closeable {
     }};
 
     private static final ExecutorService ASYNC_WORKER = Executors.newCachedThreadPool();
-    private final Object2ObjectMap<ResourceLocation, ObjectList<DrawEntry>> GLYPH_PAGE_CACHE = new Object2ObjectOpenHashMap<>();
+    private final Object2ObjectMap<Identifier, ObjectList<DrawEntry>> GLYPH_PAGE_CACHE = new Object2ObjectOpenHashMap<>();
     private final float originalSize;
     private final ObjectList<GlyphMap> maps = new ObjectArrayList<>();
     private final Char2ObjectArrayMap<Glyph> allGlyphs = new Char2ObjectArrayMap<>();
@@ -237,14 +237,14 @@ public class FontRenderer implements Closeable {
                 Glyph glyph = locateGlyph1(c);
                 if (glyph != null) {
                     if (glyph.value() != ' ') {
-                        ResourceLocation i1 = glyph.owner().bindToTexture;
+                        Identifier i1 = glyph.owner().bindToTexture;
                         DrawEntry entry = new DrawEntry(xOffset, yOffset, r2, g2, b2, glyph);
                         GLYPH_PAGE_CACHE.computeIfAbsent(i1, integer -> new ObjectArrayList<>()).add(entry);
                     }
                     xOffset += glyph.width();
                 }
             }
-            for (ResourceLocation identifier : GLYPH_PAGE_CACHE.keySet()) {
+            for (Identifier identifier : GLYPH_PAGE_CACHE.keySet()) {
                 RenderSystem.setShaderTexture(0, identifier);
                 GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
                 GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
@@ -360,8 +360,8 @@ public class FontRenderer implements Closeable {
     }
 
     @Contract(value = "-> new", pure = true)
-    public static @NotNull ResourceLocation randomIdentifier() {
-        return ResourceLocation.fromNamespaceAndPath("thunderhack", "temp/" + randomString());
+    public static @NotNull Identifier randomIdentifier() {
+        return Identifier.fromNamespaceAndPath("thunderhack", "temp/" + randomString());
     }
 
     private static String randomString() {

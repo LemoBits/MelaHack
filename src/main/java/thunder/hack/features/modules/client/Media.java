@@ -22,9 +22,9 @@ public final class Media extends Module {
     public void onPacketReceive(PacketEvent.@NotNull Receive e) {
         if (e.getPacket() instanceof ClientboundSystemChatPacket pac && nickProtect.getValue()) {
             for (PlayerInfo ple : mc.player.connection.getOnlinePlayers()) {
-                if (pac.content().getString().contains(ple.getProfile().getName())) {
+                if (pac.content().getString().contains(ple.getProfile().name())) {
                     IGameMessageS2CPacket packet = e.getPacket();
-                    packet.setContent(Component.nullToEmpty(pac.content().getString().replace(ple.getProfile().getName(), "Protected")));
+                    packet.setContent(Component.nullToEmpty(pac.content().getString().replace(ple.getProfile().name(), "Protected")));
                 }
             }
         }

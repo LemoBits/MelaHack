@@ -7,7 +7,7 @@ import com.mojang.blaze3d.platform.NativeImage;
 import net.fabricmc.loader.api.metadata.Person;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.renderer.texture.DynamicTexture;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.ThunderHack;
 import thunder.hack.gui.font.Texture;
@@ -45,25 +45,25 @@ public final class ThunderUtility {
     public static String solveName(String notSolved) {
         AtomicReference<String> mb = new AtomicReference<>("FATAL ERROR");
         Objects.requireNonNull(mc.getConnection()).getListedOnlinePlayers().forEach(player -> {
-            if (notSolved.contains(player.getProfile().getName())) {
-                mb.set(player.getProfile().getName());
+            if (notSolved.contains(player.getProfile().name())) {
+                mb.set(player.getProfile().name());
             }
         });
 
         return mb.get();
     }
 
-    public static ResourceLocation registerDynamicTexture(String path, DynamicTexture texture) {
+    public static Identifier registerDynamicTexture(String path, DynamicTexture texture) {
         if (texture == null) {
             return null;
         }
 
-        ResourceLocation id = new Texture(path).getId();
+        Identifier id = new Texture(path).getId();
         mc.execute(() -> mc.getTextureManager().register(id, texture));
         return id;
     }
 
-    public static ResourceLocation getCustomImg(String name) throws IOException {
+    public static Identifier getCustomImg(String name) throws IOException {
         try (FileInputStream stream = new FileInputStream(IMAGES_FOLDER + "/" + name + ".png")) {
             return registerDynamicTexture("th-" + name + "-" + (int) MathUtility.random(0, 1000), new DynamicTexture(() -> "th_" + name, NativeImage.read(stream)));
         }

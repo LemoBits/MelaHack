@@ -8,9 +8,9 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Axis;
 import com.mojang.blaze3d.platform.GlStateManager;
 import thunder.hack.utility.render.compat.RenderSystem;
-import net.minecraft.client.gl.ShaderProgramKeys;
-import net.minecraft.client.render.*;
-import net.minecraft.resources.ResourceLocation;
+import thunder.hack.utility.render.ShaderProgramKeys;
+import thunder.hack.utility.render.BufferRenderer;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
@@ -42,7 +42,7 @@ public class JumpCircle extends Module {
     private final Setting<Boolean> onlySelf = new Setting<>("OnlySelf", false);
     private final List<Circle> circles = new ArrayList<>();
     private final List<Player> cache = new CopyOnWriteArrayList<>();
-    private ResourceLocation custom;
+    private Identifier custom;
 
     @Override
     public void onEnable() {
@@ -98,7 +98,7 @@ public class JumpCircle extends Module {
             float sizeAnim = circleScale.getValue() - (float) Math.pow(1 - ((c.timer.getPassedTimeMs() * (easeOut.getValue() ? 2f : 1f)) / 5000f), 4);
 
             stack.pushPose();
-            stack.translate(c.pos().x - mc.getEntityRenderDispatcher().camera.getPosition().x(), c.pos().y - mc.getEntityRenderDispatcher().camera.getPosition().y(), c.pos().z - mc.getEntityRenderDispatcher().camera.getPosition().z());
+            stack.translate(c.pos().x - mc.getEntityRenderDispatcher().camera.position().x, c.pos().y - mc.getEntityRenderDispatcher().camera.position().y, c.pos().z - mc.getEntityRenderDispatcher().camera.position().z);
             stack.mulPose(Axis.XP.rotationDegrees(90));
             stack.mulPose(Axis.ZP.rotationDegrees(sizeAnim * rotateSpeed.getValue() * 1000f));
             float scale = sizeAnim * 2f;

@@ -16,7 +16,7 @@ import java.util.function.Consumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.PostChain;
 import net.minecraft.client.renderer.ShaderManager;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.ResourceProvider;
 
 import static org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA;
@@ -24,15 +24,15 @@ import static org.lwjgl.opengl.GL11.GL_SRC_ALPHA;
 
 public final class ResettableManagedShaderEffect extends ResettableManagedShaderBase<PostChain> implements ManagedShaderEffect {
 
-    private static final ResourceLocation BUF_IN = ResourceLocation.fromNamespaceAndPath("thunderhack", "buf_in");
-    private static final ResourceLocation BUF_OUT = ResourceLocation.fromNamespaceAndPath("thunderhack", "buf_out");
-    private static final Set<ResourceLocation> EXTERNAL_TARGETS = Set.of(PostChain.MAIN_TARGET_ID, BUF_IN, BUF_OUT);
+    private static final Identifier BUF_IN = Identifier.fromNamespaceAndPath("thunderhack", "buf_in");
+    private static final Identifier BUF_OUT = Identifier.fromNamespaceAndPath("thunderhack", "buf_out");
+    private static final Set<Identifier> EXTERNAL_TARGETS = Set.of(PostChain.MAIN_TARGET_ID, BUF_IN, BUF_OUT);
 
     private final Consumer<ManagedShaderEffect> initCallback;
     private final Map<String, FramebufferWrapper> managedTargets;
     private final Map<String, ManagedSamplerUniformV2> managedSamplers = new HashMap<>();
 
-    public ResettableManagedShaderEffect(ResourceLocation location, Consumer<ManagedShaderEffect> initCallback) {
+    public ResettableManagedShaderEffect(Identifier location, Consumer<ManagedShaderEffect> initCallback) {
         super(location);
         this.initCallback = initCallback;
         this.managedTargets = new HashMap<>();
@@ -44,7 +44,7 @@ public final class ResettableManagedShaderEffect extends ResettableManagedShader
     }
 
     @Override
-    protected PostChain parseShader(ResourceProvider resourceFactory, Minecraft mc, ResourceLocation location) throws IOException {
+    protected PostChain parseShader(ResourceProvider resourceFactory, Minecraft mc, Identifier location) throws IOException {
         ShaderManager loader = mc.getShaderManager();
         return loader.getPostChain(location, EXTERNAL_TARGETS);
     }
@@ -71,7 +71,7 @@ public final class ResettableManagedShaderEffect extends ResettableManagedShader
             RenderSystem.disableDepthTest();
             RenderSystem.resetTextureMatrix();
             Minecraft client = Minecraft.getInstance();
-            Map<ResourceLocation, com.mojang.blaze3d.pipeline.RenderTarget> externalTargets = Map.of(
+            Map<Identifier, com.mojang.blaze3d.pipeline.RenderTarget> externalTargets = Map.of(
                 PostChain.MAIN_TARGET_ID, client.getMainRenderTarget(),
                 BUF_IN, client.getMainRenderTarget(),
                 BUF_OUT, client.getMainRenderTarget()

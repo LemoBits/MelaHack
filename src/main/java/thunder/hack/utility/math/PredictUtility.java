@@ -87,6 +87,6 @@ public class PredictUtility {
     }
 
     public static AABB createBox(Vec3 vec, Entity entity) {
-        return entity.getBoundingBox().move(entity.position().vectorTo(vec));
+        return entity.getBoundingBox().move(vec.subtract(entity.position()));
     }
 }

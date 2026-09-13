@@ -31,7 +31,7 @@ public class StringElement extends AbstractElement {
 
         if (Render2DEngine.isHovered(mouseX, mouseY, getX() + 5, getY() + 2, getWidth() - 11f, 10)) {
             if (GLFW.glfwGetPlatform() != GLFW.GLFW_PLATFORM_WAYLAND) {
-                GLFW.glfwSetCursor(mc.getWindow().getWindow(),
+                GLFW.glfwSetCursor(mc.getWindow().handle(),
                         GLFW.glfwCreateStandardCursor(GLFW.GLFW_IBEAM_CURSOR));
             }
             ClickGUI.anyHovered = true;

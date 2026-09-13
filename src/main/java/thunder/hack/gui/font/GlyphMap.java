@@ -19,19 +19,19 @@ import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 class GlyphMap {
     final char fromIncl, toExcl;
     final Font font;
-    final ResourceLocation bindToTexture;
+    final Identifier bindToTexture;
     final int pixelPadding;
     private final Char2ObjectArrayMap<Glyph> glyphs = new Char2ObjectArrayMap<>();
     int width, height;
 
     boolean generated = false;
 
-    public GlyphMap(char from, char to, Font font, ResourceLocation identifier, int padding) {
+    public GlyphMap(char from, char to, Font font, Identifier identifier, int padding) {
         this.fromIncl = from;
         this.toExcl = to;
         this.font = font;
@@ -124,7 +124,7 @@ class GlyphMap {
         generated = true;
     }
 
-    public static void registerBufferedImageTexture(ResourceLocation i, BufferedImage bi) {
+    public static void registerBufferedImageTexture(Identifier i, BufferedImage bi) {
         try {
             // argb from BufferedImage is little endian, alpha is actually where the `a` is in the label
             // rgba from NativeImage (and by extension opengl) is big endian, alpha is on the other side (abgr)

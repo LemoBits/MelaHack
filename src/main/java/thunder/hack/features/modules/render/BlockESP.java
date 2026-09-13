@@ -2,14 +2,9 @@ package thunder.hack.features.modules.render;
 
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.Util;
-import net.minecraft.world.level.block.*;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.block.AirBlock;
-import net.minecraft.world.level.block.BarrierBlock;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.CommandBlock;
+import net.minecraft.util.Util;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.AABB;
@@ -124,9 +119,9 @@ public class BlockESP extends Module {
 
                 if (tracers.getValue()) {
                     Vec3 vec2 = new Vec3(0, 0, 75)
-                            .xRot(-(float) Math.toRadians(mc.gameRenderer.getMainCamera().getXRot()))
-                            .yRot(-(float) Math.toRadians(mc.gameRenderer.getMainCamera().getYRot()))
-                            .add(mc.cameraEntity.getEyePosition());
+                            .xRot(-(float) Math.toRadians(mc.gameRenderer.getMainCamera().xRot()))
+                            .yRot(-(float) Math.toRadians(mc.gameRenderer.getMainCamera().yRot()))
+                            .add(mc.getCameraEntity().getEyePosition());
 
                     Render3DEngine.drawLineDebug(vec2, vec.getVector(), color.getValue().getColorObject());
                 }

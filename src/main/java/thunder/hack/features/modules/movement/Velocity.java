@@ -73,22 +73,22 @@ public class Velocity extends Module {
                             flag = true;
                         } else {
                             flag = false;
-                            ((ISPacketEntityVelocity) pac).setMotionX(((int) (pac.getXa() * -0.1)));
-                            ((ISPacketEntityVelocity) pac).setMotionZ(((int) (pac.getZa() * -0.1)));
+                            ((ISPacketEntityVelocity) pac).setMotionX(pac.getMovement().x * -0.1);
+                            ((ISPacketEntityVelocity) pac).setMotionZ(pac.getMovement().z * -0.1);
                         }
                     }
                     case Redirect -> {
-                        double vX = Math.abs(pac.getXa());
-                        double vZ = Math.abs(pac.getZa());
-                        double[] motion = MovementUtility.forward((vX + vZ));
-                        ((ISPacketEntityVelocity) pac).setMotionX((int) (motion[0]));
+                        double vX = Math.abs(pac.getMovement().x);
+                        double vZ = Math.abs(pac.getMovement().z);
+                        double[] motion = MovementUtility.forward(vX + vZ);
+                        ((ISPacketEntityVelocity) pac).setMotionX(motion[0]);
                         ((ISPacketEntityVelocity) pac).setMotionY(0);
-                        ((ISPacketEntityVelocity) pac).setMotionZ((int) (motion[1]));
+                        ((ISPacketEntityVelocity) pac).setMotionZ(motion[1]);
                     }
                     case Custom -> {
-                        ((ISPacketEntityVelocity) pac).setMotionX((int) ((float) pac.getXa() * horizontal.getValue() / 100f));
-                        ((ISPacketEntityVelocity) pac).setMotionY((int) ((float) pac.getYa() * vertical.getValue() / 100f));
-                        ((ISPacketEntityVelocity) pac).setMotionZ((int) ((float) pac.getZa() * horizontal.getValue() / 100f));
+                        ((ISPacketEntityVelocity) pac).setMotionX(pac.getMovement().x * horizontal.getValue() / 100f);
+                        ((ISPacketEntityVelocity) pac).setMotionY(pac.getMovement().y * vertical.getValue() / 100f);
+                        ((ISPacketEntityVelocity) pac).setMotionZ(pac.getMovement().z * horizontal.getValue() / 100f);
                     }
                     case Sunrise -> {
                         e.cancel();
@@ -96,8 +96,8 @@ public class Velocity extends Module {
                     }
                     case Cancel -> e.cancel();
                     case Jump -> {
-                        ((ISPacketEntityVelocity) pac).setMotionX((int) ((float) pac.getXa() * horizontal.getValue() / 100f));
-                        ((ISPacketEntityVelocity) pac).setMotionZ((int) ((float) pac.getZa() * horizontal.getValue() / 100f));
+                        ((ISPacketEntityVelocity) pac).setMotionX(pac.getMovement().x * horizontal.getValue() / 100f);
+                        ((ISPacketEntityVelocity) pac).setMotionZ(pac.getMovement().z * horizontal.getValue() / 100f);
                     }
                     case OldGrim -> {
                         e.cancel();

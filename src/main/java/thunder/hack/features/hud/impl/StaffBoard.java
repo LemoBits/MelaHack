@@ -1,6 +1,4 @@
 package thunder.hack.features.hud.impl;
-import java.util.List;
-
 import com.mojang.authlib.GameProfile;
 import thunder.hack.features.cmd.impl.StaffCommand;
 import thunder.hack.gui.font.FontRenderers;
@@ -8,6 +6,7 @@ import thunder.hack.features.hud.HudElement;
 import thunder.hack.features.modules.client.HudEditor;
 import thunder.hack.utility.render.Render2DEngine;
 import thunder.hack.utility.render.animation.AnimationUtility;
+import java.util.List;
 
 import java.awt.*;
 import java.util.*;
@@ -16,7 +15,7 @@ import java.util.stream.Collectors;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.multiplayer.PlayerInfo;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.scores.PlayerTeam;
 
@@ -24,7 +23,7 @@ public class StaffBoard extends HudElement {
     private static final Pattern validUserPattern = Pattern.compile("^\\w{3,16}$");
     private List<String> players = new ArrayList<>();
     private List<String> notSpec = new ArrayList<>();
-    private Map<String, ResourceLocation> skinMap = new HashMap<>();
+    private Map<String, Identifier> skinMap = new HashMap<>();
 
     private float vAnimation, hAnimation;
 
@@ -35,7 +34,7 @@ public class StaffBoard extends HudElement {
     public static List<String> getOnlinePlayer() {
         return mc.player.connection.getOnlinePlayers().stream()
                 .map(PlayerInfo::getProfile)
-                .map(GameProfile::getName)
+                .map(GameProfile::name)
                 .filter(profileName -> validUserPattern.matcher(profileName).matches())
                 .collect(Collectors.toList());
     }
@@ -46,12 +45,12 @@ public class StaffBoard extends HudElement {
             if (mc.isLocalServer() || player.getTeam() == null) break;
             String prefix = player.getTeam().getPlayerPrefix().getString();
             if (check(ChatFormatting.stripFormatting(prefix).toLowerCase())
-                    || StaffCommand.staffNames.toString().toLowerCase().contains(player.getProfile().getName().toLowerCase())
-                    || player.getProfile().getName().toLowerCase().contains("1danil_mansoru1")
-                    || player.getProfile().getName().toLowerCase().contains("barslan_")
-                    || player.getProfile().getName().toLowerCase().contains("timmings")
-                    || player.getProfile().getName().toLowerCase().contains("timings")
-                    || player.getProfile().getName().toLowerCase().contains("ruthless")
+                    || StaffCommand.staffNames.toString().toLowerCase().contains(player.getProfile().name().toLowerCase())
+                    || player.getProfile().name().toLowerCase().contains("1danil_mansoru1")
+                    || player.getProfile().name().toLowerCase().contains("barslan_")
+                    || player.getProfile().name().toLowerCase().contains("timmings")
+                    || player.getProfile().name().toLowerCase().contains("timings")
+                    || player.getProfile().name().toLowerCase().contains("ruthless")
                     || player.getTeam().getPlayerPrefix().getString().contains("YT")
                     || (player.getTeam().getPlayerPrefix().getString().contains("Y") && player.getTeam().getPlayerPrefix().getString().contains("T"))) {
                 String name = Arrays.asList(player.getTeam().getPlayers().toArray()).toString().replace("[", "").replace("]", "");
@@ -152,7 +151,7 @@ public class StaffBoard extends HudElement {
         for (String player : all) {
             float px = getPosX() + (max_width - pointerX - 10);
 
-            ResourceLocation tex = getTexture(player);
+            Identifier tex = getTexture(player);
             if (tex != null) {
                 context.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, tex, (int) (getPosX() + 3), (int) (getPosY() + 16 + y_offset), 8, 8, 8, 8, 8, 8, 64, 64);
                 context.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, tex, (int) (getPosX() + 3), (int) (getPosY() + 16 + y_offset), 8, 8, 40, 8, 8, 8, 64, 64);
@@ -178,14 +177,14 @@ public class StaffBoard extends HudElement {
         }
     }
 
-    private ResourceLocation getTexture(String n) {
-        ResourceLocation id = null;
+    private Identifier getTexture(String n) {
+        Identifier id = null;
         if (skinMap.containsKey(n))
             id = skinMap.get(n);
 
         for (PlayerInfo ple : mc.getConnection().getOnlinePlayers())
-            if (n.contains(ple.getProfile().getName())) {
-                id = ple.getSkin().texture();
+            if (n.contains(ple.getProfile().name())) {
+                id = ple.getSkin().body().texturePath();
                 if (!skinMap.containsKey(n))
                     skinMap.put(n, id);
                 break;

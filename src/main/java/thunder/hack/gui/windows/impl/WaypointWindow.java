@@ -315,7 +315,7 @@ public class WaypointWindow extends WindowBase {
 
     @Override
     public void keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (keyCode == GLFW.GLFW_KEY_F && (InputConstants.isKeyDown(mc.getWindow().getWindow(), GLFW.GLFW_KEY_LEFT_CONTROL) || InputConstants.isKeyDown(mc.getWindow().getWindow(), GLFW.GLFW_KEY_RIGHT_CONTROL))) {
+        if (keyCode == GLFW.GLFW_KEY_F && (InputConstants.isKeyDown(mc.getWindow(), GLFW.GLFW_KEY_LEFT_CONTROL) || InputConstants.isKeyDown(mc.getWindow(), GLFW.GLFW_KEY_RIGHT_CONTROL))) {
             listeningId = -2;
             return;
         }
@@ -458,7 +458,7 @@ public class WaypointWindow extends WindowBase {
             }
 
         addServer = mc.isLocalServer() || fullNullCheck() ? "SinglePlayer" : mc.getConnection().getServerData().ip;
-        addDimension = fullNullCheck() ? "overworld" : mc.level.dimension().location().getPath();
+        addDimension = fullNullCheck() ? "overworld" : mc.level.dimension().identifier().getPath();
     }
 
     private String switchType(String t) {

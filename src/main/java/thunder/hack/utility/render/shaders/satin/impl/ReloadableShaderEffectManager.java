@@ -28,7 +28,7 @@ import thunder.hack.utility.render.WindowResizeCallback;
 
 import java.util.Set;
 import java.util.function.Consumer;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.ResourceProvider;
 
 public final class ReloadableShaderEffectManager implements ShaderEffectManager {
@@ -43,31 +43,31 @@ public final class ReloadableShaderEffectManager implements ShaderEffectManager 
     private final Set<ResettableManagedShaderBase<?>> managedShaders = new ReferenceOpenHashSet<>();
 
     @Override
-    public ManagedShaderEffect manage(ResourceLocation location) {
+    public ManagedShaderEffect manage(Identifier location) {
         return manage(location, s -> {
         });
     }
 
     @Override
-    public ManagedShaderEffect manage(ResourceLocation location, Consumer<ManagedShaderEffect> initCallback) {
+    public ManagedShaderEffect manage(Identifier location, Consumer<ManagedShaderEffect> initCallback) {
         ResettableManagedShaderEffect ret = new ResettableManagedShaderEffect(location, initCallback);
         managedShaders.add(ret);
         return ret;
     }
 
     @Override
-    public ManagedCoreShader manageCoreShader(ResourceLocation location) {
+    public ManagedCoreShader manageCoreShader(Identifier location) {
         return manageCoreShader(location, DefaultVertexFormat.NEW_ENTITY);
     }
 
     @Override
-    public ManagedCoreShader manageCoreShader(ResourceLocation location, VertexFormat vertexFormat) {
+    public ManagedCoreShader manageCoreShader(Identifier location, VertexFormat vertexFormat) {
         return manageCoreShader(location, vertexFormat, (s) -> {
         });
     }
 
     @Override
-    public ManagedCoreShader manageCoreShader(ResourceLocation location, VertexFormat vertexFormat, Consumer<ManagedCoreShader> initCallback) {
+    public ManagedCoreShader manageCoreShader(Identifier location, VertexFormat vertexFormat, Consumer<ManagedCoreShader> initCallback) {
         ResettableManagedCoreShader ret = new ResettableManagedCoreShader(location, vertexFormat, initCallback);
         managedShaders.add(ret);
         return ret;

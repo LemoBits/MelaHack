@@ -10,8 +10,8 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.render.*;
-import net.minecraft.resources.ResourceLocation;
+import thunder.hack.utility.render.BufferRenderer;
+import net.minecraft.resources.Identifier;
 import org.joml.Matrix4f;
 import thunder.hack.ThunderHack;
 import thunder.hack.utility.render.compat.RenderSystem;
@@ -30,11 +30,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Category extends AbstractCategory {
-    private final ResourceLocation ICON;
+    private final Identifier ICON;
     private static final RenderPipeline HEADER_ICON_PIPELINE = RenderPipeline.builder()
-            .withLocation(ResourceLocation.fromNamespaceAndPath("thunderhack", "pipeline/clickgui_header_icon"))
-            .withVertexShader(ResourceLocation.fromNamespaceAndPath("minecraft", "core/position_tex_color"))
-            .withFragmentShader(ResourceLocation.fromNamespaceAndPath("minecraft", "core/position_tex_color"))
+            .withLocation(Identifier.fromNamespaceAndPath("thunderhack", "pipeline/clickgui_header_icon"))
+            .withVertexShader(Identifier.fromNamespaceAndPath("minecraft", "core/position_tex_color"))
+            .withFragmentShader(Identifier.fromNamespaceAndPath("minecraft", "core/position_tex_color"))
             .withSampler("Sampler0")
             .withUniform("Projection", UniformType.UNIFORM_BUFFER)
             .withUniform("DynamicTransforms", UniformType.UNIFORM_BUFFER)
@@ -52,7 +52,7 @@ public class Category extends AbstractCategory {
     public Category(Module.Category category, ArrayList<Module> features, float x, float y, float width, float height) {
         super(category.getName(), x, y, width, height);
         buttons = new ArrayList<>();
-        ICON = ResourceLocation.fromNamespaceAndPath("thunderhack", "textures/gui/headers/" + (Module.Category.isCustomCategory(category) ? "stock" : category.getName().toLowerCase()) + ".png");
+        ICON = Identifier.fromNamespaceAndPath("thunderhack", "textures/gui/headers/" + (Module.Category.isCustomCategory(category) ? "stock" : category.getName().toLowerCase()) + ".png");
 
         if (category.getName().equals("Client"))
             buttons.add(new SearchBar());

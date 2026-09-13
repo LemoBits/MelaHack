@@ -9,8 +9,8 @@ import com.mojang.math.Axis;
 import com.mojang.blaze3d.platform.GlStateManager;
 import thunder.hack.utility.render.compat.RenderSystem;
 import net.minecraft.client.Camera;
-import net.minecraft.client.gl.ShaderProgramKeys;
-import net.minecraft.client.render.*;
+import thunder.hack.utility.render.ShaderProgramKeys;
+import thunder.hack.utility.render.BufferRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
@@ -156,11 +156,11 @@ public class Particles extends Module {
                 for (Trails.Trail ctx : trails) {
                     Vec3 pos = ctx.interpolate(1f);
                     PoseStack matrices = new PoseStack();
-                    matrices.mulPose(Axis.XP.rotationDegrees(camera.getXRot()));
-                    matrices.mulPose(Axis.YP.rotationDegrees(camera.getYRot() + 180.0F));
+                    matrices.mulPose(Axis.XP.rotationDegrees(camera.xRot()));
+                    matrices.mulPose(Axis.YP.rotationDegrees(camera.yRot() + 180.0F));
                     matrices.translate(pos.x, pos.y, pos.z);
-                    matrices.mulPose(Axis.YP.rotationDegrees(-camera.getYRot()));
-                    matrices.mulPose(Axis.XP.rotationDegrees(camera.getXRot()));
+                    matrices.mulPose(Axis.YP.rotationDegrees(-camera.yRot()));
+                    matrices.mulPose(Axis.XP.rotationDegrees(camera.xRot()));
                     Matrix4f matrix = matrices.last().pose();
 
                     bufferBuilder.addVertex(matrix, 0, -ffsize.getValue(), 0).setUv(0f, 1f).setColor(Render2DEngine.injectAlpha(ctx.color(), (int) (255 * ((float) age / (float) maxAge) * ctx.animation(Render3DEngine.getTickDelta()))).getRGB());
@@ -230,11 +230,11 @@ public class Particles extends Module {
             Vec3 pos = Render3DEngine.interpolatePos(prevposX, prevposY, prevposZ, posX, posY, posZ);
 
             PoseStack matrices = new PoseStack();
-            matrices.mulPose(Axis.XP.rotationDegrees(camera.getXRot()));
-            matrices.mulPose(Axis.YP.rotationDegrees(camera.getYRot() + 180.0F));
+            matrices.mulPose(Axis.XP.rotationDegrees(camera.xRot()));
+            matrices.mulPose(Axis.YP.rotationDegrees(camera.yRot() + 180.0F));
             matrices.translate(pos.x, pos.y, pos.z);
-            matrices.mulPose(Axis.YP.rotationDegrees(-camera.getYRot()));
-            matrices.mulPose(Axis.XP.rotationDegrees(camera.getXRot()));
+            matrices.mulPose(Axis.YP.rotationDegrees(-camera.yRot()));
+            matrices.mulPose(Axis.XP.rotationDegrees(camera.xRot()));
 
             Matrix4f matrix1 = matrices.last().pose();
 

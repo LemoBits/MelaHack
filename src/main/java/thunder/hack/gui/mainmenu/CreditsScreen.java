@@ -1,4 +1,5 @@
 package thunder.hack.gui.mainmenu;
+import thunder.hack.gui.LegacyInputScreen;
 
 import thunder.hack.utility.render.compat.RenderSystem;
 import org.jetbrains.annotations.NotNull;
@@ -17,18 +18,18 @@ import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Objects;
-import net.minecraft.Util;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
+import net.minecraft.util.Util;
 
 import static thunder.hack.features.modules.Module.mc;
 
 import com.mojang.blaze3d.platform.NativeImage;
 
-public class CreditsScreen extends Screen {
+public class CreditsScreen extends LegacyInputScreen {
     public ArrayList<Contributor> contributors = new ArrayList<>();
 
     private static int scroll;
@@ -121,10 +122,10 @@ public class CreditsScreen extends Screen {
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
-    public record Contributor(String name, ResourceLocation avatar, String role, String description, String clickAction) {
+    public record Contributor(String name, Identifier avatar, String role, String description, String clickAction) {
     }
 
-    public static ResourceLocation getAvatar(String name) {
+    public static Identifier getAvatar(String name) {
         try {
             DynamicTexture nIBT = getAvatarFromURL("https://cdn.discordapp.com/avatars/" + name + ".png?size=96");
 

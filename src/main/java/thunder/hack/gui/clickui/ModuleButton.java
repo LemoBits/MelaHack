@@ -212,7 +212,7 @@ public class ModuleButton extends AbstractButton {
         if (binding)
             FontRenderers.sf_medium_modules.drawString(context.pose(), holdbind ? (ChatFormatting.GRAY + "Toggle / " + ChatFormatting.RESET + "Hold") : (ChatFormatting.RESET + "Toggle " + ChatFormatting.GRAY + "/ Hold"), x + width - 11 - FontRenderers.sf_medium_modules.getStringWidth("Toggle/Hold"), iy + 2, Render2DEngine.applyOpacity(Color.WHITE.getRGB(), animation2));
 
-        if (hovered && InputConstants.isKeyDown(mc.getWindow().getWindow(), InputConstants.KEY_LSHIFT)) {
+        if (hovered && InputConstants.isKeyDown(mc.getWindow(), InputConstants.KEY_LSHIFT)) {
             FontRenderers.sf_medium_modules.drawString(context.pose(), "Drawn " + (module.isDrawn() ? ChatFormatting.GREEN + "TRUE" : ChatFormatting.RED + "FALSE"), ix + 1f, iy + 2, module.isEnabled() ? HudEditor.textColor2.getValue().getColor() : HudEditor.textColor.getValue().getColor());
         } else {
             if (binding)
@@ -267,12 +267,12 @@ public class ModuleButton extends AbstractButton {
         }
 
         if (hovered) {
-            if (InputConstants.isKeyDown(mc.getWindow().getWindow(), InputConstants.KEY_LSHIFT) && button == 0) {
+            if (InputConstants.isKeyDown(mc.getWindow(), InputConstants.KEY_LSHIFT) && button == 0) {
                 module.setDrawn(!module.isDrawn());
                 return;
             }
 
-            if (InputConstants.isKeyDown(mc.getWindow().getWindow(), InputConstants.KEY_DELETE) && button == 0) {
+            if (InputConstants.isKeyDown(mc.getWindow(), InputConstants.KEY_DELETE) && button == 0) {
                 DialogScreen dialogScreen = new DialogScreen(
                         TextureStorage.questionPic,
                         isRu() ? "Сброс модуля" : "Reset module",

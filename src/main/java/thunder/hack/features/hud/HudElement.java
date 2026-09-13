@@ -89,11 +89,11 @@ public class HudElement extends Module {
                 if (mouseState) {
                     if (CROSSHAIR_CURSOR == 0)
                         CROSSHAIR_CURSOR = GLFW.glfwCreateStandardCursor(GLFW.GLFW_CROSSHAIR_CURSOR);
-                    GLFW.glfwSetCursor(mc.getWindow().getWindow(), CROSSHAIR_CURSOR);
+                    GLFW.glfwSetCursor(mc.getWindow().handle(), CROSSHAIR_CURSOR);
                 } else {
                     if (HAND_CURSOR == 0)
                         HAND_CURSOR = GLFW.glfwCreateStandardCursor(GLFW.GLFW_HAND_CURSOR);
-                    GLFW.glfwSetCursor(mc.getWindow().getWindow(), HAND_CURSOR);
+                    GLFW.glfwSetCursor(mc.getWindow().handle(), HAND_CURSOR);
                 }
             }
             anyHovered = true;

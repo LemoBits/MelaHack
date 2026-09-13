@@ -1,4 +1,5 @@
 package thunder.hack.gui.clickui;
+import thunder.hack.gui.LegacyInputScreen;
 
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -24,7 +25,7 @@ import net.minecraft.network.chat.Component;
 import static thunder.hack.features.modules.Module.mc;
 import static thunder.hack.features.modules.client.ClientSettings.isRu;
 
-public class ClickGUI extends Screen {
+public class ClickGUI extends LegacyInputScreen {
     public static List<AbstractCategory> windows;
     public static boolean anyHovered;
 
@@ -181,13 +182,13 @@ public class ClickGUI extends Screen {
 
         if (ModuleManager.clickGui.scrollMode.getValue() == ClickGui.scrollModeEn.Old) {
             for (AbstractCategory window : windows) {
-                if (InputConstants.isKeyDown(mc.getWindow().getWindow(), 264))
+                if (InputConstants.isKeyDown(mc.getWindow(), 264))
                     window.setY(window.getY() + 2);
-                if (InputConstants.isKeyDown(mc.getWindow().getWindow(), 265))
+                if (InputConstants.isKeyDown(mc.getWindow(), 265))
                     window.setY(window.getY() - 2);
-                if (InputConstants.isKeyDown(mc.getWindow().getWindow(), 262))
+                if (InputConstants.isKeyDown(mc.getWindow(), 262))
                     window.setX(window.getX() + 2);
-                if (InputConstants.isKeyDown(mc.getWindow().getWindow(), 263))
+                if (InputConstants.isKeyDown(mc.getWindow(), 263))
                     window.setX(window.getX() - 2);
                 if (scrollY != 0)
                     window.setY(window.getY() + scrollY);
@@ -228,7 +229,7 @@ public class ClickGUI extends Screen {
 
         if (!HudElement.anyHovered && !ClickGUI.anyHovered)
             if (GLFW.glfwGetPlatform() != GLFW.GLFW_PLATFORM_WAYLAND) {
-                GLFW.glfwSetCursor(mc.getWindow().getWindow(), GLFW.glfwCreateStandardCursor(GLFW.GLFW_ARROW_CURSOR));
+                GLFW.glfwSetCursor(mc.getWindow().handle(), GLFW.glfwCreateStandardCursor(GLFW.GLFW_ARROW_CURSOR));
             }
 
     }

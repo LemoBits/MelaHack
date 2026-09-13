@@ -2,7 +2,7 @@ package thunder.hack.features.modules.player;
 
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
-import net.minecraft.world.entity.projectile.ThrownEnderpearl;
+import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrownEnderpearl;
 import thunder.hack.events.impl.EventEntitySpawn;
 import thunder.hack.features.modules.Module;
 import thunder.hack.utility.player.MovementUtility;

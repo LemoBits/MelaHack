@@ -5,8 +5,8 @@ import org.jetbrains.annotations.NotNull;
 import thunder.hack.features.cmd.Command;
 
 import java.io.File;
-import net.minecraft.Util;
 import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.util.Util;
 
 import static com.mojang.brigadier.Command.SINGLE_SUCCESS;
 

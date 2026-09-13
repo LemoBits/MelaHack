@@ -8,7 +8,7 @@ import thunder.hack.utility.ThunderUtility;
 
 import javax.net.ssl.HttpsURLConnection;
 import net.minecraft.client.renderer.texture.DynamicTexture;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,37 +25,37 @@ public final class CapeHandler {
      */
 
     public interface ReturnCapeTexture {
-        void response(ResourceLocation id);
+        void response(Identifier id);
     }
 
     public static void loadPlayerCape(GameProfile player, ReturnCapeTexture response) {
         try {
-            String uuid = player.getId().toString();
-            DynamicTexture optifineCape = getCapeFromURL(String.format("http://s.optifine.net/capes/%s.png", player.getName()));
-            DynamicTexture minecraftcapesCape = getCapeFromURL(String.format("https://api.minecraftcapes.net/profile/%s/cape/map", player.getId().toString().replace("-","")));
+            String uuid = player.id().toString();
+            DynamicTexture optifineCape = getCapeFromURL(String.format("http://s.optifine.net/capes/%s.png", player.name()));
+            DynamicTexture minecraftcapesCape = getCapeFromURL(String.format("https://api.minecraftcapes.net/profile/%s/cape/map", player.id().toString().replace("-","")));
             DynamicTexture minecraftcapesCapeCrack = getCapeFromURL(String.format("https://api.minecraftcapes.net/profile/%s/cape/map", getUUID(player)));
             switch (ModuleManager.capes.priority.getValue()) {
                 case Capes.capePriority.Optifine:
                     if (optifineCape != null && ModuleManager.capes.optifineCapes.getValue()) {
-                        ResourceLocation capeTexture = ThunderUtility.registerDynamicTexture("th-cape-" + uuid, optifineCape);
+                        Identifier capeTexture = ThunderUtility.registerDynamicTexture("th-cape-" + uuid, optifineCape);
                         if (capeTexture != null) response.response(capeTexture);
                     } else if (ModuleManager.capes.minecraftcapesCapes.getValue() && minecraftcapesCape != null) {
-                        ResourceLocation capeTexture = ThunderUtility.registerDynamicTexture("th-cape-" + uuid, minecraftcapesCape);
+                        Identifier capeTexture = ThunderUtility.registerDynamicTexture("th-cape-" + uuid, minecraftcapesCape);
                         if (capeTexture != null) response.response(capeTexture);
                     } else if(ModuleManager.capes.minecraftcapesCapes.getValue()) {
-                        ResourceLocation capeTexture = ThunderUtility.registerDynamicTexture("th-cape-" + uuid, minecraftcapesCapeCrack);
+                        Identifier capeTexture = ThunderUtility.registerDynamicTexture("th-cape-" + uuid, minecraftcapesCapeCrack);
                         if (capeTexture != null) response.response(capeTexture);
                     }
                     break;
                 case Capes.capePriority.Minecraftcapes:
                     if (minecraftcapesCape != null && ModuleManager.capes.minecraftcapesCapes.getValue()) {
-                        ResourceLocation capeTexture = ThunderUtility.registerDynamicTexture("th-cape-" + uuid, minecraftcapesCape);
+                        Identifier capeTexture = ThunderUtility.registerDynamicTexture("th-cape-" + uuid, minecraftcapesCape);
                         if (capeTexture != null) response.response(capeTexture);
                     } else if (minecraftcapesCapeCrack != null && ModuleManager.capes.minecraftcapesCapes.getValue()) {
-                        ResourceLocation capeTexture = ThunderUtility.registerDynamicTexture("th-cape-" + uuid, minecraftcapesCapeCrack);
+                        Identifier capeTexture = ThunderUtility.registerDynamicTexture("th-cape-" + uuid, minecraftcapesCapeCrack);
                         if (capeTexture != null) response.response(capeTexture);
                     } else if (ModuleManager.capes.optifineCapes.getValue()) {
-                        ResourceLocation capeTexture = ThunderUtility.registerDynamicTexture("th-cape-" + uuid, optifineCape);
+                        Identifier capeTexture = ThunderUtility.registerDynamicTexture("th-cape-" + uuid, optifineCape);
                         if (capeTexture != null) response.response(capeTexture);
                     }
                     break;
@@ -67,7 +67,7 @@ public final class CapeHandler {
     public static String getUUID(GameProfile player) {
         StringBuffer content = null;
         try {
-            URL request = new URL(String.format("https://api.mojang.com/users/profiles/minecraft/%s", player.getName()));
+            URL request = new URL(String.format("https://api.mojang.com/users/profiles/minecraft/%s", player.name()));
             HttpsURLConnection connection = (HttpsURLConnection) request.openConnection();
             connection.setRequestMethod("GET");
             connection.setConnectTimeout(5000);

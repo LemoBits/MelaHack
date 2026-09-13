@@ -9,21 +9,22 @@ import com.mojang.math.Axis;
 import com.mojang.blaze3d.platform.GlStateManager;
 import thunder.hack.utility.render.compat.RenderSystem;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.gl.ShaderProgramKeys;
-import net.minecraft.client.model.EndCrystalModel;
+import thunder.hack.utility.render.ShaderProgramKeys;
 import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.model.object.crystal.EndCrystalModel;
 import net.minecraft.client.player.AbstractClientPlayer;
-import net.minecraft.client.render.*;
+import thunder.hack.utility.render.BufferRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.state.EndCrystalRenderState;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
+import net.minecraft.client.renderer.rendertype.RenderType;
+import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.Direction;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -68,7 +69,7 @@ public class Chams extends Module {
         One, Two, Three
     }
 
-    private final ResourceLocation crystalTexture = ResourceLocation.parse("textures/entity/end_crystal/end_crystal.png");
+    private final Identifier crystalTexture = Identifier.parse("textures/entity/end_crystal/end_crystal.png");
     public void renderCrystal(EndCrystalRenderState state, PoseStack matrixStack, MultiBufferSource vertexConsumerProvider, int light, EndCrystalModel model) {
         RenderSystem.enableBlend();
         if (alternativeBlending.getValue())
@@ -83,8 +84,8 @@ public class Chams extends Module {
             state.ageInTicks = 0.0f;
         }
 
-        ResourceLocation texture = crystalMode.getValue() == CMode.Two ? TextureStorage.crystalTexture2 : crystalTexture;
-        RenderType layer = RenderType.entityCutoutNoCull(texture);
+        Identifier texture = crystalMode.getValue() == CMode.Two ? TextureStorage.crystalTexture2 : crystalTexture;
+        RenderType layer = RenderTypes.entityCutoutNoCull(texture);
 
         matrixStack.pushPose();
         matrixStack.scale(2.0f, 2.0f, 2.0f);
@@ -110,7 +111,7 @@ public class Chams extends Module {
         BufferBuilder buffer;
 
         if (!simple.getValue()) {
-            RenderSystem.setShaderTexture(0, ((AbstractClientPlayer) pe).getSkin().texture());
+            RenderSystem.setShaderTexture(0, ((AbstractClientPlayer) pe).getSkin().body().texturePath());
             RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX);
             buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
         } else {
@@ -150,7 +151,7 @@ public class Chams extends Module {
             k = j - h;
         }
         float m = Mth.lerp(g, ((thunder.hack.injection.accesors.IEntity) pe).getLastPitch(), pe.getXRot());
-        if (LivingEntityRenderer.isEntityUpsideDown(pe)) {
+        if (("Dinnerbone".equals(pe.getName().getString()) || "Grumm".equals(pe.getName().getString()))) {
             m *= -1.0f;
             k *= -1.0f;
         }

@@ -9,14 +9,14 @@ import com.mojang.math.Axis;
 import com.mojang.blaze3d.platform.GlStateManager;
 import thunder.hack.utility.render.compat.RenderSystem;
 import net.minecraft.client.Camera;
-import net.minecraft.client.gl.ShaderProgramKeys;
-import net.minecraft.client.render.*;
+import thunder.hack.utility.render.ShaderProgramKeys;
+import thunder.hack.utility.render.BufferRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.Arrow;
-import net.minecraft.world.entity.projectile.ThrownEnderpearl;
-import net.minecraft.world.entity.projectile.ThrownExperienceBottle;
+import net.minecraft.world.entity.projectile.arrow.Arrow;
+import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrownEnderpearl;
+import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrownExperienceBottle;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -128,14 +128,14 @@ public class Trails extends Module {
                     for (int i = 0; i < size; i++) {
                         Trail ctx = ((IEntity) entity).getTrails().get(i);
                         PoseStack matrices = new PoseStack();
-                        matrices.mulPose(Axis.XP.rotationDegrees(camera.getXRot()));
-                        matrices.mulPose(Axis.YP.rotationDegrees(camera.getYRot() + 180.0F));
+                        matrices.mulPose(Axis.XP.rotationDegrees(camera.xRot()));
+                        matrices.mulPose(Axis.YP.rotationDegrees(camera.yRot() + 180.0F));
 
                         Vec3 pos = ctx.interpolate(Render3DEngine.getTickDelta());
                         matrices.translate(pos.x, pos.y + 0.9f, pos.z);
 
-                        matrices.mulPose(Axis.YP.rotationDegrees(-camera.getYRot()));
-                        matrices.mulPose(Axis.XP.rotationDegrees(camera.getXRot()));
+                        matrices.mulPose(Axis.YP.rotationDegrees(-camera.yRot()));
+                        matrices.mulPose(Axis.XP.rotationDegrees(camera.xRot()));
                         Matrix4f matrix = matrices.last().pose();
 
                         Color col = ctx.color();
@@ -270,7 +270,7 @@ public class Trails extends Module {
         Color c = lmode.getValue() == Mode.Sync ? HudEditor.getColor(mc.player.tickCount % 360) : lcolor.getValue().getColorObject();
 
         for (Player player : mc.level.players()) {
-            if (player.position().z() != player.zo || player.position().x() != player.xo && (!onlySelf.getValue())) {
+            if (player.position().z != player.zo || player.position().x != player.xo && (!onlySelf.getValue())) {
                 ((IEntity) player).getTrails().add(new Trail(new Vec3(player.xo, player.yo, player.zo), player.position(), c));
                 if (players.is(Players.Particles)) {
                     for (int i = 0; i < amount.getValue(); i++) {
@@ -317,9 +317,9 @@ public class Trails extends Module {
         }
 
         public Vec3 interpolate(float pt) {
-            double x = from.x + ((to.x - from.x) * pt) - mc.getEntityRenderDispatcher().camera.getPosition().x();
-            double y = from.y + ((to.y - from.y) * pt) - mc.getEntityRenderDispatcher().camera.getPosition().y();
-            double z = from.z + ((to.z - from.z) * pt) - mc.getEntityRenderDispatcher().camera.getPosition().z();
+            double x = from.x + ((to.x - from.x) * pt) - mc.getEntityRenderDispatcher().camera.position().x;
+            double y = from.y + ((to.y - from.y) * pt) - mc.getEntityRenderDispatcher().camera.position().y;
+            double z = from.z + ((to.z - from.z) * pt) - mc.getEntityRenderDispatcher().camera.position().z;
             return new Vec3(x, y, z);
         }
 
@@ -436,18 +436,18 @@ public class Trails extends Module {
         public void render(PoseStack matrixStack, BufferBuilder bufferBuilder) {
             update();
             float scale = starsScale.getValue() / 10f;
-            final double posX = x - mc.getEntityRenderDispatcher().camera.getPosition().x();
-            final double posY = y - mc.getEntityRenderDispatcher().camera.getPosition().y();
-            final double posZ = z - mc.getEntityRenderDispatcher().camera.getPosition().z();
+            final double posX = x - mc.getEntityRenderDispatcher().camera.position().x;
+            final double posY = y - mc.getEntityRenderDispatcher().camera.position().y;
+            final double posZ = z - mc.getEntityRenderDispatcher().camera.position().z;
 
             Camera camera = mc.gameRenderer.getMainCamera();
 
             PoseStack matrices = new PoseStack();
-            matrices.mulPose(Axis.XP.rotationDegrees(camera.getXRot()));
-            matrices.mulPose(Axis.YP.rotationDegrees(camera.getYRot() + 180.0F));
+            matrices.mulPose(Axis.XP.rotationDegrees(camera.xRot()));
+            matrices.mulPose(Axis.YP.rotationDegrees(camera.yRot() + 180.0F));
             matrices.translate(posX, posY, posZ);
-            matrices.mulPose(Axis.YP.rotationDegrees(-camera.getYRot()));
-            matrices.mulPose(Axis.XP.rotationDegrees(camera.getXRot()));
+            matrices.mulPose(Axis.YP.rotationDegrees(-camera.yRot()));
+            matrices.mulPose(Axis.XP.rotationDegrees(camera.xRot()));
 
             Matrix4f matrix = matrices.last().pose();
 

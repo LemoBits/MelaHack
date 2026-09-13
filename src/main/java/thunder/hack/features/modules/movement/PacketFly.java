@@ -1,7 +1,7 @@
 package thunder.hack.features.modules.movement;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.gui.screens.ReceivingLevelScreen;
+import net.minecraft.client.gui.screens.LevelLoadingScreen;
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
 import net.minecraft.network.protocol.game.ServerboundAcceptTeleportationPacket;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
@@ -122,7 +122,7 @@ public class PacketFly extends Module {
             if (
                     mc.player.isAlive()
                     && mc.level.hasChunk((int) mc.player.getX() >> 4, (int) mc.player.getZ() >> 4)
-                    && !(mc.screen instanceof ReceivingLevelScreen)
+                    && !(mc.screen instanceof LevelLoadingScreen)
                     && mode.getValue() != Mode.Rubber
                     && teleport != null
                     && teleport.x == pos.x

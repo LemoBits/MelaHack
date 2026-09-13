@@ -17,7 +17,7 @@ import java.net.URL;
 import java.util.Objects;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.texture.DynamicTexture;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import static thunder.hack.features.modules.Module.mc;
 
@@ -25,7 +25,7 @@ import com.mojang.blaze3d.platform.NativeImage;
 
 public class FriendComponent {
     float scroll_animation = 0f;
-    private ResourceLocation head = null;
+    private Identifier head = null;
     private final String name;
     private int posX;
     private int posY;
@@ -49,7 +49,7 @@ public class FriendComponent {
 
     public void loadHead(String name) {
         if (Core.HEADS.containsKey(name)) head = Core.HEADS.get(name);
-        net.minecraft.Util.backgroundExecutor().execute(() -> {
+        net.minecraft.util.Util.backgroundExecutor().execute(() -> {
             try {
                 DynamicTexture nIBT = getHeadFromURL("https://minotar.net/helm/" + name + "/22.png");
                 head = ThunderUtility.registerDynamicTexture("th-heads-" + name, nIBT);
@@ -141,7 +141,7 @@ public class FriendComponent {
 
         FontRenderers.modules.drawString(context.pose(), name, posX + 37, posY + 6, Render2DEngine.applyOpacity(-1, getFadeFactor()));
 
-        boolean online = mc.player.connection.getOnlinePlayers().stream().map(p -> p.getProfile().getName()).toList().contains(name);
+        boolean online = mc.player.connection.getOnlinePlayers().stream().map(p -> p.getProfile().name()).toList().contains(name);
 
         FontRenderers.settings.drawString(context.pose(), online ? "online" : "offline", posX + 37, posY + 17, online ? Render2DEngine.applyOpacity(new Color(0xFF0B7A00, true).getRGB(), getFadeFactor()) : Render2DEngine.applyOpacity(new Color(0xFFBDBDBD, true).getRGB(), getFadeFactor()));
     }

@@ -65,7 +65,7 @@ public class SliderElement extends AbstractElement {
 
         if (Render2DEngine.isHovered(mouseX, mouseY, (x + 6), y + height - 7, width - 12, 3)) {
             if (GLFW.glfwGetPlatform() != GLFW.GLFW_PLATFORM_WAYLAND) {
-                GLFW.glfwSetCursor(mc.getWindow().getWindow(),
+                GLFW.glfwSetCursor(mc.getWindow().handle(),
                         GLFW.glfwCreateStandardCursor(GLFW.GLFW_HRESIZE_CURSOR));
             }
             ClickGUI.anyHovered = true;

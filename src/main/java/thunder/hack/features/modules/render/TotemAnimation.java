@@ -3,8 +3,7 @@ package thunder.hack.features.modules.render;
 import thunder.hack.utility.render.compat.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
@@ -37,7 +36,7 @@ public class TotemAnimation extends Module {
         }
     }
 
-    public void renderFloatingItem(float tickDelta) {
+    public void renderFloatingItem(GuiGraphics context, float tickDelta) {
         if (floatingItem != null && floatingItemTimeLeft > 0 && !mode.is(Mode.Off)) {
             int scaledWidth = mc.getWindow().getGuiScaledWidth();
             int scaledHeight = mc.getWindow().getGuiScaledHeight();
@@ -105,11 +104,9 @@ public class TotemAnimation extends Module {
                 }
             }
 
-            MultiBufferSource.BufferSource immediate = mc.renderBuffers().bufferSource();
             RenderSystem.setShaderColor(1f, 1f, 1f, 1f - animationProgress);
-            mc.getItemRenderer().renderStatic(floatingItem, ItemDisplayContext.FIXED, 15728880, OverlayTexture.NO_OVERLAY, matrixStack, immediate, mc.level, 0);
+            context.renderItem(floatingItem, scaledWidth / 2 - 8, scaledHeight / 2 - 8);
             matrixStack.popPose();
-            immediate.endBatch();
             RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
 
             RenderSystem.disableBlend();

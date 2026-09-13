@@ -1,6 +1,4 @@
 package thunder.hack.features.hud.impl;
-import java.util.List;
-
 import org.apache.commons.lang3.StringUtils;
 import thunder.hack.ThunderHack;
 import thunder.hack.core.Managers;
@@ -13,6 +11,7 @@ import thunder.hack.setting.impl.ColorSetting;
 import thunder.hack.utility.player.InventoryUtility;
 import thunder.hack.utility.math.FrameRateCounter;
 import thunder.hack.utility.math.MathUtility;
+import java.util.List;
 
 import java.awt.*;
 import java.text.SimpleDateFormat;
@@ -22,7 +21,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Tuple;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -178,7 +177,7 @@ public class LegacyHud extends Module {
             drawText(context, fpsText, width - getStringWidth(fpsText) - 2, renderingUp.getValue() ? (height - 2 - (i += offset)) : (2 + i++ * offset));
         }
 
-        boolean inHell = Objects.equals(mc.level.dimension().location().getPath(), "the_nether");
+        boolean inHell = Objects.equals(mc.level.dimension().identifier().getPath(), "the_nether");
         int posX = (int) mc.player.getX();
         int posY = (int) mc.player.getY();
         int posZ = (int) mc.player.getZ();
@@ -286,7 +285,7 @@ public class LegacyHud extends Module {
     }
     private static String biome() {
         if (mc.player == null || mc.level == null) return null;
-        ResourceLocation id = mc.level.registryAccess().lookupOrThrow(Registries.BIOME).getKey(mc.level.getBiome(mc.player.blockPosition()).value());
+        Identifier id = mc.level.registryAccess().lookupOrThrow(Registries.BIOME).getKey(mc.level.getBiome(mc.player.blockPosition()).value());
         if (id == null) return ("Unknown");
 
         return (Arrays.stream(id.getPath().split("_")).map(StringUtils::capitalize).collect(Collectors.joining(" ")));

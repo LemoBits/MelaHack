@@ -4,6 +4,7 @@ import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.textures.GpuTexture;
+import com.mojang.blaze3d.textures.GpuSampler;
 import com.mojang.blaze3d.textures.GpuTextureView;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fStack;
@@ -12,7 +13,8 @@ import org.lwjgl.opengl.GL11;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import net.minecraft.client.Minecraft;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.ClientAsset;
+import net.minecraft.resources.Identifier;
 
 public final class RenderSystem {
     public enum BlendMode {
@@ -24,6 +26,8 @@ public final class RenderSystem {
 
     private static RenderPipeline currentPipeline;
     private static final Map<String, Object> currentUniforms = new LinkedHashMap<>();
+    private static final GpuTextureView[] shaderTextures = new GpuTextureView[12];
+    private static final GpuSampler[] shaderSamplers = new GpuSampler[12];
     private static BlendMode blendMode = BlendMode.DEFAULT;
     private static boolean scissorEnabled;
     private static final float[] shaderColor = new float[]{1f, 1f, 1f, 1f};
@@ -163,7 +167,7 @@ public final class RenderSystem {
     }
 
     public static void lineWidth(float width) {
-        com.mojang.blaze3d.systems.RenderSystem.lineWidth(width);
+        // Line width is encoded by modern render pipelines rather than mutable global state.
     }
 
     public static void setShaderColor(float red, float green, float blue, float alpha) {
@@ -177,16 +181,37 @@ public final class RenderSystem {
         return shaderColor;
     }
 
-    public static void setShaderTexture(int slot, ResourceLocation id) {
-        GpuTextureView texture = Minecraft.getInstance().getTextureManager().getTexture(id).getTextureView();
-        com.mojang.blaze3d.systems.RenderSystem.setShaderTexture(slot, texture);
+    public static void setShaderTexture(int slot, Identifier id) {
+        var texture = Minecraft.getInstance().getTextureManager().getTexture(id);
+        rememberTexture(slot, texture.getTextureView(), texture.getSampler());
+    }
+
+    public static void setShaderTexture(int slot, ClientAsset.Texture texture) {
+        setShaderTexture(slot, texture.texturePath());
     }
 
     public static void setShaderTexture(int slot, GpuTexture texture) {
+        // Callers with a raw texture must provide a view on modern Blaze3D.
     }
 
     public static void setShaderTexture(int slot, GpuTextureView texture) {
-        com.mojang.blaze3d.systems.RenderSystem.setShaderTexture(slot, texture);
+        rememberTexture(slot, texture, com.mojang.blaze3d.systems.RenderSystem.getSamplerCache()
+                .getClampToEdge(com.mojang.blaze3d.textures.FilterMode.LINEAR));
+    }
+
+    private static void rememberTexture(int slot, GpuTextureView texture, GpuSampler sampler) {
+        if (slot >= 0 && slot < shaderTextures.length) {
+            shaderTextures[slot] = texture;
+            shaderSamplers[slot] = sampler;
+        }
+    }
+
+    public static GpuTextureView getShaderTexture(int slot) {
+        return slot >= 0 && slot < shaderTextures.length ? shaderTextures[slot] : null;
+    }
+
+    public static GpuSampler getShaderSampler(int slot) {
+        return slot >= 0 && slot < shaderSamplers.length ? shaderSamplers[slot] : null;
     }
 
     public static void clearColor(float red, float green, float blue, float alpha) {
@@ -244,7 +269,7 @@ public final class RenderSystem {
     }
 
     public static void resetTextureMatrix() {
-        com.mojang.blaze3d.systems.RenderSystem.resetTextureMatrix();
+        // Texture transforms are supplied through pipeline uniforms in modern Blaze3D.
     }
 
     public static GpuBufferSlice getShaderFog() {

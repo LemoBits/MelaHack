@@ -20,7 +20,7 @@ public class MixinBackgroundRenderer {
     @Unique
     private int thunderHack$viewDistance;
 
-    @Inject(method = "setupFog", at = @At("HEAD"))
+    @Inject(method = "applyFog(Lnet/minecraft/client/Camera;IZLnet/minecraft/client/DeltaTracker;FLnet/minecraft/client/multiplayer/ClientLevel;)Lorg/joml/Vector4f;", at = @At("HEAD"))
     private void captureFogContext(Camera camera, int viewDistance, boolean thickFog, DeltaTracker tickCounter,
                                    float skyDarkness, ClientLevel world, CallbackInfoReturnable<Vector4f> cir) {
         thunderHack$viewDistance = viewDistance;

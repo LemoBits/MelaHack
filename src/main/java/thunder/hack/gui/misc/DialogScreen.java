@@ -1,4 +1,5 @@
 package thunder.hack.gui.misc;
+import thunder.hack.gui.LegacyInputScreen;
 
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.gui.font.FontRenderers;
@@ -8,12 +9,12 @@ import java.awt.*;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import static thunder.hack.features.modules.Module.mc;
 
-public class DialogScreen extends Screen {
-    private final ResourceLocation pic;
+public class DialogScreen extends LegacyInputScreen {
+    private final Identifier pic;
     private final String header;
     private final String description;
     private final String yesText;
@@ -21,7 +22,7 @@ public class DialogScreen extends Screen {
     private final Runnable yesAction;
     private final Runnable noAction;
 
-    public DialogScreen(ResourceLocation pic, String header, String description, String yesText, String noText, Runnable yesAction, Runnable noAction) {
+    public DialogScreen(Identifier pic, String header, String description, String yesText, String noText, Runnable yesAction, Runnable noAction) {
         super(Component.nullToEmpty("ThDialogScreen"));
         this.pic = pic;
         this.header = header;

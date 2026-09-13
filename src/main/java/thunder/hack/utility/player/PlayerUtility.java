@@ -16,17 +16,17 @@ import static thunder.hack.features.modules.Module.mc;
 public final class PlayerUtility {
     public static boolean isInHell() {
         if (mc.level == null) return false;
-        return Objects.equals(mc.level.dimension().location().getPath(), "the_nether");
+        return Objects.equals(mc.level.dimension().identifier().getPath(), "the_nether");
     }
 
     public static boolean isInEnd() {
         if (mc.level == null) return false;
-        return Objects.equals(mc.level.dimension().location().getPath(), "the_end");
+        return Objects.equals(mc.level.dimension().identifier().getPath(), "the_end");
     }
 
     public static boolean isInOver() {
         if (mc.level == null) return false;
-        return Objects.equals(mc.level.dimension().location().getPath(), "overworld");
+        return Objects.equals(mc.level.dimension().identifier().getPath(), "overworld");
     }
 
     public static boolean isEating() {

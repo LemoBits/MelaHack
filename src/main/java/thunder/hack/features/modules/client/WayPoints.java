@@ -29,7 +29,7 @@ public final class WayPoints extends Module {
                 if (wp.getName() == null) continue;
                 if ((mc.isLocalServer() && wp.getServer().equals("SinglePlayer"))
                         || (mc.getConnection().getServerData() != null && !mc.getConnection().getServerData().ip.contains(wp.getServer()))) continue;
-                if (!mc.level.dimension().location().getPath().equals(wp.getDimension())) continue;
+                if (!mc.level.dimension().identifier().getPath().equals(wp.getDimension())) continue;
                 double difX = wp.getX() - mc.player.position().x;
                 double difZ = wp.getZ() - mc.player.position().z;
                 float yaw = (float) Mth.wrapDegrees(Math.toDegrees(Math.atan2(difZ, difX)) - 90.0);

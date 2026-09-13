@@ -70,9 +70,9 @@ public class ElytraRecast extends Module {
 
     @Override
     public void onDisable() {
-        if (!InputConstants.isKeyDown(mc.getWindow().getWindow(), mc.options.keyUp.getDefaultKey().getValue()))
+        if (!InputConstants.isKeyDown(mc.getWindow(), mc.options.keyUp.getDefaultKey().getValue()))
             mc.options.keyUp.setDown(false);
-        if (!InputConstants.isKeyDown(mc.getWindow().getWindow(), mc.options.keyJump.getDefaultKey().getValue()))
+        if (!InputConstants.isKeyDown(mc.getWindow(), mc.options.keyJump.getDefaultKey().getValue()))
             mc.options.keyJump.setDown(false);
     }
 
