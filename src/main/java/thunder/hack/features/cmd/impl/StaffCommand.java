@@ -2,13 +2,13 @@ package thunder.hack.features.cmd.impl;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import net.minecraft.command.CommandSource;
-import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.features.cmd.Command;
 
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.ChatFormatting;
+import net.minecraft.commands.SharedSuggestionProvider;
 
 import static com.mojang.brigadier.Command.SINGLE_SUCCESS;
 
@@ -20,7 +20,7 @@ public class StaffCommand extends Command {
     }
 
     @Override
-    public void executeBuild(@NotNull LiteralArgumentBuilder<CommandSource> builder) {
+    public void executeBuild(@NotNull LiteralArgumentBuilder<SharedSuggestionProvider> builder) {
         builder.then(literal("reset").executes(context -> {
             staffNames.clear();
             sendMessage("staff list got reset.");
@@ -32,7 +32,7 @@ public class StaffCommand extends Command {
             String name = context.getArgument("name", String.class);
 
             staffNames.add(name);
-            sendMessage(Formatting.GREEN + name + " added to staff list");
+            sendMessage(ChatFormatting.GREEN + name + " added to staff list");
 
             return SINGLE_SUCCESS;
         })));
@@ -41,7 +41,7 @@ public class StaffCommand extends Command {
             String name = context.getArgument("name", String.class);
 
             staffNames.remove(name);
-            sendMessage(Formatting.GREEN + name + " removed from staff list");
+            sendMessage(ChatFormatting.GREEN + name + " removed from staff list");
 
             return SINGLE_SUCCESS;
         })));

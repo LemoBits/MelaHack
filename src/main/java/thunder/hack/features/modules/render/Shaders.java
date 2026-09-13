@@ -1,9 +1,9 @@
 package thunder.hack.features.modules.render;
 
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.decoration.EndCrystalEntity;
-import net.minecraft.entity.player.PlayerEntity;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
+import net.minecraft.world.entity.player.Player;
 import thunder.hack.core.Managers;
 import thunder.hack.core.manager.client.ShaderManager;
 import thunder.hack.features.modules.Module;
@@ -58,21 +58,21 @@ public class Shaders extends Module {
         if (mc.player == null)
             return false;
 
-        if (mc.player.squaredDistanceTo(entity.getPos()) > maxRange.getPow2Value())
+        if (mc.player.distanceToSqr(entity.position()) > maxRange.getPow2Value())
             return false;
 
-        if (entity instanceof PlayerEntity) {
+        if (entity instanceof Player) {
             if (entity == mc.player && !self.getValue())
                 return false;
-            if (Managers.FRIEND.isFriend((PlayerEntity) entity))
+            if (Managers.FRIEND.isFriend((Player) entity))
                 return friends.getValue();
             return players.getValue();
         }
 
-        if (entity instanceof EndCrystalEntity)
+        if (entity instanceof EndCrystal)
             return crystals.getValue();
 
-        return switch (entity.getType().getSpawnGroup()) {
+        return switch (entity.getType().getCategory()) {
             case CREATURE, WATER_CREATURE -> creatures.getValue();
             case MONSTER -> monsters.getValue();
             case AMBIENT, WATER_AMBIENT -> ambients.getValue();
@@ -80,9 +80,9 @@ public class Shaders extends Module {
         };
     }
 
-    public void onRender3D(MatrixStack matrices) {
+    public void onRender3D(PoseStack matrices) {
         if (hands.getValue())
-            Managers.SHADER.renderShader(() -> ((IGameRenderer) mc.gameRenderer).irenderHand(Render3DEngine.getTickDelta(), false, matrices.peek().getPositionMatrix()), handsMode.getValue());
+            Managers.SHADER.renderShader(() -> ((IGameRenderer) mc.gameRenderer).irenderHand(Render3DEngine.getTickDelta(), false, matrices.last().pose()), handsMode.getValue());
     }
 
     @Override

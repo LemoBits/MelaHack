@@ -1,8 +1,8 @@
 package thunder.hack.features.cmd.impl;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import net.minecraft.client.network.PlayerListEntry;
-import net.minecraft.command.CommandSource;
+import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.commands.SharedSuggestionProvider;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.ThunderHack;
 import thunder.hack.core.Managers;
@@ -18,7 +18,7 @@ public class FriendCommand extends Command {
     }
 
     @Override
-    public void executeBuild(@NotNull LiteralArgumentBuilder<CommandSource> builder) {
+    public void executeBuild(@NotNull LiteralArgumentBuilder<SharedSuggestionProvider> builder) {
         builder.then(literal("reset").executes(context -> {
             Managers.FRIEND.clear();
             sendMessage("Friends got reset.");
@@ -27,7 +27,7 @@ public class FriendCommand extends Command {
         }));
 
         builder.then(literal("add").then(arg("player", PlayerArgumentType.create()).executes(context -> {
-            PlayerListEntry player = context.getArgument("player", PlayerListEntry.class);
+            PlayerInfo player = context.getArgument("player", PlayerInfo.class);
 
             Managers.FRIEND.addFriend(player.getProfile().getName());
             sendMessage(player.getProfile().getName() + " has been friended");
@@ -43,7 +43,7 @@ public class FriendCommand extends Command {
         })));
 
         builder.then(literal("is").then(arg("player", PlayerArgumentType.create()).executes(context -> {
-            PlayerListEntry player = context.getArgument("player", PlayerListEntry.class);
+            PlayerInfo player = context.getArgument("player", PlayerInfo.class);
             sendMessage(player.getProfile().getName() + (Managers.FRIEND.isFriend(player.getProfile().getName()) ? " is friended." : " isn't friended."));
 
             return SINGLE_SUCCESS;

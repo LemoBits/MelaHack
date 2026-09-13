@@ -1,13 +1,12 @@
 package thunder.hack.injection;
 
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.gui.screen.ConfirmScreen;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.TitleScreen;
-import net.minecraft.client.util.InputUtil;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Util;
+import net.minecraft.ChatFormatting;
+import net.minecraft.Util;
+import net.minecraft.client.gui.screens.ConfirmScreen;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.network.chat.Component;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -24,9 +23,11 @@ import java.net.URI;
 import static thunder.hack.features.modules.Module.mc;
 import static thunder.hack.features.modules.client.ClientSettings.isRu;
 
+import com.mojang.blaze3d.platform.InputConstants;
+
 @Mixin(TitleScreen.class)
 public class MixinTitleScreen extends Screen {
-    protected MixinTitleScreen(Text title) {
+    protected MixinTitleScreen(Component title) {
         super(title);
     }
 
@@ -43,12 +44,12 @@ public class MixinTitleScreen extends Screen {
                     isRu() ? "Зайти в майн" : "Join on minecraft",
                     isRu() ? "Закрыть майн" : "Close minecraft",
                     () -> {
-                        ModuleManager.clickGui.setBind(InputUtil.fromTranslationKey("key.keyboard.p").getCode(), false, false);
+                        ModuleManager.clickGui.setBind(InputConstants.getKey("key.keyboard.p").getValue(), false, false);
                         mc.setScreen(MainMenuScreen.getInstance());
                     },
                     () -> {
-                        ModuleManager.clickGui.setBind(InputUtil.fromTranslationKey("key.keyboard.p").getCode(), false, false);
-                        mc.stop();
+                        ModuleManager.clickGui.setBind(InputConstants.getKey("key.keyboard.p").getValue(), false, false);
+                        mc.destroy();
                     }
             );
             DialogScreen dialogScreen1 = new DialogScreen(
@@ -72,10 +73,10 @@ public class MixinTitleScreen extends Screen {
         if (ThunderHack.isOutdated && !FabricLoader.getInstance().isDevelopmentEnvironment()) {
             mc.setScreen(new ConfirmScreen(
                     confirm -> {
-                        if (confirm) Util.getOperatingSystem().open(URI.create("https://github.com/Pan4ur/ThunderHack-Recode/releases/download/latest/thunderhack-1.7.jar/"));
-                        else mc.stop();
+                        if (confirm) Util.getPlatform().openUri(URI.create("https://github.com/Pan4ur/ThunderHack-Recode/releases/download/latest/thunderhack-1.7.jar/"));
+                        else mc.destroy();
                     },
-                    Text.of(Formatting.RED + "You are using an outdated version of ThunderHack Recode"), Text.of("Please update to the latest release"), Text.of("Download"), Text.of("Quit Game")));
+                    Component.nullToEmpty(ChatFormatting.RED + "You are using an outdated version of ThunderHack Recode"), Component.nullToEmpty("Please update to the latest release"), Component.nullToEmpty("Download"), Component.nullToEmpty("Quit Game")));
         }
     }
 }

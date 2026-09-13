@@ -1,10 +1,9 @@
 package thunder.hack.features.modules.client;
 
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.Vec3;
 import org.joml.Vector4d;
 import thunder.hack.ThunderHack;
 import thunder.hack.core.Managers;
@@ -24,22 +23,22 @@ public final class WayPoints extends Module {
         sendMessage(Managers.COMMAND.getPrefix() + "waypoint add x y z name");
     }
 
-    public void onRender2D(DrawContext context) {
+    public void onRender2D(GuiGraphics context) {
         if (!Managers.WAYPOINT.getWayPoints().isEmpty() && !fullNullCheck()) {
             for (WayPointManager.WayPoint wp : Managers.WAYPOINT.getWayPoints()) {
                 if (wp.getName() == null) continue;
-                if ((mc.isInSingleplayer() && wp.getServer().equals("SinglePlayer"))
-                        || (mc.getNetworkHandler().getServerInfo() != null && !mc.getNetworkHandler().getServerInfo().address.contains(wp.getServer()))) continue;
-                if (!mc.world.getRegistryKey().getValue().getPath().equals(wp.getDimension())) continue;
-                double difX = wp.getX() - mc.player.getPos().x;
-                double difZ = wp.getZ() - mc.player.getPos().z;
-                float yaw = (float) MathHelper.wrapDegrees(Math.toDegrees(Math.atan2(difZ, difX)) - 90.0);
-                double plYaw = MathHelper.wrapDegrees(mc.player.getYaw());
+                if ((mc.isLocalServer() && wp.getServer().equals("SinglePlayer"))
+                        || (mc.getConnection().getServerData() != null && !mc.getConnection().getServerData().ip.contains(wp.getServer()))) continue;
+                if (!mc.level.dimension().location().getPath().equals(wp.getDimension())) continue;
+                double difX = wp.getX() - mc.player.position().x;
+                double difZ = wp.getZ() - mc.player.position().z;
+                float yaw = (float) Mth.wrapDegrees(Math.toDegrees(Math.atan2(difZ, difX)) - 90.0);
+                double plYaw = Mth.wrapDegrees(mc.player.getYRot());
                 if (Math.abs(yaw - plYaw) > 90) continue;
 
-                Vec3d vector = new Vec3d(wp.getX(), wp.getY(), wp.getZ());
+                Vec3 vector = new Vec3(wp.getX(), wp.getY(), wp.getZ());
                 Vector4d position = null;
-                vector = Render3DEngine.worldSpaceToScreenSpace(new Vec3d(vector.x, vector.y, vector.z));
+                vector = Render3DEngine.worldSpaceToScreenSpace(new Vec3(vector.x, vector.y, vector.z));
                 position = new Vector4d(vector.x, vector.y, vector.z, 0);
                 position.x = Math.min(vector.x, position.x);
                 position.y = Math.min(vector.y, position.y);
@@ -55,17 +54,17 @@ public final class WayPoints extends Module {
                 String coords = wp.getX() + " " + wp.getZ();
                 float tagX2 = (float) ((posX + diff - FontRenderers.sf_bold_mini.getStringWidth(coords) / 2) * 1);
 
-                String distance = String.format("%.0f", Math.sqrt(mc.player.squaredDistanceTo(wp.getX(), wp.getY(), wp.getZ()))) + "m";
+                String distance = String.format("%.0f", Math.sqrt(mc.player.distanceToSqr(wp.getX(), wp.getY(), wp.getZ()))) + "m";
                 float tagX3 = (float) ((posX + diff - FontRenderers.sf_bold_mini.getStringWidth(distance) / 2) * 1);
 
-                context.getMatrices().pushMatrix();
-                context.getMatrices().translate((float) (posX - 10), (float) ((posY - 35)));
-                context.drawTexture(net.minecraft.client.render.RenderPipelines.GUI_TEXTURED, TextureStorage.waypoint, 0, 0, 20, 20, 0, 0, 20, 20, 20, 20);
-                context.getMatrices().popMatrix();
+                context.pose().pushMatrix();
+                context.pose().translate((float) (posX - 10), (float) ((posY - 35)));
+                context.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, TextureStorage.waypoint, 0, 0, 20, 20, 0, 0, 20, 20, 20, 20);
+                context.pose().popMatrix();
 
-                FontRenderers.sf_bold_mini.drawString(context.getMatrices(), wp.getName(), tagX, (float) posY - 10, -1);
-                FontRenderers.sf_bold_mini.drawString(context.getMatrices(), Formatting.GRAY + coords, tagX2, (float) posY - 2, -1);
-                FontRenderers.sf_bold_mini.drawString(context.getMatrices(), Formatting.GRAY + distance, tagX3, (float) posY + 6, -1);
+                FontRenderers.sf_bold_mini.drawString(context.pose(), wp.getName(), tagX, (float) posY - 10, -1);
+                FontRenderers.sf_bold_mini.drawString(context.pose(), ChatFormatting.GRAY + coords, tagX2, (float) posY - 2, -1);
+                FontRenderers.sf_bold_mini.drawString(context.pose(), ChatFormatting.GRAY + distance, tagX3, (float) posY + 6, -1);
             }
         }
     }

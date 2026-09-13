@@ -1,7 +1,7 @@
 package thunder.hack.features.modules.misc;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.network.packet.s2c.play.GameMessageS2CPacket;
+import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
 import thunder.hack.events.impl.EventDeath;
 import thunder.hack.events.impl.PacketEvent;
 import thunder.hack.features.modules.Module;
@@ -97,8 +97,8 @@ public final class AutoEZ extends Module {
     public void onPacketReceive(PacketEvent.Receive e) {
         if (fullNullCheck()) return;
         if (server.getValue() == ServerMode.Universal) return;
-        if (e.getPacket() instanceof GameMessageS2CPacket) {
-            final GameMessageS2CPacket packet = e.getPacket();
+        if (e.getPacket() instanceof ClientboundSystemChatPacket) {
+            final ClientboundSystemChatPacket packet = e.getPacket();
             if (packet.content().getString().contains("Вы убили игрока")) {
                 String name = ThunderUtility.solveName(packet.content().getString());
                 if (Objects.equals(name, "FATAL ERROR")) return;
@@ -116,7 +116,7 @@ public final class AutoEZ extends Module {
                     finalword = EZWORDS.get(new Random().nextInt(EZWORDS.size()));
                     finalword = finalword.replaceAll("%player%", name);
                 }
-                mc.player.networkHandler.sendChatMessage(global.getValue() ? "!" + finalword : finalword);
+                mc.player.connection.sendChat(global.getValue() ? "!" + finalword : finalword);
             }
         }
     }
@@ -146,7 +146,7 @@ public final class AutoEZ extends Module {
             finalword = EZWORDS.get(new Random().nextInt(EZWORDS.size()));
             finalword = finalword.replaceAll("%player%", pn);
         }
-        mc.player.networkHandler.sendChatMessage(global.getValue() ? "!" + finalword : finalword);
+        mc.player.connection.sendChat(global.getValue() ? "!" + finalword : finalword);
     }
 
     public enum ModeEn {

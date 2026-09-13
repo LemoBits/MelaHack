@@ -1,19 +1,18 @@
 package thunder.hack.features.modules.movement;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.block.Blocks;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
+import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
+import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
 import thunder.hack.events.impl.EventSync;
 import thunder.hack.features.modules.Module;
 import thunder.hack.setting.Setting;
@@ -29,11 +28,11 @@ public class Spider extends Module {
 
     public static Direction getPlaceableSide(BlockPos pos) {
         for (Direction side : Direction.values()) {
-            BlockPos neighbour = pos.offset(side);
-            if (mc.world.isAir(neighbour)) {
+            BlockPos neighbour = pos.relative(side);
+            if (mc.level.isEmptyBlock(neighbour)) {
                 continue;
             }
-            if (!mc.world.getBlockState(neighbour).isReplaceable()) {
+            if (!mc.level.getBlockState(neighbour).canBeReplaced()) {
                 return side;
             }
         }
@@ -43,72 +42,72 @@ public class Spider extends Module {
     @Override
     public void onUpdate() {
         if (!mc.player.horizontalCollision) return;
-        if (mc.player.age % 2 == 0 && mc.options.jumpKey.isPressed() && mode.getValue() == Mode.FunTime) {
-            float pitch = mc.player.getPitch();
-            mc.player.setPitch(82);
+        if (mc.player.tickCount % 2 == 0 && mc.options.keyJump.isDown() && mode.getValue() == Mode.FunTime) {
+            float pitch = mc.player.getXRot();
+            mc.player.setXRot(82);
             int slot = getAtHotBar();
             if (slot != -1) {
                 int originalSlot = mc.player.getInventory().getSelectedSlot();
                 mc.player.getInventory().setSelectedSlot(slot);
-                sendPacket(new UpdateSelectedSlotC2SPacket(slot));
+                sendPacket(new ServerboundSetCarriedItemPacket(slot));
 
-                mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
-                mc.player.swingHand(Hand.MAIN_HAND);
+                mc.gameMode.useItem(mc.player, InteractionHand.MAIN_HAND);
+                mc.player.swing(InteractionHand.MAIN_HAND);
 
                 mc.player.getInventory().setSelectedSlot(originalSlot);
-                sendPacket(new UpdateSelectedSlotC2SPacket(originalSlot));
+                sendPacket(new ServerboundSetCarriedItemPacket(originalSlot));
             }
 
-            mc.player.setPitch(pitch);
+            mc.player.setXRot(pitch);
         }
 
 
         if (mode.getValue() == Mode.Default) {
-            mc.player.setVelocity(mc.player.getVelocity().getX(), 0.21, mc.player.getVelocity().getZ());
+            mc.player.setDeltaMovement(mc.player.getDeltaMovement().x(), 0.21, mc.player.getDeltaMovement().z());
         } else if (mode.getValue() == Mode.Matrix) {
-            mc.player.setOnGround(mc.player.age % delay.getValue() == 0);
-            mc.player.lastY -= 2.0E-232;
-            if (mc.player.isOnGround())
-                mc.player.setVelocity(mc.player.getVelocity().getX(), 0.42, mc.player.getVelocity().getZ());
+            mc.player.setOnGround(mc.player.tickCount % delay.getValue() == 0);
+            mc.player.yo -= 2.0E-232;
+            if (mc.player.onGround())
+                mc.player.setDeltaMovement(mc.player.getDeltaMovement().x(), 0.42, mc.player.getDeltaMovement().z());
         }
     }
 
 
     @EventHandler
     public void onSync(EventSync event) {
-        if (mc.options.jumpKey.isPressed() && mc.player.getVelocity().getY() <= -0.3739040364667221 && mode.getValue() == Mode.MatrixNew) {
+        if (mc.options.keyJump.isDown() && mc.player.getDeltaMovement().y() <= -0.3739040364667221 && mode.getValue() == Mode.MatrixNew) {
             mc.player.setOnGround(true);
-            mc.player.setVelocity(mc.player.getVelocity().getX(), 0.481145141919180, mc.player.getVelocity().getZ());
+            mc.player.setDeltaMovement(mc.player.getDeltaMovement().x(), 0.481145141919180, mc.player.getDeltaMovement().z());
         }
-        if (mc.player.age % delay.getValue() == 0 && mc.player.horizontalCollision && MovementUtility.isMoving() && mode.getValue() == Mode.Blocks) {
+        if (mc.player.tickCount % delay.getValue() == 0 && mc.player.horizontalCollision && MovementUtility.isMoving() && mode.getValue() == Mode.Blocks) {
             int find = -2;
             for (int i = 0; i <= 8; i++)
-                if (mc.player.getInventory().getStack(i).getItem() instanceof BlockItem) find = i;
+                if (mc.player.getInventory().getItem(i).getItem() instanceof BlockItem) find = i;
             if (find == -2) return;
-            BlockPos pos = BlockPos.ofFloored(mc.player.getX(), mc.player.getY() + 2, mc.player.getZ());
+            BlockPos pos = BlockPos.containing(mc.player.getX(), mc.player.getY() + 2, mc.player.getZ());
             Direction side = getPlaceableSide(pos);
             if (side != null) {
-                sendPacket(new UpdateSelectedSlotC2SPacket(find));
-                BlockPos neighbour = BlockPos.ofFloored(mc.player.getX(), mc.player.getY() + 2, mc.player.getZ()).offset(side);
+                sendPacket(new ServerboundSetCarriedItemPacket(find));
+                BlockPos neighbour = BlockPos.containing(mc.player.getX(), mc.player.getY() + 2, mc.player.getZ()).relative(side);
                 Direction opposite = side.getOpposite();
-                Vec3d hitVec = new Vec3d(neighbour.getX() + 0.5, neighbour.getY() + 0.5, neighbour.getZ() + 0.5).add(new Vec3d(opposite.getUnitVector()).multiply(0.5));
-                sendSequencedPacket(id -> new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND, new BlockHitResult(hitVec, opposite, neighbour, false), id));
-                sendPacket(new net.minecraft.network.packet.c2s.play.PlayerInputC2SPacket(new net.minecraft.util.PlayerInput(false, false, false, false, false, true, false)));
-                if (mc.world.getBlockState(BlockPos.ofFloored(mc.player.getPos()).add(0, 2, 0)).getBlock() != Blocks.AIR) {
-                    sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, neighbour, opposite));
-                    sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, neighbour, opposite));
+                Vec3 hitVec = new Vec3(neighbour.getX() + 0.5, neighbour.getY() + 0.5, neighbour.getZ() + 0.5).add(new Vec3(opposite.step()).scale(0.5));
+                sendSequencedPacket(id -> new ServerboundUseItemOnPacket(InteractionHand.MAIN_HAND, new BlockHitResult(hitVec, opposite, neighbour, false), id));
+                sendPacket(new net.minecraft.network.protocol.game.ServerboundPlayerInputPacket(new net.minecraft.world.entity.player.Input(false, false, false, false, false, true, false)));
+                if (mc.level.getBlockState(BlockPos.containing(mc.player.position()).offset(0, 2, 0)).getBlock() != Blocks.AIR) {
+                    sendPacket(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, neighbour, opposite));
+                    sendPacket(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, neighbour, opposite));
                 }
-                sendPacket(new net.minecraft.network.packet.c2s.play.PlayerInputC2SPacket(new net.minecraft.util.PlayerInput(false, false, false, false, false, false, false)));
+                sendPacket(new net.minecraft.network.protocol.game.ServerboundPlayerInputPacket(new net.minecraft.world.entity.player.Input(false, false, false, false, false, false, false)));
             }
             mc.player.setOnGround(true);
-            mc.player.jump();
-            sendPacket(new UpdateSelectedSlotC2SPacket(mc.player.getInventory().getSelectedSlot()));
+            mc.player.jumpFromGround();
+            sendPacket(new ServerboundSetCarriedItemPacket(mc.player.getInventory().getSelectedSlot()));
         }
     }
 
     private int getAtHotBar() {
         for (int i = 0; i < 9; ++i) {
-            ItemStack itemStack = mc.player.getInventory().getStack(i);
+            ItemStack itemStack = mc.player.getInventory().getItem(i);
             if (!(itemStack.getItem() == Items.WATER_BUCKET)) continue;
             return i;
         }

@@ -1,10 +1,6 @@
 package thunder.hack.features.modules.player;
 
 import thunder.hack.utility.render.compat.RenderSystem;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
 import thunder.hack.core.Managers;
 import thunder.hack.features.modules.Module;
 import thunder.hack.gui.font.FontRenderers;
@@ -13,6 +9,9 @@ import thunder.hack.utility.Timer;
 import thunder.hack.utility.render.TextureStorage;
 
 import java.awt.*;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 
 import static thunder.hack.features.modules.client.ClientSettings.isRu;
 
@@ -29,13 +28,13 @@ public class DurabilityAlert extends Module {
     @Override
     public void onUpdate() {
         if (friends.getValue()) {
-            for (PlayerEntity player : mc.world.getPlayers()) {
+            for (Player player : mc.level.players()) {
                 if (!Managers.FRIEND.isFriend(player)) continue;
                 if (player == mc.player) continue;
                 for (ItemStack stack : thunder.hack.utility.player.ArmorUtility.getArmorItems(player)) {
-                    if (stack.isEmpty() || !player.getPreferredEquipmentSlot(stack).isArmorSlot()) continue;
+                    if (stack.isEmpty() || !player.getEquipmentSlotForItem(stack).isArmor()) continue;
                     if (getDurability(stack) < percent.getValue() && timer.passedMs(30000)) {
-                        mc.player.networkHandler.sendChatCommand("msg " + player.getName().getString() + (isRu() ? " Срочно чини броню!" : " Fix your armor right now!"));
+                        mc.player.connection.sendCommand("msg " + player.getName().getString() + (isRu() ? " Срочно чини броню!" : " Fix your armor right now!"));
 
                         timer.reset();
                     }
@@ -45,7 +44,7 @@ public class DurabilityAlert extends Module {
 
         boolean flag = false;
         for (ItemStack stack : thunder.hack.utility.player.ArmorUtility.getArmorItems(mc.player)) {
-            if (stack.isEmpty() || !mc.player.getPreferredEquipmentSlot(stack).isArmorSlot()) continue;
+            if (stack.isEmpty() || !mc.player.getEquipmentSlotForItem(stack).isArmor()) continue;
             if (getDurability(stack) < percent.getValue()) {
                 need_alert = true;
                 flag = true;
@@ -54,18 +53,18 @@ public class DurabilityAlert extends Module {
         if (!flag && need_alert) need_alert = false;
     }
 
-    public void onRender2D(DrawContext context) {
+    public void onRender2D(GuiGraphics context) {
         if (need_alert) {
-            FontRenderers.sf_bold.drawCenteredString(context.getMatrices(), isRu() ? "Срочно чини броню!" : "Fix your armor right now!", (float) mc.getWindow().getScaledWidth() / 2f, (float) mc.getWindow().getScaledHeight() / 3f, new Color(0xFFDF00).getRGB());
+            FontRenderers.sf_bold.drawCenteredString(context.pose(), isRu() ? "Срочно чини броню!" : "Fix your armor right now!", (float) mc.getWindow().getGuiScaledWidth() / 2f, (float) mc.getWindow().getGuiScaledHeight() / 3f, new Color(0xFFDF00).getRGB());
 
             Color c1 = new Color(0xFFDF00);
             RenderSystem.setShaderColor(c1.getRed() / 255f, c1.getGreen() / 255f, c1.getBlue() / 255f, 1f);
-            context.drawTexture(net.minecraft.client.render.RenderPipelines.GUI_TEXTURED, TextureStorage.brokenShield, (int) (mc.getWindow().getScaledWidth() / 2f - 40), (int) (mc.getWindow().getScaledHeight() / 3f - 120), 80, 80, 0, 0, 80, 80, 80, 80);
+            context.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, TextureStorage.brokenShield, (int) (mc.getWindow().getGuiScaledWidth() / 2f - 40), (int) (mc.getWindow().getGuiScaledHeight() / 3f - 120), 80, 80, 0, 0, 80, 80, 80, 80);
             RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
         }
     }
 
     public static int getDurability(ItemStack stack) {
-        return (int) ((stack.getMaxDamage() - stack.getDamage()) / Math.max(0.1, stack.getMaxDamage()) * 100.0f);
+        return (int) ((stack.getMaxDamage() - stack.getDamageValue()) / Math.max(0.1, stack.getMaxDamage()) * 100.0f);
     }
 }

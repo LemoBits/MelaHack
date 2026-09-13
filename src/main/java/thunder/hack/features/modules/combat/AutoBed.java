@@ -1,32 +1,31 @@
 package thunder.hack.features.modules.combat;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.block.BedBlock;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.CraftingTableBlock;
-import net.minecraft.client.gui.screen.ingame.CraftingScreen;
-import net.minecraft.client.gui.screen.recipebook.RecipeResultCollection;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.BedItem;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.recipe.NetworkRecipeId;
-import net.minecraft.recipe.RecipeDisplayEntry;
-import net.minecraft.screen.CraftingScreenHandler;
-import net.minecraft.screen.slot.SlotActionType;
-import net.minecraft.util.context.ContextParameterMap;
-import net.minecraft.util.context.ContextType;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.RaycastContext;
+import net.minecraft.client.gui.screens.inventory.CraftingScreen;
+import net.minecraft.client.gui.screens.recipebook.RecipeCollection;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.protocol.game.ServerboundContainerClosePacket;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
+import net.minecraft.util.context.ContextKeySet;
+import net.minecraft.util.context.ContextMap;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.CraftingMenu;
+import net.minecraft.world.item.BedItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.display.RecipeDisplayEntry;
+import net.minecraft.world.item.crafting.display.RecipeDisplayId;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.block.BedBlock;
+import net.minecraft.world.level.block.CraftingTableBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.core.Managers;
 import thunder.hack.core.manager.client.ModuleManager;
@@ -55,6 +54,8 @@ import java.util.Objects;
 
 import static thunder.hack.features.modules.client.ClientSettings.isRu;
 
+import com.mojang.blaze3d.vertex.PoseStack;
+
 public final class AutoBed extends Module {
     private final Setting<InteractionUtility.Interact> interactMode = new Setting<>("InteractMode", InteractionUtility.Interact.Vanilla);
     public static final Setting<Float> range = new Setting<>("Range", 4f, 2f, 6.0f);
@@ -78,7 +79,7 @@ public final class AutoBed extends Module {
     private final Setting<ColorSetting> lineColor = new Setting<>("Line", new ColorSetting(HudEditor.getColor(0))).addToGroup(renderCategory);
     private final Setting<ColorSetting> textColor = new Setting<>("Text", new ColorSetting(Color.WHITE)).addToGroup(renderCategory);
 
-    private PlayerEntity target;
+    private Player target;
     private BedData bestBed, bestPos;
     private float rotationYaw, rotationPitch;
 
@@ -92,8 +93,8 @@ public final class AutoBed extends Module {
     @EventHandler
     public void onSync(EventSync e) {
         if (bestBed != null || bestPos != null) {
-            mc.player.setYaw(rotationYaw);
-            mc.player.setPitch(rotationPitch);
+            mc.player.setYRot(rotationYaw);
+            mc.player.setXRot(rotationPitch);
         }
     }
 
@@ -101,12 +102,12 @@ public final class AutoBed extends Module {
     public void onPlayerUpdate(PlayerUpdateEvent e) {
         target = findTarget();
 
-        if (mc.world.getDimension().bedWorks() && dimCheck.getValue()) {
+        if (mc.level.dimensionType().bedWorks() && dimCheck.getValue()) {
             disable(isRu() ? "Кровати не взрываются в этом измерении!" : "Beds don't explode in this dimension!");
             return;
         }
 
-        if (target != null && (target.isDead() || target.getHealth() < 0)) {
+        if (target != null && (target.isDeadOrDying() || target.getHealth() < 0)) {
             target = null;
             return;
         }
@@ -117,7 +118,7 @@ public final class AutoBed extends Module {
         if (bestBed != null || bestPos != null) {
             float[] angle;
 
-            angle = InteractionUtility.calculateAngle(Objects.requireNonNullElseGet(bestPos, () -> bestBed).hitResult().getPos());
+            angle = InteractionUtility.calculateAngle(Objects.requireNonNullElseGet(bestPos, () -> bestBed).hitResult().getLocation());
 
             rotationYaw = (angle[0]);
             rotationPitch = (angle[1]);
@@ -129,58 +130,58 @@ public final class AutoBed extends Module {
                 craftBed();
                 return;
             }
-            if (mc.player.currentScreenHandler instanceof CraftingScreenHandler) {
-                sendPacket(new CloseHandledScreenC2SPacket(mc.player.currentScreenHandler.syncId));
-                mc.player.closeScreen();
+            if (mc.player.containerMenu instanceof CraftingMenu) {
+                sendPacket(new ServerboundContainerClosePacket(mc.player.containerMenu.containerId));
+                mc.player.clientSideCloseContainer();
             }
         }
     }
 
     @EventHandler
     public void onPostSync(EventPostSync e) {
-        if (!(mc.player.getMainHandStack().getItem() instanceof BedItem) && autoSwap.getValue() && bestPos != null) {
+        if (!(mc.player.getMainHandItem().getItem() instanceof BedItem) && autoSwap.getValue() && bestPos != null) {
             SearchInvResult hotBarResult = InventoryUtility.findBedInHotBar();
             if (hotBarResult.found()) {
                 hotBarResult.switchTo();
             } else if (switchToHotbar.getValue()) {
                 SearchInvResult invResult = InventoryUtility.findBed();
-                if (invResult.found() && !(mc.currentScreen instanceof CraftingScreen)) {
-                    mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, invResult.slot(), mc.player.getInventory().getSelectedSlot(), SlotActionType.SWAP, mc.player);
-                    sendPacket(new CloseHandledScreenC2SPacket(mc.player.currentScreenHandler.syncId));
+                if (invResult.found() && !(mc.screen instanceof CraftingScreen)) {
+                    mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, invResult.slot(), mc.player.getInventory().getSelectedSlot(), ClickType.SWAP, mc.player);
+                    sendPacket(new ServerboundContainerClosePacket(mc.player.containerMenu.containerId));
                 }
             }
         }
 
         if (bestBed != null && explodeTimer.passedMs(explodeDelay.getValue())) {
-            sendSequencedPacket(id -> new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND, bestBed.hitResult(), id));
-            mc.player.swingHand(Hand.MAIN_HAND);
+            sendSequencedPacket(id -> new ServerboundUseItemOnPacket(InteractionHand.MAIN_HAND, bestBed.hitResult(), id));
+            mc.player.swing(InteractionHand.MAIN_HAND);
             explodeTimer.reset();
         }
 
-        if (!(mc.player.getMainHandStack().getItem() instanceof BedItem))
+        if (!(mc.player.getMainHandItem().getItem() instanceof BedItem))
             return;
 
-        if (bestPos != null && placeTimer.passedMs(placeDelay.getValue()) && !(mc.world.getBlockState(bestPos.hitResult().getBlockPos().up()).getBlock() instanceof BedBlock)) {
-            final float angle2 = InteractionUtility.calculateAngle(bestPos.hitResult.getBlockPos().toCenterPos(), bestPos.hitResult.getBlockPos().offset(bestPos.dir).toCenterPos())[0];
-            sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(angle2, 0, mc.player.isOnGround(), mc.player.horizontalCollision));
-            float prevYaw = mc.player.getYaw();
-            mc.player.setYaw(angle2);
+        if (bestPos != null && placeTimer.passedMs(placeDelay.getValue()) && !(mc.level.getBlockState(bestPos.hitResult().getBlockPos().above()).getBlock() instanceof BedBlock)) {
+            final float angle2 = InteractionUtility.calculateAngle(bestPos.hitResult.getBlockPos().getCenter(), bestPos.hitResult.getBlockPos().relative(bestPos.dir).getCenter())[0];
+            sendPacket(new ServerboundMovePlayerPacket.Rot(angle2, 0, mc.player.onGround(), mc.player.horizontalCollision));
+            float prevYaw = mc.player.getYRot();
+            mc.player.setYRot(angle2);
             ((thunder.hack.injection.accesors.IEntity) mc.player).setLastYaw(angle2);
             ((IEntity) mc.player).setLastYaw(angle2);
-            sendSequencedPacket(id -> new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND, bestPos.hitResult(), id));
-            mc.player.swingHand(Hand.MAIN_HAND);
+            sendSequencedPacket(id -> new ServerboundUseItemOnPacket(InteractionHand.MAIN_HAND, bestPos.hitResult(), id));
+            mc.player.swing(InteractionHand.MAIN_HAND);
             placeTimer.reset();
-            mc.player.setYaw(prevYaw);
+            mc.player.setYRot(prevYaw);
         }
     }
 
     @Override
-    public void onRender3D(MatrixStack stack) {
+    public void onRender3D(PoseStack stack) {
         if (bestPos != null && render.getValue()) {
-            Box box = new Box(bestPos.hitResult.getBlockPos().up());
-            Box box2 = new Box(bestPos.hitResult.getBlockPos().up().offset(bestPos.dir));
+            AABB box = new AABB(bestPos.hitResult.getBlockPos().above());
+            AABB box2 = new AABB(bestPos.hitResult.getBlockPos().above().relative(bestPos.dir));
 
-            Box finalBox = box.union(box2).withMaxY(box.maxY - 0.45f);
+            AABB finalBox = box.minmax(box2).setMaxY(box.maxY - 0.45f);
 
             String dmg = MathUtility.round2(bestPos.damage()) + (rselfDamage.getValue() ? " / " + MathUtility.round2(bestPos.selfDamage()) : "");
 
@@ -192,26 +193,26 @@ public final class AutoBed extends Module {
         }
     }
 
-    private PlayerEntity findTarget() {
+    private Player findTarget() {
         return Managers.COMBAT.getNearestTarget(12f);
     }
 
     private BedData findBedToExplode() {
         int intRange = (int) (Math.floor(range.getValue()) + 1);
-        Iterable<BlockPos> blocks_ = BlockPos.iterateOutwards(new BlockPos(BlockPos.ofFloored(mc.player.getPos()).up()), intRange, intRange, intRange);
+        Iterable<BlockPos> blocks_ = BlockPos.withinManhattan(new BlockPos(BlockPos.containing(mc.player.position()).above()), intRange, intRange, intRange);
 
         BedData bestData = null;
 
         for (BlockPos b : blocks_) {
-            BlockState state = mc.world.getBlockState(b);
-            if (PlayerUtility.squaredDistanceFromEyes(b.toCenterPos()) <= range.getPow2Value()) {
+            BlockState state = mc.level.getBlockState(b);
+            if (PlayerUtility.squaredDistanceFromEyes(b.getCenter()) <= range.getPow2Value()) {
                 if (state.getBlock() instanceof BedBlock) {
                     BlockHitResult bhr = getInteractResult(b);
 
-                    mc.world.removeBlock(b, false);
-                    float damage = ExplosionUtility.getExplosionDamage(b.toCenterPos().add(0, -0.5, 0), target, false);
-                    float selfDamage = ExplosionUtility.getExplosionDamage(b.toCenterPos().add(0, -0.5, 0), mc.player, false);
-                    mc.world.setBlockState(b, state);
+                    mc.level.removeBlock(b, false);
+                    float damage = ExplosionUtility.getExplosionDamage(b.getCenter().add(0, -0.5, 0), target, false);
+                    float selfDamage = ExplosionUtility.getExplosionDamage(b.getCenter().add(0, -0.5, 0), mc.player, false);
+                    mc.level.setBlockAndUpdate(b, state);
 
                     if (damage < minDamage.getValue())
                         continue;
@@ -226,7 +227,7 @@ public final class AutoBed extends Module {
                         continue;
 
                     if (bhr != null)
-                        bestData = new BedData(bhr, damage, selfDamage, bhr.getSide());
+                        bestData = new BedData(bhr, damage, selfDamage, bhr.getDirection());
                 }
             }
         }
@@ -235,28 +236,28 @@ public final class AutoBed extends Module {
 
     private BedData findBlockToPlace() {
         int intRange = (int) (Math.floor(range.getValue()) + 1);
-        Iterable<BlockPos> blocks_ = BlockPos.iterateOutwards(new BlockPos(BlockPos.ofFloored(mc.player.getPos()).up()), intRange, intRange, intRange);
+        Iterable<BlockPos> blocks_ = BlockPos.withinManhattan(new BlockPos(BlockPos.containing(mc.player.position()).above()), intRange, intRange, intRange);
 
         BedData bestData = null;
 
         for (BlockPos b : blocks_) {
-            BlockState state = mc.world.getBlockState(b);
-            BlockState state2 = mc.world.getBlockState(b.up());
+            BlockState state = mc.level.getBlockState(b);
+            BlockState state2 = mc.level.getBlockState(b.above());
 
-            if (PlayerUtility.squaredDistanceFromEyes(b.toCenterPos()) <= range.getPow2Value()) {
+            if (PlayerUtility.squaredDistanceFromEyes(b.getCenter()) <= range.getPow2Value()) {
                 if (state2.getBlock() instanceof BedBlock && !placeTimer.passedMs(1500) && bestPos != null)
                     return bestPos;
 
-                if (!state.isReplaceable()) {
-                    BlockHitResult bhr = InteractionUtility.getPlaceResult(b.up(), interactMode.getValue(), false);
+                if (!state.canBeReplaced()) {
+                    BlockHitResult bhr = InteractionUtility.getPlaceResult(b.above(), interactMode.getValue(), false);
                     if (bhr != null) {
 
-                        BlockHitResult wallCheck = mc.world.raycast(new RaycastContext(InteractionUtility.getEyesPos(mc.player), bhr.getPos(), RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, mc.player));
+                        BlockHitResult wallCheck = mc.level.clip(new ClipContext(InteractionUtility.getEyesPos(mc.player), bhr.getLocation(), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player));
                         if (wallCheck != null && wallCheck.getType() == HitResult.Type.BLOCK && wallCheck.getBlockPos() != b)
                             continue;
 
-                        float damage = ExplosionUtility.getExplosionDamage(b.up().toCenterPos().add(0, -0.5, 0), target, false);
-                        float selfDamage = ExplosionUtility.getExplosionDamage(b.up().toCenterPos().add(0, -0.5, 0), mc.player, false);
+                        float damage = ExplosionUtility.getExplosionDamage(b.above().getCenter().add(0, -0.5, 0), target, false);
+                        float selfDamage = ExplosionUtility.getExplosionDamage(b.above().getCenter().add(0, -0.5, 0), mc.player, false);
 
                         if (damage < minDamage.getValue())
                             continue;
@@ -276,17 +277,17 @@ public final class AutoBed extends Module {
                         for (Direction dir : Direction.values()) {
                             if (dir == Direction.DOWN || dir == Direction.UP)
                                 continue;
-                            BlockPos offset = b.up().offset(dir);
+                            BlockPos offset = b.above().relative(dir);
 
-                            if(!mc.world.getBlockState(offset).isReplaceable())
+                            if(!mc.level.getBlockState(offset).canBeReplaced())
                                 continue;
 
-                            if(oldPlace.getValue() && mc.world.getBlockState(b.offset(dir)).isReplaceable()){
+                            if(oldPlace.getValue() && mc.level.getBlockState(b.relative(dir)).canBeReplaced()){
                                 continue;
                             }
 
-                            float dirdamage = ExplosionUtility.getExplosionDamage(offset.toCenterPos().add(0, -0.5, 0), target, false);
-                            float dirSelfDamage = ExplosionUtility.getExplosionDamage(offset.toCenterPos().add(0, -0.5, 0), mc.player, false);
+                            float dirdamage = ExplosionUtility.getExplosionDamage(offset.getCenter().add(0, -0.5, 0), target, false);
+                            float dirSelfDamage = ExplosionUtility.getExplosionDamage(offset.getCenter().add(0, -0.5, 0), mc.player, false);
                             if (dirdamage > bestDirdmg && dirSelfDamage <= maxSelfDamage.getValue()) {
                                 bestDir = dir;
                                 bestDirdmg = dirdamage;
@@ -304,33 +305,33 @@ public final class AutoBed extends Module {
 
     public void craftBed() {
         int intRange = (int) (Math.floor(range.getValue()) + 1);
-        Iterable<BlockPos> blocks_ = BlockPos.iterateOutwards(new BlockPos(BlockPos.ofFloored(mc.player.getPos()).up()), intRange, intRange, intRange);
+        Iterable<BlockPos> blocks_ = BlockPos.withinManhattan(new BlockPos(BlockPos.containing(mc.player.position()).above()), intRange, intRange, intRange);
 
         for (BlockPos b : blocks_) {
-            BlockState state = mc.world.getBlockState(b);
+            BlockState state = mc.level.getBlockState(b);
             if (state.getBlock() instanceof CraftingTableBlock) {
                 BlockHitResult result = getInteractResult(b);
                 if (result != null) {
-                    if (mc.player.currentScreenHandler instanceof CraftingScreenHandler craft) {
-                        mc.player.getRecipeBook().setGuiOpen(craft.getCategory(), true);
-                        ContextParameterMap context = new ContextParameterMap.Builder().build(new ContextType.Builder().build());
-                        for (RecipeResultCollection results : mc.player.getRecipeBook().getOrderedResults()) {
-                            for (RecipeDisplayEntry recipe : results.getAllRecipes()) {
-                                ItemStack resultStack = recipe.display().result().getFirst(context);
+                    if (mc.player.containerMenu instanceof CraftingMenu craft) {
+                        mc.player.getRecipeBook().setOpen(craft.getRecipeBookType(), true);
+                        ContextMap context = new ContextMap.Builder().create(new ContextKeySet.Builder().build());
+                        for (RecipeCollection results : mc.player.getRecipeBook().getCollections()) {
+                            for (RecipeDisplayEntry recipe : results.getRecipes()) {
+                                ItemStack resultStack = recipe.display().result().resolveForFirstStack(context);
                                 if (resultStack.getItem() instanceof BedItem) {
-                                    NetworkRecipeId recipeId = recipe.id();
+                                    RecipeDisplayId recipeId = recipe.id();
                                     for (int i = 0; i < bedsPerCraft.getValue(); i++)
-                                        mc.interactionManager.clickRecipe(mc.player.currentScreenHandler.syncId, recipeId, false);
-                                    mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, 0, 0, SlotActionType.QUICK_MOVE, mc.player);
+                                        mc.gameMode.handlePlaceRecipe(mc.player.containerMenu.containerId, recipeId, false);
+                                    mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, 0, 0, ClickType.QUICK_MOVE, mc.player);
                                     break;
                                 }
                             }
                         }
                     } else {
-                        float[] angle = InteractionUtility.calculateAngle(result.getPos());
-                        mc.player.setYaw(angle[0]);
-                        mc.player.setPitch(angle[1]);
-                        sendSequencedPacket(id -> new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND, result, id));
+                        float[] angle = InteractionUtility.calculateAngle(result.getLocation());
+                        mc.player.setYRot(angle[0]);
+                        mc.player.setXRot(angle[1]);
+                        sendSequencedPacket(id -> new ServerboundUseItemOnPacket(InteractionHand.MAIN_HAND, result, id));
                     }
                 }
             }
@@ -343,16 +344,16 @@ public final class AutoBed extends Module {
         for (float x = 0f; x < 1f; x += 0.25f) {
             for (float y = 0f; y < 0.5f; y += 0.125f) {
                 for (float z = 0f; z < 1f; z += 0.25f) {
-                    Vec3d point = new Vec3d(bp.getX() + x, bp.getY() + y, bp.getZ() + z);
+                    Vec3 point = new Vec3(bp.getX() + x, bp.getY() + y, bp.getZ() + z);
                     float distance = PlayerUtility.squaredDistanceFromEyes(point);
 
-                    BlockHitResult wallCheck = mc.world.raycast(new RaycastContext(InteractionUtility.getEyesPos(mc.player), point, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, mc.player));
+                    BlockHitResult wallCheck = mc.level.clip(new ClipContext(InteractionUtility.getEyesPos(mc.player), point, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player));
                     if (wallCheck != null && wallCheck.getType() == HitResult.Type.BLOCK && wallCheck.getBlockPos() != bp)
                         if (distance > wallRange.getPow2Value())
                             continue;
 
 
-                    BlockHitResult result = ExplosionUtility.rayCastBlock(new RaycastContext(InteractionUtility.getEyesPos(mc.player), point, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, mc.player), bp);
+                    BlockHitResult result = ExplosionUtility.rayCastBlock(new ClipContext(InteractionUtility.getEyesPos(mc.player), point, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player), bp);
                     if (distance > range.getPow2Value())
                         continue;
 
@@ -369,13 +370,13 @@ public final class AutoBed extends Module {
         float bestDistance2 = 999f;
         Direction bestDirection = null;
 
-        if (mc.player.getEyePos().getY() > bp.up().getY()) {
+        if (mc.player.getEyePosition().y() > bp.above().getY()) {
             bestDirection = Direction.UP;
-        } else if (mc.player.getEyePos().getY() < bp.getY()) {
+        } else if (mc.player.getEyePosition().y() < bp.getY()) {
             bestDirection = Direction.DOWN;
         } else {
             for (Direction dir : Direction.values()) {
-                Vec3d directionVec = new Vec3d(bp.getX() + 0.5 + dir.getVector().getX() * 0.5, bp.getY() + 0.5 + dir.getVector().getY() * 0.5, bp.getZ() + 0.5 + dir.getVector().getZ() * 0.5);
+                Vec3 directionVec = new Vec3(bp.getX() + 0.5 + dir.getUnitVec3i().getX() * 0.5, bp.getY() + 0.5 + dir.getUnitVec3i().getY() * 0.5, bp.getZ() + 0.5 + dir.getUnitVec3i().getZ() * 0.5);
                 float distance = PlayerUtility.squaredDistanceFromEyes(directionVec);
                 if (bestDistance2 > distance) {
                     bestDirection = dir;
@@ -387,7 +388,7 @@ public final class AutoBed extends Module {
         if(bestResult == null)
             return null;
 
-        return new BlockHitResult(bestResult.getPos(), bestDirection, bestResult.getBlockPos(), false);
+        return new BlockHitResult(bestResult.getLocation(), bestDirection, bestResult.getBlockPos(), false);
     }
 
     private record BedData(BlockHitResult hitResult, float damage, float selfDamage, Direction dir) {

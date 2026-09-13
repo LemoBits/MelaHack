@@ -1,9 +1,9 @@
 package thunder.hack.features.modules.player;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
-import net.minecraft.util.Hand;
+import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.Items;
 import thunder.hack.events.impl.PacketEvent;
 import thunder.hack.injection.accesors.IPlayerInteractBlockC2SPacket;
 import thunder.hack.features.modules.Module;
@@ -15,7 +15,7 @@ public class PearlBlockThrow extends Module {
 
     @EventHandler
     public void onPackerSend(PacketEvent.Send event) {
-        if (event.getPacket() instanceof PlayerInteractBlockC2SPacket p && mc.player.getMainHandStack().getItem() == Items.ENDER_PEARL)
-            ((IPlayerInteractBlockC2SPacket) p).setHand(Hand.OFF_HAND);
+        if (event.getPacket() instanceof ServerboundUseItemOnPacket p && mc.player.getMainHandItem().getItem() == Items.ENDER_PEARL)
+            ((IPlayerInteractBlockC2SPacket) p).setHand(InteractionHand.OFF_HAND);
     }
 }

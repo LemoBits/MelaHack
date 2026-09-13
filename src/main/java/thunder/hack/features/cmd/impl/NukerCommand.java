@@ -1,10 +1,10 @@
 package thunder.hack.features.cmd.impl;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import net.minecraft.block.Block;
-import net.minecraft.command.CommandSource;
-import net.minecraft.registry.Registries;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.core.manager.client.ModuleManager;
 import thunder.hack.features.cmd.Command;
@@ -19,7 +19,7 @@ public class NukerCommand extends Command {
     }
 
     @Override
-    public void executeBuild(@NotNull LiteralArgumentBuilder<CommandSource> builder) {
+    public void executeBuild(@NotNull LiteralArgumentBuilder<SharedSuggestionProvider> builder) {
         builder.then(literal("reset").executes(context -> {
             ModuleManager.nuker.selectedBlocks.getValue().clear();
             sendMessage(isRu() ? "Все блоки были удалены!" : "Nuker got reset!");
@@ -32,9 +32,9 @@ public class NukerCommand extends Command {
             Block result = getRegisteredBlock(blockName);
             if (result != null) {
                 ModuleManager.nuker.selectedBlocks.getValue().add(result);
-                sendMessage(Formatting.GREEN + blockName + (isRu() ? " добавлен в Nuker" : " added to Nuker"));
+                sendMessage(ChatFormatting.GREEN + blockName + (isRu() ? " добавлен в Nuker" : " added to Nuker"));
             } else {
-                sendMessage(Formatting.RED + (isRu() ? "Такого блока нет!" : "There is no such block!"));
+                sendMessage(ChatFormatting.RED + (isRu() ? "Такого блока нет!" : "There is no such block!"));
             }
 
             return SINGLE_SUCCESS;
@@ -46,9 +46,9 @@ public class NukerCommand extends Command {
             Block result = getRegisteredBlock(blockName);
             if (result != null) {
                 ModuleManager.nuker.selectedBlocks.getValue().remove(blockName);
-                sendMessage(Formatting.GREEN + blockName + (isRu() ? " удален из Nuker" : " removed from Nuker"));
+                sendMessage(ChatFormatting.GREEN + blockName + (isRu() ? " удален из Nuker" : " removed from Nuker"));
             } else {
-                sendMessage(Formatting.RED + (isRu() ? "Такого блока нет!" : "There is no such block!"));
+                sendMessage(ChatFormatting.RED + (isRu() ? "Такого блока нет!" : "There is no such block!"));
             }
 
             return SINGLE_SUCCESS;
@@ -74,8 +74,8 @@ public class NukerCommand extends Command {
     }
 
     public static Block getRegisteredBlock(String blockName) {
-        for (Block block : Registries.BLOCK) {
-            if (block.getTranslationKey().replace("block.minecraft.", "").equalsIgnoreCase(blockName.replace("block.minecraft.", ""))) {
+        for (Block block : BuiltInRegistries.BLOCK) {
+            if (block.getDescriptionId().replace("block.minecraft.", "").equalsIgnoreCase(blockName.replace("block.minecraft.", ""))) {
                 return block;
             }
         }

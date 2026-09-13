@@ -1,24 +1,24 @@
 package thunder.hack.features.modules.movement;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.vehicle.BoatEntity;
-import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.PlayerInputC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.network.packet.c2s.play.VehicleMoveC2SPacket;
-import net.minecraft.network.packet.s2c.common.DisconnectS2CPacket;
-import net.minecraft.network.packet.s2c.play.EntityAttachS2CPacket;
-import net.minecraft.network.packet.s2c.play.EntityS2CPacket;
-import net.minecraft.network.packet.s2c.play.PlayerPositionS2CPacket;
-import net.minecraft.network.packet.s2c.play.VehicleMoveS2CPacket;
-import net.minecraft.screen.slot.SlotActionType;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.protocol.common.ClientboundDisconnectPacket;
+import net.minecraft.network.protocol.game.ClientboundMoveEntityPacket;
+import net.minecraft.network.protocol.game.ClientboundMoveVehiclePacket;
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
+import net.minecraft.network.protocol.game.ClientboundSetEntityLinkPacket;
+import net.minecraft.network.protocol.game.ServerboundInteractPacket;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.network.protocol.game.ServerboundMoveVehiclePacket;
+import net.minecraft.network.protocol.game.ServerboundPlayerInputPacket;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.vehicle.Boat;
+import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.ThunderHack;
 import thunder.hack.events.impl.EventPlayerTravel;
@@ -61,7 +61,7 @@ public class BoatFly extends Module {
     private final Setting<Float> timer = new Setting<>("Timer", 1f, 0.1f, 5f).addToGroup(advanced);
     public final Setting<Boolean> hideBoat = new Setting<>("HideBoat", true).addToGroup(advanced);
 
-    private final ArrayList<VehicleMoveC2SPacket> vehiclePackets = new ArrayList<>();
+    private final ArrayList<ServerboundMoveVehiclePacket> vehiclePackets = new ArrayList<>();
     private int ticksEnabled = 0;
     private int enableDelay = 0;
     private boolean waitedCooldown = false;
@@ -87,10 +87,10 @@ public class BoatFly extends Module {
         if (mc.player == null) return;
 
         if ((phase.getValue()) && mode.getValue() == Mode.Motion) {
-            if (mc.player.getControllingVehicle() != null) mc.player.getControllingVehicle().noClip = false;
-            mc.player.noClip = false;
+            if (mc.player.getControlledVehicle() != null) mc.player.getControlledVehicle().noPhysics = false;
+            mc.player.noPhysics = false;
         }
-        if (mc.player.getControllingVehicle() != null) mc.player.getControllingVehicle().setNoGravity(false);
+        if (mc.player.getControlledVehicle() != null) mc.player.getControlledVehicle().setNoGravity(false);
         mc.player.setNoGravity(false);
     }
 
@@ -100,28 +100,28 @@ public class BoatFly extends Module {
         return jitterSwitch ? jitter.getValue() : -jitter.getValue();
     }
 
-    private void sendMovePacket(VehicleMoveC2SPacket pac) {
+    private void sendMovePacket(ServerboundMoveVehiclePacket pac) {
         vehiclePackets.add(pac);
         sendPacket(pac);
     }
 
     private void teleportToGround(Entity boat) {
-        BlockPos blockPos = BlockPos.ofFloored(boat.getPos());
+        BlockPos blockPos = BlockPos.containing(boat.position());
         for (int i = 0; i < 255; ++i) {
-            if (!mc.world.getBlockState(blockPos).isReplaceable() || mc.world.getBlockState(blockPos).getBlock() == Blocks.WATER) {
-                boat.setPosition(boat.getX(), blockPos.getY() + 1, boat.getZ());
-                sendMovePacket(VehicleMoveC2SPacket.fromVehicle(boat));
-                boat.setPosition(boat.getX(), boat.getY(), boat.getZ());
+            if (!mc.level.getBlockState(blockPos).canBeReplaced() || mc.level.getBlockState(blockPos).getBlock() == Blocks.WATER) {
+                boat.setPos(boat.getX(), blockPos.getY() + 1, boat.getZ());
+                sendMovePacket(ServerboundMoveVehiclePacket.fromEntity(boat));
+                boat.setPos(boat.getX(), boat.getY(), boat.getZ());
                 break;
             }
-            blockPos = blockPos.down();
+            blockPos = blockPos.below();
         }
     }
 
     private void mountToBoat() {
-        for (Entity entity : mc.world.getEntities()) {
-            if (!(entity instanceof BoatEntity) || mc.player.squaredDistanceTo(entity) > 25.0f) continue;
-            sendPacket(PlayerInteractEntityC2SPacket.interact(entity, false, Hand.MAIN_HAND));
+        for (Entity entity : mc.level.entitiesForRendering()) {
+            if (!(entity instanceof Boat) || mc.player.distanceToSqr(entity) > 25.0f) continue;
+            sendPacket(ServerboundInteractPacket.createInteractionPacket(entity, false, InteractionHand.MAIN_HAND));
             break;
         }
     }
@@ -132,20 +132,20 @@ public class BoatFly extends Module {
         if (fullNullCheck()) return;
 
 
-        if (mc.player.getControllingVehicle() == null) {
+        if (mc.player.getControlledVehicle() == null) {
             if (automount.getValue())
                 mountToBoat();
             return;
         }
 
         if (phase.getValue() && mode.getValue() == Mode.Motion) {
-            mc.player.getControllingVehicle().noClip = true;
-            mc.player.getControllingVehicle().setNoGravity(true);
-            mc.player.noClip = true;
+            mc.player.getControlledVehicle().noPhysics = true;
+            mc.player.getControlledVehicle().setNoGravity(true);
+            mc.player.noPhysics = true;
         }
 
         if (!returnGravity) {
-            mc.player.getControllingVehicle().setNoGravity(!gravity.getValue());
+            mc.player.getControlledVehicle().setNoGravity(!gravity.getValue());
             mc.player.setNoGravity(!gravity.getValue());
         }
 
@@ -164,64 +164,64 @@ public class BoatFly extends Module {
             if (enableDelay <= 0) waitedCooldown = false;
         }
 
-        Entity entity = mc.player.getControllingVehicle();
+        Entity entity = mc.player.getControlledVehicle();
 
 
-        if ((!mc.world.isChunkLoaded((int) entity.getPos().getX() >> 4, (int) entity.getPos().getZ() >> 4) || entity.getPos().getY() < -60) && stopunloaded.getValue()) {
+        if ((!mc.level.hasChunk((int) entity.position().x() >> 4, (int) entity.position().z() >> 4) || entity.position().y() < -60) && stopunloaded.getValue()) {
             returnGravity = true;
             return;
         }
 
         if (timer.getValue() != 1.0f) ThunderHack.TICK_TIMER = (timer.getValue());
 
-        entity.setYaw(mc.player.getYaw());
+        entity.setYRot(mc.player.getYRot());
 
         double[] boatMotion = MovementUtility.forward(speed.getValue());
         double predictedX = entity.getX() + boatMotion[0];
         double predictedZ = entity.getZ() + boatMotion[1];
         double predictedY = entity.getY();
 
-        if ((!mc.world.isChunkLoaded((int) predictedX >> 4, (int) predictedZ >> 4) || entity.getPos().getY() < -60) && stopunloaded.getValue()) {
+        if ((!mc.level.hasChunk((int) predictedX >> 4, (int) predictedZ >> 4) || entity.position().y() < -60) && stopunloaded.getValue()) {
             returnGravity = true;
             return;
         }
 
         returnGravity = false;
 
-        entity.setVelocity(entity.getVelocity().getX(), -glidespeed.getValue() / 100.0f, entity.getVelocity().getZ());
+        entity.setDeltaMovement(entity.getDeltaMovement().x(), -glidespeed.getValue() / 100.0f, entity.getDeltaMovement().z());
 
         if (mode.getValue() == Mode.Motion)
-            entity.setVelocity(boatMotion[0], entity.getVelocity().getY(), boatMotion[1]);
+            entity.setDeltaMovement(boatMotion[0], entity.getDeltaMovement().y(), boatMotion[1]);
 
-        if (mc.options.jumpKey.isPressed()) {
+        if (mc.options.keyJump.isDown()) {
             if (mode.getValue() == Mode.Motion)
-                entity.setVelocity(entity.getVelocity().getX(), entity.getVelocity().getY() + yspeed.getValue(), entity.getVelocity().getZ());
+                entity.setDeltaMovement(entity.getDeltaMovement().x(), entity.getDeltaMovement().y() + yspeed.getValue(), entity.getDeltaMovement().z());
             else predictedY += yspeed.getValue();
-        } else if (mc.options.sneakKey.isPressed()) {
+        } else if (mc.options.keyShift.isDown()) {
             if (mode.getValue() == Mode.Motion)
-                entity.setVelocity(entity.getVelocity().getX(), entity.getVelocity().getY() - yspeed.getValue(), entity.getVelocity().getZ());
+                entity.setDeltaMovement(entity.getDeltaMovement().x(), entity.getDeltaMovement().y() - yspeed.getValue(), entity.getDeltaMovement().z());
             else predictedY -= yspeed.getValue();
         }
 
-        if (!MovementUtility.isMoving()) entity.setVelocity(0, entity.getVelocity().getY(), 0);
+        if (!MovementUtility.isMoving()) entity.setDeltaMovement(0, entity.getDeltaMovement().y(), 0);
 
         if (ongroundpacket.getValue()) teleportToGround(entity);
 
         if (mode.getValue() == Mode.Packet) {
-            entity.setPosition(predictedX, predictedY, predictedZ);
-            sendMovePacket(VehicleMoveC2SPacket.fromVehicle(entity));
+            entity.setPos(predictedX, predictedY, predictedZ);
+            sendMovePacket(ServerboundMoveVehiclePacket.fromEntity(entity));
         }
 
         if (slotClick.getValue())
-            mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, 0, 0, SlotActionType.CLONE, mc.player);
+            mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, 0, 0, ClickType.CLONE, mc.player);
 
         if (spoofpackets.getValue()) {
-            Vec3d vec3d = entity.getPos().add(0.0, randomizeYOffset(), 0.0);
-            BoatEntity entityBoat = new BoatEntity(EntityType.OAK_BOAT, mc.world, () -> Items.OAK_BOAT);
-            entityBoat.setPosition(vec3d);
-            entityBoat.setYaw(entity.getYaw());
-            entityBoat.setPitch(entity.getPitch());
-            sendMovePacket(VehicleMoveC2SPacket.fromVehicle(entityBoat));
+            Vec3 vec3d = entity.position().add(0.0, randomizeYOffset(), 0.0);
+            Boat entityBoat = new Boat(EntityType.OAK_BOAT, mc.level, () -> Items.OAK_BOAT);
+            entityBoat.setPos(vec3d);
+            entityBoat.setYRot(entity.getYRot());
+            entityBoat.setXRot(entity.getXRot());
+            sendMovePacket(ServerboundMoveVehiclePacket.fromEntity(entityBoat));
         }
 
         ev.cancel();
@@ -232,15 +232,15 @@ public class BoatFly extends Module {
     public void onPacketReceive(PacketEvent.Receive event) {
         if (fullNullCheck()) return;
 
-        if (event.getPacket() instanceof DisconnectS2CPacket) disable();
+        if (event.getPacket() instanceof ClientboundDisconnectPacket) disable();
 
-        if (!mc.player.isRiding() || returnGravity || waitedCooldown) return;
+        if (!mc.player.isHandsBusy() || returnGravity || waitedCooldown) return;
 
         if (cancel.getValue()) {
-            if (event.getPacket() instanceof VehicleMoveS2CPacket) event.cancel();
-            if (event.getPacket() instanceof PlayerPositionS2CPacket) event.cancel();
-            if (event.getPacket() instanceof EntityS2CPacket) event.cancel();
-            if (event.getPacket() instanceof EntityAttachS2CPacket) event.cancel();
+            if (event.getPacket() instanceof ClientboundMoveVehiclePacket) event.cancel();
+            if (event.getPacket() instanceof ClientboundPlayerPositionPacket) event.cancel();
+            if (event.getPacket() instanceof ClientboundMoveEntityPacket) event.cancel();
+            if (event.getPacket() instanceof ClientboundSetEntityLinkPacket) event.cancel();
         }
     }
 
@@ -248,23 +248,23 @@ public class BoatFly extends Module {
     public void onPacketSend(PacketEvent.Send event) {
         if (fullNullCheck()) return;
 
-        if ((event.getPacket() instanceof PlayerMoveC2SPacket.LookAndOnGround && (cancelrotations.getValue()) || event.getPacket() instanceof PlayerInputC2SPacket) && mc.player.isRiding())
+        if ((event.getPacket() instanceof ServerboundMovePlayerPacket.Rot && (cancelrotations.getValue()) || event.getPacket() instanceof ServerboundPlayerInputPacket) && mc.player.isHandsBusy())
             event.cancel();
 
-        if (returnGravity && event.getPacket() instanceof VehicleMoveC2SPacket) event.cancel();
+        if (returnGravity && event.getPacket() instanceof ServerboundMoveVehiclePacket) event.cancel();
 
-        if (event.getPacket() instanceof PlayerInputC2SPacket && allowShift.getValue()) {
+        if (event.getPacket() instanceof ServerboundPlayerInputPacket && allowShift.getValue()) {
             event.cancel();
         }
 
-        if (mc.player.getControllingVehicle() == null || returnGravity || waitedCooldown)
+        if (mc.player.getControlledVehicle() == null || returnGravity || waitedCooldown)
             return;
 
-        Vec3d boatPos = mc.player.getControllingVehicle().getPos();
-        if ((!mc.world.isChunkLoaded((int) boatPos.getX() >> 4, (int) boatPos.getZ() >> 4) || boatPos.getY() < -60) && stopunloaded.getValue())
+        Vec3 boatPos = mc.player.getControlledVehicle().position();
+        if ((!mc.level.hasChunk((int) boatPos.x() >> 4, (int) boatPos.z() >> 4) || boatPos.y() < -60) && stopunloaded.getValue())
             return;
 
-        if (event.getPacket() instanceof VehicleMoveC2SPacket pac && limit.getValue() && mode.getValue() == Mode.Packet)
+        if (event.getPacket() instanceof ServerboundMoveVehiclePacket pac && limit.getValue() && mode.getValue() == Mode.Packet)
             if (vehiclePackets.contains(pac)) vehiclePackets.remove(pac);
             else event.cancel();
     }

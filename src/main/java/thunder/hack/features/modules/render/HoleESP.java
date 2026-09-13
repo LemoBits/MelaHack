@@ -1,9 +1,5 @@
 package thunder.hack.features.modules.render;
 
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Direction;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.features.modules.Module;
 import thunder.hack.setting.Setting;
@@ -14,11 +10,14 @@ import thunder.hack.utility.player.PlayerUtility;
 import thunder.hack.utility.render.Render2DEngine;
 import thunder.hack.utility.render.Render3DEngine;
 import thunder.hack.utility.world.HoleUtility;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.phys.AABB;
 
 public class HoleESP extends Module {
     public HoleESP() {
@@ -45,7 +44,7 @@ public class HoleESP extends Module {
     }
 
     @Override
-    public void onRender3D(MatrixStack stack) {
+    public void onRender3D(PoseStack stack) {
         if (positions.isEmpty()) return;
 
         for (BoxWithColor pwc : positions) {
@@ -81,14 +80,14 @@ public class HoleESP extends Module {
         );
 
         Render3DEngine.FILLED_QUEUE.add(
-                new Render3DEngine.FillAction(new Box(boxWithColor.box.minX, boxWithColor.box.minY, boxWithColor.box.minZ,
+                new Render3DEngine.FillAction(new AABB(boxWithColor.box.minX, boxWithColor.box.minY, boxWithColor.box.minZ,
                         boxWithColor.box.maxX, boxWithColor.box.minY + 0.01f, boxWithColor.box.maxZ), getColor(boxWithColor.box, boxWithColor.color(), boxWithColor.color.getAlpha())
                 )
         );
     }
 
-    private Color getColor(Box box, Color color, int alpha) {
-        float dist = PlayerUtility.squaredDistance2d(box.getCenter().getX(), box.getCenter().getZ());
+    private Color getColor(AABB box, Color color, int alpha) {
+        float dist = PlayerUtility.squaredDistance2d(box.getCenter().x(), box.getCenter().z());
         float factor = dist / (rangeXZ.getPow2Value());
 
         factor = 1f - easeOutExpo(factor);
@@ -124,43 +123,43 @@ public class HoleESP extends Module {
 
     private void findHoles() {
         ArrayList<BoxWithColor> blocks = new ArrayList<>();
-        if (mc.world == null || mc.player == null) {
+        if (mc.level == null || mc.player == null) {
             positions.clear();
             return;
         }
-        BlockPos centerPos = BlockPos.ofFloored(mc.player.getPos());
-        List<Box> boxes = new ArrayList<>();
+        BlockPos centerPos = BlockPos.containing(mc.player.position());
+        List<AABB> boxes = new ArrayList<>();
 
         for (int i = centerPos.getX() - rangeXZ.getValue(); i < centerPos.getX() + rangeXZ.getValue(); i++) {
             for (int j = centerPos.getY() - rangeY.getValue(); j < centerPos.getY() + rangeY.getValue(); j++) {
                 for (int k = centerPos.getZ() - rangeXZ.getValue(); k < centerPos.getZ() + rangeXZ.getValue(); k++) {
                     BlockPos pos = new BlockPos(i, j, k);
-                    Box box = new Box(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + height.getValue(), pos.getZ() + 1);
+                    AABB box = new AABB(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + height.getValue(), pos.getZ() + 1);
                     Color color = indestrictibleColor.getValue().getColorObject();
                     if (HoleUtility.validIndestructible(pos)) {
 
                     } else if (HoleUtility.validBedrock(pos)) {
                         color = bedrockColor.getValue().getColorObject();
                     } else if (HoleUtility.validTwoBlockBedrock(pos)) {
-                        boolean east = mc.world.isAir(pos.offset(Direction.EAST));
-                        boolean south = mc.world.isAir(pos.offset(Direction.SOUTH));
-                        box = new Box(box.minX, box.minY, box.minZ, box.maxX + (east ? 1 : 0), box.maxY, box.maxZ + (south ? 1 : 0));
+                        boolean east = mc.level.isEmptyBlock(pos.relative(Direction.EAST));
+                        boolean south = mc.level.isEmptyBlock(pos.relative(Direction.SOUTH));
+                        box = new AABB(box.minX, box.minY, box.minZ, box.maxX + (east ? 1 : 0), box.maxY, box.maxZ + (south ? 1 : 0));
                         color = bedrockColor.getValue().getColorObject();
                     } else if (HoleUtility.validTwoBlockIndestructible(pos)) {
-                        boolean east = mc.world.isAir(pos.offset(Direction.EAST));
-                        boolean south = mc.world.isAir(pos.offset(Direction.SOUTH));
-                        box = new Box(box.minX, box.minY, box.minZ, box.maxX + (east ? 1 : 0), box.maxY, box.maxZ + (south ? 1 : 0));
+                        boolean east = mc.level.isEmptyBlock(pos.relative(Direction.EAST));
+                        boolean south = mc.level.isEmptyBlock(pos.relative(Direction.SOUTH));
+                        box = new AABB(box.minX, box.minY, box.minZ, box.maxX + (east ? 1 : 0), box.maxY, box.maxZ + (south ? 1 : 0));
                     } else if (HoleUtility.validQuadBedrock(pos)) {
-                        box = new Box(box.minX, box.minY, box.minZ, box.maxX + 1, box.maxY, box.maxZ + 1);
+                        box = new AABB(box.minX, box.minY, box.minZ, box.maxX + 1, box.maxY, box.maxZ + 1);
                         color = bedrockColor.getValue().getColorObject();
                     } else if (HoleUtility.validQuadIndestructible(pos)) {
-                        box = new Box(box.minX, box.minY, box.minZ, box.maxX + 1, box.maxY, box.maxZ + 1);
+                        box = new AABB(box.minX, box.minY, box.minZ, box.maxX + 1, box.maxY, box.maxZ + 1);
                     } else {
                         continue;
                     }
 
                     boolean skip = false;
-                    for (Box boxOffset : boxes) {
+                    for (AABB boxOffset : boxes) {
                         if (boxOffset.intersects(box))
                             skip = true;
                     }
@@ -177,7 +176,7 @@ public class HoleESP extends Module {
         positions.addAll(blocks);
     }
 
-    public record BoxWithColor(Box box, Color color) {
+    public record BoxWithColor(AABB box, Color color) {
     }
 
     private enum Mode {

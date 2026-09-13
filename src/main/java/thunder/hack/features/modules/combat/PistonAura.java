@@ -1,29 +1,35 @@
 package thunder.hack.features.modules.combat;
+import java.util.List;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.block.*;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.ExperienceOrbEntity;
-import net.minecraft.entity.decoration.EndCrystalEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
-import net.minecraft.network.packet.s2c.play.PlaySoundFromEntityS2CPacket;
-import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.RaycastContext;
+import net.minecraft.world.level.block.*;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.protocol.game.ClientboundSoundEntityPacket;
+import net.minecraft.network.protocol.game.ClientboundSoundPacket;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
+import net.minecraft.network.protocol.game.ServerboundSwingPacket;
+import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.ExperienceOrb;
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.FireBlock;
+import net.minecraft.world.level.block.PoweredBlock;
+import net.minecraft.world.level.block.piston.PistonBaseBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import thunder.hack.core.Managers;
@@ -46,10 +52,11 @@ import thunder.hack.utility.render.Render2DEngine;
 import thunder.hack.utility.render.Render3DEngine;
 
 import java.awt.*;
-import java.util.List;
 import java.util.*;
 
 import static thunder.hack.features.modules.client.ClientSettings.isRu;
+
+import com.mojang.blaze3d.vertex.PoseStack;
 
 public final class PistonAura extends Module {
     private final Setting<Integer> placeDelay = new Setting<>("Delay/Place", 1, 0, 25);
@@ -66,7 +73,7 @@ public final class PistonAura extends Module {
     private final Setting<InteractionUtility.Interact> interact = new Setting<>("Interact", InteractionUtility.Interact.Strict);
     private final Setting<InteractionUtility.Rotate> rotate = new Setting<>("Rotate", InteractionUtility.Rotate.None);
 
-    public PlayerEntity target;
+    public Player target;
     private BlockPos targetPos, pistonPos, crystalPos, redStonePos, firePos, pistonHeadPos;
     private boolean builtTrap, isFire;
 
@@ -76,8 +83,8 @@ public final class PistonAura extends Module {
     private int delay = 0;
     private Runnable postAction = null;
     private Stage stage = Stage.Searching;
-    private EndCrystalEntity lastCrystal;
-    private Vec3d rotations;
+    private EndCrystal lastCrystal;
+    private Vec3 rotations;
 
     public PistonAura() {
         super("PistonAura", Category.COMBAT);
@@ -89,7 +96,7 @@ public final class PistonAura extends Module {
         stage = Stage.Searching;
         trapTimer.reset();
         attackTimer.reset();
-        rotations = Vec3d.ZERO;
+        rotations = Vec3.ZERO;
         pistonPos = null;
         targetPos = null;
         firePos = null;
@@ -158,7 +165,7 @@ public final class PistonAura extends Module {
             return;
         }
 
-        if (!InventoryUtility.findItemInHotBar(Items.END_CRYSTAL).found() && mc.player.getOffHandStack().getItem() != Items.END_CRYSTAL) {
+        if (!InventoryUtility.findItemInHotBar(Items.END_CRYSTAL).found() && mc.player.getOffhandItem().getItem() != Items.END_CRYSTAL) {
             disable(isRu() ? "Нет кристаллов!" : "No crystals!");
             return;
         }
@@ -191,22 +198,22 @@ public final class PistonAura extends Module {
             return;
         }
 
-        if (mc.world.getBlockState(redStonePos).getBlock() instanceof RedstoneBlock) {
+        if (mc.level.getBlockState(redStonePos).getBlock() instanceof PoweredBlock) {
             stage = Stage.Break;
         }
 
-        if (mc.world.getBlockState(redStonePos.down()).isReplaceable() && supportPlace.getValue()) {
-            InteractionUtility.placeBlock(redStonePos.down(), rotate.getValue(), interact.getValue(), placeMode.getValue(), InventoryUtility.findBlockInHotBar(Blocks.OBSIDIAN), false, false);
+        if (mc.level.getBlockState(redStonePos.below()).canBeReplaced() && supportPlace.getValue()) {
+            InteractionUtility.placeBlock(redStonePos.below(), rotate.getValue(), interact.getValue(), placeMode.getValue(), InventoryUtility.findBlockInHotBar(Blocks.OBSIDIAN), false, false);
             return;
         }
 
         final float[] angle = InteractionUtility.getPlaceAngle(redStonePos, interact.getValue(), false);
         if (angle == null) return;
         if (extra) {
-            sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(angle[0], angle[1], mc.player.isOnGround(), mc.player.horizontalCollision));
+            sendPacket(new ServerboundMovePlayerPacket.Rot(angle[0], angle[1], mc.player.onGround(), mc.player.horizontalCollision));
         } else {
-            mc.player.setYaw(angle[0]);
-            mc.player.setPitch(angle[1]);
+            mc.player.setYRot(angle[0]);
+            mc.player.setXRot(angle[1]);
         }
 
         postAction = () -> {
@@ -231,7 +238,7 @@ public final class PistonAura extends Module {
             return;
         }
 
-        if (mc.world.getBlockState(crystalPos).isReplaceable() && supportPlace.getValue()) {
+        if (mc.level.getBlockState(crystalPos).canBeReplaced() && supportPlace.getValue()) {
             InteractionUtility.placeBlock(crystalPos, rotate.getValue(), interact.getValue(), placeMode.getValue(), InventoryUtility.findBlockInHotBar(Blocks.OBSIDIAN), false, false);
             return;
         }
@@ -240,30 +247,30 @@ public final class PistonAura extends Module {
         if (result == null) return;
         float[] angle = InteractionUtility.calculateAngle(rotations);
         if (extra) {
-            sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(angle[0] + MathUtility.random(-0.2f, 0.2f), angle[1], mc.player.isOnGround(), mc.player.horizontalCollision));
+            sendPacket(new ServerboundMovePlayerPacket.Rot(angle[0] + MathUtility.random(-0.2f, 0.2f), angle[1], mc.player.onGround(), mc.player.horizontalCollision));
         } else {
-            mc.player.setYaw(angle[0] + MathUtility.random(-0.2f, 0.2f));
-            mc.player.setPitch(angle[1]);
+            mc.player.setYRot(angle[0] + MathUtility.random(-0.2f, 0.2f));
+            mc.player.setXRot(angle[1]);
         }
 
         postAction = () -> {
-            boolean offHand = mc.player.getOffHandStack().getItem() == Items.END_CRYSTAL;
+            boolean offHand = mc.player.getOffhandItem().getItem() == Items.END_CRYSTAL;
             int prev_slot = -1;
             if (!offHand) {
                 int crystal_slot = InventoryUtility.findItemInHotBar(Items.END_CRYSTAL).slot();
                 prev_slot = mc.player.getInventory().getSelectedSlot();
                 if (crystal_slot != -1) {
                     mc.player.getInventory().setSelectedSlot(crystal_slot);
-                    sendPacket(new UpdateSelectedSlotC2SPacket(crystal_slot));
+                    sendPacket(new ServerboundSetCarriedItemPacket(crystal_slot));
                 }
             }
 
-            sendSequencedPacket(id -> new PlayerInteractBlockC2SPacket(offHand ? Hand.OFF_HAND : Hand.MAIN_HAND, result, id));
-            sendPacket(new HandSwingC2SPacket(offHand ? Hand.OFF_HAND : Hand.MAIN_HAND));
+            sendSequencedPacket(id -> new ServerboundUseItemOnPacket(offHand ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND, result, id));
+            sendPacket(new ServerboundSwingPacket(offHand ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND));
 
             if (!offHand) {
                 mc.player.getInventory().setSelectedSlot(prev_slot);
-                sendPacket(new UpdateSelectedSlotC2SPacket(prev_slot));
+                sendPacket(new ServerboundSetCarriedItemPacket(prev_slot));
             }
 
             stage = Stage.RedStone;
@@ -276,20 +283,20 @@ public final class PistonAura extends Module {
             return;
         }
 
-        if (mc.world.getBlockState(firePos).getBlock() instanceof FireBlock) stage = Stage.Crystal;
+        if (mc.level.getBlockState(firePos).getBlock() instanceof FireBlock) stage = Stage.Crystal;
 
-        if (mc.world.getBlockState(firePos.down()).isReplaceable() && supportPlace.getValue()) {
-            InteractionUtility.placeBlock(firePos.down(), rotate.getValue(), interact.getValue(), placeMode.getValue(), InventoryUtility.findBlockInHotBar(Blocks.OBSIDIAN), false, false);
+        if (mc.level.getBlockState(firePos.below()).canBeReplaced() && supportPlace.getValue()) {
+            InteractionUtility.placeBlock(firePos.below(), rotate.getValue(), interact.getValue(), placeMode.getValue(), InventoryUtility.findBlockInHotBar(Blocks.OBSIDIAN), false, false);
             return;
         }
 
         float[] angle = InteractionUtility.getPlaceAngle(firePos, interact.getValue(), false);
         if (angle == null) return;
         if (extra) {
-            sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(angle[0], angle[1], mc.player.isOnGround(), mc.player.horizontalCollision));
+            sendPacket(new ServerboundMovePlayerPacket.Rot(angle[0], angle[1], mc.player.onGround(), mc.player.horizontalCollision));
         } else {
-            mc.player.setYaw(angle[0]);
-            mc.player.setPitch(angle[1]);
+            mc.player.setYRot(angle[0]);
+            mc.player.setXRot(angle[1]);
         }
         postAction = () -> {
             InteractionUtility.placeBlock(firePos, InteractionUtility.Rotate.None, interact.getValue(), placeMode.getValue(), InventoryUtility.findItemInHotBar(Items.FLINT_AND_STEEL).slot(), false, false);
@@ -302,24 +309,24 @@ public final class PistonAura extends Module {
             stage = Stage.Piston;
             return;
         }
-        if (mc.world.getBlockState(targetPos.add(0, 2, 0)).getBlock() == Blocks.OBSIDIAN || pistonPos.getY() >= targetPos.add(0, 2, 0).getY()) {
+        if (mc.level.getBlockState(targetPos.offset(0, 2, 0)).getBlock() == Blocks.OBSIDIAN || pistonPos.getY() >= targetPos.offset(0, 2, 0).getY()) {
             stage = Stage.Piston;
             return;
         }
 
         if (!builtTrap) {
             final BlockPos offset = new BlockPos(crystalPos.getX() - targetPos.getX(), 0, crystalPos.getZ() - targetPos.getZ());
-            final BlockPos trapBase = targetPos.add(offset.getX() * -1, 0, offset.getZ() * -1);
+            final BlockPos trapBase = targetPos.offset(offset.getX() * -1, 0, offset.getZ() * -1);
 
             List<BlockPos> trapPos = new ArrayList<>();
-            trapPos.add(targetPos.add(0, 2, 0));
-            trapPos.add(trapBase.add(0, 2, 0));
-            trapPos.add(trapBase.add(0, 1, 0));
+            trapPos.add(targetPos.offset(0, 2, 0));
+            trapPos.add(trapBase.offset(0, 2, 0));
+            trapPos.add(trapBase.offset(0, 1, 0));
 
             InventoryUtility.saveSlot();
             for (BlockPos bp : trapPos) {
                 if (InteractionUtility.placeBlock(bp, rotate.getValue(), interact.getValue(), placeMode.getValue(), InventoryUtility.findBlockInHotBar(Blocks.OBSIDIAN), false, false)) {
-                    if (bp == targetPos.add(0, 2, 0)) {
+                    if (bp == targetPos.offset(0, 2, 0)) {
                         builtTrap = true;
                         stage = Stage.Piston;
                     }
@@ -341,22 +348,22 @@ public final class PistonAura extends Module {
             return;
         }
 
-        if (mc.world.getBlockState(pistonPos).getBlock() instanceof PistonBlock) {
+        if (mc.level.getBlockState(pistonPos).getBlock() instanceof PistonBaseBlock) {
             stage = isFire ? Stage.Fire : Stage.Crystal;
         }
 
-        if (mc.world.getBlockState(pistonPos.down()).isReplaceable() && supportPlace.getValue()) {
-            InteractionUtility.placeBlock(pistonPos.down(), rotate.getValue(), interact.getValue(), placeMode.getValue(), InventoryUtility.findBlockInHotBar(Blocks.OBSIDIAN), false, false);
+        if (mc.level.getBlockState(pistonPos.below()).canBeReplaced() && supportPlace.getValue()) {
+            InteractionUtility.placeBlock(pistonPos.below(), rotate.getValue(), interact.getValue(), placeMode.getValue(), InventoryUtility.findBlockInHotBar(Blocks.OBSIDIAN), false, false);
             return;
         }
 
         final float[] angle = InteractionUtility.getPlaceAngle(pistonPos, interact.getValue(), false);
         if (angle == null) return;
         if (extra) {
-            sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(angle[0], angle[1], mc.player.isOnGround(), mc.player.horizontalCollision));
+            sendPacket(new ServerboundMovePlayerPacket.Rot(angle[0], angle[1], mc.player.onGround(), mc.player.horizontalCollision));
         } else {
-            mc.player.setYaw(angle[0]);
-            mc.player.setPitch(angle[1]);
+            mc.player.setYRot(angle[0]);
+            mc.player.setXRot(angle[1]);
         }
 
 
@@ -374,27 +381,27 @@ public final class PistonAura extends Module {
             }
 
 
-            final float angle2 = InteractionUtility.calculateAngle(pistonHeadPos.toCenterPos(), pistonPos.toCenterPos())[0];
+            final float angle2 = InteractionUtility.calculateAngle(pistonHeadPos.getCenter(), pistonPos.getCenter())[0];
 
-            sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(angle2, 0, mc.player.isOnGround(), mc.player.horizontalCollision));
-            float prevYaw = mc.player.getYaw();
-            mc.player.setYaw(angle2);
+            sendPacket(new ServerboundMovePlayerPacket.Rot(angle2, 0, mc.player.onGround(), mc.player.horizontalCollision));
+            float prevYaw = mc.player.getYRot();
+            mc.player.setYRot(angle2);
             ((thunder.hack.injection.accesors.IEntity) mc.player).setLastYaw(angle2);
             ((IEntity) mc.player).setLastYaw(angle2);
             int prevSlot = mc.player.getInventory().getSelectedSlot();
             InteractionUtility.placeBlock(pistonPos, InteractionUtility.Rotate.None, interact.getValue(), placeMode.getValue(), piston_slot, false, false);
-            sendPacket(new UpdateSelectedSlotC2SPacket(prevSlot));
+            sendPacket(new ServerboundSetCarriedItemPacket(prevSlot));
             mc.player.getInventory().setSelectedSlot(prevSlot);
-            mc.player.setYaw(prevYaw);
+            mc.player.setYRot(prevYaw);
 
             stage = isFire ? Stage.Fire : Stage.Crystal;
         };
     }
 
     public @Nullable BlockHitResult getPlaceData(BlockPos bp) {
-        Block base = mc.world.getBlockState(bp).getBlock();
-        Block freeSpace = mc.world.getBlockState(bp.up()).getBlock();
-        Block legacyFreeSpace = mc.world.getBlockState(bp.up().up()).getBlock();
+        Block base = mc.level.getBlockState(bp).getBlock();
+        Block freeSpace = mc.level.getBlockState(bp.above()).getBlock();
+        Block legacyFreeSpace = mc.level.getBlockState(bp.above().above()).getBlock();
 
         if (base != Blocks.OBSIDIAN && base != Blocks.BEDROCK)
             return null;
@@ -404,7 +411,7 @@ public final class PistonAura extends Module {
 
         if (checkEntities(bp)) return null;
 
-        Vec3d crystalVec = new Vec3d(0.5f + bp.getX(), 1f + bp.getY(), 0.5f + bp.getZ());
+        Vec3 crystalVec = new Vec3(0.5f + bp.getX(), 1f + bp.getY(), 0.5f + bp.getZ());
 
         BlockHitResult interactResult = null;
 
@@ -418,16 +425,16 @@ public final class PistonAura extends Module {
     }
 
     private boolean checkEntities(@NotNull BlockPos base) {
-        Box posBoundingBox = new Box(base.up());
+        AABB posBoundingBox = new AABB(base.above());
 
-        posBoundingBox = posBoundingBox.expand(0, 1f, 0);
+        posBoundingBox = posBoundingBox.inflate(0, 1f, 0);
 
-        for (Entity ent : mc.world.getEntities()) {
+        for (Entity ent : mc.level.entitiesForRendering()) {
             if (ent == null) continue;
             if (ent.getBoundingBox().intersects(posBoundingBox)) {
-                if (ent instanceof ExperienceOrbEntity)
+                if (ent instanceof ExperienceOrb)
                     continue;
-                if (ent instanceof EndCrystalEntity) {
+                if (ent instanceof EndCrystal) {
                     continue;
                 }
                 return true;
@@ -436,11 +443,11 @@ public final class PistonAura extends Module {
         return false;
     }
 
-    private @Nullable BlockHitResult getDefaultInteract(Vec3d crystalVector, BlockPos bp) {
+    private @Nullable BlockHitResult getDefaultInteract(Vec3 crystalVector, BlockPos bp) {
         if (PlayerUtility.squaredDistanceFromEyes(crystalVector) > placeRange.getPow2Value())
             return null;
 
-        BlockHitResult wallCheck = mc.world.raycast(new RaycastContext(InteractionUtility.getEyesPos(mc.player), crystalVector, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, mc.player));
+        BlockHitResult wallCheck = mc.level.clip(new ClipContext(InteractionUtility.getEyesPos(mc.player), crystalVector, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player));
 
         if (wallCheck != null && wallCheck.getType() == HitResult.Type.BLOCK && wallCheck.getBlockPos() != bp)
             if (PlayerUtility.squaredDistanceFromEyes(crystalVector) > wallRange.getPow2Value())
@@ -452,17 +459,17 @@ public final class PistonAura extends Module {
     public @Nullable BlockHitResult getStrictInteract(@NotNull BlockPos bp) {
         float bestDistance = 999f;
         Direction bestDirection = null;
-        Vec3d bestVector = null;
+        Vec3 bestVector = null;
 
-        if (mc.player.getEyePos().getY() > bp.up().getY()) {
+        if (mc.player.getEyePosition().y() > bp.above().getY()) {
             bestDirection = Direction.UP;
-            bestVector = new Vec3d(bp.getX() + 0.5, bp.getY() + 1, bp.getZ() + 0.5);
-        } else if (mc.player.getEyePos().getY() < bp.getY()) {
+            bestVector = new Vec3(bp.getX() + 0.5, bp.getY() + 1, bp.getZ() + 0.5);
+        } else if (mc.player.getEyePosition().y() < bp.getY()) {
             bestDirection = Direction.DOWN;
-            bestVector = new Vec3d(bp.getX() + 0.5, bp.getY(), bp.getZ() + 0.5);
+            bestVector = new Vec3(bp.getX() + 0.5, bp.getY(), bp.getZ() + 0.5);
         } else {
             for (Direction dir : Direction.values()) {
-                Vec3d directionVec = new Vec3d(bp.getX() + 0.5 + dir.getVector().getX() * 0.5, bp.getY() + 0.5 + dir.getVector().getY() * 0.5, bp.getZ() + 0.5 + dir.getVector().getZ() * 0.5);
+                Vec3 directionVec = new Vec3(bp.getX() + 0.5 + dir.getUnitVec3i().getX() * 0.5, bp.getY() + 0.5 + dir.getUnitVec3i().getY() * 0.5, bp.getZ() + 0.5 + dir.getUnitVec3i().getZ() * 0.5);
                 float distance = PlayerUtility.squaredDistanceFromEyes(directionVec);
                 if (bestDistance > distance) {
                     bestDirection = dir;
@@ -478,7 +485,7 @@ public final class PistonAura extends Module {
         if (PlayerUtility.squaredDistanceFromEyes(bestVector) > placeRange.getPow2Value())
             return null;
 
-        BlockHitResult wallCheck = mc.world.raycast(new RaycastContext(InteractionUtility.getEyesPos(mc.player), bestVector, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, mc.player));
+        BlockHitResult wallCheck = mc.level.clip(new ClipContext(InteractionUtility.getEyesPos(mc.player), bestVector, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player));
 
         if (wallCheck != null && wallCheck.getType() == HitResult.Type.BLOCK && wallCheck.getBlockPos() != bp)
             if (PlayerUtility.squaredDistanceFromEyes(bestVector) > wallRange.getPow2Value())
@@ -493,15 +500,15 @@ public final class PistonAura extends Module {
         for (float x = 0f; x <= 1f; x += 0.2f) {
             for (float y = 0f; y <= 1f; y += 0.2f) {
                 for (float z = 0f; z <= 1f; z += 0.2f) {
-                    Vec3d point = new Vec3d(bp.getX() + x, bp.getY() + y, bp.getZ() + z);
+                    Vec3 point = new Vec3(bp.getX() + x, bp.getY() + y, bp.getZ() + z);
                     float distance = PlayerUtility.squaredDistanceFromEyes(point);
 
-                    BlockHitResult wallCheck = mc.world.raycast(new RaycastContext(InteractionUtility.getEyesPos(mc.player), point, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, mc.player));
+                    BlockHitResult wallCheck = mc.level.clip(new ClipContext(InteractionUtility.getEyesPos(mc.player), point, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player));
                     if (wallCheck != null && wallCheck.getType() == HitResult.Type.BLOCK && wallCheck.getBlockPos() != bp)
                         if (distance > wallRange.getPow2Value())
                             continue;
 
-                    BlockHitResult result = ExplosionUtility.rayCastBlock(new RaycastContext(InteractionUtility.getEyesPos(mc.player), point, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, mc.player), bp);
+                    BlockHitResult result = ExplosionUtility.rayCastBlock(new ClipContext(InteractionUtility.getEyesPos(mc.player), point, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player), bp);
                     if (distance > placeRange.getPow2Value())
                         continue;
 
@@ -518,37 +525,37 @@ public final class PistonAura extends Module {
     }
 
     public void breakCrystal() {
-        for (Entity ent : mc.world.getEntities()) {
-            if (!(ent instanceof EndCrystalEntity) || target.squaredDistanceTo(ent.getPos()) > 16 || ent.age < 2)
+        for (Entity ent : mc.level.entitiesForRendering()) {
+            if (!(ent instanceof EndCrystal) || target.distanceToSqr(ent.position()) > 16 || ent.tickCount < 2)
                 continue;
-            float[] angle = InteractionUtility.calculateAngle(ent.getPos());
-            mc.player.setYaw(angle[0] + MathUtility.random(-3f, 3f));
-            mc.player.setPitch(angle[1]);
+            float[] angle = InteractionUtility.calculateAngle(ent.position());
+            mc.player.setYRot(angle[0] + MathUtility.random(-3f, 3f));
+            mc.player.setXRot(angle[1]);
             if (attackTimer.passedMs(200)) {
-                mc.interactionManager.attackEntity(mc.player, ent);
-                mc.player.swingHand(Hand.MAIN_HAND);
+                mc.gameMode.attack(mc.player, ent);
+                mc.player.swing(InteractionHand.MAIN_HAND);
                 attackTimer.reset();
             }
-            lastCrystal = (EndCrystalEntity) ent;
+            lastCrystal = (EndCrystal) ent;
         }
     }
 
     @EventHandler
     @SuppressWarnings("unused")
     private void onPacketReceive(PacketEvent.@NotNull Receive event) {
-        if (event.getPacket() instanceof PlaySoundS2CPacket && ((PlaySoundS2CPacket) event.getPacket()).getCategory().equals(SoundCategory.BLOCKS) && ((PlaySoundS2CPacket) event.getPacket()).getSound().value().equals(SoundEvents.ENTITY_GENERIC_EXPLODE)) {
+        if (event.getPacket() instanceof ClientboundSoundPacket && ((ClientboundSoundPacket) event.getPacket()).getSource().equals(SoundSource.BLOCKS) && ((ClientboundSoundPacket) event.getPacket()).getSound().value().equals(SoundEvents.GENERIC_EXPLODE)) {
             if (lastCrystal == null || !lastCrystal.isAlive())
                 return;
-            double soundRange = lastCrystal.squaredDistanceTo(((PlaySoundS2CPacket) event.getPacket()).getX() + 0.5, ((PlaySoundS2CPacket) event.getPacket()).getY() + 0.5, ((PlaySoundS2CPacket) event.getPacket()).getZ() + 0.5);
+            double soundRange = lastCrystal.distanceToSqr(((ClientboundSoundPacket) event.getPacket()).getX() + 0.5, ((ClientboundSoundPacket) event.getPacket()).getY() + 0.5, ((ClientboundSoundPacket) event.getPacket()).getZ() + 0.5);
             if (soundRange > 121)
                 return;
             reset();
         }
 
-        if (event.getPacket() instanceof PlaySoundFromEntityS2CPacket && ((PlaySoundFromEntityS2CPacket) event.getPacket()).getCategory().equals(SoundCategory.BLOCKS) && ((PlaySoundFromEntityS2CPacket) event.getPacket()).getSound().value().equals(SoundEvents.ENTITY_GENERIC_EXPLODE)) {
+        if (event.getPacket() instanceof ClientboundSoundEntityPacket && ((ClientboundSoundEntityPacket) event.getPacket()).getSource().equals(SoundSource.BLOCKS) && ((ClientboundSoundEntityPacket) event.getPacket()).getSound().value().equals(SoundEvents.GENERIC_EXPLODE)) {
             if (lastCrystal == null || !lastCrystal.isAlive())
                 return;
-            if (((PlaySoundFromEntityS2CPacket) event.getPacket()).getEntityId() != lastCrystal.getId())
+            if (((ClientboundSoundEntityPacket) event.getPacket()).getId() != lastCrystal.getId())
                 return;
             reset();
         }
@@ -569,23 +576,23 @@ public final class PistonAura extends Module {
     }
 
     @Override
-    public void onRender3D(MatrixStack stack) {
+    public void onRender3D(PoseStack stack) {
         if (pistonPos == null || crystalPos == null || redStonePos == null) {
             return;
         }
-        Render3DEngine.FILLED_QUEUE.add(new Render3DEngine.FillAction(new Box(pistonHeadPos.down()), Render2DEngine.injectAlpha(Color.CYAN, 100)));
-        Render3DEngine.FILLED_QUEUE.add(new Render3DEngine.FillAction(new Box(crystalPos), Render2DEngine.injectAlpha(Color.PINK, 100)));
-        Render3DEngine.FILLED_QUEUE.add(new Render3DEngine.FillAction(new Box(pistonPos.down()), Render2DEngine.injectAlpha(Color.GREEN, 100)));
-        Render3DEngine.FILLED_QUEUE.add(new Render3DEngine.FillAction(new Box(redStonePos.down()), Render2DEngine.injectAlpha(Color.RED, 100)));
+        Render3DEngine.FILLED_QUEUE.add(new Render3DEngine.FillAction(new AABB(pistonHeadPos.below()), Render2DEngine.injectAlpha(Color.CYAN, 100)));
+        Render3DEngine.FILLED_QUEUE.add(new Render3DEngine.FillAction(new AABB(crystalPos), Render2DEngine.injectAlpha(Color.PINK, 100)));
+        Render3DEngine.FILLED_QUEUE.add(new Render3DEngine.FillAction(new AABB(pistonPos.below()), Render2DEngine.injectAlpha(Color.GREEN, 100)));
+        Render3DEngine.FILLED_QUEUE.add(new Render3DEngine.FillAction(new AABB(redStonePos.below()), Render2DEngine.injectAlpha(Color.RED, 100)));
 
         if (firePos != null)
-            Render3DEngine.FILLED_QUEUE.add(new Render3DEngine.FillAction(new Box(firePos.down()), Render2DEngine.injectAlpha(Color.yellow, 100)));
+            Render3DEngine.FILLED_QUEUE.add(new Render3DEngine.FillAction(new AABB(firePos.below()), Render2DEngine.injectAlpha(Color.yellow, 100)));
     }
 
 
     private void findPos() {
         ArrayList<Structure> list = new ArrayList<>();
-        for (PlayerEntity target : Objects.requireNonNull(getPlayersSorted(targetRange.getValue()))) {
+        for (Player target : Objects.requireNonNull(getPlayersSorted(targetRange.getValue()))) {
             for (int i = 0; i <= 2; i++) {
                 if (patternsSetting.getValue() == Pattern.Small || patternsSetting.getValue() == Pattern.All) {
                     list.add(new Structure(
@@ -808,15 +815,15 @@ public final class PistonAura extends Module {
     }
 
 
-    public static @NotNull List<PlayerEntity> getPlayersSorted(float range) {
-        synchronized (mc.world.getPlayers()) {
-            List<PlayerEntity> playerList = new ArrayList<>();
-            for (PlayerEntity player : mc.world.getPlayers()) {
-                if (mc.player != player && !Managers.FRIEND.isFriend(player) && mc.player.squaredDistanceTo(player) <= range * range) {
+    public static @NotNull List<Player> getPlayersSorted(float range) {
+        synchronized (mc.level.players()) {
+            List<Player> playerList = new ArrayList<>();
+            for (Player player : mc.level.players()) {
+                if (mc.player != player && !Managers.FRIEND.isFriend(player) && mc.player.distanceToSqr(player) <= range * range) {
                     playerList.add(player);
                 }
             }
-            playerList.sort(Comparator.comparing(player -> mc.player.squaredDistanceTo(player)));
+            playerList.sort(Comparator.comparing(player -> mc.player.distanceToSqr(player)));
             return playerList;
         }
     }
@@ -828,7 +835,7 @@ public final class PistonAura extends Module {
         private final BlockPos targetPos;
         private BlockPos redStonePos;
         private BlockPos firePos;
-        private final PlayerEntity target;
+        private final Player target;
 
         private BlockPos pistonHeadPos;
 
@@ -852,42 +859,42 @@ public final class PistonAura extends Module {
             return firePos;
         }
 
-        public PlayerEntity getTarget() {
+        public Player getTarget() {
             return target;
         }
 
-        public Structure(@NotNull PlayerEntity target, @NotNull BlockPos crystalPos, @NotNull BlockPos pistonPos, @NotNull BlockPos pistonHeadPos, BlockPos[] redStonePos, BlockPos[] firePos) {
+        public Structure(@NotNull Player target, @NotNull BlockPos crystalPos, @NotNull BlockPos pistonPos, @NotNull BlockPos pistonHeadPos, BlockPos[] redStonePos, BlockPos[] firePos) {
             this.target = target;
-            this.targetPos = BlockPos.ofFloored(target.getPos());
-            this.pistonPos = canPlace(targetPos.add(pistonPos.getX(), pistonPos.getY() + 1, pistonPos.getZ())) ? targetPos.add(pistonPos.getX(), pistonPos.getY() + 1, pistonPos.getZ()) : null;
-            this.crystalPos = getPlaceData(targetPos.add(crystalPos.getX(), crystalPos.getY(), crystalPos.getZ())) != null ? targetPos.add(crystalPos.getX(), crystalPos.getY(), crystalPos.getZ()) : null;
-            this.pistonHeadPos = mc.world.isAir(targetPos.add(pistonHeadPos.getX(), pistonHeadPos.getY() + 1, pistonHeadPos.getZ())) ? targetPos.add(pistonHeadPos.getX(), pistonHeadPos.getY() + 1, pistonHeadPos.getZ()) : null;
+            this.targetPos = BlockPos.containing(target.position());
+            this.pistonPos = canPlace(targetPos.offset(pistonPos.getX(), pistonPos.getY() + 1, pistonPos.getZ())) ? targetPos.offset(pistonPos.getX(), pistonPos.getY() + 1, pistonPos.getZ()) : null;
+            this.crystalPos = getPlaceData(targetPos.offset(crystalPos.getX(), crystalPos.getY(), crystalPos.getZ())) != null ? targetPos.offset(crystalPos.getX(), crystalPos.getY(), crystalPos.getZ()) : null;
+            this.pistonHeadPos = mc.level.isEmptyBlock(targetPos.offset(pistonHeadPos.getX(), pistonHeadPos.getY() + 1, pistonHeadPos.getZ())) ? targetPos.offset(pistonHeadPos.getX(), pistonHeadPos.getY() + 1, pistonHeadPos.getZ()) : null;
 
-            if (this.pistonHeadPos != null && !mc.world.getNonSpectatingEntities(PlayerEntity.class, new Box(this.pistonHeadPos)).isEmpty()) {
+            if (this.pistonHeadPos != null && !mc.level.getEntitiesOfClass(Player.class, new AABB(this.pistonHeadPos)).isEmpty()) {
                 this.pistonHeadPos = null;
             }
 
-            if (this.crystalPos != null && !mc.world.getNonSpectatingEntities(Entity.class, new Box(this.crystalPos)).isEmpty()) {
+            if (this.crystalPos != null && !mc.level.getEntitiesOfClass(Entity.class, new AABB(this.crystalPos)).isEmpty()) {
                 this.crystalPos = null;
             }
 
             this.redStonePos = null;
             List<BlockPos> tempRed = Arrays.stream(redStonePos)
-                    .map(blockPos -> targetPos.add(blockPos.getX(), blockPos.getY() + 1, blockPos.getZ()))
+                    .map(blockPos -> targetPos.offset(blockPos.getX(), blockPos.getY() + 1, blockPos.getZ()))
                     .toList();
-            BlockState preState = mc.world.getBlockState(pistonPos);
-            mc.world.setBlockState(pistonPos, Blocks.PISTON.getDefaultState());
+            BlockState preState = mc.level.getBlockState(pistonPos);
+            mc.level.setBlockAndUpdate(pistonPos, Blocks.PISTON.defaultBlockState());
             for (BlockPos pos : tempRed) {
                 if (canPlace(pos)) {
                     this.redStonePos = pos;
                     break;
                 }
             }
-            mc.world.setBlockState(pistonPos, preState);
+            mc.level.setBlockAndUpdate(pistonPos, preState);
 
             this.firePos = null;
             List<BlockPos> tempFire = Arrays.stream(firePos)
-                    .map(blockPos -> targetPos.add(blockPos.getX(), blockPos.getY() + 1, blockPos.getZ()))
+                    .map(blockPos -> targetPos.offset(blockPos.getX(), blockPos.getY() + 1, blockPos.getZ()))
                     .toList();
             for (BlockPos pos : tempFire) {
                 if (canPlace(pos)) {
@@ -910,16 +917,16 @@ public final class PistonAura extends Module {
 
             BlockState prevBlockState = null;
             if (supportPlace.getValue()) {
-                prevBlockState = mc.world.getBlockState(pos.down());
-                if (prevBlockState.isReplaceable()) {
-                    mc.world.setBlockState(pos.down(), Blocks.OBSIDIAN.getDefaultState());
+                prevBlockState = mc.level.getBlockState(pos.below());
+                if (prevBlockState.canBeReplaced()) {
+                    mc.level.setBlockAndUpdate(pos.below(), Blocks.OBSIDIAN.defaultBlockState());
                 } else prevBlockState = null;
             }
 
             boolean canPlace =  InteractionUtility.canPlaceBlock(pos, interact.getValue(), false);
 
             if (prevBlockState != null) {
-                mc.world.setBlockState(pos.down(), prevBlockState);
+                mc.level.setBlockAndUpdate(pos.below(), prevBlockState);
             }
 
             return canPlace;
@@ -927,12 +934,12 @@ public final class PistonAura extends Module {
 
         public double getMaxRange() {
             if (this.pistonPos == null || this.crystalPos == null || this.redStonePos == null) return 999;
-            final double piston = InteractionUtility.squaredDistanceFromEyes(this.pistonPos.toCenterPos());
-            final double crystal = InteractionUtility.squaredDistanceFromEyes(this.crystalPos.toCenterPos());
-            final double redStone = InteractionUtility.squaredDistanceFromEyes(this.redStonePos.toCenterPos());
+            final double piston = InteractionUtility.squaredDistanceFromEyes(this.pistonPos.getCenter());
+            final double crystal = InteractionUtility.squaredDistanceFromEyes(this.crystalPos.getCenter());
+            final double redStone = InteractionUtility.squaredDistanceFromEyes(this.redStonePos.getCenter());
 
             BlockPos firePos = this.firePos != null ? this.firePos : this.pistonPos;
-            final double fire = InteractionUtility.squaredDistanceFromEyes(firePos.toCenterPos());
+            final double fire = InteractionUtility.squaredDistanceFromEyes(firePos.getCenter());
             return Math.max(Math.max(fire, crystal), Math.max(redStone, piston));
         }
     }

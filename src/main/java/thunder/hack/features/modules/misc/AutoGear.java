@@ -1,16 +1,16 @@
 package thunder.hack.features.modules.misc;
 
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.PotionItem;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.util.Formatting;
 import thunder.hack.features.cmd.impl.KitCommand;
 import thunder.hack.features.modules.Module;
 import thunder.hack.setting.Setting;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.PotionItem;
 
 import static thunder.hack.features.modules.client.ClientSettings.isRu;
 
@@ -38,7 +38,7 @@ public class AutoGear extends Module {
             return;
         }
 
-        sendMessage(isRu() ? "Выбран кит => " + Formatting.AQUA + selectedKit : "Selected kit -> " + Formatting.AQUA + selectedKit);
+        sendMessage(isRu() ? "Выбран кит => " + ChatFormatting.AQUA + selectedKit : "Selected kit -> " + ChatFormatting.AQUA + selectedKit);
 
         String kitItems = KitCommand.getKitItems(selectedKit);
 
@@ -69,7 +69,7 @@ public class AutoGear extends Module {
 
         int actions = 0;
 
-        ScreenHandler handler = mc.player.currentScreenHandler;
+        AbstractContainerMenu handler = mc.player.containerMenu;
 
         if (handler.slots.size() != 63 && handler.slots.size() != 90)
             return;
@@ -84,35 +84,35 @@ public class AutoGear extends Module {
         delay = actionDelay.getValue();
     }
 
-    private int searchInContainer(String name, boolean lower, ScreenHandler handler) {
-        ItemStack cursorStack = handler.getCursorStack();
+    private int searchInContainer(String name, boolean lower, AbstractContainerMenu handler) {
+        ItemStack cursorStack = handler.getCarried();
 
         if ((cursorStack.getItem() instanceof PotionItem ?
-                cursorStack.getItem().getTranslationKey() + cursorStack.getItem().getComponents().get(DataComponentTypes.POTION_CONTENTS).getColor()
-                : cursorStack.getItem().getTranslationKey()).equals(name))
+                cursorStack.getItem().getDescriptionId() + cursorStack.getItem().components().get(DataComponents.POTION_CONTENTS).getColor()
+                : cursorStack.getItem().getDescriptionId()).equals(name))
             return -2;
 
         for (int i = 0; i < (lower ? 26 : 53); i++) {
-            ItemStack stack = handler.getSlot(i).getStack();
+            ItemStack stack = handler.getSlot(i).getItem();
             if ((stack.getItem() instanceof PotionItem ?
-                    stack.getItem().getTranslationKey() + stack.getItem().getComponents().get(DataComponentTypes.POTION_CONTENTS).getColor()
-                    : stack.getItem().getTranslationKey()).equals(name))
+                    stack.getItem().getDescriptionId() + stack.getItem().components().get(DataComponents.POTION_CONTENTS).getColor()
+                    : stack.getItem().getDescriptionId()).equals(name))
                 return i;
         }
         return -1;
     }
 
-    private ArrayList<Integer> buildClickSequence(ScreenHandler handler) {
+    private ArrayList<Integer> buildClickSequence(AbstractContainerMenu handler) {
         ArrayList<Integer> clicks = new ArrayList<>();
         for (int s : expectedInv.keySet()) {
             int lower = s < 9 ? s + 54 : s + 18;
             int upper = s < 9 ? s + 81 : s + 45;
 
-            ItemStack itemInslot = handler.slots.get((handler.slots.size() == 63 ? lower : upper)).getStack();
+            ItemStack itemInslot = handler.slots.get((handler.slots.size() == 63 ? lower : upper)).getItem();
 
             if((itemInslot.getItem() instanceof PotionItem ?
-                    itemInslot.getItem().getTranslationKey() + itemInslot.getItem().getComponents().get(DataComponentTypes.POTION_CONTENTS).getColor()
-                    : itemInslot.getItem().getTranslationKey()).equals(expectedInv.get(s)))
+                    itemInslot.getItem().getDescriptionId() + itemInslot.getItem().components().get(DataComponents.POTION_CONTENTS).getColor()
+                    : itemInslot.getItem().getDescriptionId()).equals(expectedInv.get(s)))
                 continue;
 
             int slot = searchInContainer(expectedInv.get(s), handler.slots.size() == 63, handler);

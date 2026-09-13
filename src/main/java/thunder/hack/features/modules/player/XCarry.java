@@ -1,7 +1,7 @@
 package thunder.hack.features.modules.player;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket;
+import net.minecraft.network.protocol.game.ServerboundContainerClosePacket;
 import thunder.hack.events.impl.PacketEvent;
 import thunder.hack.features.modules.Module;
 
@@ -12,6 +12,6 @@ public class XCarry extends Module {
 
     @EventHandler
     public void onPacketSend(PacketEvent.Send e) {
-        if (e.getPacket() instanceof CloseHandledScreenC2SPacket) e.cancel();
+        if (e.getPacket() instanceof ServerboundContainerClosePacket) e.cancel();
     }
 }

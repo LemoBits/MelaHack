@@ -1,14 +1,23 @@
 package thunder.hack.features.modules.render;
 
-import net.minecraft.block.ShulkerBoxBlock;
-import net.minecraft.block.entity.*;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.decoration.ItemFrameEntity;
-import net.minecraft.entity.vehicle.ChestMinecartEntity;
-import net.minecraft.item.BlockItem;
-import net.minecraft.util.math.Box;
-import net.minecraft.world.chunk.WorldChunk;
+import net.minecraft.world.level.block.entity.*;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.decoration.ItemFrame;
+import net.minecraft.world.entity.vehicle.MinecartChest;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.level.block.ShulkerBoxBlock;
+import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
+import net.minecraft.world.level.block.entity.BarrelBlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.entity.ChestBlockEntity;
+import net.minecraft.world.level.block.entity.DispenserBlockEntity;
+import net.minecraft.world.level.block.entity.EnderChestBlockEntity;
+import net.minecraft.world.level.block.entity.HopperBlockEntity;
+import net.minecraft.world.level.block.entity.ShulkerBoxBlockEntity;
+import net.minecraft.world.level.block.entity.TrappedChestBlockEntity;
+import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.phys.AABB;
 import org.jetbrains.annotations.Nullable;
 import thunder.hack.core.Managers;
 import thunder.hack.features.modules.Module;
@@ -16,11 +25,15 @@ import thunder.hack.setting.Setting;
 import thunder.hack.setting.impl.ColorSetting;
 import thunder.hack.utility.render.Render2DEngine;
 import thunder.hack.utility.render.Render3DEngine;
+import thunder.hack.utility.render.Render3DEngine.FillAction;
+import thunder.hack.utility.render.Render3DEngine.OutlineAction;
+
 import static thunder.hack.utility.render.Render3DEngine.FILLED_QUEUE;
 import static thunder.hack.utility.render.Render3DEngine.FillAction;
 import static thunder.hack.utility.render.Render3DEngine.OUTLINE_QUEUE;
 import static thunder.hack.utility.render.Render3DEngine.OutlineAction;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -56,20 +69,20 @@ public class StorageEsp extends Module {
     private final Setting<ColorSetting> barrelColor = new Setting<>("BarrelColor", new ColorSetting(0x8800FF00));
     private final Setting<ColorSetting> minecartColor = new Setting<>("MinecartColor", new ColorSetting(0x8800FF00));
 
-    public void onRender3D(MatrixStack stack) {
-        if (mc.options.hudHidden) return;
+    public void onRender3D(PoseStack stack) {
+        if (mc.options.hideGui) return;
         for (BlockEntity blockEntity : getBlockEntities()) {
             Color color = getColor(blockEntity);
 
             if (color == null) continue;
 
-            Box chestbox = new Box(
-                    blockEntity.getPos().getX() + 0.06,
-                    blockEntity.getPos().getY(),
-                    blockEntity.getPos().getZ() + 0.06,
-                    (blockEntity.getPos().getX() + 0.94),
-                    (blockEntity.getPos().getY() - 0.125 + 1),
-                    (blockEntity.getPos().getZ() + 0.94)
+            AABB chestbox = new AABB(
+                    blockEntity.getBlockPos().getX() + 0.06,
+                    blockEntity.getBlockPos().getY(),
+                    blockEntity.getBlockPos().getZ() + 0.06,
+                    (blockEntity.getBlockPos().getX() + 0.94),
+                    (blockEntity.getBlockPos().getY() - 0.125 + 1),
+                    (blockEntity.getBlockPos().getZ() + 0.94)
             );
 
             if (fill.getValue()) {
@@ -77,7 +90,7 @@ public class StorageEsp extends Module {
                     FILLED_QUEUE.add(new FillAction(chestbox, color));
                 } else if (blockEntity instanceof EnderChestBlockEntity) {
                     FILLED_QUEUE.add(new FillAction(chestbox, color));
-                } else FILLED_QUEUE.add(new FillAction(new Box(blockEntity.getPos()), color));
+                } else FILLED_QUEUE.add(new FillAction(new AABB(blockEntity.getBlockPos()), color));
             }
             if (outline.getValue()) {
                 if (blockEntity instanceof ChestBlockEntity) {
@@ -85,14 +98,14 @@ public class StorageEsp extends Module {
                 } else if (blockEntity instanceof EnderChestBlockEntity) {
                     OUTLINE_QUEUE.add(new OutlineAction(chestbox, Render2DEngine.injectAlpha(color, 255), 1f));
                 } else
-                    OUTLINE_QUEUE.add(new OutlineAction(new Box(blockEntity.getPos()), Render2DEngine.injectAlpha(color, 255), 1f));
+                    OUTLINE_QUEUE.add(new OutlineAction(new AABB(blockEntity.getBlockPos()), Render2DEngine.injectAlpha(color, 255), 1f));
             }
         }
 
         for (Entity ent : Managers.ASYNC.getAsyncEntities()) {
-            if (ent instanceof ItemFrameEntity iframe && frame.getValue()) {
+            if (ent instanceof ItemFrame iframe && frame.getValue()) {
                 Color frameColor1 = frameColor.getValue().getColorObject();
-                if (iframe.getHeldItemStack().getItem() instanceof BlockItem bitem && bitem.getBlock() instanceof ShulkerBoxBlock)
+                if (iframe.getItem().getItem() instanceof BlockItem bitem && bitem.getBlock() instanceof ShulkerBoxBlock)
                     frameColor1 = shulkerframeColor.getValue().getColorObject();
 
                 if (fill.getValue())
@@ -102,7 +115,7 @@ public class StorageEsp extends Module {
                     OUTLINE_QUEUE.add(new OutlineAction(iframe.getBoundingBox(), Render2DEngine.injectAlpha(frameColor1, 255), 1f));
             }
 
-            if (ent instanceof ChestMinecartEntity mcart && cart.getValue()) {
+            if (ent instanceof MinecartChest mcart && cart.getValue()) {
                 if (fill.getValue())
                     FILLED_QUEUE.add(new FillAction(mcart.getBoundingBox(), minecartColor.getValue().getColorObject()));
 
@@ -138,18 +151,18 @@ public class StorageEsp extends Module {
 
     public static List<BlockEntity> getBlockEntities() {
         List<BlockEntity> list = new ArrayList<>();
-        for (WorldChunk chunk : getLoadedChunks())
+        for (LevelChunk chunk : getLoadedChunks())
             list.addAll(chunk.getBlockEntities().values());
 
         return list;
     }
 
-    public static List<WorldChunk> getLoadedChunks() {
-        List<WorldChunk> chunks = new ArrayList<>();
-        int viewDist = mc.options.getViewDistance().getValue();
+    public static List<LevelChunk> getLoadedChunks() {
+        List<LevelChunk> chunks = new ArrayList<>();
+        int viewDist = mc.options.renderDistance().get();
         for (int x = -viewDist; x <= viewDist; x++) {
             for (int z = -viewDist; z <= viewDist; z++) {
-                WorldChunk chunk = mc.world.getChunkManager().getWorldChunk((int) mc.player.getX() / 16 + x, (int) mc.player.getZ() / 16 + z);
+                LevelChunk chunk = mc.level.getChunkSource().getChunkNow((int) mc.player.getX() / 16 + x, (int) mc.player.getZ() / 16 + z);
 
                 if (chunk != null) chunks.add(chunk);
             }

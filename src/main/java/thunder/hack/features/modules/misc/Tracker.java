@@ -1,15 +1,15 @@
 package thunder.hack.features.modules.misc;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.entity.decoration.EndCrystalEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.projectile.thrown.ExperienceBottleEntity;
-import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket;
-import net.minecraft.network.packet.s2c.play.GameMessageS2CPacket;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
+import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.ThrownExperienceBottle;
+import net.minecraft.world.item.Items;
 import thunder.hack.events.impl.EventEntitySpawn;
 import thunder.hack.events.impl.PacketEvent;
 import thunder.hack.features.modules.Module;
@@ -34,7 +34,7 @@ public class Tracker extends Module {
     protected final AtomicInteger awaitingExp = new AtomicInteger();
     protected static final AtomicInteger crystals = new AtomicInteger();
     protected static final AtomicInteger exp = new AtomicInteger();
-    protected static PlayerEntity trackedPlayer;
+    protected static Player trackedPlayer;
     protected boolean awaiting;
     protected int crystalStacks;
     protected int expStacks;
@@ -57,7 +57,7 @@ public class Tracker extends Module {
 
     @EventHandler
     public void onPacketReceive(PacketEvent.Receive event) {
-        if (event.getPacket() instanceof GameMessageS2CPacket pac) {
+        if (event.getPacket() instanceof ClientboundSystemChatPacket pac) {
 
             String s = pac.content().getString();
             if (!s.contains("<") && (s.contains("has accepted your duel request") || s.contains("Accepted the duel request from"))) {
@@ -74,14 +74,14 @@ public class Tracker extends Module {
 
     @EventHandler
     public void onEntitySpawn(EventEntitySpawn e) {
-        if (e.getEntity() instanceof EndCrystalEntity) {
-            if (!placed.remove(BlockPos.ofFloored(e.getEntity().getX(), e.getEntity().getY() - 1, e.getEntity().getZ()))) {
+        if (e.getEntity() instanceof EndCrystal) {
+            if (!placed.remove(BlockPos.containing(e.getEntity().getX(), e.getEntity().getY() - 1, e.getEntity().getZ()))) {
                 crystals.incrementAndGet();
             }
         }
-        if (e.getEntity() instanceof ExperienceBottleEntity) {
+        if (e.getEntity() instanceof ThrownExperienceBottle) {
             if (awaitingExp.get() > 0) {
-                if (mc.player.squaredDistanceTo(e.getEntity()) < 16) awaitingExp.decrementAndGet();
+                if (mc.player.distanceToSqr(e.getEntity()) < 16) awaitingExp.decrementAndGet();
                 else exp.incrementAndGet();
             } else exp.incrementAndGet();
         }
@@ -90,7 +90,7 @@ public class Tracker extends Module {
     @Override
     public void onUpdate() {
         boolean found = false;
-        for (PlayerEntity player : mc.world.getPlayers()) {
+        for (Player player : mc.level.players()) {
             if (player == null || player.equals(mc.player)) continue;
 
             if (found && only1v1.getValue()) {
@@ -98,7 +98,7 @@ public class Tracker extends Module {
                 return;
             }
             if (trackedPlayer == null)
-                sendMessage(Formatting.LIGHT_PURPLE + (isRu() ? "Следим за " : "Now tracking ") + Formatting.DARK_PURPLE + player.getName().getString() + Formatting.LIGHT_PURPLE + "!");
+                sendMessage(ChatFormatting.LIGHT_PURPLE + (isRu() ? "Следим за " : "Now tracking ") + ChatFormatting.DARK_PURPLE + player.getName().getString() + ChatFormatting.LIGHT_PURPLE + "!");
             trackedPlayer = player;
             found = true;
         }
@@ -108,15 +108,15 @@ public class Tracker extends Module {
         int exp = this.exp.get() / 64;
         if (expStacks != exp) {
             expStacks = exp;
-            if (isRu()) sendMessage(Formatting.DARK_PURPLE + trackedPlayer.getName().getString() + Formatting.LIGHT_PURPLE + " использовал " + Formatting.WHITE + exp + Formatting.LIGHT_PURPLE + (exp == 1 ? " стак" : " стаков") + " Пузырьков опыта!");
-            else sendMessage(Formatting.DARK_PURPLE + trackedPlayer.getName().getString() + Formatting.LIGHT_PURPLE + " used " + Formatting.WHITE + exp + Formatting.LIGHT_PURPLE + (exp == 1 ? " stack" : " stacks") + " of XP Bottles!");
+            if (isRu()) sendMessage(ChatFormatting.DARK_PURPLE + trackedPlayer.getName().getString() + ChatFormatting.LIGHT_PURPLE + " использовал " + ChatFormatting.WHITE + exp + ChatFormatting.LIGHT_PURPLE + (exp == 1 ? " стак" : " стаков") + " Пузырьков опыта!");
+            else sendMessage(ChatFormatting.DARK_PURPLE + trackedPlayer.getName().getString() + ChatFormatting.LIGHT_PURPLE + " used " + ChatFormatting.WHITE + exp + ChatFormatting.LIGHT_PURPLE + (exp == 1 ? " stack" : " stacks") + " of XP Bottles!");
         }
 
         int crystals = this.crystals.get() / 64;
         if (crystalStacks != crystals) {
             crystalStacks = crystals;
-            if (!isRu()) sendMessage(Formatting.DARK_PURPLE + trackedPlayer.getName().getString() + Formatting.LIGHT_PURPLE + " used " + Formatting.WHITE + crystals + Formatting.LIGHT_PURPLE + (crystals == 1 ? " stack" : " stacks") + " of Crystals!");
-            else sendMessage(Formatting.DARK_PURPLE + trackedPlayer.getName().getString() + Formatting.LIGHT_PURPLE + " использовал " + Formatting.WHITE + crystals + Formatting.LIGHT_PURPLE + (crystals == 1 ? " стак" : " стаков") + " Кристаллов!");
+            if (!isRu()) sendMessage(ChatFormatting.DARK_PURPLE + trackedPlayer.getName().getString() + ChatFormatting.LIGHT_PURPLE + " used " + ChatFormatting.WHITE + crystals + ChatFormatting.LIGHT_PURPLE + (crystals == 1 ? " stack" : " stacks") + " of Crystals!");
+            else sendMessage(ChatFormatting.DARK_PURPLE + trackedPlayer.getName().getString() + ChatFormatting.LIGHT_PURPLE + " использовал " + ChatFormatting.WHITE + crystals + ChatFormatting.LIGHT_PURPLE + (crystals == 1 ? " стак" : " стаков") + " Кристаллов!");
         }
     }
 
@@ -126,20 +126,20 @@ public class Tracker extends Module {
             int e = exp.get();
             StringBuilder builder;
 
-            if (isRu()) builder = new StringBuilder().append(trackedPlayer.getName().getString()).append(Formatting.LIGHT_PURPLE).append(" использовал ").append(Formatting.WHITE).append(c).append(Formatting.LIGHT_PURPLE).append(" (").append(Formatting.WHITE);
-            else builder = new StringBuilder().append(trackedPlayer.getName().getString()).append(Formatting.LIGHT_PURPLE).append(" has used ").append(Formatting.WHITE).append(c).append(Formatting.LIGHT_PURPLE).append(" (").append(Formatting.WHITE);
+            if (isRu()) builder = new StringBuilder().append(trackedPlayer.getName().getString()).append(ChatFormatting.LIGHT_PURPLE).append(" использовал ").append(ChatFormatting.WHITE).append(c).append(ChatFormatting.LIGHT_PURPLE).append(" (").append(ChatFormatting.WHITE);
+            else builder = new StringBuilder().append(trackedPlayer.getName().getString()).append(ChatFormatting.LIGHT_PURPLE).append(" has used ").append(ChatFormatting.WHITE).append(c).append(ChatFormatting.LIGHT_PURPLE).append(" (").append(ChatFormatting.WHITE);
 
             if (c % 64 == 0) builder.append(c / 64);
             else builder.append(MathUtility.round(c / 64.0, 1));
 
-            if (isRu()) builder.append(Formatting.LIGHT_PURPLE).append(") кристаллов и ").append(Formatting.WHITE).append(e).append(Formatting.LIGHT_PURPLE).append(" (").append(Formatting.WHITE);
-            else builder.append(Formatting.LIGHT_PURPLE).append(") crystals and ").append(Formatting.WHITE).append(e).append(Formatting.LIGHT_PURPLE).append(" (").append(Formatting.WHITE);
+            if (isRu()) builder.append(ChatFormatting.LIGHT_PURPLE).append(") кристаллов и ").append(ChatFormatting.WHITE).append(e).append(ChatFormatting.LIGHT_PURPLE).append(" (").append(ChatFormatting.WHITE);
+            else builder.append(ChatFormatting.LIGHT_PURPLE).append(") crystals and ").append(ChatFormatting.WHITE).append(e).append(ChatFormatting.LIGHT_PURPLE).append(" (").append(ChatFormatting.WHITE);
 
             if (e % 64 == 0) builder.append(e / 64);
             else builder.append(MathUtility.round(e / 64.0, 1));
 
-            if (isRu()) builder.append(Formatting.LIGHT_PURPLE).append(") пузырьков опыта.");
-            else builder.append(Formatting.LIGHT_PURPLE).append(") bottles of experience.");
+            if (isRu()) builder.append(ChatFormatting.LIGHT_PURPLE).append(") пузырьков опыта.");
+            else builder.append(ChatFormatting.LIGHT_PURPLE).append(") bottles of experience.");
 
             sendMessage(builder.toString());
         }
@@ -147,14 +147,14 @@ public class Tracker extends Module {
 
     @EventHandler
     public void onPacketSend(PacketEvent.Send event) {
-        if (event.getPacket() instanceof PlayerInteractItemC2SPacket) {
-            if (mc.player.getMainHandStack().getItem() == Items.EXPERIENCE_BOTTLE || mc.player.getOffHandStack().getItem() == Items.EXPERIENCE_BOTTLE) {
+        if (event.getPacket() instanceof ServerboundUseItemPacket) {
+            if (mc.player.getMainHandItem().getItem() == Items.EXPERIENCE_BOTTLE || mc.player.getOffhandItem().getItem() == Items.EXPERIENCE_BOTTLE) {
                 awaitingExp.incrementAndGet();
             }
         }
-        if (event.getPacket() instanceof PlayerInteractBlockC2SPacket pac) {
-            if (mc.player.getMainHandStack().getItem() == Items.END_CRYSTAL || mc.player.getOffHandStack().getItem() == Items.END_CRYSTAL) {
-                placed.add(pac.getBlockHitResult().getBlockPos());
+        if (event.getPacket() instanceof ServerboundUseItemOnPacket pac) {
+            if (mc.player.getMainHandItem().getItem() == Items.END_CRYSTAL || mc.player.getOffhandItem().getItem() == Items.END_CRYSTAL) {
+                placed.add(pac.getHitResult().getBlockPos());
             }
         }
     }

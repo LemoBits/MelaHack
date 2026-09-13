@@ -1,15 +1,6 @@
 package thunder.hack.features.hud.impl;
+import java.util.List;
 
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.ChatScreen;
-import net.minecraft.entity.effect.StatusEffect;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
-import com.mojang.datafixers.util.Pair;
 import org.apache.commons.lang3.StringUtils;
 import thunder.hack.ThunderHack;
 import thunder.hack.core.Managers;
@@ -25,9 +16,18 @@ import thunder.hack.utility.math.MathUtility;
 
 import java.awt.*;
 import java.text.SimpleDateFormat;
-import java.util.List;
 import java.util.*;
 import java.util.stream.Collectors;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.ChatScreen;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Tuple;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 import static thunder.hack.features.hud.impl.PotionHud.getDuration;
 
@@ -69,12 +69,12 @@ public class LegacyHud extends Module {
         Minecraft, Comfortaa, Monsterrat, SF
     }
 
-    public void onRender2D(DrawContext context) {
+    public void onRender2D(GuiGraphics context) {
         if (fullNullCheck())
             return;
 
-        int width = mc.getWindow().getScaledWidth();
-        int height = mc.getWindow().getScaledHeight();
+        int width = mc.getWindow().getGuiScaledWidth();
+        int height = mc.getWindow().getGuiScaledHeight();
         int offset;
 
         switch (customFont.getValue()) {
@@ -88,14 +88,14 @@ public class LegacyHud extends Module {
         if (waterMark.getValue())
             drawText(context, "thunderhack v" + ThunderHack.VERSION, 2, waterMarkY.getValue());
 
-        int j = (mc.currentScreen instanceof ChatScreen && !renderingUp.getValue()) ? 14 : 0;
+        int j = (mc.screen instanceof ChatScreen && !renderingUp.getValue()) ? 14 : 0;
 
         if (arrayList.getValue())
             for (Module module : Managers.MODULE.getEnabledModules().stream().filter(Module::isDrawn).sorted(Comparator.comparing(module -> getStringWidth(module.getFullArrayString()) * -1)).toList()) {
                 if (!module.isDrawn()) {
                     continue;
                 }
-                String str = module.getDisplayName() + Formatting.GRAY + ((module.getDisplayInfo() != null) ? (" [" + Formatting.WHITE + module.getDisplayInfo() + Formatting.GRAY + "]") : "");
+                String str = module.getDisplayName() + ChatFormatting.GRAY + ((module.getDisplayInfo() != null) ? (" [" + ChatFormatting.WHITE + module.getDisplayInfo() + ChatFormatting.GRAY + "]") : "");
                 if (renderingUp.getValue()) {
                     drawText(context, str, (width - 2 - getStringWidth(str)), (2 + j * offset));
                     j++;
@@ -105,12 +105,12 @@ public class LegacyHud extends Module {
                 }
             }
 
-        int i = (mc.currentScreen instanceof ChatScreen && renderingUp.getValue()) ? 13 : (renderingUp.getValue() ? -2 : 0);
+        int i = (mc.screen instanceof ChatScreen && renderingUp.getValue()) ? 13 : (renderingUp.getValue() ? -2 : 0);
 
         if (potions.getValue()) {
-            List<StatusEffectInstance> effects = new ArrayList<>(mc.player.getStatusEffects());
-            for (StatusEffectInstance potionEffect : effects) {
-                StatusEffect potion = potionEffect.getEffectType().value();
+            List<MobEffectInstance> effects = new ArrayList<>(mc.player.getActiveEffects());
+            for (MobEffectInstance potionEffect : effects) {
+                MobEffect potion = potionEffect.getEffect().value();
                 String power = "";
                 switch (potionEffect.getAmplifier()) {
                     case 0 -> power = "I";
@@ -119,9 +119,9 @@ public class LegacyHud extends Module {
                     case 3 -> power = "IV";
                     case 4 -> power = "V";
                 }
-                String s = potion.getName().getString() + " " + power;
+                String s = potion.getDisplayName().getString() + " " + power;
                 String s2 = getDuration(potionEffect) + "";
-                Color c = new Color(potionEffect.getEffectType().value().getColor());
+                Color c = new Color(potionEffect.getEffect().value().getColor());
 
                 if (renderingUp.getValue()) {
                     i += offset;
@@ -133,70 +133,70 @@ public class LegacyHud extends Module {
         }
 
         if(worldTime.getValue()) {
-            String str2 = "WorldTime: " + Formatting.WHITE + mc.world.getTimeOfDay() % 24000;
+            String str2 = "WorldTime: " + ChatFormatting.WHITE + mc.level.getDayTime() % 24000;
             drawText(context, str2, width - getStringWidth(str2) - 2, renderingUp.getValue() ? (height - 2 - (i += offset)) : (2 + i++ * offset));
         }
 
         if (mainhandDurability.getValue()) {
-            String str = "MainHand" + Formatting.WHITE +" [" +  (mc.player.getMainHandStack().getMaxDamage() - mc.player.getMainHandStack().getDamage()) + "]";
+            String str = "MainHand" + ChatFormatting.WHITE +" [" +  (mc.player.getMainHandItem().getMaxDamage() - mc.player.getMainHandItem().getDamageValue()) + "]";
             drawText(context, str, (width - getStringWidth(str) - 2), renderingUp.getValue() ? (height - 2 - (i += offset)) : (2 + i++ * offset));
         }
         if (tps.getValue()) {
-            String str = "TPS " + Formatting.WHITE + Managers.SERVER.getTPS() + (extraTps.getValue() ? " [" + Managers.SERVER.getTPS2() + "]" : "");
+            String str = "TPS " + ChatFormatting.WHITE + Managers.SERVER.getTPS() + (extraTps.getValue() ? " [" + Managers.SERVER.getTPS2() + "]" : "");
             drawText(context, str, (width - getStringWidth(str) - 2), renderingUp.getValue() ? (height - 2 - (i += offset)) : (2 + i++ * offset));
         }
 
         if (speed.getValue()) {
-            String str = "Speed " + Formatting.WHITE + MathUtility.round(Managers.PLAYER.currentPlayerSpeed * (bps.getValue() ? 20f : 72f) * ThunderHack.TICK_TIMER) + (bps.getValue() ? " b/s" : " km/h");
+            String str = "Speed " + ChatFormatting.WHITE + MathUtility.round(Managers.PLAYER.currentPlayerSpeed * (bps.getValue() ? 20f : 72f) * ThunderHack.TICK_TIMER) + (bps.getValue() ? " b/s" : " km/h");
             drawText(context, str, (width - getStringWidth(str) - 2), renderingUp.getValue() ? (height - 2 - (i += offset)) : (2 + i++ * offset));
         }
         if (chests.getValue()) {
-            Pair<Integer, Integer> chests = ModuleManager.chestCounter.getChestCount();
-            String str = "Chests: " + Formatting.WHITE + "S:" + chests.getLeft() + " D:" + chests.getRight();
+            Tuple<Integer, Integer> chests = ModuleManager.chestCounter.getChestCount();
+            String str = "Chests: " + ChatFormatting.WHITE + "S:" + chests.getA() + " D:" + chests.getB();
             drawText(context, str, (width - getStringWidth(str) - 2), renderingUp.getValue() ? (height - 2 - (i += offset)) : (2 + i++ * offset));
         }
         if(biome.getValue()) {
-            String str3 = "Biome: " + Formatting.WHITE + biome();
+            String str3 = "Biome: " + ChatFormatting.WHITE + biome();
             drawText(context, str3, width - getStringWidth(str3) - 2, renderingUp.getValue() ? (height - 2 - (i += offset)) : (2 + i++ * offset));
         }
 
         if (time.getValue()) {
-            String str = "Time " + Formatting.WHITE + (new SimpleDateFormat("h:mm a")).format(new Date());
+            String str = "Time " + ChatFormatting.WHITE + (new SimpleDateFormat("h:mm a")).format(new Date());
             drawText(context, str, (width - getStringWidth(str) - 2), renderingUp.getValue() ? (height - 2 - (i += offset)) : (2 + i++ * offset));
         }
         if (offhandDurability.getValue()) {
-            String str = "OffHand" + Formatting.WHITE + " [" + (mc.player.getOffHandStack().getMaxDamage() - mc.player.getOffHandStack().getDamage()) + "]";
+            String str = "OffHand" + ChatFormatting.WHITE + " [" + (mc.player.getOffhandItem().getMaxDamage() - mc.player.getOffhandItem().getDamageValue()) + "]";
             drawText(context, str, (width - getStringWidth(str) - 2), renderingUp.getValue() ? (height - 2 - (i += offset)) : (2 + i++ * offset));
         }
         if (ping.getValue()) {
-            String str1 = "Ping " + Formatting.WHITE + Managers.SERVER.getPing();
+            String str1 = "Ping " + ChatFormatting.WHITE + Managers.SERVER.getPing();
             drawText(context, str1, width - getStringWidth(str1) - 2, renderingUp.getValue() ? (height - 2 - (i += offset)) : (2 + i++ * offset));
         }
 
         if (fps.getValue()) {
-            String fpsText = "FPS " + Formatting.WHITE + FrameRateCounter.INSTANCE.getFps();
+            String fpsText = "FPS " + ChatFormatting.WHITE + FrameRateCounter.INSTANCE.getFps();
             drawText(context, fpsText, width - getStringWidth(fpsText) - 2, renderingUp.getValue() ? (height - 2 - (i += offset)) : (2 + i++ * offset));
         }
 
-        boolean inHell = Objects.equals(mc.world.getRegistryKey().getValue().getPath(), "the_nether");
+        boolean inHell = Objects.equals(mc.level.dimension().location().getPath(), "the_nether");
         int posX = (int) mc.player.getX();
         int posY = (int) mc.player.getY();
         int posZ = (int) mc.player.getZ();
         float nether = !inHell ? 0.125F : 8.0F;
         int hposX = (int) (mc.player.getX() * nether);
         int hposZ = (int) (mc.player.getZ() * nether);
-        i = (mc.currentScreen instanceof ChatScreen) ? 14 : 0;
-        String coordinates = Formatting.WHITE + "XYZ " + Formatting.RESET + (inHell ? (posX + ", " + posY + ", " + posZ + Formatting.WHITE + " [" + Formatting.RESET + hposX + ", " + hposZ + Formatting.WHITE + "]" + Formatting.RESET) : (posX + ", " + posY + ", " + posZ + Formatting.WHITE + " [" + Formatting.RESET + hposX + ", " + hposZ + Formatting.WHITE + "]"));
+        i = (mc.screen instanceof ChatScreen) ? 14 : 0;
+        String coordinates = ChatFormatting.WHITE + "XYZ " + ChatFormatting.RESET + (inHell ? (posX + ", " + posY + ", " + posZ + ChatFormatting.WHITE + " [" + ChatFormatting.RESET + hposX + ", " + hposZ + ChatFormatting.WHITE + "]" + ChatFormatting.RESET) : (posX + ", " + posY + ", " + posZ + ChatFormatting.WHITE + " [" + ChatFormatting.RESET + hposX + ", " + hposZ + ChatFormatting.WHITE + "]"));
         String direction1 = "";
 
         i += offset;
 
         if (direction.getValue()) {
-            switch (mc.player.getHorizontalFacing()) {
-                case EAST -> direction1 = "East" + Formatting.WHITE + " [+X]";
-                case WEST -> direction1 = "West" + Formatting.WHITE + " [-X]";
-                case NORTH -> direction1 = "North" + Formatting.WHITE + " [-Z]";
-                case SOUTH -> direction1 = "South" + Formatting.WHITE + " [+Z]";
+            switch (mc.player.getDirection()) {
+                case EAST -> direction1 = "East" + ChatFormatting.WHITE + " [+X]";
+                case WEST -> direction1 = "West" + ChatFormatting.WHITE + " [-X]";
+                case NORTH -> direction1 = "North" + ChatFormatting.WHITE + " [-Z]";
+                case SOUTH -> direction1 = "South" + ChatFormatting.WHITE + " [+Z]";
             }
             drawText(context, direction1, 2, (height - i - 11));
         }
@@ -207,7 +207,7 @@ public class LegacyHud extends Module {
         if (greeter.getValue()) renderGreeter(context);
     }
 
-    private void drawText(DrawContext context, String str, int x, int y, int color) {
+    private void drawText(GuiGraphics context, String str, int x, int y, int color) {
         if (!customFont.getValue().equals(Font.Minecraft)) {
             FontRenderer adapter;
             switch (customFont.getValue()) {
@@ -215,14 +215,14 @@ public class LegacyHud extends Module {
                 case SF -> adapter = FontRenderers.sf_medium;
                 default -> adapter = FontRenderers.modules;
             }
-            adapter.drawString(context.getMatrices(), str.replace(Formatting.WHITE + "", ""), x + 0.5, y + 0.5, Color.BLACK.getRGB());
-            adapter.drawString(context.getMatrices(), str, x, y, color);
+            adapter.drawString(context.pose(), str.replace(ChatFormatting.WHITE + "", ""), x + 0.5, y + 0.5, Color.BLACK.getRGB());
+            adapter.drawString(context.pose(), str, x, y, color);
             return;
         }
-        context.drawText(mc.textRenderer, str, x, y, color, true);
+        context.drawString(mc.font, str, x, y, color, true);
     }
 
-    private void drawText(DrawContext context, String str, int x, int y) {
+    private void drawText(GuiGraphics context, String str, int x, int y) {
         if (!customFont.getValue().equals(Font.Minecraft)) {
             FontRenderer adapter;
             switch (customFont.getValue()) {
@@ -230,11 +230,11 @@ public class LegacyHud extends Module {
                 case SF -> adapter = FontRenderers.sf_medium;
                 default -> adapter = FontRenderers.modules;
             }
-            adapter.drawString(context.getMatrices(), str.replace(Formatting.WHITE + "", ""), x + 0.5, y + 0.5, Color.BLACK.getRGB());
-            adapter.drawString(context.getMatrices(), str, x, y, color);
+            adapter.drawString(context.pose(), str.replace(ChatFormatting.WHITE + "", ""), x + 0.5, y + 0.5, Color.BLACK.getRGB());
+            adapter.drawString(context.pose(), str, x, y, color);
             return;
         }
-        context.drawText(mc.textRenderer, str, x, y, color, true);
+        context.drawString(mc.font, str, x, y, color, true);
     }
 
     private int getStringWidth(String str) {
@@ -246,7 +246,7 @@ public class LegacyHud extends Module {
                 return (int) FontRenderers.sf_medium.getStringWidth(str);
             }
             case Minecraft -> {
-                return mc.textRenderer.getWidth(str);
+                return mc.font.width(str);
             }
             default -> {
                 return (int) FontRenderers.modules.getStringWidth(str);
@@ -254,9 +254,9 @@ public class LegacyHud extends Module {
         }
     }
 
-    public void renderGreeter(DrawContext context) {
+    public void renderGreeter(GuiGraphics context) {
         String text = "Good " + getTimeOfDay() + mc.player.getName().getString();
-        drawText(context, text, (int) (mc.getWindow().getScaledWidth() / 2.0F - getStringWidth(text) / 2.0F + 2.0F), 2);
+        drawText(context, text, (int) (mc.getWindow().getGuiScaledWidth() / 2.0F - getStringWidth(text) / 2.0F + 2.0F), 2);
     }
 
     public static String getTimeOfDay() {
@@ -267,48 +267,48 @@ public class LegacyHud extends Module {
         return "Night ";
     }
 
-    public void renderTotemHUD(DrawContext context) {
-        int width = mc.getWindow().getScaledWidth();
-        int height = mc.getWindow().getScaledHeight();
+    public void renderTotemHUD(GuiGraphics context) {
+        int width = mc.getWindow().getGuiScaledWidth();
+        int height = mc.getWindow().getGuiScaledHeight();
         int totems = InventoryUtility.getItemCount(Items.TOTEM_OF_UNDYING);
-        int u = mc.player.getMaxAir();
-        int v = Math.min(mc.player.getAir(), u);
-        if (mc.player.getOffHandStack().getItem() == Items.TOTEM_OF_UNDYING)
-            totems += mc.player.getOffHandStack().getCount();
+        int u = mc.player.getMaxAirSupply();
+        int v = Math.min(mc.player.getAirSupply(), u);
+        if (mc.player.getOffhandItem().getItem() == Items.TOTEM_OF_UNDYING)
+            totems += mc.player.getOffhandItem().getCount();
         if (totems > 0) {
             int i = width / 2;
-            int y = height - 55 - (mc.player.isSubmergedInWater() || v < u ? 10 : 0);
+            int y = height - 55 - (mc.player.isUnderWater() || v < u ? 10 : 0);
             int x = i - 189 + 180 + 2;
-            context.drawItem(totem, x, y);
-            context.drawStackOverlay(mc.textRenderer, totem, x, y);
+            context.renderItem(totem, x, y);
+            context.renderItemDecorations(mc.font, totem, x, y);
             drawText(context, totems + "", 8 + (int) (x - (float) getStringWidth(totems + "") / 2f), (y - 7), 16777215);
         }
     }
     private static String biome() {
-        if (mc.player == null || mc.world == null) return null;
-        Identifier id = mc.world.getRegistryManager().getOrThrow(RegistryKeys.BIOME).getId(mc.world.getBiome(mc.player.getBlockPos()).value());
+        if (mc.player == null || mc.level == null) return null;
+        ResourceLocation id = mc.level.registryAccess().lookupOrThrow(Registries.BIOME).getKey(mc.level.getBiome(mc.player.blockPosition()).value());
         if (id == null) return ("Unknown");
 
         return (Arrays.stream(id.getPath().split("_")).map(StringUtils::capitalize).collect(Collectors.joining(" ")));
     }
 
-    public void renderArmorHUD(boolean percent, DrawContext context) {
+    public void renderArmorHUD(boolean percent, GuiGraphics context) {
         int i = 0;
-        int u = mc.player.getMaxAir();
-        int v = Math.min(mc.player.getAir(), u);
+        int u = mc.player.getMaxAirSupply();
+        int v = Math.min(mc.player.getAirSupply(), u);
 
-        int y = mc.getWindow().getScaledHeight() - 55 - (mc.player.isSubmergedInWater() || v < u ? 10 : 0);
+        int y = mc.getWindow().getGuiScaledHeight() - 55 - (mc.player.isUnderWater() || v < u ? 10 : 0);
         for (ItemStack is : thunder.hack.utility.player.ArmorUtility.getArmorItems(mc.player)) {
             i++;
             if (is.isEmpty())
                 continue;
-            int x = (mc.getWindow().getScaledWidth() / 2) - 90 + (9 - i) * 20 + 2;
-            context.drawItem(is, x, y);
-            context.drawStackOverlay(mc.textRenderer, is, x, y);
+            int x = (mc.getWindow().getGuiScaledWidth() / 2) - 90 + (9 - i) * 20 + 2;
+            context.renderItem(is, x, y);
+            context.renderItemDecorations(mc.font, is, x, y);
             String s = (is.getCount() > 1) ? (is.getCount() + "") : "";
             drawText(context, s, (x + 19 - 2 - getStringWidth(s)), (y + 9), 16777215);
             if (percent) {
-                float green = (float) (is.getMaxDamage() - is.getDamage()) / (float) is.getMaxDamage();
+                float green = (float) (is.getMaxDamage() - is.getDamageValue()) / (float) is.getMaxDamage();
                 float red = 1.0F - green;
                 int dmg = 100 - (int) (red * 100.0F);
 

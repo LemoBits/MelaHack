@@ -3,8 +3,8 @@ package thunder.hack.features.cmd.impl;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import net.minecraft.command.CommandSource;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.core.BlockPos;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.core.Managers;
 import thunder.hack.features.cmd.Command;
@@ -20,7 +20,7 @@ public class WayPointCommand extends Command {
     }
 
     @Override
-    public void executeBuild(@NotNull LiteralArgumentBuilder<CommandSource> builder) {
+    public void executeBuild(@NotNull LiteralArgumentBuilder<SharedSuggestionProvider> builder) {
         builder.then(literal("list").executes(context -> {
             sendMessage(isRu() ? "Метки:" : "Waypoints:");
 
@@ -40,7 +40,7 @@ public class WayPointCommand extends Command {
 
         builder.then(literal("add").then(arg("name", StringArgumentType.word()).executes(context -> {
             String name = context.getArgument("name", String.class);
-            WayPointManager.WayPoint wp = new WayPointManager.WayPoint((int) mc.player.getX(), (int) mc.player.getY(), (int) mc.player.getZ(), name, (mc.isInSingleplayer() ? "SinglePlayer" : mc.getNetworkHandler().getServerInfo().address), mc.world.getRegistryKey().getValue().getPath());
+            WayPointManager.WayPoint wp = new WayPointManager.WayPoint((int) mc.player.getX(), (int) mc.player.getY(), (int) mc.player.getZ(), name, (mc.isLocalServer() ? "SinglePlayer" : mc.getConnection().getServerData().ip), mc.level.dimension().location().getPath());
             Managers.WAYPOINT.addWayPoint(wp);
 
             sendMessage((isRu() ? "Добавлена метка " + name + " с координатами" : "Added waypoint " + name + " with coords") + " X: " + ((int) mc.player.getX()) + " Y: " + ((int) mc.player.getY()) + " Z: " + ((int) mc.player.getZ()));
@@ -52,7 +52,7 @@ public class WayPointCommand extends Command {
                             String name = context.getArgument("name", String.class);
                             BlockPos pos = new BlockPos(context.getArgument("x", Integer.class), context.getArgument("y", Integer.class), context.getArgument("z", Integer.class));
 
-                            WayPointManager.WayPoint wp = new WayPointManager.WayPoint(pos.getX(), pos.getY(), pos.getZ(), name, (mc.isInSingleplayer() ? "SinglePlayer" : mc.getNetworkHandler().getServerInfo().address), mc.world.getRegistryKey().getValue().getPath());
+                            WayPointManager.WayPoint wp = new WayPointManager.WayPoint(pos.getX(), pos.getY(), pos.getZ(), name, (mc.isLocalServer() ? "SinglePlayer" : mc.getConnection().getServerData().ip), mc.level.dimension().location().getPath());
                             Managers.WAYPOINT.addWayPoint(wp);
 
                             sendMessage((isRu() ? "Добавлена метка " + name + " с координатами X: " : "Added waypoint " + name + " with coords") + pos.getX() + " Y: " + pos.getY() + " Z: " + pos.getZ());

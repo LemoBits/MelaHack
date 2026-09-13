@@ -2,19 +2,19 @@ package thunder.hack.features.modules.misc;
 
 import com.mojang.authlib.GameProfile;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.network.OtherClientPlayerEntity;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityStatuses;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.network.packet.s2c.play.EntityStatusS2CPacket;
-import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.client.player.RemotePlayer;
+import net.minecraft.network.protocol.game.ClientboundEntityEventPacket;
+import net.minecraft.network.protocol.game.ClientboundExplodePacket;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityEvent;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.phys.Vec3;
 import thunder.hack.ThunderHack;
 import thunder.hack.core.manager.client.ModuleManager;
 import thunder.hack.events.impl.EventAttack;
@@ -33,7 +33,7 @@ import java.util.UUID;
 public class FakePlayer extends Module {
     private final Setting<Boolean> copyInventory = new Setting<>("CopyInventory", false);
 
-    public static OtherClientPlayerEntity fakePlayer;
+    public static RemotePlayer fakePlayer;
 
     public FakePlayer() {
         super("FakePlayer", Category.MISC);
@@ -50,34 +50,34 @@ public class FakePlayer extends Module {
 
     @Override
     public void onEnable() {
-        fakePlayer = new OtherClientPlayerEntity(mc.world, new GameProfile(UUID.fromString("66123666-6666-6666-6666-666666666600"), name.getValue()));
-        fakePlayer.copyPositionAndRotation(mc.player);
+        fakePlayer = new RemotePlayer(mc.level, new GameProfile(UUID.fromString("66123666-6666-6666-6666-666666666600"), name.getValue()));
+        fakePlayer.copyPosition(mc.player);
 
         if (copyInventory.getValue()) {
-            fakePlayer.setStackInHand(Hand.MAIN_HAND, mc.player.getMainHandStack().copy());
-            fakePlayer.setStackInHand(Hand.OFF_HAND, mc.player.getOffHandStack().copy());
+            fakePlayer.setItemInHand(InteractionHand.MAIN_HAND, mc.player.getMainHandItem().copy());
+            fakePlayer.setItemInHand(InteractionHand.OFF_HAND, mc.player.getOffhandItem().copy());
 
-            fakePlayer.getInventory().setStack(36, mc.player.getInventory().getStack(36).copy());
-            fakePlayer.getInventory().setStack(37, mc.player.getInventory().getStack(37).copy());
-            fakePlayer.getInventory().setStack(38, mc.player.getInventory().getStack(38).copy());
-            fakePlayer.getInventory().setStack(39, mc.player.getInventory().getStack(39).copy());
+            fakePlayer.getInventory().setItem(36, mc.player.getInventory().getItem(36).copy());
+            fakePlayer.getInventory().setItem(37, mc.player.getInventory().getItem(37).copy());
+            fakePlayer.getInventory().setItem(38, mc.player.getInventory().getItem(38).copy());
+            fakePlayer.getInventory().setItem(39, mc.player.getInventory().getItem(39).copy());
         }
 
-        mc.world.addEntity(fakePlayer);
-        fakePlayer.addStatusEffect(new StatusEffectInstance(StatusEffects.REGENERATION, 9999, 2));
-        fakePlayer.addStatusEffect(new StatusEffectInstance(StatusEffects.ABSORPTION, 9999, 4));
-        fakePlayer.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 9999, 1));
+        mc.level.addEntity(fakePlayer);
+        fakePlayer.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 9999, 2));
+        fakePlayer.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 9999, 4));
+        fakePlayer.addEffect(new MobEffectInstance(MobEffects.RESISTANCE, 9999, 1));
     }
 
     @EventHandler
     public void onPacketReceive(PacketEvent.Receive e) {
-        if (e.getPacket() instanceof ExplosionS2CPacket explosion && fakePlayer != null && fakePlayer.hurtTime == 0) {
-            fakePlayer.onDamaged(mc.world.getDamageSources().generic());
-            Vec3d center = explosion.center();
-            fakePlayer.setHealth(fakePlayer.getHealth() + fakePlayer.getAbsorptionAmount() - ExplosionUtility.getAutoCrystalDamage(new Vec3d(center.x, center.y, center.z), fakePlayer, 0, false));
-            if (fakePlayer.isDead()) {
-                if (fakePlayer.getOffHandStack().isOf(Items.TOTEM_OF_UNDYING)) {
-                    fakePlayer.getOffHandStack().decrement(1);
+        if (e.getPacket() instanceof ClientboundExplodePacket explosion && fakePlayer != null && fakePlayer.hurtTime == 0) {
+            fakePlayer.handleDamageEvent(mc.level.damageSources().generic());
+            Vec3 center = explosion.center();
+            fakePlayer.setHealth(fakePlayer.getHealth() + fakePlayer.getAbsorptionAmount() - ExplosionUtility.getAutoCrystalDamage(new Vec3(center.x, center.y, center.z), fakePlayer, 0, false));
+            if (fakePlayer.isDeadOrDying()) {
+                if (fakePlayer.getOffhandItem().is(Items.TOTEM_OF_UNDYING)) {
+                    fakePlayer.getOffhandItem().shrink(1);
                     fakePlayer.setHealth(10f);
 
 
@@ -92,7 +92,7 @@ public class FakePlayer extends Module {
     @EventHandler
     public void onSync(EventSync e) {
         if (record.getValue()) {
-            positions.add(new PlayerState(mc.player.getX(), mc.player.getY(), mc.player.getZ(), mc.player.getYaw(), mc.player.getPitch()));
+            positions.add(new PlayerState(mc.player.getX(), mc.player.getY(), mc.player.getZ(), mc.player.getYRot(), mc.player.getXRot()));
             return;
         }
         if (fakePlayer != null) {
@@ -104,20 +104,20 @@ public class FakePlayer extends Module {
                     return;
                 }
                 PlayerState p = positions.get(movementTick);
-                fakePlayer.setYaw(p.yaw);
-                fakePlayer.setPitch(p.pitch);
-                fakePlayer.setHeadYaw(p.yaw);
+                fakePlayer.setYRot(p.yaw);
+                fakePlayer.setXRot(p.pitch);
+                fakePlayer.setYHeadRot(p.yaw);
 
-                fakePlayer.setPosition(p.x, p.y, p.z);
-                fakePlayer.setYaw(p.yaw);
-                fakePlayer.setPitch(p.pitch);
-                fakePlayer.setHeadYaw(p.yaw);
+                fakePlayer.setPos(p.x, p.y, p.z);
+                fakePlayer.setYRot(p.yaw);
+                fakePlayer.setXRot(p.pitch);
+                fakePlayer.setYHeadRot(p.yaw);
             } else movementTick = 0;
 
-            if (autoTotem.getValue() && fakePlayer.getOffHandStack().getItem() != Items.TOTEM_OF_UNDYING)
-                fakePlayer.setStackInHand(Hand.OFF_HAND, new ItemStack(Items.TOTEM_OF_UNDYING));
+            if (autoTotem.getValue() && fakePlayer.getOffhandItem().getItem() != Items.TOTEM_OF_UNDYING)
+                fakePlayer.setItemInHand(InteractionHand.OFF_HAND, new ItemStack(Items.TOTEM_OF_UNDYING));
 
-            if (fakePlayer.isDead()) {
+            if (fakePlayer.isDeadOrDying()) {
                 deathTime++;
                 if (deathTime > 10) disable();
             }
@@ -127,19 +127,19 @@ public class FakePlayer extends Module {
     @EventHandler
     public void onAttack(EventAttack e) {
         if (fakePlayer != null && e.getEntity() == fakePlayer && fakePlayer.hurtTime == 0 && !e.isPre()) {
-            mc.world.playSound(mc.player, fakePlayer.getX(), fakePlayer.getY(), fakePlayer.getZ(), SoundEvents.ENTITY_PLAYER_HURT, SoundCategory.PLAYERS, 1f, 1f);
+            mc.level.playSound(mc.player, fakePlayer.getX(), fakePlayer.getY(), fakePlayer.getZ(), SoundEvents.PLAYER_HURT, SoundSource.PLAYERS, 1f, 1f);
 
             if (mc.player.fallDistance > 0 || ModuleManager.criticals.isEnabled())
-                mc.world.playSound(mc.player, fakePlayer.getX(), fakePlayer.getY(), fakePlayer.getZ(), SoundEvents.ENTITY_PLAYER_ATTACK_CRIT, SoundCategory.PLAYERS, 1f, 1f);
-            fakePlayer.onDamaged(mc.world.getDamageSources().generic());
+                mc.level.playSound(mc.player, fakePlayer.getX(), fakePlayer.getY(), fakePlayer.getZ(), SoundEvents.PLAYER_ATTACK_CRIT, SoundSource.PLAYERS, 1f, 1f);
+            fakePlayer.handleDamageEvent(mc.level.damageSources().generic());
             if (ModuleManager.aura.getAttackCooldown() >= 0.85)
-                fakePlayer.setHealth(fakePlayer.getHealth() + fakePlayer.getAbsorptionAmount() - InventoryUtility.getHitDamage(mc.player.getMainHandStack(), fakePlayer));
+                fakePlayer.setHealth(fakePlayer.getHealth() + fakePlayer.getAbsorptionAmount() - InventoryUtility.getHitDamage(mc.player.getMainHandItem(), fakePlayer));
             else fakePlayer.setHealth(fakePlayer.getHealth() + fakePlayer.getAbsorptionAmount() - 1f);
-            if (fakePlayer.isDead()) {
-                if (fakePlayer.getOffHandStack().isOf(Items.TOTEM_OF_UNDYING)) {
-                    fakePlayer.getOffHandStack().decrement(1);
+            if (fakePlayer.isDeadOrDying()) {
+                if (fakePlayer.getOffhandItem().is(Items.TOTEM_OF_UNDYING)) {
+                    fakePlayer.getOffhandItem().shrink(1);
                     fakePlayer.setHealth(10f);
-                    new EntityStatusS2CPacket(fakePlayer, EntityStatuses.USE_TOTEM_OF_UNDYING).apply(mc.player.networkHandler);
+                    new ClientboundEntityEventPacket(fakePlayer, EntityEvent.PROTECTED_FROM_DEATH).handle(mc.player.connection);
                 }
             }
         }
@@ -150,7 +150,7 @@ public class FakePlayer extends Module {
         if (fakePlayer == null) return;
         fakePlayer.discard();
         fakePlayer.setRemoved(Entity.RemovalReason.KILLED);
-        fakePlayer.onRemoved();
+        fakePlayer.onClientRemoval();
         fakePlayer = null;
         positions.clear();
         deathTime = 0;

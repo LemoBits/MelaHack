@@ -1,6 +1,5 @@
 package thunder.hack.features.hud.impl;
 
-import net.minecraft.client.gui.DrawContext;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.core.Managers;
 import thunder.hack.core.manager.client.ModuleManager;
@@ -15,6 +14,7 @@ import thunder.hack.utility.render.animation.AnimationUtility;
 
 import java.awt.*;
 import java.util.Objects;
+import net.minecraft.client.gui.GuiGraphics;
 
 public class KeyBinds extends HudElement {
     public final Setting<ColorSetting> oncolor = new Setting<>("OnColor", new ColorSetting(-1));
@@ -27,7 +27,7 @@ public class KeyBinds extends HudElement {
 
     private float vAnimation, hAnimation;
 
-    public void onRender2D(DrawContext context) {
+    public void onRender2D(GuiGraphics context) {
         super.onRender2D(context);
 
         int y_offset1 = 0;
@@ -60,37 +60,37 @@ public class KeyBinds extends HudElement {
         vAnimation = AnimationUtility.fast(vAnimation, 14 + y_offset1, 15);
         hAnimation = AnimationUtility.fast(hAnimation, max_width, 15);
 
-        Render2DEngine.drawHudBase(context.getMatrices(), getPosX(), getPosY(), hAnimation, vAnimation, HudEditor.hudRound.getValue());
+        Render2DEngine.drawHudBase(context.pose(), getPosX(), getPosY(), hAnimation, vAnimation, HudEditor.hudRound.getValue());
 
         if (HudEditor.hudStyle.is(HudEditor.HudStyle.Glowing)) {
-            FontRenderers.sf_bold.drawCenteredString(context.getMatrices(), "KeyBinds", getPosX() + hAnimation / 2, getPosY() + 4, HudEditor.textColor.getValue().getColorObject());
+            FontRenderers.sf_bold.drawCenteredString(context.pose(), "KeyBinds", getPosX() + hAnimation / 2, getPosY() + 4, HudEditor.textColor.getValue().getColorObject());
         } else {
-            FontRenderers.sf_bold.drawGradientCenteredString(context.getMatrices(), "KeyBinds", getPosX() + hAnimation / 2, getPosY() + 4, 10);
+            FontRenderers.sf_bold.drawGradientCenteredString(context.pose(), "KeyBinds", getPosX() + hAnimation / 2, getPosY() + 4, 10);
         }
 
         if (y_offset1 > 0) {
             if (HudEditor.hudStyle.is(HudEditor.HudStyle.Blurry)) {
-                Render2DEngine.drawRectDumbWay(context.getMatrices(), getPosX() + 4, getPosY() + 13, getPosX() + getWidth() - 4, getPosY() + 13.5f, new Color(0x54FFFFFF, true));
+                Render2DEngine.drawRectDumbWay(context.pose(), getPosX() + 4, getPosY() + 13, getPosX() + getWidth() - 4, getPosY() + 13.5f, new Color(0x54FFFFFF, true));
             } else {
-                Render2DEngine.horizontalGradient(context.getMatrices(), getPosX() + 2, getPosY() + 13.7f, getPosX() + 2 + hAnimation / 2f - 2, getPosY() + 14, Render2DEngine.injectAlpha(HudEditor.textColor.getValue().getColorObject(), 0), HudEditor.textColor.getValue().getColorObject());
-                Render2DEngine.horizontalGradient(context.getMatrices(), getPosX() + 2 + hAnimation / 2f - 2, getPosY() + 13.7f, getPosX() + 2 + hAnimation - 4, getPosY() + 14, HudEditor.textColor.getValue().getColorObject(), Render2DEngine.injectAlpha(HudEditor.textColor.getValue().getColorObject(), 0));
+                Render2DEngine.horizontalGradient(context.pose(), getPosX() + 2, getPosY() + 13.7f, getPosX() + 2 + hAnimation / 2f - 2, getPosY() + 14, Render2DEngine.injectAlpha(HudEditor.textColor.getValue().getColorObject(), 0), HudEditor.textColor.getValue().getColorObject());
+                Render2DEngine.horizontalGradient(context.pose(), getPosX() + 2 + hAnimation / 2f - 2, getPosY() + 13.7f, getPosX() + 2 + hAnimation - 4, getPosY() + 14, HudEditor.textColor.getValue().getColorObject(), Render2DEngine.injectAlpha(HudEditor.textColor.getValue().getColorObject(), 0));
             }
         }
 
 
-        Render2DEngine.addWindow(context.getMatrices(), getPosX(), getPosY(), getPosX() + hAnimation, getPosY() + vAnimation, 1f);
+        Render2DEngine.addWindow(context.pose(), getPosX(), getPosY(), getPosX() + hAnimation, getPosY() + vAnimation, 1f);
         int y_offset = 0;
         for (Module feature : Managers.MODULE.modules) {
             if (feature.isDisabled() && onlyEnabled.getValue())
                 continue;
             if (!Objects.equals(feature.getBind().getBind(), "None") && feature != ModuleManager.clickGui && feature != ModuleManager.thunderHackGui) {
-                FontRenderers.sf_bold_mini.drawString(context.getMatrices(), feature.getName(), getPosX() + 5, getPosY() + 19 + y_offset, feature.isOn() ? oncolor.getValue().getColor() : offcolor.getValue().getColor());
-                FontRenderers.sf_bold_mini.drawCenteredString(context.getMatrices(),  getShortKeyName(feature),
+                FontRenderers.sf_bold_mini.drawString(context.pose(), feature.getName(), getPosX() + 5, getPosY() + 19 + y_offset, feature.isOn() ? oncolor.getValue().getColor() : offcolor.getValue().getColor());
+                FontRenderers.sf_bold_mini.drawCenteredString(context.pose(),  getShortKeyName(feature),
 
                         px + (getPosX() + max_width - px) / 2f,
 
                         getPosY() + 19 + y_offset, feature.isOn() ? oncolor.getValue().getColor() : offcolor.getValue().getColor());
-                Render2DEngine.drawRect(context.getMatrices(), px, getPosY() + 17 + y_offset, 0.5f, 8, new Color(0x44FFFFFF, true));
+                Render2DEngine.drawRect(context.pose(), px, getPosY() + 17 + y_offset, 0.5f, 8, new Color(0x44FFFFFF, true));
 
                 y_offset += 9;
             }

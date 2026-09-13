@@ -1,8 +1,8 @@
 package thunder.hack.features.modules.player;
 
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.Item;
-import net.minecraft.item.Items;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
 import thunder.hack.features.modules.Module;
 import thunder.hack.injection.accesors.IMinecraftClient;
 import thunder.hack.setting.Setting;
@@ -21,7 +21,7 @@ public class FastUse extends Module {
     @Override
     public void onUpdate() {
         assert mc.player != null;
-        if (check(mc.player.getMainHandStack().getItem()) && ((IMinecraftClient) mc).getUseCooldown() > delay.getValue())
+        if (check(mc.player.getMainHandItem().getItem()) && ((IMinecraftClient) mc).getUseCooldown() > delay.getValue())
             ((IMinecraftClient) mc).setUseCooldown(delay.getValue());
     }
 

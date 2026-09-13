@@ -1,5 +1,8 @@
 package thunder.hack.gui.font;
 
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 
 import thunder.hack.utility.render.compat.RenderSystem;
@@ -11,7 +14,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectList;
 import net.minecraft.client.render.*;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -57,7 +60,7 @@ public class FontRenderer implements Closeable {
     }};
 
     private static final ExecutorService ASYNC_WORKER = Executors.newCachedThreadPool();
-    private final Object2ObjectMap<Identifier, ObjectList<DrawEntry>> GLYPH_PAGE_CACHE = new Object2ObjectOpenHashMap<>();
+    private final Object2ObjectMap<ResourceLocation, ObjectList<DrawEntry>> GLYPH_PAGE_CACHE = new Object2ObjectOpenHashMap<>();
     private final float originalSize;
     private final ObjectList<GlyphMap> maps = new ObjectArrayList<>();
     private final Char2ObjectArrayMap<Glyph> allGlyphs = new Char2ObjectArrayMap<>();
@@ -101,7 +104,7 @@ public class FontRenderer implements Closeable {
     }
 
     private void sizeCheck() {
-        int gs = (int) mc.getWindow().getScaleFactor();
+        int gs = (int) mc.getWindow().getGuiScale();
         if (gs != this.previousGameScale) {
             close();
             init(this.font, this.originalSize);
@@ -111,7 +114,7 @@ public class FontRenderer implements Closeable {
     private void init(Font font, float sizePx) {
         if (initialized) throw new IllegalStateException("Double call to init()");
         initialized = true;
-        this.previousGameScale = (int) mc.getWindow().getScaleFactor();
+        this.previousGameScale = (int) mc.getWindow().getGuiScale();
         this.scaleMul = this.previousGameScale;
         this.font = font.deriveFont(sizePx * this.scaleMul);
         if (prebakeGlyphs != null && !prebakeGlyphs.isEmpty()) {
@@ -234,20 +237,20 @@ public class FontRenderer implements Closeable {
                 Glyph glyph = locateGlyph1(c);
                 if (glyph != null) {
                     if (glyph.value() != ' ') {
-                        Identifier i1 = glyph.owner().bindToTexture;
+                        ResourceLocation i1 = glyph.owner().bindToTexture;
                         DrawEntry entry = new DrawEntry(xOffset, yOffset, r2, g2, b2, glyph);
                         GLYPH_PAGE_CACHE.computeIfAbsent(i1, integer -> new ObjectArrayList<>()).add(entry);
                     }
                     xOffset += glyph.width();
                 }
             }
-            for (Identifier identifier : GLYPH_PAGE_CACHE.keySet()) {
+            for (ResourceLocation identifier : GLYPH_PAGE_CACHE.keySet()) {
                 RenderSystem.setShaderTexture(0, identifier);
                 GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
                 GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
                 List<DrawEntry> objects = GLYPH_PAGE_CACHE.get(identifier);
 
-                bb = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR);
+                bb = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
 
                 for (DrawEntry object : objects) {
                     float xo = object.atX;
@@ -264,10 +267,10 @@ public class FontRenderer implements Closeable {
                     float u2 = (float) (glyph.u() + glyph.width()) / owner.width;
                     float v2 = (float) (glyph.v() + glyph.height()) / owner.height;
 
-                    bb.vertex(mat, xo + 0, yo + h, 0).texture(u1, v2).color(cr, cg, cb, a);
-                    bb.vertex(mat, xo + w, yo + h, 0).texture(u2, v2).color(cr, cg, cb, a);
-                    bb.vertex(mat, xo + w, yo + 0, 0).texture(u2, v1).color(cr, cg, cb, a);
-                    bb.vertex(mat, xo + 0, yo + 0, 0).texture(u1, v1).color(cr, cg, cb, a);
+                    bb.addVertex(mat, xo + 0, yo + h, 0).setUv(u1, v2).setColor(cr, cg, cb, a);
+                    bb.addVertex(mat, xo + w, yo + h, 0).setUv(u2, v2).setColor(cr, cg, cb, a);
+                    bb.addVertex(mat, xo + w, yo + 0, 0).setUv(u2, v1).setColor(cr, cg, cb, a);
+                    bb.addVertex(mat, xo + 0, yo + 0, 0).setUv(u1, v1).setColor(cr, cg, cb, a);
                 }
                 Render2DEngine.endBuilding(bb);
             }
@@ -357,8 +360,8 @@ public class FontRenderer implements Closeable {
     }
 
     @Contract(value = "-> new", pure = true)
-    public static @NotNull Identifier randomIdentifier() {
-        return Identifier.of("thunderhack", "temp/" + randomString());
+    public static @NotNull ResourceLocation randomIdentifier() {
+        return ResourceLocation.fromNamespaceAndPath("thunderhack", "temp/" + randomString());
     }
 
     private static String randomString() {

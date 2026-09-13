@@ -1,8 +1,7 @@
 package thunder.hack.features.modules.client;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.SharedConstants;
-import net.minecraft.client.util.Icons;
-import net.minecraft.util.Formatting;
 import thunder.hack.core.Managers;
 import thunder.hack.core.manager.client.ConfigManager;
 import thunder.hack.features.modules.Module;
@@ -14,6 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static thunder.hack.features.modules.client.ClientSettings.isRu;
+
+import com.mojang.blaze3d.platform.IconSet;
 
 public class UnHook extends Module { // Йо фабос, засунь в о4ко себе фалос
     public UnHook() {
@@ -28,15 +29,15 @@ public class UnHook extends Module { // Йо фабос, засунь в о4ко
     public void onEnable() {
         code = (int) MathUtility.random(10, 99);
         for (int i = 0; i < 20; i++)
-            sendMessage(isRu() ? Formatting.RED + "Ща все свернется, напиши в чат " + Formatting.WHITE + code + Formatting.RED + " чтобы все вернуть!"
-                    : Formatting.RED + "It's all close now, write to the chat " + Formatting.WHITE + code + Formatting.RED + " to return everything!");
+            sendMessage(isRu() ? ChatFormatting.RED + "Ща все свернется, напиши в чат " + ChatFormatting.WHITE + code + ChatFormatting.RED + " чтобы все вернуть!"
+                    : ChatFormatting.RED + "It's all close now, write to the chat " + ChatFormatting.WHITE + code + ChatFormatting.RED + " to return everything!");
 
         list = Managers.MODULE.getEnabledModules();
 
         mc.setScreen(null);
 
         Managers.ASYNC.run(() -> {
-            mc.executeSync(() -> {
+            mc.executeIfPossible(() -> {
                 for (Module module : list) {
                     if (module.equals(this))
                         continue;
@@ -46,17 +47,17 @@ public class UnHook extends Module { // Йо фабос, засунь в о4ко
 
                 // Clean icon
                 try {
-                    mc.getWindow().setIcon(mc.getDefaultResourcePack(), SharedConstants.getGameVersion().stable() ? Icons.RELEASE : Icons.SNAPSHOT);
+                    mc.getWindow().setIcon(mc.getVanillaPackResources(), SharedConstants.getCurrentVersion().stable() ? IconSet.RELEASE : IconSet.SNAPSHOT);
                 } catch (Exception e) {
                 }
 
                 // Clean chat
-                mc.inGameHud.getChatHud().clear(true);
+                mc.gui.getChat().clearMessages(true);
                 setEnabled(true);
 
                 // Clean log
                 try {
-                    File file = new File(mc.runDirectory + File.separator + "logs" + File.separator + "latest.log");
+                    File file = new File(mc.gameDirectory + File.separator + "logs" + File.separator + "latest.log");
                     FileInputStream fis = new FileInputStream(file);
                     BufferedReader reader = new BufferedReader(new InputStreamReader(fis, StandardCharsets.UTF_8));
                     ArrayList<String> lines = new ArrayList<>();

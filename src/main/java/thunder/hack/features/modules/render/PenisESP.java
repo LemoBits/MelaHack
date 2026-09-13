@@ -1,10 +1,5 @@
 package thunder.hack.features.modules.render;
 
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.Vec3d;
 import thunder.hack.features.modules.Module;
 import thunder.hack.setting.Setting;
 import thunder.hack.setting.impl.ColorSetting;
@@ -13,6 +8,10 @@ import thunder.hack.utility.render.Render3DEngine;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec3;
 
 import static thunder.hack.core.Managers.FRIEND;
 
@@ -32,74 +31,74 @@ public class PenisESP extends Module {
     private final Setting<ColorSetting> headColor = new Setting<>("HeadColor", new ColorSetting(new Color(240, 50, 180, 255)), v -> !fimoz.getValue());
 
     @Override
-    public void onRender2D(DrawContext event) {
-        for (PlayerEntity player : mc.world.getPlayers()) {
+    public void onRender2D(GuiGraphics event) {
+        for (Player player : mc.level.players()) {
             if (onlyOwn.getValue() && player != mc.player) continue;
             double size = (FRIEND.isFriend(player) ? friendSize.getValue() : (player != mc.player ? enemySize.getValue() : penisSize.getValue()));
 
-            Vec3d base = getBase(player);
-            Vec3d forward = base.add(0, player.getHeight() / 2.4, 0).add(Vec3d.fromPolar(0, player.getYaw()).multiply(0.1));
+            Vec3 base = getBase(player);
+            Vec3 forward = base.add(0, player.getBbHeight() / 2.4, 0).add(Vec3.directionFromRotation(0, player.getYRot()).scale(0.1));
 
-            Vec3d left = forward.add(Vec3d.fromPolar(0, player.getYaw() - 90).multiply(ballSize.getValue()));
-            Vec3d right = forward.add(Vec3d.fromPolar(0, player.getYaw() + 90).multiply(ballSize.getValue()));
+            Vec3 left = forward.add(Vec3.directionFromRotation(0, player.getYRot() - 90).scale(ballSize.getValue()));
+            Vec3 right = forward.add(Vec3.directionFromRotation(0, player.getYRot() + 90).scale(ballSize.getValue()));
 
             drawBall(player, ballSize.getValue(), gradation.getValue(), left, penisColor.getValue().getColorObject(), 0);
             drawBall(player, ballSize.getValue(), gradation.getValue(), right, penisColor.getValue().getColorObject(), 0);
-            drawPenis(player, event.getMatrices(), size, forward);
+            drawPenis(player, event.pose(), size, forward);
         }
     }
 
-    public Vec3d getBase(Entity entity) {
-        double x = entity.lastX + ((entity.getX() - entity.lastX) * Render3DEngine.getTickDelta());
-        double y = entity.lastY + ((entity.getY() - entity.lastY) * Render3DEngine.getTickDelta());
-        double z = entity.lastZ + ((entity.getZ() - entity.lastZ) * Render3DEngine.getTickDelta());
+    public Vec3 getBase(Entity entity) {
+        double x = entity.xo + ((entity.getX() - entity.xo) * Render3DEngine.getTickDelta());
+        double y = entity.yo + ((entity.getY() - entity.yo) * Render3DEngine.getTickDelta());
+        double z = entity.zo + ((entity.getZ() - entity.zo) * Render3DEngine.getTickDelta());
 
-        return new Vec3d(x, y, z);
+        return new Vec3(x, y, z);
     }
 
-    public void drawBall(PlayerEntity player, double radius, int gradation, Vec3d pos, Color color, int stage) {
+    public void drawBall(Player player, double radius, int gradation, Vec3 pos, Color color, int stage) {
         float alpha, beta;
 
         for (alpha = 0.0f; alpha < Math.PI; alpha += Math.PI / gradation) {
             for (beta = 0.0f; beta < 2.0 * Math.PI; beta += Math.PI / gradation) {
-                double x1 = (float) (pos.getX() + (radius * Math.cos(beta) * Math.sin(alpha)));
-                double y1 = (float) (pos.getY() + (radius * Math.sin(beta) * Math.sin(alpha)));
-                double z1 = (float) (pos.getZ() + (radius * Math.cos(alpha)));
+                double x1 = (float) (pos.x() + (radius * Math.cos(beta) * Math.sin(alpha)));
+                double y1 = (float) (pos.y() + (radius * Math.sin(beta) * Math.sin(alpha)));
+                double z1 = (float) (pos.z() + (radius * Math.cos(alpha)));
 
                 double sin = Math.sin(alpha + Math.PI / gradation);
-                double x2 = (float) (pos.getX() + (radius * Math.cos(beta) * sin));
-                double y2 = (float) (pos.getY() + (radius * Math.sin(beta) * sin));
-                double z2 = (float) (pos.getZ() + (radius * Math.cos(alpha + Math.PI / gradation)));
+                double x2 = (float) (pos.x() + (radius * Math.cos(beta) * sin));
+                double y2 = (float) (pos.y() + (radius * Math.sin(beta) * sin));
+                double z2 = (float) (pos.z() + (radius * Math.cos(alpha + Math.PI / gradation)));
 
-                Vec3d base = getBase(player);
-                Vec3d forward = base.add(0, player.getHeight() / 2.4, 0).add(Vec3d.fromPolar(0, player.getYaw()).multiply(0.1));
-                Vec3d vec3d = new Vec3d(x1, y1, z1);
+                Vec3 base = getBase(player);
+                Vec3 forward = base.add(0, player.getBbHeight() / 2.4, 0).add(Vec3.directionFromRotation(0, player.getYRot()).scale(0.1));
+                Vec3 vec3d = new Vec3(x1, y1, z1);
 
                 switch (stage) {
                     case 1 -> {
-                        if (!vec3d.isInRange(forward, 0.145)) continue;
+                        if (!vec3d.closerThan(forward, 0.145)) continue;
                     }
                     case 2 -> {
                         double size = (FRIEND.isFriend(player) ? friendSize.getValue() : (player != mc.player ? enemySize.getValue() : penisSize.getValue()));
-                        if (vec3d.isInRange(forward, size + 0.095)) continue;
+                        if (vec3d.closerThan(forward, size + 0.095)) continue;
                     }
                 }
 
-                Render3DEngine.drawLine(vec3d, new Vec3d(x2, y2, z2), color);
+                Render3DEngine.drawLine(vec3d, new Vec3(x2, y2, z2), color);
             }
         }
     }
 
-    public void drawPenis(PlayerEntity player, Object event, double size, Vec3d start) {
-        Vec3d copy = start;
-        start = start.add(Vec3d.fromPolar(0, player.getYaw()).multiply(0.1));
-        Vec3d end = start.add(Vec3d.fromPolar(0, player.getYaw()).multiply(size));
+    public void drawPenis(Player player, Object event, double size, Vec3 start) {
+        Vec3 copy = start;
+        start = start.add(Vec3.directionFromRotation(0, player.getYRot()).scale(0.1));
+        Vec3 end = start.add(Vec3.directionFromRotation(0, player.getYRot()).scale(size));
 
-        List<Vec3d> vecs = getVec3ds(start, 0.1);
+        List<Vec3> vecs = getVec3ds(start, 0.1);
         vecs.forEach(vec3d -> {
-            if (!vec3d.isInRange(copy, 0.145)) return;
-            if (vec3d.isInRange(copy, 0.135)) return;
-            Vec3d pos = vec3d.add(Vec3d.fromPolar(0, player.getYaw()).multiply(size));
+            if (!vec3d.closerThan(copy, 0.145)) return;
+            if (vec3d.closerThan(copy, 0.135)) return;
+            Vec3 pos = vec3d.add(Vec3.directionFromRotation(0, player.getYRot()).scale(size));
             Render3DEngine.drawLine(vec3d, pos, penisColor.getValue().getColorObject());
         });
 
@@ -111,17 +110,17 @@ public class PenisESP extends Module {
         }
     }
 
-    public List<Vec3d> getVec3ds(Vec3d vec3d, double radius) {
-        List<Vec3d> vec3ds = new ArrayList<>();
+    public List<Vec3> getVec3ds(Vec3 vec3d, double radius) {
+        List<Vec3> vec3ds = new ArrayList<>();
         float alpha, beta;
 
         for (alpha = 0.0f; alpha < Math.PI; alpha += Math.PI / gradation.getValue()) {
             for (beta = 0.0f; beta < 2.01f * Math.PI; beta += Math.PI / gradation.getValue()) {
-                double x1 = (float) (vec3d.getX() + (radius * Math.cos(beta) * Math.sin(alpha)));
-                double y1 = (float) (vec3d.getY() + (radius * Math.sin(beta) * Math.sin(alpha)));
-                double z1 = (float) (vec3d.getZ() + (radius * Math.cos(alpha)));
+                double x1 = (float) (vec3d.x() + (radius * Math.cos(beta) * Math.sin(alpha)));
+                double y1 = (float) (vec3d.y() + (radius * Math.sin(beta) * Math.sin(alpha)));
+                double z1 = (float) (vec3d.z() + (radius * Math.cos(alpha)));
 
-                Vec3d vec = new Vec3d(x1, y1, z1);
+                Vec3 vec = new Vec3(x1, y1, z1);
                 vec3ds.add(vec);
             }
         }

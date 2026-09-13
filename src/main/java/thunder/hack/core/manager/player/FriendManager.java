@@ -1,13 +1,13 @@
 package thunder.hack.core.manager.player;
 
-import net.minecraft.client.network.AbstractClientPlayerEntity;
 import org.jetbrains.annotations.NotNull;
-import net.minecraft.entity.player.PlayerEntity;
 import thunder.hack.core.manager.IManager;
 import thunder.hack.core.manager.client.ConfigManager;
 
 import java.io.*;
 import java.util.*;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.world.entity.player.Player;
 
 public class FriendManager implements IManager {
     public static List<String> friends = new ArrayList<>();
@@ -16,7 +16,7 @@ public class FriendManager implements IManager {
         return friends.stream().anyMatch(friend -> friend.equalsIgnoreCase(name));
     }
 
-    public boolean isFriend(@NotNull PlayerEntity player) {
+    public boolean isFriend(@NotNull Player player) {
         return isFriend(player.getName().getString());
     }
 
@@ -36,10 +36,10 @@ public class FriendManager implements IManager {
         friends.clear();
     }
 
-    public List<AbstractClientPlayerEntity> getNearFriends() {
-        if (mc.world == null) return new ArrayList<>();
+    public List<AbstractClientPlayer> getNearFriends() {
+        if (mc.level == null) return new ArrayList<>();
 
-        return mc.world.getPlayers().stream()
+        return mc.level.players().stream()
                 .filter(player -> friends.contains(player.getName().getString()))
                 .toList();
     }

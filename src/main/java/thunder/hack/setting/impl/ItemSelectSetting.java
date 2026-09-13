@@ -1,9 +1,8 @@
 package thunder.hack.setting.impl;
 
-import net.minecraft.block.Block;
-import net.minecraft.item.Item;
-
 import java.util.List;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.Block;
 
 public class ItemSelectSetting {
     private List<String> itemsById;
@@ -29,27 +28,27 @@ public class ItemSelectSetting {
     }
 
     public void add(Block b) {
-        add(b.getTranslationKey().replace("block.minecraft.", ""));
+        add(b.getDescriptionId().replace("block.minecraft.", ""));
     }
 
     public void add(Item i) {
-        add(i.getTranslationKey().replace("item.minecraft.", ""));
+        add(i.getDescriptionId().replace("item.minecraft.", ""));
     }
 
     public void remove(Block b) {
-        remove(b.getTranslationKey().replace("block.minecraft.", ""));
+        remove(b.getDescriptionId().replace("block.minecraft.", ""));
     }
 
     public void remove(Item i) {
-        remove(i.getTranslationKey().replace("item.minecraft.", ""));
+        remove(i.getDescriptionId().replace("item.minecraft.", ""));
     }
 
     public boolean contains(Block b) {
-        return contains(b.getTranslationKey().replace("block.minecraft.", ""));
+        return contains(b.getDescriptionId().replace("block.minecraft.", ""));
     }
 
     public boolean contains(Item i) {
-        return contains(i.getTranslationKey().replace("item.minecraft.", ""));
+        return contains(i.getDescriptionId().replace("item.minecraft.", ""));
     }
 
     public void clear() {

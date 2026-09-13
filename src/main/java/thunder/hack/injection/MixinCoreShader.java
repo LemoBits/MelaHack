@@ -17,13 +17,12 @@
  */
 package thunder.hack.injection;
 
-import net.minecraft.client.gl.ShaderProgram;
 import org.spongepowered.asm.mixin.Mixin;
 import thunder.hack.utility.render.shaders.satin.impl.SamplerAccess;
-
+import com.mojang.blaze3d.opengl.GlProgram;
 import java.util.List;
 
-@Mixin(ShaderProgram.class)
+@Mixin(GlProgram.class)
 public abstract class MixinCoreShader implements SamplerAccess {
     @Override
     public boolean hasSampler(String name) {

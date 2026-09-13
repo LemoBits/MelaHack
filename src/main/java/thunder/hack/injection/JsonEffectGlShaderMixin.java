@@ -1,8 +1,8 @@
 package thunder.hack.injection;
 
-import net.minecraft.client.gl.ShaderProgram;
+import com.mojang.blaze3d.opengl.GlProgram;
 import org.spongepowered.asm.mixin.Mixin;
 
-@Mixin(ShaderProgram.class)
+@Mixin(GlProgram.class)
 public abstract class JsonEffectGlShaderMixin {
 }

@@ -5,14 +5,14 @@ import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.textures.GpuTexture;
 import com.mojang.blaze3d.textures.GpuTextureView;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.util.Identifier;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fStack;
 import org.lwjgl.opengl.GL11;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import net.minecraft.client.Minecraft;
+import net.minecraft.resources.ResourceLocation;
 
 public final class RenderSystem {
     public enum BlendMode {
@@ -177,8 +177,8 @@ public final class RenderSystem {
         return shaderColor;
     }
 
-    public static void setShaderTexture(int slot, Identifier id) {
-        GpuTextureView texture = MinecraftClient.getInstance().getTextureManager().getTexture(id).getGlTextureView();
+    public static void setShaderTexture(int slot, ResourceLocation id) {
+        GpuTextureView texture = Minecraft.getInstance().getTextureManager().getTexture(id).getTextureView();
         com.mojang.blaze3d.systems.RenderSystem.setShaderTexture(slot, texture);
     }
 

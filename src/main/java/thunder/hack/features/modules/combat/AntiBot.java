@@ -1,9 +1,9 @@
 package thunder.hack.features.modules.combat;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.network.OtherClientPlayerEntity;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.client.player.RemotePlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
 import thunder.hack.events.impl.EventSync;
 import thunder.hack.features.modules.Module;
 import thunder.hack.features.modules.misc.FakePlayer;
@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.UUID;
 
 public final class AntiBot extends Module {
-    public static ArrayList<PlayerEntity> bots = new ArrayList<>();
+    public static ArrayList<Player> bots = new ArrayList<>();
     public Setting<Boolean> remove = new Setting<>("Remove", false);
     public Setting<Boolean> onlyAura = new Setting<>("OnlyAura", true);
     private final Setting<Mode> mode = new Setting<>("Mode", Mode.UUIDCheck);
@@ -30,15 +30,15 @@ public final class AntiBot extends Module {
 
     @EventHandler
     public void onSync(EventSync e) {
-        if (!onlyAura.getValue()) mc.world.getPlayers().forEach(this::markAsBot);
-        else if (Aura.target instanceof PlayerEntity ent) this.markAsBot(ent);
+        if (!onlyAura.getValue()) mc.level.players().forEach(this::markAsBot);
+        else if (Aura.target instanceof Player ent) this.markAsBot(ent);
 
-        bots.removeIf(PlayerEntity::isCreative);
+        bots.removeIf(Player::isCreative);
 
         if (remove.getValue())
             bots.forEach(b -> {
                     try {
-                        mc.world.removeEntity(b.getId(), Entity.RemovalReason.KILLED);
+                        mc.level.removeEntity(b.getId(), Entity.RemovalReason.KILLED);
                     } catch (Exception ignored) {
                     }
             });
@@ -50,7 +50,7 @@ public final class AntiBot extends Module {
         }
     }
 
-    private void markAsBot(PlayerEntity ent) {
+    private void markAsBot(Player ent) {
         if (bots.contains(ent))
             return;
         if (ent.isCreative())
@@ -58,15 +58,15 @@ public final class AntiBot extends Module {
 
         switch (mode.getValue()) {
             case UUIDCheck -> {
-                if (!ent.getUuid().equals(UUID.nameUUIDFromBytes(("OfflinePlayer:" + ent.getName().getString()).getBytes(StandardCharsets.UTF_8))) && ent instanceof OtherClientPlayerEntity
+                if (!ent.getUUID().equals(UUID.nameUUIDFromBytes(("OfflinePlayer:" + ent.getName().getString()).getBytes(StandardCharsets.UTF_8))) && ent instanceof RemotePlayer
                         && (FakePlayer.fakePlayer == null || ent.getId() != FakePlayer.fakePlayer.getId())
                         && !ent.getName().getString().contains("-")) {
                     this.addBot(ent);
                 }
             }
             case MotionCheck -> {
-                double diffX = ent.getX() - ent.lastX;
-                double diffZ = ent.getZ() - ent.lastZ;
+                double diffX = ent.getX() - ent.xo;
+                double diffZ = ent.getZ() - ent.zo;
                 
                 if ((diffX * diffX) + (diffZ * diffZ) > 0.5D) {
                     if (ticks >= checkticks.getValue())
@@ -81,7 +81,7 @@ public final class AntiBot extends Module {
         }
     }
 
-    private void addBot(PlayerEntity entity) {
+    private void addBot(Player entity) {
         this.sendMessage(entity.getName().getString() + " is a bot!");
         bots.add(entity);
     }

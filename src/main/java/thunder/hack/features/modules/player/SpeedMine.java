@@ -2,27 +2,26 @@ package thunder.hack.features.modules.player;
 
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
-import net.minecraft.block.AirBlock;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.enchantment.Enchantments;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.ItemEntity;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
-import net.minecraft.screen.slot.SlotActionType;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Direction;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.protocol.game.ServerboundContainerClosePacket;
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
+import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.level.block.AirBlock;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import thunder.hack.core.Managers;
@@ -46,7 +45,7 @@ import thunder.hack.utility.player.PlayerUtility;
 import thunder.hack.utility.render.Render2DEngine;
 import thunder.hack.utility.render.Render3DEngine;
 import thunder.hack.utility.world.ExplosionUtility;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Objects;
@@ -103,36 +102,36 @@ public final class SpeedMine extends Module {
 
     @Override
     public void onUpdate() {
-        if (fullNullCheck() || mc.player.getAbilities().creativeMode)
+        if (fullNullCheck() || mc.player.getAbilities().instabuild)
             return;
 
         if (PlayerUtility.isEating() && pauseEat.getValue()) return;
 
         if (mode.getValue() == Mode.Damage)
-            if (((IInteractionManager) mc.interactionManager).getCurBlockDamageMP() < speed.getValue())
-                ((IInteractionManager) mc.interactionManager).setCurBlockDamageMP(speed.getValue());
+            if (((IInteractionManager) mc.gameMode).getCurBlockDamageMP() < speed.getValue())
+                ((IInteractionManager) mc.gameMode).setCurBlockDamageMP(speed.getValue());
 
         actions.removeIf(MineAction::update);
     }
 
     @Override
-    public void onRender3D(MatrixStack stack) {
-        if (mode.is(Mode.Damage) || mc.world == null)
+    public void onRender3D(PoseStack stack) {
+        if (mode.is(Mode.Damage) || mc.level == null)
             return;
 
         actions.forEach(a -> {
-            if (!mc.world.isAir(a.getPos())) {
+            if (!mc.level.isEmptyBlock(a.getPos())) {
                 float noom = (float) MathUtility.clamp(Render2DEngine.interpolate(a.getPrevProgress(), a.getProgress(), Render3DEngine.getTickDelta()), 0f, 1f);
-                Box renderBox =
+                AABB renderBox =
 
                         switch (renderMode.getValue()) {
-                            case Block -> new Box(a.getPos());
+                            case Block -> new AABB(a.getPos());
                             case Grow ->
-                                    new Box(a.getPos().getX(), a.getPos().getY(), a.getPos().getZ(), a.getPos().getX() + 1, a.getPos().getY() + noom, a.getPos().getZ() + 1);
+                                    new AABB(a.getPos().getX(), a.getPos().getY(), a.getPos().getZ(), a.getPos().getX() + 1, a.getPos().getY() + noom, a.getPos().getZ() + 1);
                             case Shrink ->
-                                    new Box(a.getPos().getX(), a.getPos().getY(), a.getPos().getZ(), a.getPos().getX(), a.getPos().getY(), a.getPos().getZ())
-                                            .shrink(noom, noom, noom)
-                                            .offset(0.5 + noom * 0.5, 0.5 + noom * 0.5, 0.5 + noom * 0.5);
+                                    new AABB(a.getPos().getX(), a.getPos().getY(), a.getPos().getZ(), a.getPos().getX(), a.getPos().getY(), a.getPos().getZ())
+                                            .contract(noom, noom, noom)
+                                            .move(0.5 + noom * 0.5, 0.5 + noom * 0.5, 0.5 + noom * 0.5);
                         };
 
                 Render3DEngine.FILLED_QUEUE.add(new Render3DEngine.FillAction(
@@ -152,7 +151,7 @@ public final class SpeedMine extends Module {
     @EventHandler
     @SuppressWarnings("unused")
     public void onAttackBlock(@NotNull EventAttackBlock event) {
-        if (fullNullCheck() || !canBreak(event.getBlockPos()) || mc.player.getAbilities().creativeMode || mode.is(Mode.Damage))
+        if (fullNullCheck() || !canBreak(event.getBlockPos()) || mc.player.getAbilities().instabuild || mode.is(Mode.Damage))
             return;
 
         if (!alreadyActing(event.getBlockPos())) {
@@ -180,21 +179,21 @@ public final class SpeedMine extends Module {
     @EventHandler
     @SuppressWarnings("unused")
     private void onPacketSend(PacketEvent.@NotNull SendPost e) {
-        if (e.getPacket() instanceof UpdateSelectedSlotC2SPacket && resetOnSwitch.getValue() && !switchMode.is(SwitchMode.Silent) && !mode.is(Mode.GrimInstant))
+        if (e.getPacket() instanceof ServerboundSetCarriedItemPacket && resetOnSwitch.getValue() && !switchMode.is(SwitchMode.Silent) && !mode.is(Mode.GrimInstant))
             actions.forEach(MineAction::reset);
     }
 
     private void closeScreen() {
         if (mc.player == null) return;
 
-        sendPacket(new CloseHandledScreenC2SPacket(mc.player.currentScreenHandler.syncId));
+        sendPacket(new ServerboundContainerClosePacket(mc.player.containerMenu.containerId));
     }
 
     public float getBlockStrength(@NotNull BlockState state, BlockPos position) {
-        if (state == Blocks.AIR.getDefaultState())
+        if (state == Blocks.AIR.defaultBlockState())
             return 0.02f;
 
-        float hardness = state.getHardness(mc.world, position);
+        float hardness = state.getDestroySpeed(mc.level, position);
 
         if (hardness < 0)
             return 0;
@@ -208,8 +207,8 @@ public final class SpeedMine extends Module {
 
         if (mc.player == null)
             return 0;
-        if (slot != -1 && mc.player.getInventory().getStack(slot) != null && !mc.player.getInventory().getStack(slot).isEmpty()) {
-            destroySpeed *= mc.player.getInventory().getStack(slot).getMiningSpeedMultiplier(state);
+        if (slot != -1 && mc.player.getInventory().getItem(slot) != null && !mc.player.getInventory().getItem(slot).isEmpty()) {
+            destroySpeed *= mc.player.getInventory().getItem(slot).getDestroySpeed(state);
         }
 
         return destroySpeed;
@@ -222,26 +221,26 @@ public final class SpeedMine extends Module {
         if (digSpeed > 1) {
             int slot = getTool(position);
             if (slot != -1) {
-                ItemStack itemstack = mc.player.getInventory().getStack(slot);
-                int efficiencyModifier = EnchantmentHelper.getLevel(mc.world.getRegistryManager().getOrThrow(RegistryKeys.ENCHANTMENT).getOrThrow(Enchantments.EFFICIENCY), itemstack);
+                ItemStack itemstack = mc.player.getInventory().getItem(slot);
+                int efficiencyModifier = EnchantmentHelper.getItemEnchantmentLevel(mc.level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.EFFICIENCY), itemstack);
                 if (efficiencyModifier > 0 && !itemstack.isEmpty()) {
                     digSpeed += (float) (StrictMath.pow(efficiencyModifier, 2) + 1);
                 }
             }
         }
 
-        if (mc.player.hasStatusEffect(StatusEffects.HASTE))
-            digSpeed *= 1 + (Objects.requireNonNull(mc.player.getStatusEffect(StatusEffects.HASTE)).getAmplifier() + 1) * 0.2F;
+        if (mc.player.hasEffect(MobEffects.HASTE))
+            digSpeed *= 1 + (Objects.requireNonNull(mc.player.getEffect(MobEffects.HASTE)).getAmplifier() + 1) * 0.2F;
 
 
-        if (mc.player.hasStatusEffect(StatusEffects.MINING_FATIGUE))
-            digSpeed *= (float) Math.pow(0.3f, Objects.requireNonNull(mc.player.getStatusEffect(StatusEffects.MINING_FATIGUE)).getAmplifier() + 1);
+        if (mc.player.hasEffect(MobEffects.MINING_FATIGUE))
+            digSpeed *= (float) Math.pow(0.3f, Objects.requireNonNull(mc.player.getEffect(MobEffects.MINING_FATIGUE)).getAmplifier() + 1);
 
 
-        if (mc.player.isSubmergedInWater())
-            digSpeed *= (float) mc.player.getAttributeInstance(EntityAttributes.SUBMERGED_MINING_SPEED).getValue();
+        if (mc.player.isUnderWater())
+            digSpeed *= (float) mc.player.getAttribute(Attributes.SUBMERGED_MINING_SPEED).getValue();
 
-        if (!mc.player.isOnGround() && ModuleManager.freeCam.isDisabled())
+        if (!mc.player.onGround() && ModuleManager.freeCam.isDisabled())
             digSpeed /= 5;
 
         return digSpeed < 0 ? 0 : digSpeed * factor.getValue();
@@ -251,20 +250,20 @@ public final class SpeedMine extends Module {
         int index = -1;
         float currentFastest = 1.f;
 
-        if (mc.world == null
+        if (mc.level == null
                 || mc.player == null
-                || mc.world.getBlockState(pos).getBlock() instanceof AirBlock)
+                || mc.level.getBlockState(pos).getBlock() instanceof AirBlock)
             return -1;
 
         for (int i = 9; i < 45; ++i) {
-            final ItemStack stack = mc.player.getInventory().getStack(i >= 36 ? i - 36 : i);
+            final ItemStack stack = mc.player.getInventory().getItem(i >= 36 ? i - 36 : i);
 
             if (stack != ItemStack.EMPTY) {
-                if (!(stack.getMaxDamage() - stack.getDamage() > 10))
+                if (!(stack.getMaxDamage() - stack.getDamageValue() > 10))
                     continue;
 
-                final float digSpeed = EnchantmentHelper.getLevel(mc.world.getRegistryManager().getOrThrow(RegistryKeys.ENCHANTMENT).getOrThrow(Enchantments.EFFICIENCY), stack);
-                final float destroySpeed = stack.getMiningSpeedMultiplier(mc.world.getBlockState(pos));
+                final float digSpeed = EnchantmentHelper.getItemEnchantmentLevel(mc.level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.EFFICIENCY), stack);
+                final float destroySpeed = stack.getDestroySpeed(mc.level.getBlockState(pos));
 
                 if (digSpeed + destroySpeed > currentFastest) {
                     currentFastest = digSpeed + destroySpeed;
@@ -277,12 +276,12 @@ public final class SpeedMine extends Module {
     }
 
     private boolean canBreak(BlockPos pos) {
-        if (mc.world == null || PlayerUtility.squaredDistanceFromEyes(pos.toCenterPos()) > range.getPow2Value())
+        if (mc.level == null || PlayerUtility.squaredDistanceFromEyes(pos.getCenter()) > range.getPow2Value())
             return false;
 
-        final BlockState blockState = mc.world.getBlockState(pos);
+        final BlockState blockState = mc.level.getBlockState(pos);
         final Block block = blockState.getBlock();
-        return block.getHardness() != -1;
+        return block.defaultDestroyTime() != -1;
     }
 
     public void placeCrystal() {
@@ -305,11 +304,11 @@ public final class SpeedMine extends Module {
     public AutoCrystal.@Nullable PlaceData getCevData() {
 
         for (MineAction action : actions) {
-            if (mc.world.isAir(action.getPos().down())) {
-                if (ExplosionUtility.getSelfExplosionDamage(action.getPos().toCenterPos().add(0, 0.5, 0), 0, false) > ModuleManager.autoCrystal.maxSelfDamage.getValue())
+            if (mc.level.isEmptyBlock(action.getPos().below())) {
+                if (ExplosionUtility.getSelfExplosionDamage(action.getPos().getCenter().add(0, 0.5, 0), 0, false) > ModuleManager.autoCrystal.maxSelfDamage.getValue())
                     return null;
 
-                return ModuleManager.autoCrystal.getPlaceData(action.getPos(), null, mc.player.getPos());
+                return ModuleManager.autoCrystal.getPlaceData(action.getPos(), null, mc.player.position());
             }
         }
         return null;
@@ -317,25 +316,25 @@ public final class SpeedMine extends Module {
 
     public AutoCrystal.@Nullable PlaceData getBestData() {
         for (MineAction action : actions) {
-            BlockState prevState = mc.world.getBlockState(action.getPos());
-            mc.world.setBlockState(action.getPos(), Blocks.AIR.getDefaultState());
+            BlockState prevState = mc.level.getBlockState(action.getPos());
+            mc.level.setBlockAndUpdate(action.getPos(), Blocks.AIR.defaultBlockState());
 
             for (Direction dir : Direction.values()) {
                 if (dir == Direction.UP || dir == Direction.DOWN) continue;
-                if (ExplosionUtility.getSelfExplosionDamage(action.getPos().down().offset(dir).toCenterPos().add(0, 0.5, 0), 0, false) > ModuleManager.autoCrystal.maxSelfDamage.getValue())
+                if (ExplosionUtility.getSelfExplosionDamage(action.getPos().below().relative(dir).getCenter().add(0, 0.5, 0), 0, false) > ModuleManager.autoCrystal.maxSelfDamage.getValue())
                     continue;
 
-                AutoCrystal.PlaceData autoMineData = ModuleManager.autoCrystal.getPlaceData(action.getPos().down().offset(dir), null, mc.player.getPos());
+                AutoCrystal.PlaceData autoMineData = ModuleManager.autoCrystal.getPlaceData(action.getPos().below().relative(dir), null, mc.player.position());
                 if (autoMineData != null) {
-                    mc.world.setBlockState(action.getPos(), prevState);
+                    mc.level.setBlockAndUpdate(action.getPos(), prevState);
                     return autoMineData;
                 }
             }
 
-            float selfDmg = ExplosionUtility.getSelfExplosionDamage(action.getPos().toCenterPos().add(0, 0.5, 0), 0, false);
-            mc.world.setBlockState(action.getPos(), prevState);
+            float selfDmg = ExplosionUtility.getSelfExplosionDamage(action.getPos().getCenter().add(0, 0.5, 0), 0, false);
+            mc.level.setBlockAndUpdate(action.getPos(), prevState);
 
-            AutoCrystal.PlaceData autoMineData = ModuleManager.autoCrystal.getPlaceData(action.getPos(), null, mc.player.getPos());
+            AutoCrystal.PlaceData autoMineData = ModuleManager.autoCrystal.getPlaceData(action.getPos(), null, mc.player.position());
             if (selfDmg > ModuleManager.autoCrystal.maxSelfDamage.getValue())
                 continue;
 
@@ -346,9 +345,9 @@ public final class SpeedMine extends Module {
     }
 
     public boolean isBlockDrop(Entity ent) {
-        if (ent instanceof ItemEntity && isOn() && ent.age < 3)
+        if (ent instanceof ItemEntity && isOn() && ent.tickCount < 3)
             for (MineAction a : actions)
-                if (a.getPos().toCenterPos().squaredDistanceTo(ent.getPos()) <= 1f)
+                if (a.getPos().getCenter().distanceToSqr(ent.position()) <= 1f)
                     return true;
 
         return false;
@@ -371,31 +370,31 @@ public final class SpeedMine extends Module {
         }
 
         public void start(Direction direction) {
-            Direction startDirection = direction == null ? mc.player.getHorizontalFacing() : direction;
+            Direction startDirection = direction == null ? mc.player.getDirection() : direction;
 
             if (startDirection != null)
                 if (doubleMine.getValue()) {
-                    sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, pos, startDirection));
-                    sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, pos, startDirection));
-                    sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, pos, startDirection));
+                    sendPacket(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, pos, startDirection));
+                    sendPacket(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, pos, startDirection));
+                    sendPacket(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, pos, startDirection));
                 } else {
-                    sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, pos, startDirection));
-                    sendPacket(new PlayerActionC2SPacket(startMode.getValue() == StartMode.StartAbort ? PlayerActionC2SPacket.Action.ABORT_DESTROY_BLOCK : PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, pos, startDirection));
+                    sendPacket(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, pos, startDirection));
+                    sendPacket(new ServerboundPlayerActionPacket(startMode.getValue() == StartMode.StartAbort ? ServerboundPlayerActionPacket.Action.ABORT_DESTROY_BLOCK : ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, pos, startDirection));
                 }
         }
 
         public boolean update() {
-            Direction dir = InteractionUtility.getStrictDirections(pos).stream().findFirst().orElse(mc.player.getHorizontalFacing());
+            Direction dir = InteractionUtility.getStrictDirections(pos).stream().findFirst().orElse(mc.player.getDirection());
 
             if (mineBreaks >= breakAttempts.getValue() && mode.not(Mode.GrimInstant))
                 return true;
 
-            if (PlayerUtility.squaredDistanceFromEyes(pos.toCenterPos()) > range.getPow2Value()) {
+            if (PlayerUtility.squaredDistanceFromEyes(pos.getCenter()) > range.getPow2Value()) {
                 cancel();
                 return true;
             }
 
-            if (mc.world.isAir(pos)) {
+            if (mc.level.isEmptyBlock(pos)) {
                 progress = 0;
                 prevProgress = -1;
                 return false;
@@ -403,7 +402,7 @@ public final class SpeedMine extends Module {
 
             if (progress == 0 && prevProgress == -1 && mode.is(Mode.Packet) && attackTimer.every(800)) {
                 start(dir);
-                mc.player.swingHand(Hand.MAIN_HAND);
+                mc.player.swing(InteractionHand.MAIN_HAND);
             }
 
             int pickSlot = getTool(pos);
@@ -421,20 +420,20 @@ public final class SpeedMine extends Module {
                 switchTo(pickSlot, -1);
 
                 if (mode.getValue() == Mode.GrimInstant || doubleMine.getValue()) {
-                    sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, pos, dir));
+                    sendPacket(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, pos, dir));
                 } else {
                     if (stop.getValue())
-                        sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, pos, dir));
+                        sendPacket(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, pos, dir));
                     if (abort.getValue())
-                        sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.ABORT_DESTROY_BLOCK, pos, dir));
+                        sendPacket(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.ABORT_DESTROY_BLOCK, pos, dir));
                     if (start.getValue())
-                        sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, pos, dir));
+                        sendPacket(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, pos, dir));
                     if (stop2.getValue())
-                        sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, pos, dir));
+                        sendPacket(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, pos, dir));
                 }
 
                 if (clientRemove.getValue())
-                    mc.interactionManager.breakBlock(pos);
+                    mc.gameMode.destroyBlock(pos);
 
                 int delay = doubleMine.getValue() ? 100 : swapDelay.getValue();
 
@@ -451,7 +450,7 @@ public final class SpeedMine extends Module {
                     return true;
             } else {
                 prevProgress = progress;
-                progress += getBlockStrength(mc.world.getBlockState(pos), pos);
+                progress += getBlockStrength(mc.level.getBlockState(pos), pos);
             }
 
             fixMovement();
@@ -462,9 +461,9 @@ public final class SpeedMine extends Module {
         private void switchTo(int slot, int from) {
             if (switchMode.getValue() == SwitchMode.Alternative || slot >= 9) {
                 if (from == -1)
-                    clickSlot(slot < 9 ? slot + 36 : slot, mc.player.getInventory().getSelectedSlot(), SlotActionType.SWAP);
+                    clickSlot(slot < 9 ? slot + 36 : slot, mc.player.getInventory().getSelectedSlot(), ClickType.SWAP);
                 else
-                    clickSlot(from < 9 ? from + 36 : from, mc.player.getInventory().getSelectedSlot(), SlotActionType.SWAP);
+                    clickSlot(from < 9 ? from + 36 : from, mc.player.getInventory().getSelectedSlot(), ClickType.SWAP);
                 closeScreen();
             } else if (switchMode.is(SwitchMode.Silent)) InventoryUtility.switchToSilent(slot);
             else InventoryUtility.switchTo(slot);
@@ -472,7 +471,7 @@ public final class SpeedMine extends Module {
 
         public void fixMovement() {
             if (rotate.getValue() && progress > 0.95)
-                ModuleManager.rotations.fixRotation = PlayerManager.calcAngle(mc.player.getEyePos(), pos.toCenterPos())[0];
+                ModuleManager.rotations.fixRotation = PlayerManager.calcAngle(mc.player.getEyePosition(), pos.getCenter())[0];
         }
 
         public BlockPos getPos() {
@@ -489,9 +488,9 @@ public final class SpeedMine extends Module {
 
         public void onSync() {
             if (rotate.getValue() && progress > 0.95) {
-                float[] angle = PlayerManager.calcAngle(mc.player.getEyePos(), pos.toCenterPos().add(0, -0.25f, 0));
-                mc.player.setYaw(angle[0]);
-                mc.player.setPitch(angle[1]);
+                float[] angle = PlayerManager.calcAngle(mc.player.getEyePosition(), pos.getCenter().add(0, -0.25f, 0));
+                mc.player.setYRot(angle[0]);
+                mc.player.setXRot(angle[1]);
             }
         }
 
@@ -500,14 +499,14 @@ public final class SpeedMine extends Module {
                 return;
 
             prevProgress = progress = 0;
-            Direction dir = InteractionUtility.getStrictDirections(pos).stream().findFirst().orElse(mc.player.getHorizontalFacing());
-            sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.ABORT_DESTROY_BLOCK, pos, dir));
+            Direction dir = InteractionUtility.getStrictDirections(pos).stream().findFirst().orElse(mc.player.getDirection());
+            sendPacket(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.ABORT_DESTROY_BLOCK, pos, dir));
             start(dir);
         }
 
         public void cancel() {
             if (progress != 0)
-                sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.ABORT_DESTROY_BLOCK, pos, Direction.DOWN));
+                sendPacket(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.ABORT_DESTROY_BLOCK, pos, Direction.DOWN));
         }
 
         public boolean instantBreaking() {

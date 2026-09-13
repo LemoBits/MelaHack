@@ -21,31 +21,30 @@ import com.google.common.base.Preconditions;
 import com.mojang.logging.LogUtils;
 import thunder.hack.utility.render.shaders.satin.api.managed.ManagedCoreShader;
 import thunder.hack.utility.render.shaders.satin.api.managed.uniform.SamplerUniform;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.ShaderProgram;
+import com.mojang.blaze3d.opengl.GlProgram;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import net.minecraft.resource.ResourceFactory;
-import net.minecraft.util.Identifier;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
+import net.minecraft.client.Minecraft;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.ResourceProvider;
 
-public final class ResettableManagedCoreShader extends ResettableManagedShaderBase<ShaderProgram> implements ManagedCoreShader {
+public final class ResettableManagedCoreShader extends ResettableManagedShaderBase<GlProgram> implements ManagedCoreShader {
     private final Consumer<ManagedCoreShader> initCallback;
     private final VertexFormat vertexFormat;
     private final Map<String, ManagedSamplerUniformV1> managedSamplers = new HashMap<>();
 
-    public ResettableManagedCoreShader(Identifier location, VertexFormat vertexFormat, Consumer<ManagedCoreShader> initCallback) {
+    public ResettableManagedCoreShader(ResourceLocation location, VertexFormat vertexFormat, Consumer<ManagedCoreShader> initCallback) {
         super(location);
         this.vertexFormat = vertexFormat;
         this.initCallback = initCallback;
     }
 
     @Override
-    protected ShaderProgram parseShader(ResourceFactory resourceManager, MinecraftClient mc, Identifier location) throws IOException {
-        return ShaderProgram.INVALID;
+    protected GlProgram parseShader(ResourceProvider resourceManager, Minecraft mc, ResourceLocation location) throws IOException {
+        return GlProgram.INVALID_PROGRAM;
     }
 
     @Override
@@ -58,13 +57,13 @@ public final class ResettableManagedCoreShader extends ResettableManagedShaderBa
     }
 
     @Override
-    public ShaderProgram getProgram() {
+    public GlProgram getProgram() {
         return this.shader;
     }
 
 
     @Override
-    protected boolean setupUniform(ManagedUniformBase uniform, ShaderProgram shader) {
+    protected boolean setupUniform(ManagedUniformBase uniform, GlProgram shader) {
         return uniform.findUniformTarget(shader);
     }
 

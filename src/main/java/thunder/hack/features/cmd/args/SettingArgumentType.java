@@ -6,13 +6,13 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import net.minecraft.command.CommandSource;
 import thunder.hack.features.modules.Module;
 import thunder.hack.setting.Setting;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import net.minecraft.commands.SharedSuggestionProvider;
 
 public class SettingArgumentType implements ArgumentType<String> {
     public static SettingArgumentType create() {
@@ -26,7 +26,7 @@ public class SettingArgumentType implements ArgumentType<String> {
 
     @Override
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
-        return CommandSource.suggestMatching(getSettings(context.getArgument("module", Module.class)), builder);
+        return SharedSuggestionProvider.suggest(getSettings(context.getArgument("module", Module.class)), builder);
     }
 
     public static List<String> getSettings(Module module) {

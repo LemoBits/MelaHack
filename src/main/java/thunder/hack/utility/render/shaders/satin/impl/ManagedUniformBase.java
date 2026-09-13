@@ -17,10 +17,9 @@
  */
 package thunder.hack.utility.render.shaders.satin.impl;
 
-import net.minecraft.client.render.effect.PostEffectPass;
-import net.minecraft.client.gl.ShaderProgram;
-
+import com.mojang.blaze3d.opengl.GlProgram;
 import java.util.List;
+import net.minecraft.client.renderer.PostPass;
 
 public abstract class ManagedUniformBase {
     protected final String name;
@@ -29,9 +28,9 @@ public abstract class ManagedUniformBase {
         this.name = name;
     }
 
-    public abstract boolean findUniformTargets(List<PostEffectPass> shaders);
+    public abstract boolean findUniformTargets(List<PostPass> shaders);
 
-    public abstract boolean findUniformTarget(ShaderProgram shader);
+    public abstract boolean findUniformTarget(GlProgram shader);
 
     public String getName() {
         return name;

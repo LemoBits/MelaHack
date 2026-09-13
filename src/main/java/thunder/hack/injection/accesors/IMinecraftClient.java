@@ -1,47 +1,47 @@
 package thunder.hack.injection.accesors;
 
 import com.mojang.authlib.minecraft.UserApiService;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.friend.SocialInteractionsManager;
-import net.minecraft.client.session.ProfileKeys;
-import net.minecraft.client.session.Session;
-import net.minecraft.client.session.report.AbuseReportContext;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.User;
+import net.minecraft.client.gui.screens.social.PlayerSocialManager;
+import net.minecraft.client.multiplayer.ProfileKeyPairManager;
+import net.minecraft.client.multiplayer.chat.report.ReportingContext;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
-@Mixin(MinecraftClient.class)
+@Mixin(Minecraft.class)
 public interface IMinecraftClient {
-    @Accessor("itemUseCooldown")
+    @Accessor("rightClickDelay")
     int getUseCooldown();
 
-    @Accessor("itemUseCooldown")
+    @Accessor("rightClickDelay")
     void setUseCooldown(int val);
 
-    @Invoker("doItemUse")
+    @Invoker("startUseItem")
     void idoItemUse();
 
-    @Invoker("doAttack")
+    @Invoker("startAttack")
     boolean idoAttack();
 
     @Mutable
-    @Accessor("profileKeys")
-    void setProfileKeys(ProfileKeys keys);
+    @Accessor("profileKeyPairManager")
+    void setProfileKeys(ProfileKeyPairManager keys);
 
     @Mutable
-    @Accessor("session")
-    void setSessionT(Session session);
+    @Accessor("user")
+    void setSessionT(User session);
 
     @Mutable
     @Accessor
     void setUserApiService(UserApiService apiService);
 
     @Mutable
-    @Accessor("socialInteractionsManager")
-    void setSocialInteractionsManagerT(SocialInteractionsManager socialInteractionsManager);
+    @Accessor("playerSocialManager")
+    void setSocialInteractionsManagerT(PlayerSocialManager socialInteractionsManager);
 
     @Mutable
-    @Accessor("abuseReportContext")
-    void setAbuseReportContextT(AbuseReportContext abuseReportContext);
+    @Accessor("reportingContext")
+    void setAbuseReportContextT(ReportingContext abuseReportContext);
 }

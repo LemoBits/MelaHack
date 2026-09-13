@@ -1,13 +1,6 @@
 package thunder.hack.injection;
 
 import thunder.hack.utility.render.compat.RenderSystem;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.gui.screen.SplashOverlay;
-import net.minecraft.resource.ResourceReload;
-import net.minecraft.util.Util;
-import net.minecraft.util.math.MathHelper;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -22,52 +15,57 @@ import thunder.hack.utility.render.TextureStorage;
 import java.awt.*;
 import java.util.Optional;
 import java.util.function.Consumer;
+import net.minecraft.Util;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.LoadingOverlay;
+import net.minecraft.server.packs.resources.ReloadInstance;
+import net.minecraft.util.Mth;
 
 import static thunder.hack.features.modules.Module.mc;
 
-@Mixin(SplashOverlay.class)
+@Mixin(LoadingOverlay.class)
 public abstract class MixinSplashOverlay {
-    @Final @Shadow private boolean reloading;
-    @Shadow private float progress;
-    @Shadow private long reloadCompleteTime = -1L;
-    @Shadow private long reloadStartTime = -1L;
-    @Final @Shadow private ResourceReload reload;
-    @Final @Shadow private Consumer<Optional<Throwable>> exceptionHandler;
+    @Final @Shadow private boolean fadeIn;
+    @Shadow private float currentProgress;
+    @Shadow private long fadeOutStart = -1L;
+    @Shadow private long fadeInStart = -1L;
+    @Final @Shadow private ReloadInstance reload;
+    @Final @Shadow private Consumer<Optional<Throwable>> onFinish;
 
     @Inject(method = "render", at = @At("HEAD"), cancellable = true)
-    public void render(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+    public void render(GuiGraphics context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (ModuleManager.unHook.isEnabled() || !ClientSettings.customLoadingScreen.getValue())
             return;
         ci.cancel();
         renderCustom(context, mouseX, mouseY, delta);
     }
 
-    public void renderCustom(DrawContext context, int mouseX, int mouseY, float delta) {
-        int i = mc.getWindow().getScaledWidth();
-        int j = mc.getWindow().getScaledHeight();
-        long l = Util.getMeasuringTimeMs();
-        if (reloading && reloadStartTime == -1L) {
-            reloadStartTime = l;
+    public void renderCustom(GuiGraphics context, int mouseX, int mouseY, float delta) {
+        int i = mc.getWindow().getGuiScaledWidth();
+        int j = mc.getWindow().getGuiScaledHeight();
+        long l = Util.getMillis();
+        if (fadeIn && fadeInStart == -1L) {
+            fadeInStart = l;
         }
 
-        float f = reloadCompleteTime > -1L ? (float) (l - reloadCompleteTime) / 1000.0F : -1.0F;
-        float g = reloadStartTime > -1L ? (float) (l - reloadStartTime) / 500.0F : -1.0F;
+        float f = fadeOutStart > -1L ? (float) (l - fadeOutStart) / 1000.0F : -1.0F;
+        float g = fadeInStart > -1L ? (float) (l - fadeInStart) / 500.0F : -1.0F;
         float h;
         int k;
         if (f >= 1.0F) {
-            if (mc.currentScreen != null)
-                mc.currentScreen.render(context, 0, 0, delta);
+            if (mc.screen != null)
+                mc.screen.render(context, 0, 0, delta);
 
-            k = MathHelper.ceil((1.0F - MathHelper.clamp(f - 1.0F, 0.0F, 1.0F)) * 255.0F);
+            k = Mth.ceil((1.0F - Mth.clamp(f - 1.0F, 0.0F, 1.0F)) * 255.0F);
             context.fill(0, 0, i, j, withAlpha(new Color(0x070015).getRGB(), k));
-            h = 1.0F - MathHelper.clamp(f - 1.0F, 0.0F, 1.0F);
-        } else if (reloading) {
-            if (mc.currentScreen != null && g < 1.0F)
-                mc.currentScreen.render(context, mouseX, mouseY, delta);
+            h = 1.0F - Mth.clamp(f - 1.0F, 0.0F, 1.0F);
+        } else if (fadeIn) {
+            if (mc.screen != null && g < 1.0F)
+                mc.screen.render(context, mouseX, mouseY, delta);
 
-            k = MathHelper.ceil(MathHelper.clamp((double) g, 0.15, 1.0) * 255.0);
+            k = Mth.ceil(Mth.clamp((double) g, 0.15, 1.0) * 255.0);
             context.fill(0, 0, i, j, withAlpha(new Color(0x070015).getRGB(), k));
-            h = MathHelper.clamp(g, 0.0F, 1.0F);
+            h = Mth.clamp(g, 0.0F, 1.0F);
         } else {
             k = new Color(0x070015).getRGB();
             float m = (float) (k >> 16 & 255) / 255.0F;
@@ -78,22 +76,22 @@ public abstract class MixinSplashOverlay {
             h = 1.0F;
         }
 
-        k = (int) ((double) context.getScaledWindowWidth() * 0.5);
-        int p = (int) ((double) context.getScaledWindowHeight() * 0.5);
+        k = (int) ((double) context.guiWidth() * 0.5);
+        int p = (int) ((double) context.guiHeight() * 0.5);
 
         RenderSystem.enableBlend();
         RenderSystem.blendFunc(770, 1);
 
-        int logoAlpha = MathHelper.ceil(MathHelper.clamp(h, 0.0F, 1.0F) * 255.0F);
-        context.drawTexture(net.minecraft.client.render.RenderPipelines.GUI_TEXTURED, TextureStorage.thLogo, k - 150, p - 35, 0, 0, 300, 70, 300, 70,
+        int logoAlpha = Mth.ceil(Mth.clamp(h, 0.0F, 1.0F) * 255.0F);
+        context.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, TextureStorage.thLogo, k - 150, p - 35, 0, 0, 300, 70, 300, 70,
                 withAlpha(new Color(0x1A1A1A).getRGB(), logoAlpha));
-        Render2DEngine.addWindow(context.getMatrices(),k - 150, p - 35, k - 150 + (300 * progress), p + 35, 1f);
-        context.drawTexture(net.minecraft.client.render.RenderPipelines.GUI_TEXTURED, TextureStorage.thLogo, k - 150, p - 35, 0, 0, 300, 70, 300, 70,
+        Render2DEngine.addWindow(context.pose(),k - 150, p - 35, k - 150 + (300 * currentProgress), p + 35, 1f);
+        context.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, TextureStorage.thLogo, k - 150, p - 35, 0, 0, 300, 70, 300, 70,
                 withAlpha(Color.WHITE.getRGB(), logoAlpha));
         Render2DEngine.popWindow();
 
-        float t = this.reload.getProgress();
-        this.progress = MathHelper.clamp(this.progress * 0.95F + t * 0.050000012F, 0.0F, 1.0F);
+        float t = this.reload.getActualProgress();
+        this.currentProgress = Mth.clamp(this.currentProgress * 0.95F + t * 0.050000012F, 0.0F, 1.0F);
 
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.defaultBlendFunc();
@@ -103,17 +101,17 @@ public abstract class MixinSplashOverlay {
             mc.setOverlay(null);
         }
 
-        if (reloadCompleteTime == -1L && reload.isComplete() && (!reloading || g >= 2.0F)) {
+        if (fadeOutStart == -1L && reload.isDone() && (!fadeIn || g >= 2.0F)) {
             try {
-                reload.throwException();
-                exceptionHandler.accept(Optional.empty());
+                reload.checkExceptions();
+                onFinish.accept(Optional.empty());
             } catch (Throwable var23) {
-                exceptionHandler.accept(Optional.of(var23));
+                onFinish.accept(Optional.of(var23));
             }
 
-            reloadCompleteTime = Util.getMeasuringTimeMs();
-            if (mc.currentScreen != null) {
-                mc.currentScreen.init(mc, mc.getWindow().getScaledWidth(), mc.getWindow().getScaledHeight());
+            fadeOutStart = Util.getMillis();
+            if (mc.screen != null) {
+                mc.screen.init(mc, mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight());
             }
         }
     }

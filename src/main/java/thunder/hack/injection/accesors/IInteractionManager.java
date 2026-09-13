@@ -1,18 +1,18 @@
 package thunder.hack.injection.accesors;
 
-import net.minecraft.client.network.ClientPlayerInteractionManager;
+import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
-@Mixin(ClientPlayerInteractionManager.class)
+@Mixin(MultiPlayerGameMode.class)
 public interface IInteractionManager {
-    @Accessor(value = "currentBreakingProgress")
+    @Accessor(value = "destroyProgress")
     float getCurBlockDamageMP();
 
-    @Accessor(value = "currentBreakingProgress")
+    @Accessor(value = "destroyProgress")
     void setCurBlockDamageMP(float a);
 
-    @Invoker(value = "syncSelectedSlot")
+    @Invoker(value = "ensureHasSentCarriedItem")
     void syncSlot();
 }

@@ -1,8 +1,6 @@
 package thunder.hack.features.modules.render;
 
 import com.google.common.collect.Lists;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.util.math.Vec3d;
 import org.joml.Vector4d;
 import thunder.hack.features.modules.Module;
 import thunder.hack.gui.font.FontRenderers;
@@ -13,6 +11,8 @@ import thunder.hack.utility.render.Render3DEngine;
 
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.world.phys.Vec3;
 
 public class SoundESP extends Module {
     public SoundESP() {
@@ -28,9 +28,9 @@ public class SoundESP extends Module {
         sounds.add(new Sound(x, y, z, name.replace("minecraft.block.", "").replace("minecraft.entity", "").replace(".", " ")));
     }
 
-    public void onRender2D(DrawContext context) {
+    public void onRender2D(GuiGraphics context) {
         for (Sound s : Lists.newArrayList(sounds)) {
-            Vec3d vector = new Vec3d(s.x, s.y, s.z);
+            Vec3 vector = new Vec3(s.x, s.y, s.z);
             Vector4d position = null;
             vector = Render3DEngine.worldSpaceToScreenSpace(vector);
             if (vector.z > 0 && vector.z < 1) {
@@ -51,13 +51,13 @@ public class SoundESP extends Module {
 
                 float alpha = (float) (1f - Math.pow(1f - ((float) s.ticks / 60f), 3f));
 
-                context.getMatrices().pushMatrix();
-                context.getMatrices().translate((float) (tagX - 2 + (textWidth + 4) / 2f), (float) ((float) (posY - 13f) + 6.5f));
-                context.getMatrices().scale(scale.getValue(), scale.getValue());
-                context.getMatrices().translate((float) (-(tagX - 2 + (textWidth + 4) / 2f)), (float) (-(float) ((posY - 13f) + 6.5f)));
-                Render2DEngine.drawRect(context.getMatrices(), tagX - 2, (float) (posY - 13f), textWidth + 4, 11, fillColorA.getValue().withAlpha((int) (fillColorA.getValue().getAlpha() * alpha)).getColorObject());
-                FontRenderers.sf_bold.drawString(context.getMatrices(), s.name, tagX, (float) posY - 10, Render2DEngine.applyOpacity(-1, alpha));
-                context.getMatrices().popMatrix();
+                context.pose().pushMatrix();
+                context.pose().translate((float) (tagX - 2 + (textWidth + 4) / 2f), (float) ((float) (posY - 13f) + 6.5f));
+                context.pose().scale(scale.getValue(), scale.getValue());
+                context.pose().translate((float) (-(tagX - 2 + (textWidth + 4) / 2f)), (float) (-(float) ((posY - 13f) + 6.5f)));
+                Render2DEngine.drawRect(context.pose(), tagX - 2, (float) (posY - 13f), textWidth + 4, 11, fillColorA.getValue().withAlpha((int) (fillColorA.getValue().getAlpha() * alpha)).getColorObject());
+                FontRenderers.sf_bold.drawString(context.pose(), s.name, tagX, (float) posY - 10, Render2DEngine.applyOpacity(-1, alpha));
+                context.pose().popMatrix();
             }
         }
     }

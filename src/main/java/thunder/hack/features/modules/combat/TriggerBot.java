@@ -1,11 +1,11 @@
 package thunder.hack.features.modules.combat;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.block.Blocks;
 import thunder.hack.core.Managers;
 import thunder.hack.core.manager.client.ModuleManager;
 import thunder.hack.events.impl.PlayerUpdateEvent;
@@ -36,8 +36,8 @@ public final class TriggerBot extends Module {
         if (mc.player.isUsingItem() && pauseEating.getValue()) {
             return;
         }
-        if (!mc.options.jumpKey.isPressed() && mc.player.isOnGround() && autoJump.getValue())
-            mc.player.jump();
+        if (!mc.options.keyJump.isDown() && mc.player.onGround() && autoJump.getValue())
+            mc.player.jumpFromGround();
 
         // Smart crits should not be delayed
         if (!autoCrit()) {
@@ -47,10 +47,10 @@ public final class TriggerBot extends Module {
             }
         }
 
-        Entity ent = Managers.PLAYER.getRtxTarget(mc.player.getYaw(), mc.player.getPitch(), attackRange.getValue(), ignoreWalls.getValue());
+        Entity ent = Managers.PLAYER.getRtxTarget(mc.player.getYRot(), mc.player.getXRot(), attackRange.getValue(), ignoreWalls.getValue());
         if (ent != null && !Managers.FRIEND.isFriend(ent.getName().getString())) {
-            mc.interactionManager.attackEntity(mc.player, ent);
-            mc.player.swingHand(Hand.MAIN_HAND);
+            mc.gameMode.attack(mc.player, ent);
+            mc.player.swing(InteractionHand.MAIN_HAND);
 
             // Set delay for the next hit (10 to 20 ms)
             delay = random.nextInt(minDelay.getValue(), maxDelay.getValue() + 1) ; // (20ms / 50ms per tick = ~0.4 ticks, 10ms / 50ms = ~0.2 ticks)
@@ -65,31 +65,31 @@ public final class TriggerBot extends Module {
         boolean reasonForSkipCrit =
                 !smartCrit.getValue().isEnabled()
                         || mc.player.getAbilities().flying
-                        || (mc.player.isGliding() || ModuleManager.elytraPlus.isEnabled())
-                        || mc.player.hasStatusEffect(StatusEffects.BLINDNESS)
-                        || mc.player.isHoldingOntoLadder()
-                        || mc.world.getBlockState(BlockPos.ofFloored(mc.player.getPos())).getBlock() == Blocks.COBWEB;
+                        || (mc.player.isFallFlying() || ModuleManager.elytraPlus.isEnabled())
+                        || mc.player.hasEffect(MobEffects.BLINDNESS)
+                        || mc.player.isSuppressingSlidingDownLadder()
+                        || mc.level.getBlockState(BlockPos.containing(mc.player.position())).getBlock() == Blocks.COBWEB;
 
         if (mc.player.fallDistance > 1 && mc.player.fallDistance < 1.14)
             return false;
 
-        if (ModuleManager.aura.getAttackCooldown() < (mc.player.isOnGround() ? 1f : 0.9f))
+        if (ModuleManager.aura.getAttackCooldown() < (mc.player.onGround() ? 1f : 0.9f))
             return false;
 
         boolean mergeWithTargetStrafe = !ModuleManager.targetStrafe.isEnabled() || !ModuleManager.targetStrafe.jump.getValue();
-        boolean mergeWithSpeed = !ModuleManager.speed.isEnabled() || mc.player.isOnGround();
+        boolean mergeWithSpeed = !ModuleManager.speed.isEnabled() || mc.player.onGround();
 
-        if (!mc.options.jumpKey.isPressed() && mergeWithTargetStrafe && mergeWithSpeed && !onlySpace.getValue() && !autoJump.getValue())
+        if (!mc.options.keyJump.isDown() && mergeWithTargetStrafe && mergeWithSpeed && !onlySpace.getValue() && !autoJump.getValue())
             return true;
 
         if (mc.player.isInLava())
             return true;
 
-        if (!mc.options.jumpKey.isPressed() && ModuleManager.aura.isAboveWater())
+        if (!mc.options.keyJump.isDown() && ModuleManager.aura.isAboveWater())
             return true;
 
         if (!reasonForSkipCrit)
-            return !mc.player.isOnGround() && mc.player.fallDistance > 0.0f;
+            return !mc.player.onGround() && mc.player.fallDistance > 0.0f;
         return true;
     }
 }

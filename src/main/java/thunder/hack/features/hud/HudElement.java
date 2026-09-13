@@ -1,8 +1,8 @@
 package thunder.hack.features.hud;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.ChatScreen;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.ChatScreen;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 import thunder.hack.core.Managers;
@@ -33,16 +33,16 @@ public class HudElement extends Module {
     }
 
     @Override
-    public void onRender2D(DrawContext context) {
-        y = mc.getWindow().getScaledHeight() * pos.getValue().getY();
-        x = mc.getWindow().getScaledWidth() * pos.getValue().getX();
+    public void onRender2D(GuiGraphics context) {
+        y = mc.getWindow().getGuiScaledHeight() * pos.getValue().getY();
+        x = mc.getWindow().getGuiScaledWidth() * pos.getValue().getX();
 
-        if (mc.currentScreen instanceof ChatScreen || mc.currentScreen instanceof HudEditorGui) {
+        if (mc.screen instanceof ChatScreen || mc.screen instanceof HudEditorGui) {
             if (mouseButton && mouseState) {
-                pos.getValue().setX(Math.clamp(Render2DEngine.scrollAnimate((normaliseX() - dragX) / mc.getWindow().getScaledWidth(), pos.getValue().getX(), .1f),
+                pos.getValue().setX(Math.clamp(Render2DEngine.scrollAnimate((normaliseX() - dragX) / mc.getWindow().getGuiScaledWidth(), pos.getValue().getX(), .1f),
                         0, 1f));
-                pos.getValue().setY(Math.clamp(Render2DEngine.scrollAnimate((normaliseY() - dragY) / mc.getWindow().getScaledHeight(), pos.getValue().getY(), .1f),
-                        0, 1f - (height / mc.getWindow().getScaledHeight())));
+                pos.getValue().setY(Math.clamp(Render2DEngine.scrollAnimate((normaliseY() - dragY) / mc.getWindow().getGuiScaledHeight(), pos.getValue().getY(), .1f),
+                        0, 1f - (height / mc.getWindow().getGuiScaledHeight())));
 
                 float finalX = 0;
                 float finalY = 0;
@@ -50,7 +50,7 @@ public class HudElement extends Module {
                 if (HudEditor.sticky.getValue())
                     for (Module m : Managers.MODULE.getEnabledModules())
                         if (m instanceof HudElement hudElement && hudElement != this && !(hudElement.getPosX() == 0 && hudElement.getPosY() == 0)) {
-                            if (getPosX() > mc.getWindow().getScaledWidth() / 2f) {
+                            if (getPosX() > mc.getWindow().getGuiScaledWidth() / 2f) {
                                 if (isNear(hudElement.getHitX() + hudElement.getWidth(), getHitX() + getWidth()))
                                     finalX = hudElement.getHitX() + hudElement.getWidth() - getWidth();
 
@@ -64,36 +64,36 @@ public class HudElement extends Module {
                         }
 
                 if (finalX != 0 || finalY != 0)
-                    Render2DEngine.drawRound(context.getMatrices(), finalX == 0 ? getHitX() : finalX, finalY == 0 ? getHitY() : finalY, width, height, 3, new Color(0x7B2F2F2F, true));
+                    Render2DEngine.drawRound(context.pose(), finalX == 0 ? getHitX() : finalX, finalY == 0 ? getHitY() : finalY, width, height, 3, new Color(0x7B2F2F2F, true));
 
                 if (finalX != 0)
-                    Render2DEngine.drawLine(finalX, 0, finalX, mc.getWindow().getScaledHeight(), -1);
+                    Render2DEngine.drawLine(finalX, 0, finalX, mc.getWindow().getGuiScaledHeight(), -1);
 
                 if (finalY != 0)
-                    Render2DEngine.drawLine(0, finalY, mc.getWindow().getScaledWidth(), finalY, -1);
+                    Render2DEngine.drawLine(0, finalY, mc.getWindow().getGuiScaledWidth(), finalY, -1);
             }
         }
 
         if (mouseButton) {
             if (!mouseState && isHovering()) {
-                dragX = (int) (normaliseX() - (pos.getValue().getX() * mc.getWindow().getScaledWidth()));
-                dragY = (int) (normaliseY() - (pos.getValue().getY() * mc.getWindow().getScaledHeight()));
+                dragX = (int) (normaliseX() - (pos.getValue().getX() * mc.getWindow().getGuiScaledWidth()));
+                dragY = (int) (normaliseY() - (pos.getValue().getY() * mc.getWindow().getGuiScaledHeight()));
                 mouseState = true;
             }
         } else {
             mouseState = false;
         }
 
-        if (isHovering() && (mc.currentScreen instanceof ChatScreen || mc.currentScreen instanceof HudEditorGui)) {
+        if (isHovering() && (mc.screen instanceof ChatScreen || mc.screen instanceof HudEditorGui)) {
             if (GLFW.glfwGetPlatform() != GLFW.GLFW_PLATFORM_WAYLAND) {
                 if (mouseState) {
                     if (CROSSHAIR_CURSOR == 0)
                         CROSSHAIR_CURSOR = GLFW.glfwCreateStandardCursor(GLFW.GLFW_CROSSHAIR_CURSOR);
-                    GLFW.glfwSetCursor(mc.getWindow().getHandle(), CROSSHAIR_CURSOR);
+                    GLFW.glfwSetCursor(mc.getWindow().getWindow(), CROSSHAIR_CURSOR);
                 } else {
                     if (HAND_CURSOR == 0)
                         HAND_CURSOR = GLFW.glfwCreateStandardCursor(GLFW.GLFW_HAND_CURSOR);
-                    GLFW.glfwSetCursor(mc.getWindow().getHandle(), HAND_CURSOR);
+                    GLFW.glfwSetCursor(mc.getWindow().getWindow(), HAND_CURSOR);
                 }
             }
             anyHovered = true;
@@ -104,7 +104,7 @@ public class HudElement extends Module {
     @EventHandler
     @SuppressWarnings("unused")
     public void onMouse(@NotNull EventMouse event) {
-        if (event.getAction() == 0 && event.getButton() == 1 && isHovering() && mc.currentScreen instanceof HudEditorGui)
+        if (event.getAction() == 0 && event.getButton() == 1 && isHovering() && mc.screen instanceof HudEditorGui)
             HudEditorGui.getHudGui().hudClicked(this);
 
         if (event.getAction() == 0) {
@@ -117,15 +117,15 @@ public class HudElement extends Module {
                             float hitDifX = getPosX() - getHitX();
                             float hitDifY = getPosY() - getHitY();
 
-                            if (getPosX() > mc.getWindow().getScaledWidth() / 2f) {
+                            if (getPosX() > mc.getWindow().getGuiScaledWidth() / 2f) {
                                 if (isNear(hudElement.getHitX() + hudElement.getWidth(), getHitX() + getWidth()))
-                                    pos.getValue().setX((hudElement.getHitX() + hitDifX + hudElement.getWidth() - getWidth()) / mc.getWindow().getScaledWidth());
+                                    pos.getValue().setX((hudElement.getHitX() + hitDifX + hudElement.getWidth() - getWidth()) / mc.getWindow().getGuiScaledWidth());
                             } else {
                                 if (isNear(hudElement.getHitX(), getHitX()))
-                                    pos.getValue().setX((hudElement.getHitX() + hitDifX) / mc.getWindow().getScaledWidth());
+                                    pos.getValue().setX((hudElement.getHitX() + hitDifX) / mc.getWindow().getGuiScaledWidth());
                             }
                             if (isNear(hudElement.getHitY(), getHitY()))
-                                pos.getValue().setY((hudElement.getHitY() + hitDifY) / mc.getWindow().getScaledHeight());
+                                pos.getValue().setY((hudElement.getHitY() + hitDifY) / mc.getWindow().getGuiScaledHeight());
                         }
                     }
 
@@ -139,11 +139,11 @@ public class HudElement extends Module {
     }
 
     public int normaliseX() {
-        return (int) (mc.mouse.getX() / Render3DEngine.getScaleFactor());
+        return (int) (mc.mouseHandler.xpos() / Render3DEngine.getScaleFactor());
     }
 
     public int normaliseY() {
-        return (int) (mc.mouse.getY() / Render3DEngine.getScaleFactor());
+        return (int) (mc.mouseHandler.ypos() / Render3DEngine.getScaleFactor());
     }
 
     public boolean isHovering() {

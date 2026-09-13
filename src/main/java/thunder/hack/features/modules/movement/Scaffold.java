@@ -1,13 +1,17 @@
 package thunder.hack.features.modules.movement;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.item.BlockItem;
-import net.minecraft.network.packet.c2s.play.*;
-import net.minecraft.screen.slot.SlotActionType;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.protocol.game.*;
+import net.minecraft.network.protocol.game.ServerboundContainerClosePacket;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.network.protocol.game.ServerboundSwingPacket;
+import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
 import thunder.hack.events.impl.EventMove;
 import thunder.hack.events.impl.EventPostSync;
 import thunder.hack.events.impl.EventSync;
@@ -19,6 +23,7 @@ import thunder.hack.setting.impl.ColorSetting;
 import thunder.hack.setting.impl.SettingGroup;
 import thunder.hack.utility.Timer;
 import thunder.hack.utility.player.InteractionUtility;
+import thunder.hack.utility.player.InteractionUtility.BlockPosWithFacing;
 import thunder.hack.utility.player.InventoryUtility;
 import thunder.hack.utility.player.MovementUtility;
 import thunder.hack.utility.player.SearchInvResult;
@@ -76,7 +81,7 @@ public class Scaffold extends Module {
             double y = event.getY();
             double z = event.getZ();
 
-            if (mc.player.isOnGround() && !mc.player.noClip) {
+            if (mc.player.onGround() && !mc.player.noPhysics) {
                 double increment;
                 for (increment = 0.05D; x != 0.0D && isOffsetBBEmpty(x, 0.0D); ) {
                     if (x < increment && x >= -increment) {
@@ -137,34 +142,34 @@ public class Scaffold extends Module {
     public void preAction() {
         currentblock = null;
 
-        if (mc.player.isSneaking() && !allowShift.getValue()) return;
+        if (mc.player.isShiftKeyDown() && !allowShift.getValue()) return;
 
         if (prePlace(false) == -1) return;
 
-        if (mc.options.jumpKey.isPressed() && !MovementUtility.isMoving())
+        if (mc.options.keyJump.isDown() && !MovementUtility.isMoving())
             prevY = (int) (Math.floor(mc.player.getY() - 1));
 
         if (MovementUtility.isMoving() && autoJump.getValue()) {
-            if (mc.options.jumpKey.isPressed()) {
+            if (mc.options.keyJump.isDown()) {
                 if (onlyNotHoldingSpace.getValue())
                     prevY = (int) (Math.floor(mc.player.getY() - 1));
-            } else if (mc.player.isOnGround())
-                mc.player.jump();
+            } else if (mc.player.onGround())
+                mc.player.jumpFromGround();
         }
 
         BlockPos blockPos2 = lockY.getValue() && prevY != -999 ?
-                BlockPos.ofFloored(mc.player.getX(), prevY, mc.player.getZ())
+                BlockPos.containing(mc.player.getX(), prevY, mc.player.getZ())
                 : new BlockPos((int) Math.floor(mc.player.getX()), (int) (Math.floor(mc.player.getY() - 1)), (int) Math.floor(mc.player.getZ()));
 
-        if (!mc.world.getBlockState(blockPos2).isReplaceable()) return;
+        if (!mc.level.getBlockState(blockPos2).canBeReplaced()) return;
 
         currentblock = checkNearBlocksExtended(blockPos2);
         if (currentblock != null) {
             if (rotate.getValue() && !mode.is(Mode.Grim)) {
-                Vec3d hitVec = new Vec3d(currentblock.position().getX() + 0.5, currentblock.position().getY() + 0.5, currentblock.position().getZ() + 0.5).add(new Vec3d(currentblock.facing().getUnitVector()).multiply(0.5));
+                Vec3 hitVec = new Vec3(currentblock.position().getX() + 0.5, currentblock.position().getY() + 0.5, currentblock.position().getZ() + 0.5).add(new Vec3(currentblock.facing().step()).scale(0.5));
                 float[] rotations = InteractionUtility.calculateAngle(hitVec);
-                mc.player.setYaw(rotations[0]);
-                mc.player.setPitch(rotations[1]);
+                mc.player.setYRot(rotations[0]);
+                mc.player.setXRot(rotations[1]);
             }
         }
     }
@@ -178,7 +183,7 @@ public class Scaffold extends Module {
     public void postAction() {
         float offset = mode.is(Mode.Grim) ? 0.3f : 0.2f;
 
-        if (mc.world.getBlockCollisions(mc.player, mc.player.getBoundingBox().expand(-offset, 0, -offset).offset(0, -0.5, 0)).iterator().hasNext())
+        if (mc.level.getBlockCollisions(mc.player, mc.player.getBoundingBox().inflate(-offset, 0, -offset).move(0, -0.5, 0)).iterator().hasNext())
             return;
 
         if (currentblock == null) return;
@@ -186,10 +191,10 @@ public class Scaffold extends Module {
         int prevItem = prePlace(true);
 
         if (prevItem != -1) {
-            if (mc.options.jumpKey.isPressed() && !MovementUtility.isMoving() && tower.getValue() && !mode.is(Mode.Grim)) {
-                mc.player.setVelocity(0.0, 0.42, 0.0);
+            if (mc.options.keyJump.isDown() && !MovementUtility.isMoving() && tower.getValue() && !mode.is(Mode.Grim)) {
+                mc.player.setDeltaMovement(0.0, 0.42, 0.0);
                 if (timer.passedMs(1500)) {
-                    mc.player.setVelocity(mc.player.getVelocity().x, -0.28, mc.player.getVelocity().z);
+                    mc.player.setDeltaMovement(mc.player.getDeltaMovement().x, -0.28, mc.player.getDeltaMovement().z);
                     timer.reset();
                 }
             } else timer.reset();
@@ -197,35 +202,35 @@ public class Scaffold extends Module {
             BlockHitResult bhr;
 
             if (mode.is(Mode.StrictNCP))
-                bhr = new BlockHitResult(new Vec3d(currentblock.position().getX() + 0.5, currentblock.position().getY() + 0.5, currentblock.position().getZ() + 0.5).add(new Vec3d(currentblock.facing().getUnitVector()).multiply(0.5)), currentblock.facing(), currentblock.position(), false);
+                bhr = new BlockHitResult(new Vec3(currentblock.position().getX() + 0.5, currentblock.position().getY() + 0.5, currentblock.position().getZ() + 0.5).add(new Vec3(currentblock.facing().step()).scale(0.5)), currentblock.facing(), currentblock.position(), false);
             else
-                bhr = new BlockHitResult(new Vec3d((double) currentblock.position().getX() + Math.random(), currentblock.position().getY() + 0.99f, (double) currentblock.position().getZ() + Math.random()), currentblock.facing(), currentblock.position(), false);
+                bhr = new BlockHitResult(new Vec3((double) currentblock.position().getX() + Math.random(), currentblock.position().getY() + 0.99f, (double) currentblock.position().getZ() + Math.random()), currentblock.facing(), currentblock.position(), false);
 
-            float[] rotations = InteractionUtility.calculateAngle(bhr.getPos());
+            float[] rotations = InteractionUtility.calculateAngle(bhr.getLocation());
 
-            boolean sneak = InteractionUtility.needSneak(mc.world.getBlockState(bhr.getBlockPos()).getBlock()) && !mc.player.isSneaking();
+            boolean sneak = InteractionUtility.needSneak(mc.level.getBlockState(bhr.getBlockPos()).getBlock()) && !mc.player.isShiftKeyDown();
 
             if (sneak)
-                mc.player.networkHandler.sendPacket(new net.minecraft.network.packet.c2s.play.PlayerInputC2SPacket(new net.minecraft.util.PlayerInput(false, false, false, false, false, true, false)));
+                mc.player.connection.send(new net.minecraft.network.protocol.game.ServerboundPlayerInputPacket(new net.minecraft.world.entity.player.Input(false, false, false, false, false, true, false)));
 
             if (mode.is(Mode.Grim))
-                sendPacket(new PlayerMoveC2SPacket.Full(mc.player.getX(), mc.player.getY(), mc.player.getZ(), rotations[0], rotations[1], mc.player.isOnGround(), mc.player.horizontalCollision));
+                sendPacket(new ServerboundMovePlayerPacket.PosRot(mc.player.getX(), mc.player.getY(), mc.player.getZ(), rotations[0], rotations[1], mc.player.onGround(), mc.player.horizontalCollision));
 
             if (placeMode.getValue() == InteractionUtility.PlaceMode.Packet && !mode.is(Mode.Grim)) {
                 boolean finalIsOffhand = prevItem == -2;
-                sendSequencedPacket(id -> new PlayerInteractBlockC2SPacket(finalIsOffhand ? Hand.OFF_HAND : Hand.MAIN_HAND, bhr, id));
+                sendSequencedPacket(id -> new ServerboundUseItemOnPacket(finalIsOffhand ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND, bhr, id));
             } else
-                mc.interactionManager.interactBlock(mc.player, prevItem == -2 ? Hand.OFF_HAND : Hand.MAIN_HAND, bhr);
+                mc.gameMode.useItemOn(mc.player, prevItem == -2 ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND, bhr);
 
-            mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(prevItem == -2 ? Hand.OFF_HAND : Hand.MAIN_HAND));
+            mc.player.connection.send(new ServerboundSwingPacket(prevItem == -2 ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND));
 
             prevY = currentblock.position().getY();
 
             if (sneak)
-                mc.player.networkHandler.sendPacket(new net.minecraft.network.packet.c2s.play.PlayerInputC2SPacket(new net.minecraft.util.PlayerInput(false, false, false, false, false, false, false)));
+                mc.player.connection.send(new net.minecraft.network.protocol.game.ServerboundPlayerInputPacket(new net.minecraft.world.entity.player.Input(false, false, false, false, false, false, false)));
 
             if (mode.is(Mode.Grim))
-                sendPacket(new PlayerMoveC2SPacket.Full(mc.player.getX(), mc.player.getY(), mc.player.getZ(), mc.player.getYaw(), mc.player.getPitch(), mc.player.isOnGround(), mc.player.horizontalCollision));
+                sendPacket(new ServerboundMovePlayerPacket.PosRot(mc.player.getX(), mc.player.getY(), mc.player.getZ(), mc.player.getYRot(), mc.player.getXRot(), mc.player.onGround(), mc.player.horizontalCollision));
 
             if (render.getValue())
                 BlockAnimationUtility.renderBlock(currentblock.position(), renderLineColor.getValue().getColorObject(), renderLineWidth.getValue(), renderFillColor.getValue().getColorObject(), animationMode.getValue(), renderMode.getValue());
@@ -240,67 +245,67 @@ public class Scaffold extends Module {
         ret = checkNearBlocks(blockPos);
         if (ret != null) return ret;
 
-        ret = checkNearBlocks(blockPos.add(-1, 0, 0));
+        ret = checkNearBlocks(blockPos.offset(-1, 0, 0));
         if (ret != null) return ret;
 
-        ret = checkNearBlocks(blockPos.add(1, 0, 0));
+        ret = checkNearBlocks(blockPos.offset(1, 0, 0));
         if (ret != null) return ret;
 
-        ret = checkNearBlocks(blockPos.add(0, 0, 1));
+        ret = checkNearBlocks(blockPos.offset(0, 0, 1));
         if (ret != null) return ret;
 
-        ret = checkNearBlocks(blockPos.add(0, 0, -1));
+        ret = checkNearBlocks(blockPos.offset(0, 0, -1));
         if (ret != null) return ret;
 
-        ret = checkNearBlocks(blockPos.add(-2, 0, 0));
+        ret = checkNearBlocks(blockPos.offset(-2, 0, 0));
         if (ret != null) return ret;
 
-        ret = checkNearBlocks(blockPos.add(2, 0, 0));
+        ret = checkNearBlocks(blockPos.offset(2, 0, 0));
         if (ret != null) return ret;
 
-        ret = checkNearBlocks(blockPos.add(0, 0, 2));
+        ret = checkNearBlocks(blockPos.offset(0, 0, 2));
         if (ret != null) return ret;
 
-        ret = checkNearBlocks(blockPos.add(0, 0, -2));
+        ret = checkNearBlocks(blockPos.offset(0, 0, -2));
         if (ret != null) return ret;
 
-        ret = checkNearBlocks(blockPos.add(0, -1, 0));
+        ret = checkNearBlocks(blockPos.offset(0, -1, 0));
         if (ret != null) return ret;
 
-        ret = checkNearBlocks(blockPos.add(1, -1, 0));
+        ret = checkNearBlocks(blockPos.offset(1, -1, 0));
         if (ret != null) return ret;
 
-        ret = checkNearBlocks(blockPos.add(-1, -1, 0));
+        ret = checkNearBlocks(blockPos.offset(-1, -1, 0));
         if (ret != null) return ret;
 
-        ret = checkNearBlocks(blockPos.add(0, -1, 1));
+        ret = checkNearBlocks(blockPos.offset(0, -1, 1));
         if (ret != null) return ret;
 
-        return checkNearBlocks(blockPos.add(0, -1, -1));
+        return checkNearBlocks(blockPos.offset(0, -1, -1));
     }
 
     private int prePlace(boolean swap) {
-        if (mc.player == null || mc.world == null || mc.interactionManager == null)
+        if (mc.player == null || mc.level == null || mc.gameMode == null)
             return -1;
 
-        if (mc.player.getOffHandStack().getItem() instanceof BlockItem bi && !bi.getBlock().getDefaultState().isReplaceable())
+        if (mc.player.getOffhandItem().getItem() instanceof BlockItem bi && !bi.getBlock().defaultBlockState().canBeReplaced())
             return -2;
 
-        if (mc.player.getMainHandStack().getItem() instanceof BlockItem bi && !bi.getBlock().getDefaultState().isReplaceable())
+        if (mc.player.getMainHandItem().getItem() instanceof BlockItem bi && !bi.getBlock().defaultBlockState().canBeReplaced())
             return mc.player.getInventory().getSelectedSlot();
 
         int prevSlot = mc.player.getInventory().getSelectedSlot();
 
-        SearchInvResult hotbarResult = InventoryUtility.findInHotBar(i -> i.getItem() instanceof BlockItem bi && !bi.getBlock().getDefaultState().isReplaceable());
-        SearchInvResult invResult = InventoryUtility.findInInventory(i -> i.getItem() instanceof BlockItem bi && !bi.getBlock().getDefaultState().isReplaceable());
+        SearchInvResult hotbarResult = InventoryUtility.findInHotBar(i -> i.getItem() instanceof BlockItem bi && !bi.getBlock().defaultBlockState().canBeReplaced());
+        SearchInvResult invResult = InventoryUtility.findInInventory(i -> i.getItem() instanceof BlockItem bi && !bi.getBlock().defaultBlockState().canBeReplaced());
 
         if (swap)
             switch (autoSwitch.getValue()) {
                 case Inventory -> {
                     if (invResult.found()) {
                         prevSlot = invResult.slot();
-                        mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, prevSlot, mc.player.getInventory().getSelectedSlot(), SlotActionType.SWAP, mc.player);
-                        sendPacket(new CloseHandledScreenC2SPacket(mc.player.currentScreenHandler.syncId));
+                        mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, prevSlot, mc.player.getInventory().getSelectedSlot(), ClickType.SWAP, mc.player);
+                        sendPacket(new ServerboundContainerClosePacket(mc.player.containerMenu.containerId));
                     }
                 }
                 case Normal, Silent -> hotbarResult.switchTo();
@@ -315,14 +320,14 @@ public class Scaffold extends Module {
 
         switch (autoSwitch.getValue()) {
             case Inventory -> {
-                mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, prevSlot, mc.player.getInventory().getSelectedSlot(), SlotActionType.SWAP, mc.player);
-                sendPacket(new CloseHandledScreenC2SPacket(mc.player.currentScreenHandler.syncId));
+                mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, prevSlot, mc.player.getInventory().getSelectedSlot(), ClickType.SWAP, mc.player);
+                sendPacket(new ServerboundContainerClosePacket(mc.player.containerMenu.containerId));
             }
             case Silent -> InventoryUtility.switchTo(prevSlot);
         }
     }
 
     private boolean isOffsetBBEmpty(double x, double z) {
-        return !mc.world.getBlockCollisions(mc.player, mc.player.getBoundingBox().expand(-0.1, 0, -0.1).offset(x, -2, z)).iterator().hasNext();
+        return !mc.level.getBlockCollisions(mc.player, mc.player.getBoundingBox().inflate(-0.1, 0, -0.1).move(x, -2, z)).iterator().hasNext();
     }
 }

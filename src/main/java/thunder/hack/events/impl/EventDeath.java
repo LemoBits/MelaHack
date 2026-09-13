@@ -1,16 +1,16 @@
 package thunder.hack.events.impl;
 
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.world.entity.player.Player;
 import thunder.hack.events.Event;
 
 public class EventDeath extends Event {
-    private final PlayerEntity player;
+    private final Player player;
 
-    public EventDeath(PlayerEntity player) {
+    public EventDeath(Player player) {
         this.player = player;
     }
 
-    public PlayerEntity getPlayer(){
+    public Player getPlayer(){
         return player;
     }
 }

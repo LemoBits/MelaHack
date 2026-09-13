@@ -1,9 +1,9 @@
 package thunder.hack.features.modules.movement;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import thunder.hack.ThunderHack;
 import thunder.hack.core.manager.client.ModuleManager;
 import thunder.hack.events.impl.EventSync;
@@ -28,27 +28,27 @@ public class ReverseStep extends Module {
     public void onEntitySync(EventSync eventPlayerUpdateWalking) {
         if (ModuleManager.packetFly.isEnabled()) return;
 
-        BlockPos playerPos = BlockPos.ofFloored(mc.player.getPos());
+        BlockPos playerPos = BlockPos.containing(mc.player.position());
 
-        if (pauseIfShift.getValue() && mc.options.sneakKey.isPressed()) {
+        if (pauseIfShift.getValue() && mc.options.keyShift.isDown()) {
             disableTimer();
             return;
         }
 
-        if (mc.player.isTouchingWater() || mc.player.isSubmergedInWater() || mc.player.isInLava() || mc.player.isGliding() || mc.player.getAbilities().flying || mc.world.getBlockState(playerPos).getBlock() == Blocks.COBWEB) {
+        if (mc.player.isInWater() || mc.player.isUnderWater() || mc.player.isInLava() || mc.player.isFallFlying() || mc.player.getAbilities().flying || mc.level.getBlockState(playerPos).getBlock() == Blocks.COBWEB) {
             disableTimer();
             return;
         }
 
-        if (checkBlock(mc.world.getBlockState(playerPos.down(2))) || checkBlock(mc.world.getBlockState(playerPos.down(3))) || checkBlock(mc.world.getBlockState(playerPos.down(4))))
+        if (checkBlock(mc.level.getBlockState(playerPos.below(2))) || checkBlock(mc.level.getBlockState(playerPos.below(3))) || checkBlock(mc.level.getBlockState(playerPos.below(4))))
             doStep();
 
-        if (disableTimer && (mc.player.isOnGround())) {
+        if (disableTimer && (mc.player.onGround())) {
             disableTimer = false;
             ThunderHack.TICK_TIMER = 1.0f;
         }
 
-        prevGround = mc.player.isOnGround();
+        prevGround = mc.player.onGround();
     }
     
     private void disableTimer() {
@@ -61,13 +61,13 @@ public class ReverseStep extends Module {
     }
 
     private void doStep() {
-        if (!(mode.getValue() != Mode.Timer || !prevGround || mc.player.isOnGround() || !(mc.player.getVelocity().getY() < -0.1) || disableTimer)) {
+        if (!(mode.getValue() != Mode.Timer || !prevGround || mc.player.onGround() || !(mc.player.getDeltaMovement().y() < -0.1) || disableTimer)) {
             ThunderHack.TICK_TIMER = timer.getValue();
             disableTimer = true;
         }
 
-        if (mc.player.isOnGround() && mode.getValue() == Mode.Motion)
-            mc.player.setVelocity(mc.player.getVelocity().add(0, -motion.getValue(), 0));
+        if (mc.player.onGround() && mode.getValue() == Mode.Motion)
+            mc.player.setDeltaMovement(mc.player.getDeltaMovement().add(0, -motion.getValue(), 0));
     }
 
     public enum Mode {

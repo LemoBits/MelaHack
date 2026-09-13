@@ -1,10 +1,10 @@
 package thunder.hack.features.modules.combat;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.decoration.EndCrystalEntity;
-import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
+import net.minecraft.network.protocol.game.ServerboundInteractPacket;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.events.impl.PacketEvent;
 import thunder.hack.injection.accesors.IPlayerInteractEntityC2SPacket;
@@ -24,18 +24,18 @@ public final class Criticals extends Module {
 
     @EventHandler
     public void onPacketSend(PacketEvent.@NotNull Send event) {
-        if (event.getPacket() instanceof PlayerInteractEntityC2SPacket && getInteractType(event.getPacket()) == InteractType.ATTACK) {
+        if (event.getPacket() instanceof ServerboundInteractPacket && getInteractType(event.getPacket()) == InteractType.ATTACK) {
             Entity ent = getEntity(event.getPacket());
-            if (ent == null || ent instanceof EndCrystalEntity || cancelCrit)
+            if (ent == null || ent instanceof EndCrystal || cancelCrit)
                 return;
             doCrit();
         }
     }
 
     public void doCrit() {
-        if (isDisabled() || mc.player == null || mc.world == null)
+        if (isDisabled() || mc.player == null || mc.level == null)
             return;
-        if ((mc.player.isOnGround() || mc.player.getAbilities().flying || mode.is(Mode.Grim)) && !mc.player.isInLava() && !mc.player.isSubmergedInWater()) {
+        if ((mc.player.onGround() || mc.player.getAbilities().flying || mode.is(Mode.Grim)) && !mc.player.isInLava() && !mc.player.isUnderWater()) {
             switch (mode.getValue()) {
                 case OldNCP -> {
                     critPacket(0.00001058293536, false);
@@ -57,7 +57,7 @@ public final class Criticals extends Module {
                     critPacket(0., false);
                 }
                 case Grim -> {
-                    if (!mc.player.isOnGround())
+                    if (!mc.player.onGround())
                         critPacket(-0.000001, true);
 
                 }
@@ -67,16 +67,16 @@ public final class Criticals extends Module {
 
     private void critPacket(double yDelta, boolean full) {
         if (!full)
-            sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(mc.player.getX(), mc.player.getY() + yDelta, mc.player.getZ(), false, mc.player.horizontalCollision));
+            sendPacket(new ServerboundMovePlayerPacket.Pos(mc.player.getX(), mc.player.getY() + yDelta, mc.player.getZ(), false, mc.player.horizontalCollision));
         else
-            sendPacket(new PlayerMoveC2SPacket.Full(mc.player.getX(), mc.player.getY() + yDelta, mc.player.getZ(), ((IEntity) mc.player).getLastYaw(), ((IEntity) mc.player).getLastPitch(), false, mc.player.horizontalCollision));
+            sendPacket(new ServerboundMovePlayerPacket.PosRot(mc.player.getX(), mc.player.getY() + yDelta, mc.player.getZ(), ((IEntity) mc.player).getLastYaw(), ((IEntity) mc.player).getLastPitch(), false, mc.player.horizontalCollision));
     }
 
-    public static Entity getEntity(@NotNull PlayerInteractEntityC2SPacket packet) {
-        return mc.world.getEntityById(((IPlayerInteractEntityC2SPacket) packet).getEntityId());
+    public static Entity getEntity(@NotNull ServerboundInteractPacket packet) {
+        return mc.level.getEntity(((IPlayerInteractEntityC2SPacket) packet).getEntityId());
     }
 
-    public static InteractType getInteractType(@NotNull PlayerInteractEntityC2SPacket packet) {
+    public static InteractType getInteractType(@NotNull ServerboundInteractPacket packet) {
         return InteractType.valueOf(((IPlayerInteractEntityC2SPacket) packet).getType().getType().name());
     }
 

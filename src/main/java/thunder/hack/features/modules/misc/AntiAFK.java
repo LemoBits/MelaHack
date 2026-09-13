@@ -39,7 +39,7 @@ public class AntiAFK extends Module {
     @Override
     public void onEnable() {
         if (alwayssneak.getValue())
-            mc.options.sneakKey.setPressed(true);
+            mc.options.keyShift.setDown(true);
 
         step = 0;
     }
@@ -54,7 +54,7 @@ public class AntiAFK extends Module {
     @SuppressWarnings("unused")
     public void onKeyboardInput(EventKeyboardInput e) {
         if (mc.player != null && mode.is(Mode.Simple) && !MovementUtility.isMoving() && move.getValue() && isAfk()) {
-            float angleToRad = (float) Math.toRadians(9 * (mc.player.age % 40));
+            float angleToRad = (float) Math.toRadians(9 * (mc.player.tickCount % 40));
 
             float sin = (float) Math.clamp(Math.sin(angleToRad), -1, 1);
             float cos = (float) Math.clamp(Math.cos(angleToRad), -1, 1);
@@ -75,19 +75,19 @@ public class AntiAFK extends Module {
                 mc.player.setSprinting(false);
 
             if (spin.getValue()) {
-                double gcdFix = (Math.pow(mc.options.getMouseSensitivity().getValue() * 0.6 + 0.2, 3.0)) * 1.2;
-                float newYaw = mc.player.getYaw() + rotateSpeed.getValue();
-                mc.player.setYaw((float) (newYaw - (newYaw - mc.player.getYaw()) % gcdFix));
+                double gcdFix = (Math.pow(mc.options.sensitivity().get() * 0.6 + 0.2, 3.0)) * 1.2;
+                float newYaw = mc.player.getYRot() + rotateSpeed.getValue();
+                mc.player.setYRot((float) (newYaw - (newYaw - mc.player.getYRot()) % gcdFix));
             }
 
-            if (jump.getValue() && mc.player.isOnGround())
-                mc.player.jump();
+            if (jump.getValue() && mc.player.onGround())
+                mc.player.jumpFromGround();
 
             if (swing.getValue() && ThreadLocalRandom.current().nextInt(99) == 0)
-                mc.player.swingHand(mc.player.getActiveHand());
+                mc.player.swing(mc.player.getUsedItemHand());
 
             if (command.getValue() && ThreadLocalRandom.current().nextInt(99) == 0)
-                mc.player.networkHandler.sendChatCommand("qwerty");
+                mc.player.connection.sendCommand("qwerty");
 
         } else {
             if (inactiveTime.every(5000)) {
@@ -96,19 +96,19 @@ public class AntiAFK extends Module {
 
                 switch (step) {
                     case 0: {
-                        mc.player.networkHandler.sendChatMessage("#goto ~ ~" + radius.getValue());
+                        mc.player.connection.sendChat("#goto ~ ~" + radius.getValue());
                         break;
                     }
                     case 1: {
-                        mc.player.networkHandler.sendChatMessage("#goto ~" + radius.getValue() + " ~");
+                        mc.player.connection.sendChat("#goto ~" + radius.getValue() + " ~");
                         break;
                     }
                     case 2: {
-                        mc.player.networkHandler.sendChatMessage("#goto ~ ~-" + radius.getValue());
+                        mc.player.connection.sendChat("#goto ~ ~-" + radius.getValue());
                         break;
                     }
                     case 3: {
-                        mc.player.networkHandler.sendChatMessage("#goto ~-" + radius.getValue() + " ~");
+                        mc.player.connection.sendChat("#goto ~-" + radius.getValue() + " ~");
                         break;
                     }
                 }
@@ -120,10 +120,10 @@ public class AntiAFK extends Module {
     @Override
     public void onDisable() {
         if (alwayssneak.getValue())
-            mc.options.sneakKey.setPressed(false);
+            mc.options.keyShift.setDown(false);
 
         if (mode.getValue() == Mode.Baritone)
-            mc.player.networkHandler.sendChatMessage("#stop");
+            mc.player.connection.sendChat("#stop");
     }
 
     private boolean isAfk() {
@@ -131,6 +131,6 @@ public class AntiAFK extends Module {
     }
 
     private boolean isActive() {
-        return mc.options.forwardKey.isPressed() || mc.options.leftKey.isPressed() || mc.options.rightKey.isPressed() || mc.options.backKey.isPressed();
+        return mc.options.keyUp.isDown() || mc.options.keyLeft.isDown() || mc.options.keyRight.isDown() || mc.options.keyDown.isDown();
     }
 }

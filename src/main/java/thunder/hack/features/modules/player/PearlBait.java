@@ -1,8 +1,8 @@
 package thunder.hack.features.modules.player;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.entity.projectile.thrown.EnderPearlEntity;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.world.entity.projectile.ThrownEnderpearl;
 import thunder.hack.events.impl.EventEntitySpawn;
 import thunder.hack.features.modules.Module;
 import thunder.hack.utility.player.MovementUtility;
@@ -16,14 +16,14 @@ public class PearlBait extends Module {
 
     @EventHandler
     public void onEntitySpawn(EventEntitySpawn e) {
-        if (e.getEntity() instanceof EnderPearlEntity)
-            mc.world.getPlayers().stream()
-                    .min(Comparator.comparingDouble((p) -> p.squaredDistanceTo(e.getEntity().getPos())))
+        if (e.getEntity() instanceof ThrownEnderpearl)
+            mc.level.players().stream()
+                    .min(Comparator.comparingDouble((p) -> p.distanceToSqr(e.getEntity().position())))
                     .ifPresent((player) -> {
-                        if (player.equals(mc.player) && mc.player.isOnGround()) {
-                            mc.player.setVelocity(0, 0, 0);
+                        if (player.equals(mc.player) && mc.player.onGround()) {
+                            mc.player.setDeltaMovement(0, 0, 0);
                             MovementUtility.clearMovementInput();
-                            mc.player.networkHandler.sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(mc.player.getX(), mc.player.getY() + 1.0, mc.player.getZ(), false, mc.player.horizontalCollision));
+                            mc.player.connection.send(new ServerboundMovePlayerPacket.Pos(mc.player.getX(), mc.player.getY() + 1.0, mc.player.getZ(), false, mc.player.horizontalCollision));
                         }
                     });
     }

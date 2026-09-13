@@ -1,28 +1,27 @@
 package thunder.hack.injection.accesors;
 
-import net.minecraft.client.render.item.HeldItemRenderer;
-import net.minecraft.client.render.item.ItemRenderer;
-import net.minecraft.item.ItemStack;
+import net.minecraft.client.renderer.ItemInHandRenderer;
+import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(HeldItemRenderer.class)
+@Mixin(ItemInHandRenderer.class)
 public interface IHeldItemRenderer {
-    @Accessor(value="equipProgressMainHand")
+    @Accessor(value="mainHandHeight")
     void setEquippedProgressMainHand(float var1);
 
-    @Accessor(value="equipProgressOffHand")
+    @Accessor(value="offHandHeight")
     void setEquippedProgressOffHand(float var1);
 
-    @Accessor(value="equipProgressMainHand")
+    @Accessor(value="mainHandHeight")
     float getEquippedProgressMainHand();
 
-    @Accessor(value="equipProgressOffHand")
+    @Accessor(value="offHandHeight")
     float getEquippedProgressOffHand();
 
-    @Accessor(value="mainHand")
+    @Accessor(value="mainHandItem")
     void setItemStackMainHand(ItemStack var1);
 
-    @Accessor(value="offHand")
+    @Accessor(value="offHandItem")
     void setItemStackOffHand(ItemStack var1);
 }

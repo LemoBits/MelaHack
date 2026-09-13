@@ -1,21 +1,21 @@
 package thunder.hack.core.manager.world;
 
-import net.minecraft.entity.decoration.EndCrystalEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
 import thunder.hack.core.Managers;
 import thunder.hack.core.manager.IManager;
 import thunder.hack.core.manager.client.ModuleManager;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
+import net.minecraft.world.phys.Vec3;
 
 public class CrystalManager implements IManager {
     private final Map<Integer, Long> deadCrystals = new ConcurrentHashMap<>();
     private final Map<Integer, Attempt> attackedCrystals = new ConcurrentHashMap<>();
     private final Map<BlockPos, Attempt> awaitingPositions = new ConcurrentHashMap<>();
 
-    public void onAttack(EndCrystalEntity crystal) {
+    public void onAttack(EndCrystal crystal) {
         setDead(crystal.getId(), System.currentTimeMillis());
         addAttack(crystal);
     }
@@ -45,10 +45,10 @@ public class CrystalManager implements IManager {
         return attackedCrystals.containsKey(id) && attackedCrystals.get(id).canSetPosBlocked();
     }
 
-    public void addAttack(EndCrystalEntity entity) {
+    public void addAttack(EndCrystal entity) {
         attackedCrystals.compute(entity.getId(), (pos, attempt) -> {
             if (attempt == null) {
-                return new Attempt(System.currentTimeMillis(), 1, entity.getPos());
+                return new Attempt(System.currentTimeMillis(), 1, entity.position());
             } else {
                 if (ModuleManager.autoCrystal.breakFailsafe.getValue())
                     attempt.addAttempt();
@@ -66,11 +66,11 @@ public class CrystalManager implements IManager {
     }
 
     public void addAwaitingPos(BlockPos blockPos) {
-        boolean blocked = ModuleManager.autoCrystal.isPositionBlockedByCrystal(blockPos.up());
+        boolean blocked = ModuleManager.autoCrystal.isPositionBlockedByCrystal(blockPos.above());
 
         awaitingPositions.compute(blockPos, (pos, attempt) -> {
             if (attempt == null) {
-                return new Attempt(System.currentTimeMillis(), 1, blockPos.toCenterPos());
+                return new Attempt(System.currentTimeMillis(), 1, blockPos.getCenter());
             } else {
                 if (!blocked && ModuleManager.autoCrystal.placeFailsafe.getValue())
                     attempt.addAttempt();
@@ -87,16 +87,16 @@ public class CrystalManager implements IManager {
         long time;
         int attempts;
         float distance;
-        public Vec3d pos;
+        public Vec3 pos;
 
-        Attempt(long time, int attempts, Vec3d pos) {
+        Attempt(long time, int attempts, Vec3 pos) {
             this.time = time;
             this.pos = pos;
             this.attempts = attempts;
-            distance = (float) mc.player.squaredDistanceTo(pos);
+            distance = (float) mc.player.distanceToSqr(pos);
         }
 
-        public Vec3d getPos() {
+        public Vec3 getPos() {
             return pos;
         }
 
@@ -109,7 +109,7 @@ public class CrystalManager implements IManager {
         }
 
         public boolean shouldRemove() {
-            return Math.abs(distance - mc.player.squaredDistanceTo(pos)) >= 1f;
+            return Math.abs(distance - mc.player.distanceToSqr(pos)) >= 1f;
         }
 
         public void addAttempt() {

@@ -1,23 +1,24 @@
 package thunder.hack.features.modules.misc;
+import java.util.List;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.network.PlayerListEntry;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket;
-import net.minecraft.network.packet.c2s.play.CommandExecutionC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket;
-import net.minecraft.network.packet.s2c.play.GameMessageS2CPacket;
-import net.minecraft.screen.GenericContainerScreenHandler;
-import net.minecraft.screen.slot.Slot;
-import net.minecraft.screen.slot.SlotActionType;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
+import net.minecraft.network.protocol.game.ServerboundChatCommandPacket;
+import net.minecraft.network.protocol.game.ServerboundContainerClosePacket;
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.ChestMenu;
+import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import org.apache.commons.lang3.StringUtils;
 import thunder.hack.ThunderHack;
 import thunder.hack.core.Managers;
@@ -35,7 +36,6 @@ import thunder.hack.utility.render.Render2DEngine;
 
 import java.awt.*;
 import java.util.*;
-import java.util.List;
 
 import static thunder.hack.features.modules.client.ClientSettings.isRu;
 
@@ -79,7 +79,7 @@ public class ServerHelper extends Module {
 
     @EventHandler
     public void onPacketReceive(PacketEvent.Receive event) {
-        if (event.getPacket() instanceof GameMessageS2CPacket pac) {
+        if (event.getPacket() instanceof ClientboundSystemChatPacket pac) {
             if (spek.getValue()) {
                 String content = pac.content().getString().toLowerCase();
                 if (content.contains("спек") || content.contains("ызус") || content.contains("spec") || content.contains("spek") || content.contains("ызул")) {
@@ -91,7 +91,7 @@ public class ServerHelper extends Module {
             if (photomath.getValue())
                 if (pac.content().getString().contains("Решите: ") && Objects.equals(ThunderUtility.solveName(pac.content().getString()), "FATAL ERROR"))
                     try {
-                        mc.player.networkHandler.sendChatMessage(String.valueOf(Integer.parseInt(StringUtils.substringBetween(pac.content().getString(), "Решите: ", " + ")) + Integer.parseInt(StringUtils.substringBetween(pac.content().getString(), " + ", " кто первый"))));
+                        mc.player.connection.sendChat(String.valueOf(Integer.parseInt(StringUtils.substringBetween(pac.content().getString(), "Решите: ", " + ")) + Integer.parseInt(StringUtils.substringBetween(pac.content().getString(), " + ", " кто первый"))));
                     } catch (Exception ignored) {
                     }
 
@@ -120,60 +120,60 @@ public class ServerHelper extends Module {
         if (flag && atphtimer.passedMs(100) && antiTpHere.getValue()) {
             StringBuilder log = new StringBuilder("Тебя телепортировали в X: " + (int) mc.player.getX() + " Z: " + (int) mc.player.getZ() + ". Ближайшие игроки : ");
 
-            for (PlayerEntity entity : mc.world.getPlayers()) {
+            for (Player entity : mc.level.players()) {
                 if (entity == mc.player) continue;
                 log.append(entity.getName().getString()).append(" ");
             }
             sendMessage(String.valueOf(log));
 
-            mc.player.networkHandler.sendChatCommand("back");
+            mc.player.connection.sendCommand("back");
             flag = false;
         }
 
         if (inviteTimer.passedS(clanInviteDelay.getValue()) && clanInvite.getValue()) {
             ArrayList<String> playersNames = new ArrayList<>();
-            for (PlayerListEntry player : mc.player.networkHandler.getPlayerList()) {
+            for (PlayerInfo player : mc.player.connection.getOnlinePlayers()) {
                 playersNames.add(player.getProfile().getName());
             }
             if (playersNames.size() > 1) {
                 int randomName = (int) Math.floor(Math.random() * playersNames.size());
-                mc.player.networkHandler.sendChatCommand("c invite " + playersNames.get(randomName));
+                mc.player.connection.sendCommand("c invite " + playersNames.get(randomName));
                 playersNames.clear();
                 inviteTimer.reset();
             }
         }
 
-        if (feed.getValue() && mc.player.getHungerManager().getFoodLevel() < 8 && canSendCommand())
-            mc.player.networkHandler.sendChatCommand("feed");
+        if (feed.getValue() && mc.player.getFoodData().getFoodLevel() < 8 && canSendCommand())
+            mc.player.connection.sendCommand("feed");
 
         if (fixAll.getValue() && canSendCommand())
-            mc.player.networkHandler.sendChatCommand("fix all");
+            mc.player.connection.sendCommand("fix all");
 
         if (mc.player.hurtTime > 0)
             pvpTimer.reset();
 
-        if (near.getValue() && mc.player.age % 30 == 0)
-            mc.player.networkHandler.sendChatCommand("near");
+        if (near.getValue() && mc.player.tickCount % 30 == 0)
+            mc.player.connection.sendCommand("near");
 
         if (farmilka.getValue()) {
             for (Entity ent : Managers.ASYNC.getAsyncEntities()) {
-                if (ent instanceof PlayerEntity) continue;
+                if (ent instanceof Player) continue;
                 if (ent instanceof LivingEntity) {
-                    if (((LivingEntity) ent).isDead())
-                        mc.world.removeEntity(ent.getId(), Entity.RemovalReason.KILLED);
+                    if (((LivingEntity) ent).isDeadOrDying())
+                        mc.level.removeEntity(ent.getId(), Entity.RemovalReason.KILLED);
                 }
             }
         }
 
-        if (mc.player.currentScreenHandler instanceof GenericContainerScreenHandler chest && aucHelper.getValue()) {
-            if (mc.currentScreen.getTitle().getString().contains("Аукцион") || mc.currentScreen.getTitle().getString().contains("Поиск")) {
+        if (mc.player.containerMenu instanceof ChestMenu chest && aucHelper.getValue()) {
+            if (mc.screen.getTitle().getString().contains("Аукцион") || mc.screen.getTitle().getString().contains("Поиск")) {
 
                 result.clear();
                 Map<String, Integer> itemMap = new HashMap<>();
 
                 int slot = 0;
 
-                for (ItemStack itemStack : chest.getStacks()) {
+                for (ItemStack itemStack : chest.getItems()) {
                     if (slot > 44)
                         continue;
 
@@ -187,7 +187,7 @@ public class ServerHelper extends Module {
                 }
 
                 slot = 0;
-                for (ItemStack itemStack : chest.getStacks()) {
+                for (ItemStack itemStack : chest.getItems()) {
                     if (itemMap.get(getKey(itemStack)) != null) {
 
                         int price = getPrice(itemStack);
@@ -217,7 +217,7 @@ public class ServerHelper extends Module {
 
     @EventHandler
     public void onPacketSend(PacketEvent.Send e) {
-        if (e.getPacket() instanceof CommandExecutionC2SPacket)
+        if (e.getPacket() instanceof ServerboundChatCommandPacket)
             checktimer.reset();
     }
 
@@ -225,13 +225,13 @@ public class ServerHelper extends Module {
     private void onSync(EventSync event) {
         if (fullNullCheck()) return;
 
-        if (isKeyPressed(desorient.getValue().getKey()) && disorientTimer.passedMs(3000) && mc.currentScreen == null) {
+        if (isKeyPressed(desorient.getValue().getKey()) && disorientTimer.passedMs(3000) && mc.screen == null) {
             use(InventoryUtility.findInHotBar(i -> i.getItem() == Items.ENDER_EYE),
                     InventoryUtility.findInInventory(i -> i.getItem() == Items.ENDER_EYE));
             disorientTimer.reset();
         }
 
-        if (isKeyPressed(trap.getValue().getKey()) && trapTimer.passedMs(3000) && mc.currentScreen == null) {
+        if (isKeyPressed(trap.getValue().getKey()) && trapTimer.passedMs(3000) && mc.screen == null) {
             use(InventoryUtility.findInHotBar(i -> i.getItem() == Items.NETHERITE_SCRAP),
                     InventoryUtility.findInInventory(i -> i.getItem() == Items.NETHERITE_SCRAP));
             trapTimer.reset();
@@ -240,20 +240,20 @@ public class ServerHelper extends Module {
 
     private String getKey(ItemStack stack) {
         if (groupBy.is(GroupBy.Name)) {
-            return stack.getName().getString();
+            return stack.getHoverName().getString();
         } else {
-            return stack.getItem().getTranslationKey();
+            return stack.getItem().getDescriptionId();
         }
     }
 
-    public void onRenderChest(DrawContext context, Slot slot) {
-        if (mc.player.currentScreenHandler instanceof GenericContainerScreenHandler chest)
-            if (mc.currentScreen.getTitle().getString().contains("Аукцион") || mc.currentScreen.getTitle().getString().contains("Поиск"))
+    public void onRenderChest(GuiGraphics context, Slot slot) {
+        if (mc.player.containerMenu instanceof ChestMenu chest)
+            if (mc.screen.getTitle().getString().contains("Аукцион") || mc.screen.getTitle().getString().contains("Поиск"))
                 for (AucItem item : result)
-                    if (item.id == slot.id && slot.id <= 44 && !slot.getStack().isEmpty()) {
+                    if (item.id == slot.index && slot.index <= 44 && !slot.getItem().isEmpty()) {
                         float ratio = (float) (Math.pow(item.lowestPrice, contrast.getValue()) / Math.pow(item.price, contrast.getValue()));
 
-                        Render2DEngine.drawRect(context.getMatrices(), slot.x, slot.y,
+                        Render2DEngine.drawRect(context.pose(), slot.x, slot.y,
                                 16, 16, Render2DEngine.interpolateColorC(new Color(0xFF000000, true), new Color(0x00FF00), ratio));
                         return;
                     }
@@ -281,13 +281,13 @@ public class ServerHelper extends Module {
     private void use(SearchInvResult result, SearchInvResult invResult) {
         if (result.found()) {
             InventoryUtility.saveAndSwitchTo(result.slot());
-            sendSequencedPacket(id -> new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, id, mc.player.getYaw(), mc.player.getPitch()));
+            sendSequencedPacket(id -> new ServerboundUseItemPacket(InteractionHand.MAIN_HAND, id, mc.player.getYRot(), mc.player.getXRot()));
             InventoryUtility.returnSlot();
         } else if (invResult.found()) {
-            clickSlot(invResult.slot(), mc.player.getInventory().getSelectedSlot(), SlotActionType.SWAP);
-            sendSequencedPacket(id -> new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, id, mc.player.getYaw(), mc.player.getPitch()));
-            clickSlot(invResult.slot(), mc.player.getInventory().getSelectedSlot(), SlotActionType.SWAP);
-            sendPacket(new CloseHandledScreenC2SPacket(mc.player.currentScreenHandler.syncId));
+            clickSlot(invResult.slot(), mc.player.getInventory().getSelectedSlot(), ClickType.SWAP);
+            sendSequencedPacket(id -> new ServerboundUseItemPacket(InteractionHand.MAIN_HAND, id, mc.player.getYRot(), mc.player.getXRot()));
+            clickSlot(invResult.slot(), mc.player.getInventory().getSelectedSlot(), ClickType.SWAP);
+            sendPacket(new ServerboundContainerClosePacket(mc.player.containerMenu.containerId));
         }
         disorientTimer.reset();
     }

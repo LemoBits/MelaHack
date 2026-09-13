@@ -1,7 +1,7 @@
 package thunder.hack.injection;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.vehicle.AbstractBoatEntity;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.vehicle.AbstractBoat;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -9,25 +9,25 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import thunder.hack.core.manager.client.ModuleManager;
 
-@Mixin(AbstractBoatEntity.class)
+@Mixin(AbstractBoat.class)
 public class MixinBoatEntity {
 
     @Unique
     private float prevYaw, prevHeadYaw;
 
-    @Inject(method = "updatePassengerPosition", at = @At("HEAD"))
-    protected void updatePassengerPositionHookPre(Entity passenger, Entity.PositionUpdater positionUpdater, CallbackInfo ci) {
+    @Inject(method = "positionRider", at = @At("HEAD"))
+    protected void updatePassengerPositionHookPre(Entity passenger, Entity.MoveFunction positionUpdater, CallbackInfo ci) {
         if(ModuleManager.boatFly.isEnabled()) {
-            prevYaw = passenger.getYaw();
-            prevHeadYaw = passenger.getHeadYaw();
+            prevYaw = passenger.getYRot();
+            prevHeadYaw = passenger.getYHeadRot();
         }
     }
 
-    @Inject(method = "updatePassengerPosition", at = @At("RETURN"))
-    protected void updatePassengerPositionHookPost(Entity passenger, Entity.PositionUpdater positionUpdater, CallbackInfo ci) {
+    @Inject(method = "positionRider", at = @At("RETURN"))
+    protected void updatePassengerPositionHookPost(Entity passenger, Entity.MoveFunction positionUpdater, CallbackInfo ci) {
         if(ModuleManager.boatFly.isEnabled()) {
-            passenger.setYaw(prevYaw);
-            passenger.setHeadYaw(prevHeadYaw);
+            passenger.setYRot(prevYaw);
+            passenger.setYHeadRot(prevHeadYaw);
         }
     }
 }

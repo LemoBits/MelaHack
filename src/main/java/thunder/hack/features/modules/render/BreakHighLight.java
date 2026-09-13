@@ -1,10 +1,5 @@
 package thunder.hack.features.modules.render;
 
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
 import thunder.hack.injection.accesors.IWorldRenderer;
 import thunder.hack.features.modules.Module;
 import thunder.hack.setting.Setting;
@@ -12,8 +7,12 @@ import thunder.hack.setting.impl.ColorSetting;
 import thunder.hack.utility.math.MathUtility;
 import thunder.hack.utility.render.Render2DEngine;
 import thunder.hack.utility.render.Render3DEngine;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
 
 public class BreakHighLight extends Module {
     public BreakHighLight() {
@@ -33,24 +32,24 @@ public class BreakHighLight extends Module {
 
     private float prevProgress;
 
-    public void onRender3D(MatrixStack stack) {
-        if (mc.interactionManager.isBreakingBlock() && mc.crosshairTarget != null && mc.crosshairTarget instanceof BlockHitResult bhr && !mc.world.isAir(bhr.getBlockPos())) {
-            Box shrunkMineBox = new Box(bhr.getBlockPos().getX(), bhr.getBlockPos().getY(), bhr.getBlockPos().getZ(), bhr.getBlockPos().getX(), bhr.getBlockPos().getY(), bhr.getBlockPos().getZ());
+    public void onRender3D(PoseStack stack) {
+        if (mc.gameMode.isDestroying() && mc.hitResult != null && mc.hitResult instanceof BlockHitResult bhr && !mc.level.isEmptyBlock(bhr.getBlockPos())) {
+            AABB shrunkMineBox = new AABB(bhr.getBlockPos().getX(), bhr.getBlockPos().getY(), bhr.getBlockPos().getZ(), bhr.getBlockPos().getX(), bhr.getBlockPos().getY(), bhr.getBlockPos().getZ());
 
             float noom; //ам ням ебался
 
             switch (mode.getValue()) {
-                case Grow -> noom = Render2DEngine.interpolateFloat(prevProgress, MathUtility.clamp(mc.interactionManager.currentBreakingProgress, 0f, 1f), Render3DEngine.getTickDelta());
-                case Shrink -> noom = 1f - Render2DEngine.interpolateFloat(prevProgress, mc.interactionManager.currentBreakingProgress, Render3DEngine.getTickDelta());
+                case Grow -> noom = Render2DEngine.interpolateFloat(prevProgress, MathUtility.clamp(mc.gameMode.destroyProgress, 0f, 1f), Render3DEngine.getTickDelta());
+                case Shrink -> noom = 1f - Render2DEngine.interpolateFloat(prevProgress, mc.gameMode.destroyProgress, Render3DEngine.getTickDelta());
                 default -> noom = 1;
             }
 
             Render3DEngine.FILLED_QUEUE.add(new Render3DEngine.FillAction(
-                    shrunkMineBox.shrink(noom, noom, noom).offset(0.5 + noom * 0.5, 0.5 + noom * 0.5, 0.5 + noom * 0.5),
+                    shrunkMineBox.contract(noom, noom, noom).move(0.5 + noom * 0.5, 0.5 + noom * 0.5, 0.5 + noom * 0.5),
                     Render2DEngine.interpolateColorC(color.getValue().getColorObject(),color2.getValue().getColorObject(),noom)
             ));
             Render3DEngine.OUTLINE_QUEUE.add(new Render3DEngine.OutlineAction(
-                    shrunkMineBox.shrink(noom, noom, noom).offset(0.5 + noom * 0.5, 0.5 + noom * 0.5, 0.5 + noom * 0.5),
+                    shrunkMineBox.contract(noom, noom, noom).move(0.5 + noom * 0.5, 0.5 + noom * 0.5, 0.5 + noom * 0.5),
                     Render2DEngine.interpolateColorC(ocolor.getValue().getColorObject(),ocolor2.getValue().getColorObject(),noom),
                     lineWidth.getValue()
             ));
@@ -61,27 +60,27 @@ public class BreakHighLight extends Module {
                 default -> prevProgress = 1f;
             }
         }
-        ((IWorldRenderer) mc.worldRenderer).getBlockBreakingInfos().forEach(((integer, destroyBlockProgress) -> {
-            Entity object = mc.world.getEntityById(integer);
+        ((IWorldRenderer) mc.levelRenderer).getBlockBreakingInfos().forEach(((integer, destroyBlockProgress) -> {
+            Entity object = mc.level.getEntity(integer);
             if (object != null && otherPlayer.getValue() && !object.getName().equals(mc.player.getName())) {
                 BlockPos pos = destroyBlockProgress.getPos();
-                Render3DEngine.drawTextIn3D(String.valueOf(object.getName().getString()),pos.toCenterPos(),0,0.1,0,textColor.getValue().getColorObject());
-                Box shrunkMineBox = new Box(pos.getX(), pos.getY(), pos.getZ(), pos.getX(), pos.getY(), pos.getZ());
+                Render3DEngine.drawTextIn3D(String.valueOf(object.getName().getString()),pos.getCenter(),0,0.1,0,textColor.getValue().getColorObject());
+                AABB shrunkMineBox = new AABB(pos.getX(), pos.getY(), pos.getZ(), pos.getX(), pos.getY(), pos.getZ());
 
                 float noom;
                 switch (mode.getValue()) {
-                    case Grow -> noom = MathUtility.clamp((destroyBlockProgress.getStage() / 10f), 0f, 1f);
-                    case Shrink -> noom = 1f - (destroyBlockProgress.getStage() / 10f);
+                    case Grow -> noom = MathUtility.clamp((destroyBlockProgress.getProgress() / 10f), 0f, 1f);
+                    case Shrink -> noom = 1f - (destroyBlockProgress.getProgress() / 10f);
                     default -> noom = 1;
                 }
 
                 Render3DEngine.FILLED_QUEUE.add(new Render3DEngine.FillAction(
-                        shrunkMineBox.shrink(noom, noom, noom).offset(0.5 + noom * 0.5, 0.5 + noom * 0.5, 0.5 + noom * 0.5),
+                        shrunkMineBox.contract(noom, noom, noom).move(0.5 + noom * 0.5, 0.5 + noom * 0.5, 0.5 + noom * 0.5),
                         Render2DEngine.interpolateColorC(color.getValue().getColorObject(),color2.getValue().getColorObject(),noom)
                 ));
 
                 Render3DEngine.OUTLINE_QUEUE.add(new Render3DEngine.OutlineAction(
-                        shrunkMineBox.shrink(noom, noom, noom).offset(0.5 + noom * 0.5, 0.5 + noom * 0.5, 0.5 + noom * 0.5),
+                        shrunkMineBox.contract(noom, noom, noom).move(0.5 + noom * 0.5, 0.5 + noom * 0.5, 0.5 + noom * 0.5),
                         Render2DEngine.interpolateColorC(ocolor.getValue().getColorObject(),ocolor2.getValue().getColorObject(),noom),
                         lineWidth.getValue()
                 ));

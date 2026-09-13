@@ -1,7 +1,5 @@
 package thunder.hack.features.hud.impl;
 
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.util.Formatting;
 import thunder.hack.core.Managers;
 import thunder.hack.gui.font.FontRenderers;
 import thunder.hack.features.hud.HudElement;
@@ -14,6 +12,8 @@ import thunder.hack.utility.render.Render2DEngine;
 import java.awt.*;
 import java.util.Comparator;
 import java.util.List;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.GuiGraphics;
 
 public class ModuleList extends HudElement {
     private final Setting<Mode> mode = new Setting<>("Mode", Mode.ColorText);
@@ -28,11 +28,11 @@ public class ModuleList extends HudElement {
         super("ArrayList", 50, 30);
     }
 
-    public void onRender2D(DrawContext context) {
+    public void onRender2D(GuiGraphics context) {
         super.onRender2D(context);
 
         int stringWidth;
-        boolean reverse = getPosX() > (mc.getWindow().getScaledWidth() / 2f);
+        boolean reverse = getPosX() > (mc.getWindow().getGuiScaledWidth() / 2f);
         int offset = 0;
         float maxWidth = 0;
         float reversedX = getPosX();
@@ -51,10 +51,10 @@ public class ModuleList extends HudElement {
 
             Color color1 = HudEditor.getColor(offset);
 
-            stringWidth = (int) (FontRenderers.modules.getStringWidth(module.getDisplayName() + Formatting.GRAY + ((module.getDisplayInfo() != null) ? (" [" + Formatting.WHITE + module.getDisplayInfo() + Formatting.GRAY + "]") : "")) + 3);
+            stringWidth = (int) (FontRenderers.modules.getStringWidth(module.getDisplayName() + ChatFormatting.GRAY + ((module.getDisplayInfo() != null) ? (" [" + ChatFormatting.WHITE + module.getDisplayInfo() + ChatFormatting.GRAY + "]") : "")) + 3);
 
             if (glow.getValue())
-                Render2DEngine.drawBlurredShadow(context.getMatrices(), reverse ? reversedX - stringWidth - 3 : getPosX(), getPosY() + offset - 1, stringWidth + 4, 9f, gste.getValue(), color1);
+                Render2DEngine.drawBlurredShadow(context.pose(), reverse ? reversedX - stringWidth - 3 : getPosX(), getPosY() + offset - 1, stringWidth + 4, 9f, gste.getValue(), color1);
 
             if (stringWidth > maxWidth)
                 maxWidth = stringWidth;
@@ -68,17 +68,17 @@ public class ModuleList extends HudElement {
             if (!shouldRender(module))
                 continue;
 
-            stringWidth = (int) (FontRenderers.modules.getStringWidth(module.getDisplayName() + Formatting.GRAY + ((module.getDisplayInfo() != null) ? (" [" + Formatting.WHITE + module.getDisplayInfo() + Formatting.GRAY + "]") : "")) + 3);
+            stringWidth = (int) (FontRenderers.modules.getStringWidth(module.getDisplayName() + ChatFormatting.GRAY + ((module.getDisplayInfo() != null) ? (" [" + ChatFormatting.WHITE + module.getDisplayInfo() + ChatFormatting.GRAY + "]") : "")) + 3);
             Color color1 = HudEditor.getColor(offset);
 
             if (HudEditor.hudStyle.is(HudEditor.HudStyle.Blurry)) {
-                Render2DEngine.drawRoundedBlur(context.getMatrices(), reverse ? reversedX - stringWidth : getPosX(), getPosY() + offset, stringWidth + 1.0f, 9.0f, 2, HudEditor.blurColor.getValue().getColorObject());
+                Render2DEngine.drawRoundedBlur(context.pose(), reverse ? reversedX - stringWidth : getPosX(), getPosY() + offset, stringWidth + 1.0f, 9.0f, 2, HudEditor.blurColor.getValue().getColorObject());
             } else {
-                Render2DEngine.drawRect(context.getMatrices(), reverse ? reversedX - stringWidth : getPosX(), getPosY() + offset, stringWidth + 1.0f, 9.0f, mode.getValue() == Mode.ColorRect ? color1 : color3.getValue().getColorObject());
-                Render2DEngine.drawRect(context.getMatrices(), reverse ? reversedX + 1f : getPosX() - 2.0f, getPosY() + offset, 2.0f, 9f, mode.getValue() == Mode.ColorRect ? color4.getValue().getColorObject() : color1);
+                Render2DEngine.drawRect(context.pose(), reverse ? reversedX - stringWidth : getPosX(), getPosY() + offset, stringWidth + 1.0f, 9.0f, mode.getValue() == Mode.ColorRect ? color1 : color3.getValue().getColorObject());
+                Render2DEngine.drawRect(context.pose(), reverse ? reversedX + 1f : getPosX() - 2.0f, getPosY() + offset, 2.0f, 9f, mode.getValue() == Mode.ColorRect ? color4.getValue().getColorObject() : color1);
             }
 
-            FontRenderers.modules.drawString(context.getMatrices(), module.getDisplayName() + Formatting.GRAY + (module.getDisplayInfo() != null ? " [" + Formatting.WHITE + module.getDisplayInfo() + Formatting.GRAY + "]" : ""), reverse ? reversedX - stringWidth + 2.0f : getPosX() + 3.0f, getPosY() + 3.0f + offset, mode.getValue() == Mode.ColorRect ? -1 : color1.getRGB());
+            FontRenderers.modules.drawString(context.pose(), module.getDisplayName() + ChatFormatting.GRAY + (module.getDisplayInfo() != null ? " [" + ChatFormatting.WHITE + module.getDisplayInfo() + ChatFormatting.GRAY + "]" : ""), reverse ? reversedX - stringWidth + 2.0f : getPosX() + 3.0f, getPosY() + 3.0f + offset, mode.getValue() == Mode.ColorRect ? -1 : color1.getRGB());
 
             offset += 9;
         }

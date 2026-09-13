@@ -1,16 +1,23 @@
 package thunder.hack.injection;
 
-import net.minecraft.block.*;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.network.ClientPlayerInteractionManager;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Items;
-import net.minecraft.screen.slot.SlotActionType;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
+import net.minecraft.world.level.block.*;
+import net.minecraft.client.multiplayer.MultiPlayerGameMode;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.DoorBlock;
+import net.minecraft.world.level.block.FenceBlock;
+import net.minecraft.world.level.block.FenceGateBlock;
+import net.minecraft.world.level.block.ShulkerBoxBlock;
+import net.minecraft.world.level.block.TrapDoorBlock;
+import net.minecraft.world.phys.BlockHitResult;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -30,15 +37,15 @@ import thunder.hack.features.modules.player.SpeedMine;
 
 import static thunder.hack.features.modules.Module.mc;
 
-@Mixin(ClientPlayerInteractionManager.class)
+@Mixin(MultiPlayerGameMode.class)
 public class MixinClientPlayerInteractionManager {
 
     @Shadow
-    private int blockBreakingCooldown;
+    private int destroyDelay;
 
-    @Inject(method = "interactBlock", at = @At("HEAD"), cancellable = true)
-    private void interactBlock(ClientPlayerEntity player, Hand hand, BlockHitResult hitResult, CallbackInfoReturnable<ActionResult> cir) {
-        Block bs = mc.world.getBlockState(hitResult.getBlockPos()).getBlock();
+    @Inject(method = "useItemOn", at = @At("HEAD"), cancellable = true)
+    private void interactBlock(LocalPlayer player, InteractionHand hand, BlockHitResult hitResult, CallbackInfoReturnable<InteractionResult> cir) {
+        Block bs = mc.level.getBlockState(hitResult.getBlockPos()).getBlock();
         if (ModuleManager.noInteract.isEnabled() && (
                 bs == Blocks.CHEST ||
                         bs == Blocks.TRAPPED_CHEST ||
@@ -56,29 +63,29 @@ public class MixinClientPlayerInteractionManager {
                         bs instanceof FenceBlock ||
                         bs instanceof FenceGateBlock ||
                         bs instanceof DoorBlock ||
-                        bs instanceof TrapdoorBlock)
+                        bs instanceof TrapDoorBlock)
                 && (ModuleManager.aura.isEnabled() || !NoInteract.onlyAura.getValue())) {
-            cir.setReturnValue(ActionResult.PASS);
+            cir.setReturnValue(InteractionResult.PASS);
         }
 
         if(mc.player != null && ModuleManager.antiBallPlace.isEnabled()
-                && ((mc.player.getOffHandStack().getItem() == Items.PLAYER_HEAD && hand == Hand.OFF_HAND) || (mc.player.getMainHandStack().getItem() == Items.PLAYER_HEAD && hand == Hand.MAIN_HAND)))
-            cir.setReturnValue(ActionResult.PASS);
+                && ((mc.player.getOffhandItem().getItem() == Items.PLAYER_HEAD && hand == InteractionHand.OFF_HAND) || (mc.player.getMainHandItem().getItem() == Items.PLAYER_HEAD && hand == InteractionHand.MAIN_HAND)))
+            cir.setReturnValue(InteractionResult.PASS);
     }
 
-    @Redirect(method = "updateBlockBreakingProgress", at = @At(value = "FIELD", target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;blockBreakingCooldown:I", opcode = Opcodes.GETFIELD, ordinal = 0))
-    public int updateBlockBreakingProgressHook(ClientPlayerInteractionManager clientPlayerInteractionManager) {
-        return ModuleManager.speedMine.isEnabled() ? 0 : this.blockBreakingCooldown;
+    @Redirect(method = "continueDestroyBlock", at = @At(value = "FIELD", target = "Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;destroyDelay:I", opcode = Opcodes.GETFIELD, ordinal = 0))
+    public int updateBlockBreakingProgressHook(MultiPlayerGameMode clientPlayerInteractionManager) {
+        return ModuleManager.speedMine.isEnabled() ? 0 : this.destroyDelay;
     }
 
-    @Inject(method = "updateBlockBreakingProgress", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "continueDestroyBlock", at = @At("HEAD"), cancellable = true)
     public void updateBlockBreakingProgress(BlockPos pos, Direction direction, CallbackInfoReturnable<Boolean> cir) {
         if (ModuleManager.speedMine.isEnabled() && ModuleManager.speedMine.mode.getValue() == SpeedMine.Mode.Packet) {
             cir.setReturnValue(false);
         }
     }
 
-    @Inject(method = "attackBlock", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "startDestroyBlock", at = @At("HEAD"), cancellable = true)
     private void attackBlockHook(BlockPos pos, Direction direction, CallbackInfoReturnable<Boolean> cir) {
         if(Module.fullNullCheck()) return;
         EventAttackBlock event = new EventAttackBlock(pos, direction);
@@ -103,7 +110,7 @@ public class MixinClientPlayerInteractionManager {
     }
      */
 
-    @Inject(method = "breakBlock", at = @At("RETURN"), cancellable = true)
+    @Inject(method = "destroyBlock", at = @At("RETURN"), cancellable = true)
     public void breakBlockHook(BlockPos pos, CallbackInfoReturnable<Boolean> cir) {
         if(Module.fullNullCheck()) return;
         EventBreakBlock event = new EventBreakBlock(pos);
@@ -112,8 +119,8 @@ public class MixinClientPlayerInteractionManager {
             cir.setReturnValue(false);
     }
 
-    @Inject(method = "clickSlot", at = @At("HEAD"), cancellable = true)
-    public void clickSlotHook(int syncId, int slotId, int button, SlotActionType actionType, PlayerEntity player, CallbackInfo ci) {
+    @Inject(method = "handleInventoryMouseClick", at = @At("HEAD"), cancellable = true)
+    public void clickSlotHook(int syncId, int slotId, int button, ClickType actionType, Player player, CallbackInfo ci) {
         if(Module.fullNullCheck()) return;
         EventClickSlot event = new EventClickSlot(actionType, slotId, button, syncId);
         ThunderHack.EVENT_BUS.post(event);

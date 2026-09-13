@@ -1,17 +1,17 @@
 package thunder.hack.features.modules;
 
+import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.logging.LogUtils;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.network.PendingUpdateManager;
-import net.minecraft.client.network.SequencedPacketCreator;
-import net.minecraft.client.util.InputUtil;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.network.packet.Packet;
-import net.minecraft.screen.slot.SlotActionType;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.multiplayer.prediction.BlockStatePredictionHandler;
+import net.minecraft.client.multiplayer.prediction.PredictiveAction;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.world.inventory.ClickType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import thunder.hack.ThunderHack;
@@ -47,7 +47,7 @@ public abstract class Module {
             "HudEditor"
     );
 
-    public static final MinecraftClient mc = MinecraftClient.getInstance();
+    public static final Minecraft mc = Minecraft.getInstance();
 
     public Module(@NotNull String name, @NotNull Category category) {
         this.displayName = name;
@@ -71,11 +71,11 @@ public abstract class Module {
     public void onUpdate() {
     }
 
-    public void onRender2D(DrawContext event) {
+    public void onRender2D(GuiGraphics event) {
     }
 
 
-    public void onRender3D(MatrixStack event) {
+    public void onRender3D(PoseStack event) {
     }
 
     public void onUnload() {
@@ -85,8 +85,8 @@ public abstract class Module {
         return true;
     }
 
-    protected void onClientTick(MinecraftClient client) {
-        if (mc.player != null && mc.world != null && isEnabled()) {
+    protected void onClientTick(Minecraft client) {
+        if (mc.player != null && mc.level != null && isEnabled()) {
             onSync();
         }
     }
@@ -97,22 +97,22 @@ public abstract class Module {
     ;
 
     protected void sendPacket(Packet<?> packet) {
-        if (mc.getNetworkHandler() == null) return;
+        if (mc.getConnection() == null) return;
 
-        mc.getNetworkHandler().sendPacket(packet);
+        mc.getConnection().send(packet);
     }
 
     protected void sendPacketSilent(Packet<?> packet) {
-        if (mc.getNetworkHandler() == null) return;
+        if (mc.getConnection() == null) return;
         ThunderHack.core.silentPackets.add(packet);
-        mc.getNetworkHandler().sendPacket(packet);
+        mc.getConnection().send(packet);
     }
 
-    protected void sendSequencedPacket(SequencedPacketCreator packetCreator) {
-        if (mc.getNetworkHandler() == null || mc.world == null) return;
-        try (PendingUpdateManager pendingUpdateManager = mc.world.getPendingUpdateManager().incrementSequence();) {
-            int i = pendingUpdateManager.getSequence();
-            mc.getNetworkHandler().sendPacket(packetCreator.predict(i));
+    protected void sendSequencedPacket(PredictiveAction packetCreator) {
+        if (mc.getConnection() == null || mc.level == null) return;
+        try (BlockStatePredictionHandler pendingUpdateManager = mc.level.getBlockStatePredictionHandler().startPredicting();) {
+            int i = pendingUpdateManager.currentSequence();
+            mc.getConnection().send(packetCreator.predict(i));
         }
     }
 
@@ -226,11 +226,11 @@ public abstract class Module {
     }
 
     public String getFullArrayString() {
-        return getDisplayName() + Formatting.GRAY + (getDisplayInfo() != null ? " [" + Formatting.WHITE + getDisplayInfo() + Formatting.GRAY + "]" : "");
+        return getDisplayName() + ChatFormatting.GRAY + (getDisplayInfo() != null ? " [" + ChatFormatting.WHITE + getDisplayInfo() + ChatFormatting.GRAY + "]" : "");
     }
 
     public static boolean fullNullCheck() {
-        return mc.player == null || mc.world == null || ModuleManager.unHook.isEnabled();
+        return mc.player == null || mc.level == null || ModuleManager.unHook.isEnabled();
     }
 
     public String getName() {
@@ -271,49 +271,49 @@ public abstract class Module {
     }
 
     public static void clickSlot(int id) {
-        if (id == -1 || mc.interactionManager == null || mc.player == null) return;
-        mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, id, 0, SlotActionType.PICKUP, mc.player);
+        if (id == -1 || mc.gameMode == null || mc.player == null) return;
+        mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, id, 0, ClickType.PICKUP, mc.player);
     }
 
-    public static void clickSlot(int id, SlotActionType type) {
-        if (id == -1 || mc.interactionManager == null || mc.player == null) return;
-        mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, id, 0, type, mc.player);
+    public static void clickSlot(int id, ClickType type) {
+        if (id == -1 || mc.gameMode == null || mc.player == null) return;
+        mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, id, 0, type, mc.player);
     }
 
-    public static void clickSlot(int id, int button, SlotActionType type) {
-        if (id == -1 || mc.interactionManager == null || mc.player == null) return;
-        mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, id, button, type, mc.player);
+    public static void clickSlot(int id, int button, ClickType type) {
+        if (id == -1 || mc.gameMode == null || mc.player == null) return;
+        mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, id, button, type, mc.player);
     }
 
     public void sendMessage(String message) {
         if (fullNullCheck() || !ClientSettings.clientMessages.getValue() || ModuleManager.unHook.isEnabled()) return;
-        if (mc.isOnThread()) {
-            mc.player.sendMessage(Text.of(CommandManager.getClientMessage() + " " + Formatting.GRAY + "[" + Formatting.DARK_PURPLE + getDisplayName() + Formatting.GRAY + "] " + message), false);
+        if (mc.isSameThread()) {
+            mc.player.displayClientMessage(Component.nullToEmpty(CommandManager.getClientMessage() + " " + ChatFormatting.GRAY + "[" + ChatFormatting.DARK_PURPLE + getDisplayName() + ChatFormatting.GRAY + "] " + message), false);
         } else {
-            mc.executeSync(() ->
-                mc.player.sendMessage(Text.of(CommandManager.getClientMessage() + " " + Formatting.GRAY + "[" + Formatting.DARK_PURPLE + getDisplayName() + Formatting.GRAY + "] " + message), false)
+            mc.executeIfPossible(() ->
+                mc.player.displayClientMessage(Component.nullToEmpty(CommandManager.getClientMessage() + " " + ChatFormatting.GRAY + "[" + ChatFormatting.DARK_PURPLE + getDisplayName() + ChatFormatting.GRAY + "] " + message), false)
             );
         }
     }
 
     public void sendChatMessage(String message) {
         if (fullNullCheck()) return;
-        mc.getNetworkHandler().sendChatMessage(message);
+        mc.getConnection().sendChat(message);
     }
 
     public void sendChatCommand(String command) {
         if (fullNullCheck()) return;
 
-        mc.getNetworkHandler().sendChatCommand(command);
+        mc.getConnection().sendCommand(command);
     }
 
     public void debug(String message) {
         if (fullNullCheck() || !ClientSettings.debug.getValue()) return;
-        if (mc.isOnThread()) {
-            mc.player.sendMessage(Text.of(CommandManager.getClientMessage() + " " + Formatting.GRAY + "[" + Formatting.DARK_PURPLE + getDisplayName() + Formatting.GRAY + "] [\uD83D\uDD27] " + message), false);
+        if (mc.isSameThread()) {
+            mc.player.displayClientMessage(Component.nullToEmpty(CommandManager.getClientMessage() + " " + ChatFormatting.GRAY + "[" + ChatFormatting.DARK_PURPLE + getDisplayName() + ChatFormatting.GRAY + "] [\uD83D\uDD27] " + message), false);
         } else {
-            mc.executeSync(() -> {
-                mc.player.sendMessage(Text.of(CommandManager.getClientMessage() + " " + Formatting.GRAY + "[" + Formatting.DARK_PURPLE + getDisplayName() + Formatting.GRAY + "] [\uD83D\uDD27] " + message), false);
+            mc.executeIfPossible(() -> {
+                mc.player.displayClientMessage(Component.nullToEmpty(CommandManager.getClientMessage() + " " + ChatFormatting.GRAY + "[" + ChatFormatting.DARK_PURPLE + getDisplayName() + ChatFormatting.GRAY + "] [\uD83D\uDD27] " + message), false);
             });
         }
     }
@@ -330,7 +330,7 @@ public abstract class Module {
         if (button < 10) // check
             return false;
 
-        return InputUtil.isKeyPressed(mc.getWindow().getHandle(), button);
+        return InputConstants.isKeyDown(mc.getWindow().getWindow(), button);
     }
 
     public boolean isKeyPressed(Setting<Bind> bind) {

@@ -1,7 +1,7 @@
 package thunder.hack.core.manager.client;
+import thunder.hack.features.modules.render.Particles;
+import thunder.hack.features.modules.movement.Timer;
 
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.util.math.MatrixStack;
 import org.lwjgl.glfw.GLFW;
 import thunder.hack.ThunderHack;
 import thunder.hack.core.manager.IManager;
@@ -14,16 +14,14 @@ import thunder.hack.features.modules.Module;
 import thunder.hack.features.modules.client.*;
 import thunder.hack.features.modules.combat.*;
 import thunder.hack.features.modules.misc.*;
-import thunder.hack.features.modules.movement.Timer;
 import thunder.hack.features.modules.movement.*;
 import thunder.hack.features.modules.player.*;
-import thunder.hack.features.modules.render.Particles;
 import thunder.hack.features.modules.render.*;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.lang.reflect.Field;
 import java.util.*;
-import java.util.List;
 import java.util.stream.Collectors;
+import net.minecraft.client.gui.GuiGraphics;
 
 @SuppressWarnings("unused")
 public class ModuleManager implements IManager {
@@ -336,8 +334,8 @@ public class ModuleManager implements IManager {
         modules.stream().filter(Module::isEnabled).forEach(Module::onUpdate);
     }
 
-    public void onRender2D(DrawContext context) {
-        if (mc.getDebugHud().shouldShowDebugHud() || mc.options.hudHidden) return;
+    public void onRender2D(GuiGraphics context) {
+        if (mc.getDebugOverlay().showDebugScreen() || mc.options.hideGui) return;
         Render2DEngine.BLUR_PROGRAM.invalidateCapture();
         HudElement.anyHovered = false;
         modules.stream().filter(Module::isEnabled).forEach(module -> module.onRender2D(context));
@@ -345,12 +343,12 @@ public class ModuleManager implements IManager {
             if (GLFW.glfwGetPlatform() != GLFW.GLFW_PLATFORM_WAYLAND) {
                 if (DEFAULT_CURSOR == 0)
                     DEFAULT_CURSOR = GLFW.glfwCreateStandardCursor(GLFW.GLFW_ARROW_CURSOR);
-                GLFW.glfwSetCursor(mc.getWindow().getHandle(), DEFAULT_CURSOR);
+                GLFW.glfwSetCursor(mc.getWindow().getWindow(), DEFAULT_CURSOR);
             }
         ThunderHack.core.onRender2D(context);
     }
 
-    public void onRender3D(MatrixStack stack) {
+    public void onRender3D(PoseStack stack) {
         modules.stream().filter(Module::isEnabled).forEach(module -> module.onRender3D(stack));
     }
 
@@ -377,7 +375,7 @@ public class ModuleManager implements IManager {
     }
 
     public void onKeyPressed(int eventKey) {
-        if (eventKey == -1 || eventKey == 0 || mc.currentScreen instanceof ClickGUI) {
+        if (eventKey == -1 || eventKey == 0 || mc.screen instanceof ClickGUI) {
             return;
         }
         modules.forEach(module -> {
@@ -387,7 +385,7 @@ public class ModuleManager implements IManager {
     }
 
     public void onKeyReleased(int eventKey) {
-        if (eventKey == -1 || eventKey == 0 || mc.currentScreen instanceof ClickGUI)
+        if (eventKey == -1 || eventKey == 0 || mc.screen instanceof ClickGUI)
             return;
 
         modules.forEach(module -> {
@@ -397,7 +395,7 @@ public class ModuleManager implements IManager {
     }
 
     public void onMoseKeyPressed(int eventKey) {
-        if (eventKey == -1 || mc.currentScreen instanceof ClickGUI) {
+        if (eventKey == -1 || mc.screen instanceof ClickGUI) {
             return;
         }
 
@@ -409,7 +407,7 @@ public class ModuleManager implements IManager {
     }
 
     public void onMoseKeyReleased(int eventKey) {
-        if (eventKey == -1 || mc.currentScreen instanceof ClickGUI)
+        if (eventKey == -1 || mc.screen instanceof ClickGUI)
             return;
 
         activeMouseKeys.add(eventKey);

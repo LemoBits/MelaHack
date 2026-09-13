@@ -1,11 +1,12 @@
 package thunder.hack.features.modules.player;
 
-import net.minecraft.item.ItemStack;
 import thunder.hack.features.modules.Module;
 import thunder.hack.setting.Setting;
 
 import static thunder.hack.features.modules.client.ClientSettings.isRu;
 import static thunder.hack.features.modules.combat.AutoTotem.findNearestCurrentItem;
+
+import net.minecraft.world.item.ItemStack;
 
 public class ToolSaver extends Module {
     public ToolSaver() {
@@ -16,11 +17,11 @@ public class ToolSaver extends Module {
 
     @Override
     public void onUpdate() {
-        ItemStack tool = mc.player.getMainHandStack();
-        if(!tool.isDamageable())
+        ItemStack tool = mc.player.getMainHandItem();
+        if(!tool.isDamageableItem())
             return;
 
-        float durability = tool.getMaxDamage() - tool.getDamage();
+        float durability = tool.getMaxDamage() - tool.getDamageValue();
         int percent = (int) ((durability / (float) tool.getMaxDamage()) * 100F);
 
         if(percent <= savePercent.getValue()) {

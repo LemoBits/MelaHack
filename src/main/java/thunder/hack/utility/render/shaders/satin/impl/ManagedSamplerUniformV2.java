@@ -18,10 +18,9 @@
 package thunder.hack.utility.render.shaders.satin.impl;
 
 import thunder.hack.utility.render.shaders.satin.api.managed.uniform.SamplerUniformV2;
-import com.mojang.blaze3d.textures.Framebuffer;
-import net.minecraft.client.texture.AbstractTexture;
-
+import com.mojang.blaze3d.pipeline.RenderTarget;
 import java.util.function.IntSupplier;
+import net.minecraft.client.renderer.texture.AbstractTexture;
 
 public final class ManagedSamplerUniformV2 extends ManagedSamplerUniformBase implements SamplerUniformV2 {
     public ManagedSamplerUniformV2(String name) {
@@ -34,7 +33,7 @@ public final class ManagedSamplerUniformV2 extends ManagedSamplerUniformBase imp
     }
 
     @Override
-    public void set(Framebuffer textureFbo) {
+    public void set(RenderTarget textureFbo) {
         set((Object) textureFbo);
     }
 

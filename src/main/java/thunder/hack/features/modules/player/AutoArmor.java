@@ -1,19 +1,5 @@
 package thunder.hack.features.modules.player;
 
-import net.minecraft.client.gui.screen.ChatScreen;
-import net.minecraft.component.type.ItemEnchantmentsComponent;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.enchantment.Enchantments;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
-import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.util.Hand;
 import thunder.hack.core.manager.client.ModuleManager;
 import thunder.hack.gui.clickui.ClickGUI;
 import thunder.hack.gui.hud.HudEditorGui;
@@ -24,6 +10,20 @@ import thunder.hack.utility.player.MovementUtility;
 
 import java.util.Arrays;
 import java.util.List;
+import net.minecraft.client.gui.screens.ChatScreen;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.protocol.game.ServerboundContainerClosePacket;
+import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
 
 public class AutoArmor extends Module {
     public AutoArmor() {
@@ -53,7 +53,7 @@ public class AutoArmor extends Module {
 
     @Override
     public void onUpdate() {
-        if (mc.currentScreen != null && pauseInventory.getValue() && !(mc.currentScreen instanceof ChatScreen) && !(mc.currentScreen instanceof ClickGUI) && !(mc.currentScreen instanceof HudEditorGui))
+        if (mc.screen != null && pauseInventory.getValue() && !(mc.screen instanceof ChatScreen) && !(mc.screen instanceof ClickGUI) && !(mc.screen instanceof HudEditorGui))
             return;
 
         if (tickDelay-- > 0)
@@ -62,11 +62,11 @@ public class AutoArmor extends Module {
         armorList.forEach(ArmorData::reset);
 
         for (int i = 0; i < 36; i++) {
-            ItemStack stack = mc.player.getInventory().getStack(i);
+            ItemStack stack = mc.player.getInventory().getItem(i);
             int prot = getProtection(stack);
             if (prot > 0)
                 for (ArmorData e : armorList) {
-                    if (e.getEquipmentSlot() == mc.player.getPreferredEquipmentSlot(stack))
+                    if (e.getEquipmentSlot() == mc.player.getEquipmentSlotForItem(stack))
                         if (prot > e.getPrevProt() && prot > e.getNewProtection()) {
                             e.setNewSlot(i);
                             e.setNewProtection(prot);
@@ -79,7 +79,7 @@ public class AutoArmor extends Module {
             if (slot != -1) {
                 if ((armorPiece.getPrevProt() == -1 || !oldVersion.getValue()) && slot < 9) {
                     InventoryUtility.saveAndSwitchTo(slot);
-                    sendSequencedPacket(id -> new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, id, mc.player.getYaw(), mc.player.getPitch()));
+                    sendSequencedPacket(id -> new ServerboundUseItemPacket(InteractionHand.MAIN_HAND, id, mc.player.getYRot(), mc.player.getXRot()));
                     InventoryUtility.returnSlot();
                 } else {
                     if (MovementUtility.isMoving() && noMove.getValue())
@@ -88,14 +88,14 @@ public class AutoArmor extends Module {
                     int newArmorSlot = slot < 9 ? 36 + slot : slot;
 
                     if(strict.getValue())
-                        sendPacket(new ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.STOP_SPRINTING));
+                        sendPacket(new ServerboundPlayerCommandPacket(mc.player, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING));
 
                     clickSlot(newArmorSlot);
                     clickSlot((armorPiece.getArmorSlot() - 34) + (39 - armorPiece.getArmorSlot()) * 2);
                     if (armorPiece.getPrevProt() != -1)
                         clickSlot(newArmorSlot);
 
-                    sendPacket(new CloseHandledScreenC2SPacket(mc.player.currentScreenHandler.syncId));
+                    sendPacket(new ServerboundContainerClosePacket(mc.player.containerMenu.containerId));
                 }
 
                 tickDelay = delay.getValue();
@@ -105,17 +105,17 @@ public class AutoArmor extends Module {
     }
 
     private int getProtection(ItemStack is) {
-        if (mc.player.getPreferredEquipmentSlot(is).isArmorSlot() || is.isOf(Items.ELYTRA)) {
+        if (mc.player.getEquipmentSlotForItem(is).isArmor() || is.is(Items.ELYTRA)) {
             int prot = 0;
 
-            EquipmentSlot slot = mc.player.getPreferredEquipmentSlot(is);
+            EquipmentSlot slot = mc.player.getEquipmentSlotForItem(is);
 
-            if (is.isOf(Items.ELYTRA)) {
+            if (is.is(Items.ELYTRA)) {
                 if (!isUsableElytra(is))
                     return 0;
 
                 boolean ePlus = elytraPriority.is(ElytraPriority.ElytraPlus) && (ModuleManager.elytraRecast.isEnabled() || ModuleManager.elytraPlus.isEnabled());
-                boolean ignore = elytraPriority.is(ElytraPriority.Ignore) && mc.player.getInventory().getStack(38).isOf(Items.ELYTRA);
+                boolean ignore = elytraPriority.is(ElytraPriority.Ignore) && mc.player.getInventory().getItem(38).is(Items.ELYTRA);
 
                 if (ePlus || ignore || elytraPriority.is(ElytraPriority.Always))
                     prot = 999;
@@ -143,31 +143,31 @@ public class AutoArmor extends Module {
                 }
             }
 
-            if (is.hasEnchantments()) {
-                ItemEnchantmentsComponent enchants = EnchantmentHelper.getEnchantments(is);
+            if (is.isEnchanted()) {
+                ItemEnchantments enchants = EnchantmentHelper.getEnchantmentsForCrafting(is);
 
-                var enchantments = mc.world.getRegistryManager().getOrThrow(RegistryKeys.ENCHANTMENT);
+                var enchantments = mc.level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
                 var protection = enchantments.getOrThrow(Enchantments.PROTECTION);
                 var blastProtection = enchantments.getOrThrow(Enchantments.BLAST_PROTECTION);
                 var bindingCurse = enchantments.getOrThrow(Enchantments.BINDING_CURSE);
 
-                if (enchants.getEnchantments().contains(protection))
+                if (enchants.keySet().contains(protection))
                     prot += enchants.getLevel(protection) * protectionMultiplier;
 
-                if (enchants.getEnchantments().contains(blastProtection))
+                if (enchants.keySet().contains(blastProtection))
                     prot += enchants.getLevel(blastProtection) * blastMultiplier;
 
-                if (enchants.getEnchantments().contains(bindingCurse) && ignoreCurse.getValue())
+                if (enchants.keySet().contains(bindingCurse) && ignoreCurse.getValue())
                     prot = -999;
             }
 
-            if (slot.isArmorSlot()) {
+            if (slot.isArmor()) {
                 final double[] armorValues = new double[2];
-                is.applyAttributeModifiers(slot, (attribute, modifier) -> {
-                    if (attribute.matches(EntityAttributes.ARMOR)) {
-                        armorValues[0] += modifier.value();
-                    } else if (attribute.matches(EntityAttributes.ARMOR_TOUGHNESS)) {
-                        armorValues[1] += modifier.value();
+                is.forEachModifier(slot, (attribute, modifier) -> {
+                    if (attribute.is(Attributes.ARMOR)) {
+                        armorValues[0] += modifier.amount();
+                    } else if (attribute.is(Attributes.ARMOR_TOUGHNESS)) {
+                        armorValues[1] += modifier.amount();
                     }
                 });
                 int base = (int) Math.ceil(armorValues[0] + armorValues[1]);
@@ -179,7 +179,7 @@ public class AutoArmor extends Module {
     }
 
     private boolean isUsableElytra(ItemStack stack) {
-        return LivingEntity.canGlideWith(stack, EquipmentSlot.CHEST);
+        return LivingEntity.canGlideUsing(stack, EquipmentSlot.CHEST);
     }
 
     public class ArmorData {
@@ -227,7 +227,7 @@ public class AutoArmor extends Module {
         }
 
         public void reset() {
-            setPrevProt(getProtection(mc.player.getInventory().getStack(getArmorSlot())));
+            setPrevProt(getProtection(mc.player.getInventory().getItem(getArmorSlot())));
             setNewSlot(-1);
             setNewProtection(-1);
         }

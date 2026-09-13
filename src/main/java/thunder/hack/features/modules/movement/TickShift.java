@@ -1,8 +1,8 @@
 package thunder.hack.features.modules.movement;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.network.packet.s2c.play.PlayerPositionS2CPacket;
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import thunder.hack.ThunderHack;
 import thunder.hack.events.impl.EventSync;
 import thunder.hack.events.impl.PacketEvent;
@@ -38,35 +38,35 @@ public class TickShift extends Module {
         prevPosX = mc.player.getX();
         prevPosY = mc.player.getY();
         prevPosZ = mc.player.getZ();
-        yaw = mc.player.getYaw();
-        pitch = mc.player.getPitch();
+        yaw = mc.player.getYRot();
+        pitch = mc.player.getXRot();
 
-        if (mc.player == null || mc.world == null || !lagTimer.passedMs(lagTime.getValue())) {
+        if (mc.player == null || mc.level == null || !lagTimer.passedMs(lagTime.getValue())) {
             reset();
-        } else if (ticks <= 0 || !MovementUtility.isMoving() || !sneaking.getValue() && mc.player.isSneaking()) {
+        } else if (ticks <= 0 || !MovementUtility.isMoving() || !sneaking.getValue() && mc.player.isShiftKeyDown()) {
             ThunderHack.TICK_TIMER = 1.0f;
         }
     }
 
     @EventHandler
     public void onPacketReceive(PacketEvent.Receive e) {
-        if (e.getPacket() instanceof PlayerPositionS2CPacket)
+        if (e.getPacket() instanceof ClientboundPlayerPositionPacket)
             lagTimer.reset();
     }
 
     @EventHandler
     public void onPacketSend(PacketEvent.Send e) {
-        if (e.getPacket() instanceof PlayerMoveC2SPacket.Full)
+        if (e.getPacket() instanceof ServerboundMovePlayerPacket.PosRot)
             shift(e, true);
-        if (e.getPacket() instanceof PlayerMoveC2SPacket.PositionAndOnGround)
+        if (e.getPacket() instanceof ServerboundMovePlayerPacket.Pos)
             shift(e, true);
 
-        if (e.getPacket() instanceof PlayerMoveC2SPacket.LookAndOnGround pac)
-            if (cancelRotations.getValue() && (cancelGround.getValue() || pac.isOnGround() == mc.player.isOnGround()))
+        if (e.getPacket() instanceof ServerboundMovePlayerPacket.Rot pac)
+            if (cancelRotations.getValue() && (cancelGround.getValue() || pac.isOnGround() == mc.player.onGround()))
                 e.cancel();
             else shift(e, false);
 
-        if (e.getPacket() instanceof PlayerMoveC2SPacket.OnGroundOnly)
+        if (e.getPacket() instanceof ServerboundMovePlayerPacket.StatusOnly)
             if (cancelGround.getValue()) e.cancel();
             else shift(e, false);
     }
@@ -87,12 +87,12 @@ public class TickShift extends Module {
     }
 
     private static boolean notMoving() {
-        return prevPosX == mc.player.getX() && prevPosY == mc.player.getY() && prevPosZ == mc.player.getZ() && yaw == mc.player.getYaw() && pitch == mc.player.getPitch();
+        return prevPosX == mc.player.getX() && prevPosY == mc.player.getY() && prevPosZ == mc.player.getZ() && yaw == mc.player.getYRot() && pitch == mc.player.getXRot();
     }
 
     private void shift(PacketEvent.Send event, boolean moving) {
         if (event.isCancelled()) return;
-        if (moving && MovementUtility.isMoving() &&ticks > 0 && (sneaking.getValue() || !mc.player.isSneaking()))
+        if (moving && MovementUtility.isMoving() &&ticks > 0 && (sneaking.getValue() || !mc.player.isShiftKeyDown()))
             ThunderHack.TICK_TIMER = timer.getValue();
         ticks = ticks <= 0 ? 0 : ticks - 1;
     }

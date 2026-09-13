@@ -1,8 +1,8 @@
 package thunder.hack.features.modules.misc;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.network.packet.c2s.play.ClickSlotC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
+import net.minecraft.network.protocol.game.ServerboundContainerClickPacket;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.events.impl.PacketEvent;
 import thunder.hack.features.modules.Module;
@@ -20,13 +20,13 @@ public final class PacketCanceler extends Module {
     @EventHandler
     @SuppressWarnings("unused")
     private void onPacketSend(PacketEvent.@NotNull Send e) {
-        if (e.getPacket() instanceof ClickSlotC2SPacket && clickSlot.getValue()) {
+        if (e.getPacket() instanceof ServerboundContainerClickPacket && clickSlot.getValue()) {
             e.cancel();
-        } else if (e.getPacket() instanceof PlayerMoveC2SPacket.PositionAndOnGround && playerMovePosAndOnGround.getValue()) {
+        } else if (e.getPacket() instanceof ServerboundMovePlayerPacket.Pos && playerMovePosAndOnGround.getValue()) {
             e.cancel();
-        } else if (e.getPacket() instanceof PlayerMoveC2SPacket.OnGroundOnly && playerMoveOnGroundOnly.getValue()) {
+        } else if (e.getPacket() instanceof ServerboundMovePlayerPacket.StatusOnly && playerMoveOnGroundOnly.getValue()) {
             e.cancel();
-        } else if (e.getPacket() instanceof PlayerMoveC2SPacket.LookAndOnGround && playerMoveLookAndOnGround.getValue()) {
+        } else if (e.getPacket() instanceof ServerboundMovePlayerPacket.Rot && playerMoveLookAndOnGround.getValue()) {
             e.cancel();
         }
     }

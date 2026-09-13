@@ -2,8 +2,8 @@ package thunder.hack.features.cmd.impl;
 
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import net.minecraft.command.CommandSource;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.core.BlockPos;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.ThunderHack;
 import thunder.hack.features.cmd.Command;
@@ -16,7 +16,7 @@ public class GpsCommand extends Command {
     }
 
     @Override
-    public void executeBuild(@NotNull LiteralArgumentBuilder<CommandSource> builder) {
+    public void executeBuild(@NotNull LiteralArgumentBuilder<SharedSuggestionProvider> builder) {
         builder.then(literal("off").executes(context -> {
             ThunderHack.gps_position = null;
             return SINGLE_SUCCESS;

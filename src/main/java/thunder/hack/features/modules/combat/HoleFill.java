@@ -1,13 +1,19 @@
 package thunder.hack.features.modules.combat;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.block.Block;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3i;
-import net.minecraft.world.RaycastContext;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.Vec3i;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 import thunder.hack.core.Managers;
@@ -21,12 +27,6 @@ import thunder.hack.setting.impl.SettingGroup;
 import thunder.hack.utility.math.PredictUtility;
 import thunder.hack.utility.player.InteractionUtility;
 import thunder.hack.utility.Timer;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.math.BlockPos;
 import thunder.hack.utility.render.BlockAnimationUtility;
 import thunder.hack.utility.world.HoleUtility;
 
@@ -105,14 +105,14 @@ public final class HoleFill extends Module {
     @EventHandler
     public void onTick(EventTick event) {
         if (fullNullCheck()) return;
-        if (jumpDisable.getValue() && mc.player.lastY < mc.player.getY())
+        if (jumpDisable.getValue() && mc.player.yo < mc.player.getY())
             disable(isRu() ? "Вы прыгнули! Выключаю..." : "You jumped! Disabling...");
 
         if (tickCounter < actionInterval.getValue()) {
             tickCounter++;
             return;
         }
-        if (HoleUtility.isHole(mc.player.getBlockPos()) && mc.world.getBlockState(mc.player.getBlockPos()).isAir()) {
+        if (HoleUtility.isHole(mc.player.blockPosition()) && mc.level.getBlockState(mc.player.blockPosition()).isAir()) {
             burrowWasEnabled = false;
         }
         int slot = getBlockSlot();
@@ -120,14 +120,14 @@ public final class HoleFill extends Module {
 
         List<BlockPos> holes = findHoles();
 
-        PlayerEntity target = Managers.COMBAT.getTargets(placeRange.getValue()).stream()
-                .min(Comparator.comparing(e -> mc.player.squaredDistanceTo(e)))
+        Player target = Managers.COMBAT.getTargets(placeRange.getValue()).stream()
+                .min(Comparator.comparing(e -> mc.player.distanceToSqr(e)))
                 .orElse(null);
 
         if (mode.getValue() == Mode.Target && target == null)
             return;
 
-        final PlayerEntity predicted = PredictUtility.predictPlayer(target, 3);
+        final Player predicted = PredictUtility.predictPlayer(target, 3);
 
         int blocksPlaced = 0;
 
@@ -137,39 +137,39 @@ public final class HoleFill extends Module {
             if (mode.getValue() == Mode.Target) {
                 pos = holes.stream()
                         .filter(this::isHole)
-                        .filter(p -> mc.player.getPos().distanceTo(p.toCenterPos()) <= placeRange.getValue())
-                        .filter(p -> predicted.getPos().distanceTo(p.toCenterPos()) <= rangeToTarget.getValue())
+                        .filter(p -> mc.player.position().distanceTo(p.getCenter()) <= placeRange.getValue())
+                        .filter(p -> predicted.position().distanceTo(p.getCenter()) <= rangeToTarget.getValue())
                         .filter(p -> {
-                            if (p.equals(mc.player.getBlockPos()) && selfFill.getValue()) {
+                            if (p.equals(mc.player.blockPosition()) && selfFill.getValue()) {
                                 selfFillNeed = true;
                                 return true;
                             }
                             return InteractionUtility.canPlaceBlock(p, interactMode.getValue(), false);
                         })
-                        .min(Comparator.comparing(p -> mc.player.getPos().distanceTo(p.toCenterPos())))
+                        .min(Comparator.comparing(p -> mc.player.position().distanceTo(p.getCenter())))
                         .orElse(null);
             } else {
                 pos = holes.stream()
                         .filter(this::isHole)
-                        .filter(p -> mc.player.getPos().distanceTo(p.toCenterPos()) <= placeRange.getValue())
+                        .filter(p -> mc.player.position().distanceTo(p.getCenter()) <= placeRange.getValue())
                         .filter(p -> {
-                            if (p.equals(mc.player.getBlockPos()) && selfFill.getValue()) {
+                            if (p.equals(mc.player.blockPosition()) && selfFill.getValue()) {
                                 selfFillNeed = true;
                                 return true;
                             }
                             return InteractionUtility.canPlaceBlock(p, interactMode.getValue(), false);
                         })
-                        .min(Comparator.comparing(p -> mc.player.getPos().distanceTo(p.toCenterPos())))
+                        .min(Comparator.comparing(p -> mc.player.position().distanceTo(p.getCenter())))
                         .orElse(null);
             }
 
             if (pos != null) {
                 List<BlockPos> poses = getHolePoses(pos).stream()
-                        .filter(blockPos -> mc.player.getPos().distanceTo(blockPos.toCenterPos()) <= placeRange.getValue())
+                        .filter(blockPos -> mc.player.position().distanceTo(blockPos.getCenter()) <= placeRange.getValue())
                         .toList();
                 boolean broke = false;
 
-                if (selfFillNeed && HoleUtility.isHole(mc.player.getBlockPos())) {
+                if (selfFillNeed && HoleUtility.isHole(mc.player.blockPosition())) {
                     switch (selfFillMode.getValue()) {
                         case Burrow -> {
                             if (ModuleManager.burrow.isEnabled() || burrowWasEnabled) {
@@ -181,8 +181,8 @@ public final class HoleFill extends Module {
                             return;
                         }
                         case Trap -> {
-                            BlockPos headPos = BlockPos.ofFloored(mc.player.getPos()).up(2);
-                            if (mc.world.getBlockState(headPos).isReplaceable() && InteractionUtility.canPlaceBlock(headPos, interactMode.getValue(), false)) {
+                            BlockPos headPos = BlockPos.containing(mc.player.position()).above(2);
+                            if (mc.level.getBlockState(headPos).canBeReplaced() && InteractionUtility.canPlaceBlock(headPos, interactMode.getValue(), false)) {
                                 selfFillNeed = false;
                                 InteractionUtility.placeBlock(headPos, rotate.getValue(), interactMode.getValue(), placeMode.getValue(), slot, true, false);
                                 BlockAnimationUtility.renderBlock(headPos, renderLineColor.getValue().getColorObject(), renderLineWidth.getValue(), renderFillColor.getValue().getColorObject(), animationMode.getValue(), renderMode.getValue());
@@ -194,8 +194,8 @@ public final class HoleFill extends Module {
                                 boolean placed = false;
                                 for (int i = 0; i < 3; i++) {
                                     for (Vec3i vecAdd : HoleUtility.VECTOR_PATTERN) {
-                                        BlockPos checkPos = headPos.add(vecAdd).down(i);
-                                        if (!mc.world.getBlockState(checkPos).isReplaceable()) {
+                                        BlockPos checkPos = headPos.offset(vecAdd).below(i);
+                                        if (!mc.level.getBlockState(checkPos).canBeReplaced()) {
                                             continue;
                                         }
                                         if (InteractionUtility.canPlaceBlock(checkPos, interactMode.getValue(), false)) {
@@ -220,7 +220,7 @@ public final class HoleFill extends Module {
                         blocksPlaced++;
                         tickCounter = 0;
                         BlockAnimationUtility.renderBlock(blockPos, renderLineColor.getValue().getColorObject(), renderLineWidth.getValue(), renderFillColor.getValue().getColorObject(), animationMode.getValue(), renderMode.getValue());
-                        if (!mc.player.isOnGround()) return;
+                        if (!mc.player.onGround()) return;
                         inactivityTimer.reset();
                     } else {
                         broke = true;
@@ -241,14 +241,14 @@ public final class HoleFill extends Module {
     private @NotNull @Unmodifiable List<BlockPos> getHolePoses(BlockPos fromPos) {
         if (HoleUtility.validQuadBedrock(fromPos) || HoleUtility.validQuadIndestructible(fromPos)) {
             for (Vec3i vec : HOLE_VECTORS) {
-                if (mc.world.getBlockState(fromPos.add(vec)).isReplaceable()
-                        && mc.world.getBlockState(fromPos.add(vec.getX(), 0, 0)).isReplaceable()
-                        && mc.world.getBlockState(fromPos.add(0, 0, vec.getZ())).isReplaceable()) {
+                if (mc.level.getBlockState(fromPos.offset(vec)).canBeReplaced()
+                        && mc.level.getBlockState(fromPos.offset(vec.getX(), 0, 0)).canBeReplaced()
+                        && mc.level.getBlockState(fromPos.offset(0, 0, vec.getZ())).canBeReplaced()) {
                     return List.of(
                             fromPos,
-                            fromPos.add(vec),
-                            fromPos.add(vec.getX(), 0, 0),
-                            fromPos.add(0, 0, vec.getZ())
+                            fromPos.offset(vec),
+                            fromPos.offset(vec.getX(), 0, 0),
+                            fromPos.offset(0, 0, vec.getZ())
                     );
                 }
             }
@@ -256,11 +256,11 @@ public final class HoleFill extends Module {
 
         if (HoleUtility.validTwoBlockBedrock(fromPos) || HoleUtility.validTwoBlockIndestructible(fromPos)) {
             for (Vec3i vec : HoleUtility.VECTOR_PATTERN) {
-                if (mc.world.getBlockState(fromPos).isReplaceable()
-                        && mc.world.getBlockState(fromPos.add(vec)).isReplaceable()) {
+                if (mc.level.getBlockState(fromPos).canBeReplaced()
+                        && mc.level.getBlockState(fromPos.offset(vec)).canBeReplaced()) {
                     return List.of(
                             fromPos,
-                            fromPos.add(vec)
+                            fromPos.offset(vec)
                     );
                 }
             }
@@ -271,7 +271,7 @@ public final class HoleFill extends Module {
 
     private @NotNull List<BlockPos> findHoles() {
         List<BlockPos> positions = new ArrayList<>();
-        BlockPos centerPos = mc.player.getBlockPos();
+        BlockPos centerPos = mc.player.blockPosition();
         int r = (int) Math.ceil(placeRange.getValue()) + 1;
         int h = placeRange.getValue().intValue();
 
@@ -282,8 +282,8 @@ public final class HoleFill extends Module {
                     boolean foundEntity = false;
                     if (isHole(pos) && !isFillingNow(pos)) {
 
-                        for (PlayerEntity pe : Managers.ASYNC.getAsyncPlayers()) {
-                            if (new Box(pos).intersects(pe.getBoundingBox())) {
+                        for (Player pe : Managers.ASYNC.getAsyncPlayers()) {
+                            if (new AABB(pos).intersects(pe.getBoundingBox())) {
                                 foundEntity = true;
                                 break;
                             }
@@ -292,9 +292,9 @@ public final class HoleFill extends Module {
                         if (foundEntity)
                             continue;
 
-                        BlockHitResult wallCheck = mc.world.raycast(new RaycastContext(InteractionUtility.getEyesPos(mc.player), pos.toCenterPos().offset(Direction.UP, 0.5f), RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, mc.player));
+                        BlockHitResult wallCheck = mc.level.clip(new ClipContext(InteractionUtility.getEyesPos(mc.player), pos.getCenter().relative(Direction.UP, 0.5f), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player));
                         if (wallCheck != null && wallCheck.getType() == HitResult.Type.BLOCK && wallCheck.getBlockPos() != pos)
-                            if (InteractionUtility.squaredDistanceFromEyes(pos.toCenterPos()) > placeWallRange.getPow2Value())
+                            if (InteractionUtility.squaredDistanceFromEyes(pos.getCenter()) > placeWallRange.getPow2Value())
                                 continue;
                         positions.add(pos);
                     }
@@ -307,13 +307,13 @@ public final class HoleFill extends Module {
 
 
     private int getBlockSlot() {
-        ItemStack stack = mc.player.getMainHandStack();
+        ItemStack stack = mc.player.getMainHandItem();
 
         if (!stack.isEmpty() && isValidItem(stack.getItem())) {
             return mc.player.getInventory().getSelectedSlot();
         } else {
             for (int i = 0; i < 9; ++i) {
-                stack = mc.player.getInventory().getStack(i);
+                stack = mc.player.getInventory().getItem(i);
                 if (!stack.isEmpty() && isValidItem(stack.getItem())) {
                     return i;
                 }

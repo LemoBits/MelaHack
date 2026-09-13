@@ -1,21 +1,21 @@
 package thunder.hack.injection.accesors;
 
-import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket;
+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(EntityVelocityUpdateS2CPacket.class)
+@Mixin(ClientboundSetEntityMotionPacket.class)
 public interface ISPacketEntityVelocity {
     @Mutable
-    @Accessor("velocityX")
+    @Accessor("xa")
     void setMotionX(int velocityX);
 
     @Mutable
-    @Accessor("velocityY")
+    @Accessor("ya")
     void setMotionY(int velocityY);
 
     @Mutable
-    @Accessor("velocityZ")
+    @Accessor("za")
     void setMotionZ(int velocityZ);
 }

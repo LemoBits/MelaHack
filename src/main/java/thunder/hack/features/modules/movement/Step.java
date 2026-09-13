@@ -1,8 +1,8 @@
 package thunder.hack.features.modules.movement;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import thunder.hack.ThunderHack;
 import thunder.hack.core.manager.client.ModuleManager;
 import thunder.hack.events.impl.EventSync;
@@ -29,7 +29,7 @@ public class Step extends Module {
 
     @Override
     public void onEnable() {
-        alreadyInHole = mc.player != null && HoleUtility.isHole(mc.player.getBlockPos());
+        alreadyInHole = mc.player != null && HoleUtility.isHole(mc.player.blockPosition());
     }
 
     @Override
@@ -40,35 +40,35 @@ public class Step extends Module {
 
     @Override
     public void onUpdate() {
-        if (holeDisable.getValue() && HoleUtility.isHole(mc.player.getBlockPos()) && !alreadyInHole) {
+        if (holeDisable.getValue() && HoleUtility.isHole(mc.player.blockPosition()) && !alreadyInHole) {
             disable("Player in hole... Disabling...");
             return;
         }
-        alreadyInHole = mc.player != null && HoleUtility.isHole(mc.player.getBlockPos());
+        alreadyInHole = mc.player != null && HoleUtility.isHole(mc.player.blockPosition());
 
-        if (pauseIfShift.getValue() && mc.options.sneakKey.isPressed()) {
+        if (pauseIfShift.getValue() && mc.options.keyShift.isDown()) {
             setStepHeight(0.6F);
             return;
         }
 
-        if (mc.player.getAbilities().flying || ModuleManager.freeCam.isOn() || mc.player.isRiding() || mc.player.isTouchingWater()) {
+        if (mc.player.getAbilities().flying || ModuleManager.freeCam.isOn() || mc.player.isHandsBusy() || mc.player.isInWater()) {
             setStepHeight(0.6F);
             return;
         }
 
-        if (timer && mc.player.isOnGround()) {
+        if (timer && mc.player.onGround()) {
             ThunderHack.TICK_TIMER = 1f;
             timer = false;
         }
 
-        if (mc.player.isOnGround() && stepTimer.passedMs(stepDelay.getValue())) setStepHeight(height.getValue());
+        if (mc.player.onGround() && stepTimer.passedMs(stepDelay.getValue())) setStepHeight(height.getValue());
         else setStepHeight(0.6F);
     }
 
     @EventHandler
     public void onStep(EventSync event) {
         if (mode.getValue() == Mode.NCP) {
-            double stepHeight = mc.player.getY() - mc.player.lastY;
+            double stepHeight = mc.player.getY() - mc.player.yo;
 
             if (stepHeight <= 0.75 || stepHeight > height.getValue() || (strict.getValue() && stepHeight > 1)) return;
 
@@ -79,9 +79,9 @@ public class Step extends Module {
                     timer = true;
                 }
                 for (double offset : offsets)
-                    sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(mc.player.lastX, mc.player.lastY + offset, mc.player.lastZ, false, mc.player.horizontalCollision));
+                    sendPacket(new ServerboundMovePlayerPacket.Pos(mc.player.xo, mc.player.yo + offset, mc.player.zo, false, mc.player.horizontalCollision));
                 if (strict.getValue())
-                    sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(mc.player.lastX, mc.player.lastY + stepHeight, mc.player.lastZ, false, mc.player.horizontalCollision));
+                    sendPacket(new ServerboundMovePlayerPacket.Pos(mc.player.xo, mc.player.yo + stepHeight, mc.player.zo, false, mc.player.horizontalCollision));
             }
             stepTimer.reset();
         }
@@ -99,7 +99,7 @@ public class Step extends Module {
     }
 
     private void setStepHeight(float v) {
-        mc.player.getAttributeInstance(EntityAttributes.STEP_HEIGHT).setBaseValue(v);
+        mc.player.getAttribute(Attributes.STEP_HEIGHT).setBaseValue(v);
     }
 
     public enum Mode {NCP, VANILLA}

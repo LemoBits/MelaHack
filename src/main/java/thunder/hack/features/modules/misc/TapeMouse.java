@@ -1,9 +1,9 @@
 package thunder.hack.features.modules.misc;
 
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.EntityHitResult;
-import net.minecraft.util.hit.HitResult;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.HitResult;
 import thunder.hack.features.modules.Module;
 import thunder.hack.injection.accesors.IMinecraftClient;
 import thunder.hack.setting.Setting;
@@ -31,14 +31,14 @@ public class TapeMouse extends Module {
         if (timer.every((long) (delay.getValue() + (randomize.getValue().isEnabled() ? MathUtility.random(0, randomizeValue.getValue()) : 0))))
             if (mode.getValue() == Mode.Left) {
                 if (!legit.getValue()) {
-                    HitResult hr = mc.crosshairTarget;
+                    HitResult hr = mc.hitResult;
                     if (hr != null) {
                         if (hr instanceof EntityHitResult ehr && ehr.getEntity() != null) {
-                            mc.interactionManager.attackEntity(mc.player, ehr.getEntity());
-                            mc.player.swingHand(Hand.MAIN_HAND);
-                        } else if (hr instanceof BlockHitResult bhr && bhr.getBlockPos() != null && bhr.getSide() != null && !mc.world.isAir(bhr.getBlockPos())) {
-                            mc.interactionManager.attackBlock(bhr.getBlockPos(), bhr.getSide());
-                            mc.player.swingHand(Hand.MAIN_HAND);
+                            mc.gameMode.attack(mc.player, ehr.getEntity());
+                            mc.player.swing(InteractionHand.MAIN_HAND);
+                        } else if (hr instanceof BlockHitResult bhr && bhr.getBlockPos() != null && bhr.getDirection() != null && !mc.level.isEmptyBlock(bhr.getBlockPos())) {
+                            mc.gameMode.startDestroyBlock(bhr.getBlockPos(), bhr.getDirection());
+                            mc.player.swing(InteractionHand.MAIN_HAND);
                         }
                     }
                 } else ((IMinecraftClient) mc).idoAttack();

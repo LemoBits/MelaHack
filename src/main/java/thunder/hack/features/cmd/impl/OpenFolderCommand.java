@@ -1,12 +1,12 @@
 package thunder.hack.features.cmd.impl;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import net.minecraft.command.CommandSource;
-import net.minecraft.util.Util;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.features.cmd.Command;
 
 import java.io.File;
+import net.minecraft.Util;
+import net.minecraft.commands.SharedSuggestionProvider;
 
 import static com.mojang.brigadier.Command.SINGLE_SUCCESS;
 
@@ -16,9 +16,9 @@ public class OpenFolderCommand extends Command {
     }
 
     @Override
-    public void executeBuild(@NotNull LiteralArgumentBuilder<CommandSource> builder) {
+    public void executeBuild(@NotNull LiteralArgumentBuilder<SharedSuggestionProvider> builder) {
         builder.executes(context -> {
-            Util.getOperatingSystem().open(new File("ThunderHackRecode/configs/"));
+            Util.getPlatform().openFile(new File("ThunderHackRecode/configs/"));
             return SINGLE_SUCCESS;
         });
     }

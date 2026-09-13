@@ -3,8 +3,8 @@ package thunder.hack.core.manager.client;
 import com.google.common.collect.Lists;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.entity.Entity;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.world.entity.Entity;
 import thunder.hack.core.Managers;
 import thunder.hack.features.cmd.Command;
 import thunder.hack.core.manager.IManager;
@@ -23,7 +23,7 @@ public class AsyncManager implements IManager {
     private ClientService clientService = new ClientService();
     public static ExecutorService executor = Executors.newCachedThreadPool();
     private volatile Iterable<Entity> threadSafeEntityList = Collections.emptyList();
-    private volatile List<AbstractClientPlayerEntity> threadSafePlayersList = Collections.emptyList();
+    private volatile List<AbstractClientPlayer> threadSafePlayersList = Collections.emptyList();
     public final AtomicBoolean ticking = new AtomicBoolean(false);
 
     public static void sleep(int delay) {
@@ -35,10 +35,10 @@ public class AsyncManager implements IManager {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPostTick(EventPostTick e) {
-        if (mc.world == null) return;
+        if (mc.level == null) return;
 
-        threadSafeEntityList = Lists.newArrayList(mc.world.getEntities());
-        threadSafePlayersList = Lists.newArrayList(mc.world.getPlayers());
+        threadSafeEntityList = Lists.newArrayList(mc.level.entitiesForRendering());
+        threadSafePlayersList = Lists.newArrayList(mc.level.players());
         ticking.set(false);
     }
 
@@ -46,7 +46,7 @@ public class AsyncManager implements IManager {
         return threadSafeEntityList;
     }
 
-    public List<AbstractClientPlayerEntity> getAsyncPlayers() {
+    public List<AbstractClientPlayer> getAsyncPlayers() {
         return threadSafePlayersList;
     }
 

@@ -2,7 +2,7 @@ package thunder.hack.features.modules.movement;
 
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import thunder.hack.events.impl.EventMove;
 import thunder.hack.events.impl.PacketEvent;
 import thunder.hack.features.modules.Module;
@@ -25,7 +25,7 @@ public class Freeze extends Module {
 
     @EventHandler
     public void onPacketSend(PacketEvent.Send e) {
-        if (e.getPacket() instanceof PlayerMoveC2SPacket)
+        if (e.getPacket() instanceof ServerboundMovePlayerPacket)
             e.cancel();
 
     }

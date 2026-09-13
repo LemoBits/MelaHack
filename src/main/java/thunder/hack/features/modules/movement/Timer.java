@@ -1,10 +1,10 @@
 package thunder.hack.features.modules.movement;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.network.packet.s2c.common.CommonPingS2CPacket;
-import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket;
-import net.minecraft.network.packet.s2c.play.PlayerPositionS2CPacket;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.network.protocol.common.ClientboundPingPacket;
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
+import net.minecraft.util.Mth;
 import thunder.hack.ThunderHack;
 import thunder.hack.events.impl.PacketEvent;
 import thunder.hack.events.impl.PostPlayerUpdateEvent;
@@ -59,7 +59,7 @@ public class Timer extends Module {
                 ThunderHack.TICK_TIMER = Math.max(speed.getValue(), 1f);
 
                 if (energy > 0) {
-                    energy = MathHelper.clamp(energy - ((0.1f * speed.getValue()) - 0.1f), 0f, 1f);
+                    energy = Mth.clamp(energy - ((0.1f * speed.getValue()) - 0.1f), 0f, 1f);
                 } else
                     disable(isRu() ? "Заряд таймера кончился! Отключаю.." : "Timer's out of charge! Disabling..");
             }
@@ -71,7 +71,7 @@ public class Timer extends Module {
                 }
 
                 ThunderHack.TICK_TIMER = Math.max(speed.getValue(), 1f);
-                energy = MathHelper.clamp(energy - ((0.0025f * speed.getValue()) - 0.0025f), 0f, 1f);
+                energy = Mth.clamp(energy - ((0.0025f * speed.getValue()) - 0.0025f), 0f, 1f);
             }
         }
     }
@@ -79,7 +79,7 @@ public class Timer extends Module {
     @EventHandler
     public void onPacketReceive(PacketEvent.Receive e) {
         if (mode.is(Mode.Grim)) {
-            if (e.getPacket() instanceof CommonPingS2CPacket
+            if (e.getPacket() instanceof ClientboundPingPacket
                     && ThunderHack.core.getSetBackTime() > 2000) {
                 if (System.currentTimeMillis() - cancelTime > 25000) {
                     cancelTime = System.currentTimeMillis();
@@ -94,7 +94,7 @@ public class Timer extends Module {
             }
         }
 
-        if (e.getPacket() instanceof PlayerPositionS2CPacket) {
+        if (e.getPacket() instanceof ClientboundPlayerPositionPacket) {
             switch (onFlag.getValue()) {
                 case Reset -> {
                     ThunderHack.TICK_TIMER = 1f;
@@ -107,8 +107,8 @@ public class Timer extends Module {
             }
         }
 
-        if (e.getPacket() instanceof EntityVelocityUpdateS2CPacket velo
-                && velo.getEntityId() == mc.player.getId() && mode.is(Mode.Grim)) {
+        if (e.getPacket() instanceof ClientboundSetEntityMotionPacket velo
+                && velo.getId() == mc.player.getId() && mode.is(Mode.Grim)) {
             ThunderHack.TICK_TIMER = 1f;
             energy = 0;
         }
@@ -134,12 +134,12 @@ public class Timer extends Module {
         prevPosX = mc.player.getX();
         prevPosY = mc.player.getY();
         prevPosZ = mc.player.getZ();
-        yaw = mc.player.getYaw();
-        pitch = mc.player.getPitch();
+        yaw = mc.player.getYRot();
+        pitch = mc.player.getXRot();
     }
 
     private static boolean notMoving() {
-        return prevPosX == mc.player.getX() && prevPosY == mc.player.getY() && prevPosZ == mc.player.getZ() && yaw == mc.player.getYaw() && pitch == mc.player.getPitch();
+        return prevPosX == mc.player.getX() && prevPosY == mc.player.getY() && prevPosZ == mc.player.getZ() && yaw == mc.player.getYRot() && pitch == mc.player.getXRot();
     }
 
     public enum Mode {

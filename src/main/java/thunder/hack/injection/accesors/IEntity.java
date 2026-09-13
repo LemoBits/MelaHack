@@ -1,8 +1,8 @@
 package thunder.hack.injection.accesors;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.gen.Accessor;
@@ -10,22 +10,22 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 @Mixin(Entity.class)
 public interface IEntity {
     @Mutable
-    @Accessor("pos")
-    void setPos(Vec3d pos);
+    @Accessor("position")
+    void setPos(Vec3 pos);
 
     @Mutable
-    @Accessor("blockPos")
+    @Accessor("blockPosition")
     void setBlockPos(BlockPos blockPos);
 
-    @Accessor("lastYaw")
+    @Accessor("yRotO")
     float getLastYaw();
 
-    @Accessor("lastYaw")
+    @Accessor("yRotO")
     void setLastYaw(float yaw);
 
-    @Accessor("lastPitch")
+    @Accessor("xRotO")
     float getLastPitch();
 
-    @Accessor("lastPitch")
+    @Accessor("xRotO")
     void setLastPitch(float pitch);
 }

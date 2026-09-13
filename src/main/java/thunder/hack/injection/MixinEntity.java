@@ -1,11 +1,5 @@
 package thunder.hack.injection;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -29,6 +23,12 @@ import thunder.hack.utility.interfaces.IEntityLiving;
 
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 import static thunder.hack.features.modules.Module.mc;
 
@@ -36,13 +36,13 @@ import static thunder.hack.features.modules.Module.mc;
 public abstract class MixinEntity implements IEntity, IEntityLiving {
 
     @Shadow
-    protected abstract BlockPos getVelocityAffectingPos();
+    protected abstract BlockPos getBlockPosBelowThatAffectsMyMovement();
 
     @Shadow
-    public abstract Vec3d getSyncedPos();
+    public abstract Vec3 trackingPosition();
 
     @Shadow
-    private Box boundingBox;
+    private AABB bb;
 
     @Override
     public List<Trails.Trail> getTrails() {
@@ -51,7 +51,7 @@ public abstract class MixinEntity implements IEntity, IEntityLiving {
 
     @Override
     public BlockPos thunderHack_Recode$getVelocityBP() {
-        return getVelocityAffectingPos();
+        return getBlockPosBelowThatAffectsMyMovement();
     }
 
     @Unique
@@ -68,10 +68,10 @@ public abstract class MixinEntity implements IEntity, IEntityLiving {
         return positonHistory;
     }
 
-    @Inject(method = {"updateTrackedPositionAndAngles"}, at = {@At("HEAD")})
-    private void updateTrackedPositionAndAnglesHook(Vec3d pos, float yaw, float pitch, CallbackInfo ci) {
+    @Inject(method = {"moveOrInterpolateTo"}, at = {@At("HEAD")})
+    private void updateTrackedPositionAndAnglesHook(Vec3 pos, float yaw, float pitch, CallbackInfo ci) {
         if (Module.fullNullCheck()) return;
-        Vec3d syncedPos = getSyncedPos();
+        Vec3 syncedPos = trackingPosition();
         prevServerX = syncedPos.x;
         prevServerY = syncedPos.y;
         prevServerZ = syncedPos.z;
@@ -105,37 +105,37 @@ public abstract class MixinEntity implements IEntity, IEntityLiving {
         }
     }
 
-    @Inject(method = "updateVelocity", at = {@At("HEAD")}, cancellable = true)
-    public void updateVelocityHook(float speed, Vec3d movementInput, CallbackInfo ci) {
+    @Inject(method = "moveRelative", at = {@At("HEAD")}, cancellable = true)
+    public void updateVelocityHook(float speed, Vec3 movementInput, CallbackInfo ci) {
         if(Module.fullNullCheck()) return;
         if ((Object) this == mc.player) {
             ci.cancel();
-            EventFixVelocity event = new EventFixVelocity(movementInput, speed, mc.player.getYaw(), movementInputToVelocityC(movementInput, speed, mc.player.getYaw()));
+            EventFixVelocity event = new EventFixVelocity(movementInput, speed, mc.player.getYRot(), movementInputToVelocityC(movementInput, speed, mc.player.getYRot()));
             ThunderHack.EVENT_BUS.post(event);
-            mc.player.setVelocity(mc.player.getVelocity().add(event.getVelocity()));
+            mc.player.setDeltaMovement(mc.player.getDeltaMovement().add(event.getVelocity()));
         }
     }
 
     @Unique
-    private static Vec3d movementInputToVelocityC(Vec3d movementInput, float speed, float yaw) {
-        double d = movementInput.lengthSquared();
+    private static Vec3 movementInputToVelocityC(Vec3 movementInput, float speed, float yaw) {
+        double d = movementInput.lengthSqr();
         if (d < 1.0E-7) {
-            return Vec3d.ZERO;
+            return Vec3.ZERO;
         }
-        Vec3d vec3d = (d > 1.0 ? movementInput.normalize() : movementInput).multiply(speed);
-        float f = MathHelper.sin(yaw * ((float) Math.PI / 180));
-        float g = MathHelper.cos(yaw * ((float) Math.PI / 180));
-        return new Vec3d(vec3d.x * (double) g - vec3d.z * (double) f, vec3d.y, vec3d.z * (double) g + vec3d.x * (double) f);
+        Vec3 vec3d = (d > 1.0 ? movementInput.normalize() : movementInput).scale(speed);
+        float f = Mth.sin(yaw * ((float) Math.PI / 180));
+        float g = Mth.cos(yaw * ((float) Math.PI / 180));
+        return new Vec3(vec3d.x * (double) g - vec3d.z * (double) f, vec3d.y, vec3d.z * (double) g + vec3d.x * (double) f);
     }
 
     @Inject(method = "getBoundingBox", at = {@At("HEAD")}, cancellable = true)
-    public final void getBoundingBox(CallbackInfoReturnable<Box> cir) {
+    public final void getBoundingBox(CallbackInfoReturnable<AABB> cir) {
         if (ModuleManager.hitBox.isEnabled() && mc != null && mc.player != null && ((Entity) (Object) this).getId() != mc.player.getId() && (ModuleManager.aura.isDisabled() || HitBox.affectToAura.getValue())) {
-            cir.setReturnValue(new Box(this.boundingBox.minX - HitBox.XZExpand.getValue() / 2f, this.boundingBox.minY - HitBox.YExpand.getValue() / 2f, this.boundingBox.minZ - HitBox.XZExpand.getValue() / 2f, this.boundingBox.maxX + HitBox.XZExpand.getValue() / 2f, this.boundingBox.maxY + HitBox.YExpand.getValue() / 2f, this.boundingBox.maxZ + HitBox.XZExpand.getValue() / 2f));
+            cir.setReturnValue(new AABB(this.bb.minX - HitBox.XZExpand.getValue() / 2f, this.bb.minY - HitBox.YExpand.getValue() / 2f, this.bb.minZ - HitBox.XZExpand.getValue() / 2f, this.bb.maxX + HitBox.XZExpand.getValue() / 2f, this.bb.maxY + HitBox.YExpand.getValue() / 2f, this.bb.maxZ + HitBox.XZExpand.getValue() / 2f));
         }
     }
 
-    @Inject(method = "isGlowing", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "isCurrentlyGlowing", at = @At("HEAD"), cancellable = true)
     public void isGlowingHook(CallbackInfoReturnable<Boolean> cir) {
         Shaders shaders = ModuleManager.shaders;
         if (shaders.isEnabled()) {
@@ -151,7 +151,7 @@ public abstract class MixinEntity implements IEntity, IEntityLiving {
     }
 
     @Inject(method = "isInvisibleTo", at = @At("HEAD"), cancellable = true)
-    public void isInvisibleToHook(PlayerEntity player, CallbackInfoReturnable<Boolean> cir) {
+    public void isInvisibleToHook(Player player, CallbackInfoReturnable<Boolean> cir) {
         if (ModuleManager.serverHelper.isEnabled() && ModuleManager.serverHelper.trueSight.getValue()) {
             cir.setReturnValue(false);
         }
@@ -163,7 +163,7 @@ public abstract class MixinEntity implements IEntity, IEntityLiving {
             cir.setReturnValue(false);
     }
 
-    @Inject(method = "isTouchingWater", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "isInWater", at = @At("HEAD"), cancellable = true)
     public void isTouchingWaterHook(CallbackInfoReturnable<Boolean> cir) {
         if((ModuleManager.jesus.isEnabled() || ModuleManager.noWaterCollision.isEnabled()) && mc.player != null && ((Entity) (Object) this).getId() == mc.player.getId())
             cir.setReturnValue(false);
@@ -175,14 +175,14 @@ public abstract class MixinEntity implements IEntity, IEntityLiving {
             ci.cancel();
     }
 
-    @ModifyVariable(method = "changeLookDirection", at = @At("HEAD"), ordinal = 0, argsOnly = true)
+    @ModifyVariable(method = "turn", at = @At("HEAD"), ordinal = 0, argsOnly = true)
     private double changeLookDirectionHook0(double value) {
         if(ModuleManager.viewLock.isEnabled() && ModuleManager.viewLock.yaw.getValue())
             return 0d;
         return value;
     }
 
-    @ModifyVariable(method = "changeLookDirection", at = @At("HEAD"), ordinal = 1, argsOnly = true)
+    @ModifyVariable(method = "turn", at = @At("HEAD"), ordinal = 1, argsOnly = true)
     private double changeLookDirectionHook1(double value) {
         if(ModuleManager.viewLock.isEnabled() && ModuleManager.viewLock.pitch.getValue())
             return 0d;

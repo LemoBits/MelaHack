@@ -1,23 +1,23 @@
 package thunder.hack.features.modules.misc;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.PotionContentsComponent;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
-import net.minecraft.screen.slot.SlotActionType;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.EntityHitResult;
-import net.minecraft.util.hit.HitResult;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
+import net.minecraft.network.protocol.game.ServerboundSwingPacket;
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.alchemy.PotionContents;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.HitResult;
 import thunder.hack.core.Managers;
 import thunder.hack.core.manager.client.AsyncManager;
 import thunder.hack.core.manager.client.ModuleManager;
@@ -63,36 +63,36 @@ public class MiddleClick extends Module {
 
     @EventHandler
     private void onSync(EventSync event) {
-        if (mc.currentScreen == null) {
-            HitResult target = mc.crosshairTarget;
+        if (mc.screen == null) {
+            HitResult target = mc.hitResult;
 
-            if (mc.player.isGliding()) {
-                if (mc.options.pickItemKey.isPressed())
+            if (mc.player.isFallFlying()) {
+                if (mc.options.keyPickItem.isDown())
                     onFlying.getValue().doAction(event);
                 state = onFlying.getValue().toString();
                 return;
             }
 
-            if (target instanceof EntityHitResult ehr && ehr.getEntity() instanceof PlayerEntity) {
-                if (mc.options.pickItemKey.isPressed())
+            if (target instanceof EntityHitResult ehr && ehr.getEntity() instanceof Player) {
+                if (mc.options.keyPickItem.isDown())
                     onEntity.getValue().doAction(event);
                 state = onEntity.getValue().toString();
                 return;
             }
 
             if (target instanceof BlockHitResult bhr) {
-                if (mc.world.isAir(bhr.getBlockPos())) {
-                    if (mc.options.pickItemKey.isPressed())
+                if (mc.level.isEmptyBlock(bhr.getBlockPos())) {
+                    if (mc.options.keyPickItem.isDown())
                         onAir.getValue().doAction(event);
                     state = onAir.getValue().toString();
                 } else {
-                    if (mc.options.pickItemKey.isPressed())
+                    if (mc.options.keyPickItem.isDown())
                         onBlock.getValue().doAction(event);
                     state = onBlock.getValue().toString();
                 }
                 return;
             }
-            if (mc.options.pickItemKey.isPressed())
+            if (mc.options.keyPickItem.isDown())
                 onAir.getValue().doAction(event);
             state = onAir.getValue().toString();
         }
@@ -108,14 +108,14 @@ public class MiddleClick extends Module {
 
     private static int getHpSlot() {
         for (int i = 0; i < 9; ++i)
-            if (isStackPotion(mc.player.getInventory().getStack(i)))
+            if (isStackPotion(mc.player.getInventory().getItem(i)))
                 return i;
         return -1;
     }
 
     private static int findHpInInventory() {
         for (int i = 36; i >= 0; i--)
-            if (isStackPotion(mc.player.getInventory().getStack(i)))
+            if (isStackPotion(mc.player.getInventory().getItem(i)))
                 return i < 9 ? i + 36 : i;
         return -1;
     }
@@ -125,20 +125,20 @@ public class MiddleClick extends Module {
             return false;
 
         if (stack.getItem() == Items.SPLASH_POTION) {
-            PotionContentsComponent potionContentsComponent = stack.getOrDefault(DataComponentTypes.POTION_CONTENTS, PotionContentsComponent.DEFAULT);
-            for (StatusEffectInstance effect : potionContentsComponent.getEffects())
-                if (effect.getEffectType().value() == StatusEffects.INSTANT_HEALTH.value())
+            PotionContents potionContentsComponent = stack.getOrDefault(DataComponents.POTION_CONTENTS, PotionContents.EMPTY);
+            for (MobEffectInstance effect : potionContentsComponent.getAllEffects())
+                if (effect.getEffect().value() == MobEffects.INSTANT_HEALTH.value())
                     return true;
         }
         return false;
     }
 
     public static class PearlThread extends Thread {
-        public ClientPlayerEntity player;
+        public LocalPlayer player;
         int epSlot, originalSlot, delay;
         boolean inv;
 
-        public PearlThread(ClientPlayerEntity entityPlayer, int epSlot, int originalSlot, int delay, boolean inventory) {
+        public PearlThread(LocalPlayer entityPlayer, int epSlot, int originalSlot, int delay, boolean inventory) {
             this.player = entityPlayer;
             this.epSlot = epSlot;
             this.originalSlot = originalSlot;
@@ -151,19 +151,19 @@ public class MiddleClick extends Module {
             if (!inv) {
                 InventoryUtility.switchTo(epSlot);
                 AsyncManager.sleep(delay);
-                InteractionUtility.sendSequencedPacket(id -> new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, id, mc.player.getYaw(), mc.player.getPitch()));
-                mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
+                InteractionUtility.sendSequencedPacket(id -> new ServerboundUseItemPacket(InteractionHand.MAIN_HAND, id, mc.player.getYRot(), mc.player.getXRot()));
+                mc.player.connection.send(new ServerboundSwingPacket(InteractionHand.MAIN_HAND));
                 AsyncManager.sleep(delay);
                 InventoryUtility.switchTo(originalSlot);
             } else {
-                mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, epSlot, originalSlot, SlotActionType.SWAP, mc.player);
+                mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, epSlot, originalSlot, ClickType.SWAP, mc.player);
                 AsyncManager.sleep(delay);
                 if (ModuleManager.aura.isEnabled() && Aura.target != null)
-                    mc.player.networkHandler.sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(mc.player.getYaw(), mc.player.getPitch(), mc.player.isOnGround(), mc.player.horizontalCollision));
-                InteractionUtility.sendSequencedPacket(id -> new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, id, mc.player.getYaw(), mc.player.getPitch()));
-                mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
+                    mc.player.connection.send(new ServerboundMovePlayerPacket.Rot(mc.player.getYRot(), mc.player.getXRot(), mc.player.onGround(), mc.player.horizontalCollision));
+                InteractionUtility.sendSequencedPacket(id -> new ServerboundUseItemPacket(InteractionHand.MAIN_HAND, id, mc.player.getYRot(), mc.player.getXRot()));
+                mc.player.connection.send(new ServerboundSwingPacket(InteractionHand.MAIN_HAND));
                 AsyncManager.sleep(delay);
-                mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, epSlot, originalSlot, SlotActionType.SWAP, mc.player);
+                mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, epSlot, originalSlot, ClickType.SWAP, mc.player);
             }
             super.run();
         }
@@ -177,16 +177,16 @@ public class MiddleClick extends Module {
                     int originalSlot = mc.player.getInventory().getSelectedSlot();
                     if (hpSlot != -1) {
                         InventoryUtility.switchTo(hpSlot);
-                        InteractionUtility.sendSequencedPacket(id -> new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, id, mc.player.getYaw(), mc.player.getPitch()));
+                        InteractionUtility.sendSequencedPacket(id -> new ServerboundUseItemPacket(InteractionHand.MAIN_HAND, id, mc.player.getYRot(), mc.player.getXRot()));
                         InventoryUtility.switchTo(originalSlot);
                     }
                 } else {
                     int hpSlot = findHpInInventory();
                     if (hpSlot != -1) {
-                        mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, hpSlot, mc.player.getInventory().getSelectedSlot(), SlotActionType.SWAP, mc.player);
-                        InteractionUtility.sendSequencedPacket(id -> new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, id, mc.player.getYaw(), mc.player.getPitch()));
-                        mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
-                        mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, hpSlot, mc.player.getInventory().getSelectedSlot(), SlotActionType.SWAP, mc.player);
+                        mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, hpSlot, mc.player.getInventory().getSelectedSlot(), ClickType.SWAP, mc.player);
+                        InteractionUtility.sendSequencedPacket(id -> new ServerboundUseItemPacket(InteractionHand.MAIN_HAND, id, mc.player.getYRot(), mc.player.getXRot()));
+                        mc.player.connection.send(new ServerboundSwingPacket(InteractionHand.MAIN_HAND));
+                        mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, hpSlot, mc.player.getInventory().getSelectedSlot(), ClickType.SWAP, mc.player);
                     }
                 }
             }
@@ -200,19 +200,19 @@ public class MiddleClick extends Module {
                         int originalSlot = mc.player.getInventory().getSelectedSlot();
                         if (epSlot1 != -1) {
                             mc.player.getInventory().setSelectedSlot(epSlot1);
-                            mc.player.networkHandler.sendPacket(new UpdateSelectedSlotC2SPacket(epSlot1));
-                            InteractionUtility.sendSequencedPacket(id -> new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, id, mc.player.getYaw(), mc.player.getPitch()));
-                            mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
+                            mc.player.connection.send(new ServerboundSetCarriedItemPacket(epSlot1));
+                            InteractionUtility.sendSequencedPacket(id -> new ServerboundUseItemPacket(InteractionHand.MAIN_HAND, id, mc.player.getYRot(), mc.player.getXRot()));
+                            mc.player.connection.send(new ServerboundSwingPacket(InteractionHand.MAIN_HAND));
                             mc.player.getInventory().setSelectedSlot(originalSlot);
-                            mc.player.networkHandler.sendPacket(new UpdateSelectedSlotC2SPacket(originalSlot));
+                            mc.player.connection.send(new ServerboundSetCarriedItemPacket(originalSlot));
                         }
                     } else {
                         int epSlot = InventoryUtility.findItemInInventory(Items.FIREWORK_ROCKET).slot();
                         if (epSlot != -1) {
-                            mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, epSlot, mc.player.getInventory().getSelectedSlot(), SlotActionType.SWAP, mc.player);
-                            InteractionUtility.sendSequencedPacket(id -> new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, id, mc.player.getYaw(), mc.player.getPitch()));
-                            mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
-                            mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, epSlot, mc.player.getInventory().getSelectedSlot(), SlotActionType.SWAP, mc.player);
+                            mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, epSlot, mc.player.getInventory().getSelectedSlot(), ClickType.SWAP, mc.player);
+                            InteractionUtility.sendSequencedPacket(id -> new ServerboundUseItemPacket(InteractionHand.MAIN_HAND, id, mc.player.getYRot(), mc.player.getXRot()));
+                            mc.player.connection.send(new ServerboundSwingPacket(InteractionHand.MAIN_HAND));
+                            mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, epSlot, mc.player.getInventory().getSelectedSlot(), ClickType.SWAP, mc.player);
                         }
                     }
                 } else {
@@ -230,7 +230,7 @@ public class MiddleClick extends Module {
 
         Friend((EventSync e) -> {
             if (timer.every(800)) {
-                if (mc.crosshairTarget instanceof EntityHitResult ehr && ehr.getEntity() instanceof PlayerEntity)
+                if (mc.hitResult instanceof EntityHitResult ehr && ehr.getEntity() instanceof Player)
                     if (Managers.FRIEND.isFriend(ehr.getEntity().getName().getString())) {
                         Managers.FRIEND.removeFriend(ehr.getEntity().getName().getString());
                         Command.sendMessage(isRu() ? "§b" + ehr.getEntity().getName().getString() + "§r удален из друзей!" : "§b" + ehr.getEntity().getName().getString() + "§r removed from friends!");
@@ -244,7 +244,7 @@ public class MiddleClick extends Module {
         Pearl((EventSync e) -> {
             if (timer.every(500)) {
                 if (ModuleManager.aura.isEnabled() && Aura.target != null)
-                    mc.player.networkHandler.sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(mc.player.getYaw(), mc.player.getPitch(), mc.player.isOnGround(), mc.player.horizontalCollision));
+                    mc.player.connection.send(new ServerboundMovePlayerPacket.Rot(mc.player.getYRot(), mc.player.getXRot(), mc.player.onGround(), mc.player.horizontalCollision));
 
                 int epSlot1 = InventoryUtility.findItemInHotBar(Items.ENDER_PEARL).slot();
                 if (ModuleManager.middleClick.silent.getValue()) {
@@ -252,19 +252,19 @@ public class MiddleClick extends Module {
                         int originalSlot = mc.player.getInventory().getSelectedSlot();
                         if (epSlot1 != -1) {
                             mc.player.getInventory().setSelectedSlot(epSlot1);
-                            mc.player.networkHandler.sendPacket(new UpdateSelectedSlotC2SPacket(epSlot1));
-                            InteractionUtility.sendSequencedPacket(id -> new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, id, mc.player.getYaw(), mc.player.getPitch()));
-                            mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
+                            mc.player.connection.send(new ServerboundSetCarriedItemPacket(epSlot1));
+                            InteractionUtility.sendSequencedPacket(id -> new ServerboundUseItemPacket(InteractionHand.MAIN_HAND, id, mc.player.getYRot(), mc.player.getXRot()));
+                            mc.player.connection.send(new ServerboundSwingPacket(InteractionHand.MAIN_HAND));
                             mc.player.getInventory().setSelectedSlot(originalSlot);
-                            mc.player.networkHandler.sendPacket(new UpdateSelectedSlotC2SPacket(originalSlot));
+                            mc.player.connection.send(new ServerboundSetCarriedItemPacket(originalSlot));
                         }
                     } else {
                         int epSlot = InventoryUtility.findItemInInventory(Items.ENDER_PEARL).slot();
                         if (epSlot != -1) {
-                            mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, epSlot, mc.player.getInventory().getSelectedSlot(), SlotActionType.SWAP, mc.player);
-                            InteractionUtility.sendSequencedPacket(id -> new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, id, mc.player.getYaw(), mc.player.getPitch()));
-                            mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
-                            mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, epSlot, mc.player.getInventory().getSelectedSlot(), SlotActionType.SWAP, mc.player);
+                            mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, epSlot, mc.player.getInventory().getSelectedSlot(), ClickType.SWAP, mc.player);
+                            InteractionUtility.sendSequencedPacket(id -> new ServerboundUseItemPacket(InteractionHand.MAIN_HAND, id, mc.player.getYRot(), mc.player.getXRot()));
+                            mc.player.connection.send(new ServerboundSwingPacket(InteractionHand.MAIN_HAND));
+                            mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, epSlot, mc.player.getInventory().getSelectedSlot(), ClickType.SWAP, mc.player);
                         }
                     }
                 } else {
@@ -283,16 +283,16 @@ public class MiddleClick extends Module {
         Xp((EventSync e) -> {
             if (ModuleManager.middleClick.feetExp.getValue())
                 if (!ModuleManager.middleClick.antiWaste.getValue().isEnabled() || needXp())
-                    mc.player.setPitch(90);
+                    mc.player.setXRot(90);
 
             e.addPostAction(() -> {
                 if (ModuleManager.middleClick.antiWaste.getValue().isEnabled() && !needXp()) return;
-                if (mc.options.pickItemKey.isPressed()) {
+                if (mc.options.keyPickItem.isDown()) {
                     int slot = InventoryUtility.findItemInHotBar(Items.EXPERIENCE_BOTTLE).slot();
                     if (slot != -1) {
                         int lastSlot = mc.player.getInventory().getSelectedSlot();
                         InventoryUtility.switchTo(slot);
-                        InteractionUtility.sendSequencedPacket(id -> new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, id, mc.player.getYaw(), mc.player.getPitch()));
+                        InteractionUtility.sendSequencedPacket(id -> new ServerboundUseItemPacket(InteractionHand.MAIN_HAND, id, mc.player.getYRot(), mc.player.getXRot()));
                         if (ModuleManager.middleClick.silent.getValue())
                             InventoryUtility.switchTo(lastSlot);
                     }

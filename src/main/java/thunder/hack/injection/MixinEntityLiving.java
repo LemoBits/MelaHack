@@ -1,12 +1,5 @@
 package thunder.hack.injection;
 
-import net.minecraft.block.FluidBlock;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MovementType;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -26,16 +19,24 @@ import thunder.hack.features.modules.render.Animations;
 import static thunder.hack.features.modules.Module.mc;
 import static thunder.hack.features.modules.movement.WaterSpeed.Mode.CancelResurface;
 
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.MoverType;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.LiquidBlock;
+import net.minecraft.world.phys.Vec3;
+
 @Mixin(LivingEntity.class)
 public abstract class MixinEntityLiving {
 
     @Shadow
-    public abstract Hand getActiveHand();
+    public abstract InteractionHand getUsedItemHand();
 
     @Shadow
-    public abstract ItemStack getStackInHand(Hand hand);
+    public abstract ItemStack getItemInHand(InteractionHand hand);
 
-    @Inject(method = "getHandSwingDuration", at = {@At("HEAD")}, cancellable = true)
+    @Inject(method = "getCurrentSwingDuration", at = {@At("HEAD")}, cancellable = true)
     private void getArmSwingAnimationEnd(final CallbackInfoReturnable<Integer> info) {
         if (!ModuleManager.noRender.noSwing.getValue() && ModuleManager.animations.shouldChangeAnimationDuration() && Animations.slowAnimation.getValue())
             info.setReturnValue(Animations.slowAnimationVal.getValue());
@@ -45,9 +46,9 @@ public abstract class MixinEntityLiving {
     private boolean prevFlying = false;
 
     @Unique
-    private Hand lastConsumeHand;
+    private InteractionHand lastConsumeHand;
 
-    @Inject(method = "isGliding", at = @At("TAIL"), cancellable = true)
+    @Inject(method = "isFallFlying", at = @At("TAIL"), cancellable = true)
     public void isGlidingHook(CallbackInfoReturnable<Boolean> cir) {
         if (ModuleManager.elytraRecast.isEnabled()) {
             boolean elytra = cir.getReturnValue();
@@ -59,54 +60,54 @@ public abstract class MixinEntityLiving {
     }
 
     @Inject(method = "travel", at = @At("HEAD"), cancellable = true)
-    public void travelHook(Vec3d movementInput, CallbackInfo ci) {
+    public void travelHook(Vec3 movementInput, CallbackInfo ci) {
         if (Module.fullNullCheck()) return;
         if ((LivingEntity) (Object) this != mc.player) return;
-        final EventTravel event = new EventTravel(mc.player.getVelocity(), true);
+        final EventTravel event = new EventTravel(mc.player.getDeltaMovement(), true);
         ThunderHack.EVENT_BUS.post(event);
         if (event.isCancelled()) {
-            mc.player.move(MovementType.SELF, event.getmVec());
+            mc.player.move(MoverType.SELF, event.getmVec());
             ci.cancel();
         }
     }
 
     @Inject(method = "travel", at = @At("RETURN"), cancellable = true)
-    public void travelPostHook(Vec3d movementInput, CallbackInfo ci) {
+    public void travelPostHook(Vec3 movementInput, CallbackInfo ci) {
         if (Module.fullNullCheck()) return;
         if ((LivingEntity) (Object) this != mc.player) return;
         final EventTravel event = new EventTravel(movementInput, false);
         ThunderHack.EVENT_BUS.post(event);
         if (event.isCancelled()) {
-            mc.player.move(MovementType.SELF, mc.player.getVelocity());
+            mc.player.move(MoverType.SELF, mc.player.getDeltaMovement());
             ci.cancel();
         }
     }
 
-    @Inject(method = "jump", at = @At("HEAD"))
+    @Inject(method = "jumpFromGround", at = @At("HEAD"))
     private void onJumpPre(CallbackInfo ci) {
         if ((LivingEntity) (Object) this == mc.player) {
             ThunderHack.EVENT_BUS.post(new EventPlayerJump(true));
         }
     }
 
-    @Inject(method = "jump", at = @At("RETURN"))
+    @Inject(method = "jumpFromGround", at = @At("RETURN"))
     private void onJumpPost(CallbackInfo ci) {
         if ((LivingEntity) (Object) this == mc.player) {
             ThunderHack.EVENT_BUS.post(new EventPlayerJump(false));
         }
     }
 
-    @Inject(method = "consumeItem", at = @At("HEAD"))
+    @Inject(method = "completeUsingItem", at = @At("HEAD"))
     private void onConsumeItemStart(CallbackInfo ci) {
         if ((LivingEntity) (Object) this == mc.player) {
-            lastConsumeHand = this.getActiveHand();
+            lastConsumeHand = this.getUsedItemHand();
         }
     }
 
-    @Inject(method = "consumeItem", at = @At("RETURN"))
+    @Inject(method = "completeUsingItem", at = @At("RETURN"))
     private void onConsumeItemEnd(CallbackInfo ci) {
         if ((LivingEntity) (Object) this == mc.player && lastConsumeHand != null) {
-            ItemStack stack = this.getStackInHand(lastConsumeHand);
+            ItemStack stack = this.getItemInHand(lastConsumeHand);
             ThunderHack.EVENT_BUS.post(new EventEatFood(stack));
             lastConsumeHand = null;
         }
@@ -114,14 +115,14 @@ public abstract class MixinEntityLiving {
 
     @ModifyVariable(method = "setSprinting", at = @At("HEAD"), ordinal = 0, argsOnly = true)
     private boolean setSprintingHook(boolean sprinting) {
-        if (mc.player != null && mc.world != null && ModuleManager.waterSpeed.isEnabled() && ModuleManager.waterSpeed.mode.is(CancelResurface)) {
-            if (mc.player.isTouchingWater() || mc.world.getBlockState(BlockPos.ofFloored(mc.player.getPos().add(0, -0.5, 0))).getBlock() instanceof FluidBlock)
+        if (mc.player != null && mc.level != null && ModuleManager.waterSpeed.isEnabled() && ModuleManager.waterSpeed.mode.is(CancelResurface)) {
+            if (mc.player.isInWater() || mc.level.getBlockState(BlockPos.containing(mc.player.position().add(0, -0.5, 0))).getBlock() instanceof LiquidBlock)
                 return true;
         }
         return sprinting;
     }
 
-    @Inject(method = "getHandSwingDuration", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "getCurrentSwingDuration", at = @At("HEAD"), cancellable = true)
     private void onGetHandSwingDuration(CallbackInfoReturnable<Integer> cir) {
         if (ModuleManager.noRender.isEnabled() && ModuleManager.noRender.noSwing.getValue()) {
             cir.setReturnValue(0);

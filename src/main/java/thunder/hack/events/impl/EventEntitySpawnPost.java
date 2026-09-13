@@ -1,6 +1,6 @@
 package thunder.hack.events.impl;
 
-import net.minecraft.entity.Entity;
+import net.minecraft.world.entity.Entity;
 import thunder.hack.events.Event;
 
 public class EventEntitySpawnPost extends Event {

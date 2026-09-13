@@ -1,6 +1,6 @@
 package thunder.hack.features.modules.combat;
 
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.Nullable;
 import thunder.hack.core.Managers;
 import thunder.hack.core.manager.player.CombatManager;
@@ -20,11 +20,11 @@ public final class AutoTrap extends TrapModule {
         return target == null
                 || target.distanceTo(mc.player) > range.getValue()
                 || target.getHealth() + target.getAbsorptionAmount() <= 0
-                || target.isDead();
+                || target.isDeadOrDying();
     }
 
     @Override
-    protected @Nullable PlayerEntity getTarget() {
-        return Managers.COMBAT.getTarget(range.getValue(), targetBy.getValue(), p -> p.getVelocity().lengthSquared() < 0.08 || targetMovingPlayers.getValue());
+    protected @Nullable Player getTarget() {
+        return Managers.COMBAT.getTarget(range.getValue(), targetBy.getValue(), p -> p.getDeltaMovement().lengthSqr() < 0.08 || targetMovingPlayers.getValue());
     }
 }

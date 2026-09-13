@@ -1,22 +1,22 @@
 package thunder.hack.injection.accesors;
 
-import net.minecraft.client.input.Input;
-import net.minecraft.util.PlayerInput;
-import net.minecraft.util.math.Vec2f;
+import net.minecraft.client.player.ClientInput;
+import net.minecraft.world.entity.player.Input;
+import net.minecraft.world.phys.Vec2;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(Input.class)
+@Mixin(ClientInput.class)
 public interface IInput {
-    @Accessor("movementVector")
-    Vec2f getMovementVector();
+    @Accessor("moveVector")
+    Vec2 getMovementVector();
 
-    @Accessor("movementVector")
-    void setMovementVector(Vec2f movementVector);
+    @Accessor("moveVector")
+    void setMovementVector(Vec2 movementVector);
 
-    @Accessor("playerInput")
-    PlayerInput getPlayerInput();
+    @Accessor("keyPresses")
+    Input getPlayerInput();
 
-    @Accessor("playerInput")
-    void setPlayerInput(PlayerInput playerInput);
+    @Accessor("keyPresses")
+    void setPlayerInput(Input playerInput);
 }

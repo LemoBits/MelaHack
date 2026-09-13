@@ -1,13 +1,13 @@
 package thunder.hack.features.modules.movement;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.util.InputUtil;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
+import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import thunder.hack.ThunderHack;
 import thunder.hack.events.impl.EventSync;
 import thunder.hack.events.impl.EventTravel;
@@ -38,12 +38,12 @@ public class ElytraRecast extends Module {
     @EventHandler
     public void onSync(EventSync e) {
         if (changePitch.getValue())
-            mc.player.setPitch(pitchValue.getValue());
+            mc.player.setXRot(pitchValue.getValue());
 
         switch (exploit.getValue()) {
             case None -> {}
-            case Strict -> mc.player.setYaw(mc.player.getYaw() + jitter);
-            case Strong -> mc.player.setPitch(pitchValue.getValue() - Math.abs(jitter / 2f));
+            case Strict -> mc.player.setYRot(mc.player.getYRot() + jitter);
+            case Strong -> mc.player.setXRot(pitchValue.getValue() - Math.abs(jitter / 2f));
         }
     }
 
@@ -51,37 +51,37 @@ public class ElytraRecast extends Module {
     public void modifyVelocity(EventTravel e) {
         if (changePitch.getValue())
             if (e.isPre()) {
-                prevClientPitch = mc.player.getPitch();
-                prevClientYaw = mc.player.getYaw();
-                mc.player.setPitch(pitchValue.getValue());
+                prevClientPitch = mc.player.getXRot();
+                prevClientYaw = mc.player.getYRot();
+                mc.player.setXRot(pitchValue.getValue());
 
                 switch (exploit.getValue()) {
                     case None -> {
                     }
-                    case Strict -> mc.player.setYaw(mc.player.getYaw() + jitter);
-                    case Strong -> mc.player.setPitch(pitchValue.getValue() - Math.abs(jitter / 2f));
+                    case Strict -> mc.player.setYRot(mc.player.getYRot() + jitter);
+                    case Strong -> mc.player.setXRot(pitchValue.getValue() - Math.abs(jitter / 2f));
                 }
             } else {
-                mc.player.setPitch(prevClientPitch);
+                mc.player.setXRot(prevClientPitch);
                 if (exploit.getValue() == Exploit.Strict)
-                    mc.player.setYaw(prevClientYaw);
+                    mc.player.setYRot(prevClientYaw);
             }
     }
 
     @Override
     public void onDisable() {
-        if (!InputUtil.isKeyPressed(mc.getWindow().getHandle(), mc.options.forwardKey.getDefaultKey().getCode()))
-            mc.options.forwardKey.setPressed(false);
-        if (!InputUtil.isKeyPressed(mc.getWindow().getHandle(), mc.options.jumpKey.getDefaultKey().getCode()))
-            mc.options.jumpKey.setPressed(false);
+        if (!InputConstants.isKeyDown(mc.getWindow().getWindow(), mc.options.keyUp.getDefaultKey().getValue()))
+            mc.options.keyUp.setDown(false);
+        if (!InputConstants.isKeyDown(mc.getWindow().getWindow(), mc.options.keyJump.getDefaultKey().getValue()))
+            mc.options.keyJump.setDown(false);
     }
 
     @Override
     public void onUpdate() {
-        if (autoJump.getValue()) mc.options.jumpKey.setPressed(true);
-        if (autoWalk.getValue()) mc.options.forwardKey.setPressed(true);
+        if (autoJump.getValue()) mc.options.keyJump.setDown(true);
+        if (autoWalk.getValue()) mc.options.keyUp.setDown(true);
 
-        if (!mc.player.isGliding() && mc.player.fallDistance > 0 && checkElytra() && !mc.player.isGliding())
+        if (!mc.player.isFallFlying() && mc.player.fallDistance > 0 && checkElytra() && !mc.player.isFallFlying())
             castElytra();
 
         jitter = (20 * MathUtility.sin((System.currentTimeMillis() - ThunderHack.initTime) / 50f));
@@ -91,25 +91,25 @@ public class ElytraRecast extends Module {
 
     public boolean castElytra() {
         if (checkElytra() && check()) {
-            sendPacket(new ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.START_FALL_FLYING));
+            sendPacket(new ServerboundPlayerCommandPacket(mc.player, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING));
             return true;
         }
         return false;
     }
 
     private boolean checkElytra() {
-        if (mc.player.input.playerInput.jump() && !mc.player.getAbilities().flying && !mc.player.hasVehicle() && !mc.player.isClimbing()) {
-            ItemStack is = mc.player.getEquippedStack(EquipmentSlot.CHEST);
+        if (mc.player.input.keyPresses.jump() && !mc.player.getAbilities().flying && !mc.player.isPassenger() && !mc.player.onClimbable()) {
+            ItemStack is = mc.player.getItemBySlot(EquipmentSlot.CHEST);
             return isUsableElytra(is);
         }
         return false;
     }
 
     private boolean check() {
-        if (!mc.player.isTouchingWater() && !mc.player.hasStatusEffect(StatusEffects.LEVITATION)) {
-            ItemStack is = mc.player.getEquippedStack(EquipmentSlot.CHEST);
+        if (!mc.player.isInWater() && !mc.player.hasEffect(MobEffects.LEVITATION)) {
+            ItemStack is = mc.player.getItemBySlot(EquipmentSlot.CHEST);
             if (isUsableElytra(is)) {
-                mc.player.startGliding();
+                mc.player.startFallFlying();
                 return true;
             }
         }
@@ -117,9 +117,9 @@ public class ElytraRecast extends Module {
     }
 
     private boolean isUsableElytra(ItemStack stack) {
-        if (!stack.isOf(Items.ELYTRA)) {
+        if (!stack.is(Items.ELYTRA)) {
             return false;
         }
-        return allowBroken.getValue() || LivingEntity.canGlideWith(stack, EquipmentSlot.CHEST);
+        return allowBroken.getValue() || LivingEntity.canGlideUsing(stack, EquipmentSlot.CHEST);
     }
 }

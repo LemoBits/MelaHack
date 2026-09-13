@@ -1,15 +1,18 @@
 package thunder.hack.features.modules.render;
 
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
-
+import com.mojang.math.Axis;
 import com.mojang.blaze3d.platform.GlStateManager;
 import thunder.hack.utility.render.compat.RenderSystem;
+import net.minecraft.client.Camera;
 import net.minecraft.client.gl.ShaderProgramKeys;
 import net.minecraft.client.render.*;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.RotationAxis;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 import thunder.hack.features.modules.Module;
 import thunder.hack.features.modules.client.HudEditor;
@@ -73,39 +76,39 @@ public class Particles extends Module {
         }
     }
 
-    public void onRender3D(MatrixStack stack) {
+    public void onRender3D(PoseStack stack) {
         if (FireFlies.getValue().isEnabled()) {
-            stack.push();
+            stack.pushPose();
             RenderSystem.setShaderTexture(0, TextureStorage.firefly);
             RenderSystem.enableBlend();
             RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE);
             RenderSystem.enableDepthTest();
             RenderSystem.depthMask(false);
             RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX_COLOR);
-            BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR);
+            BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
             fireFlies.forEach(p -> p.render(bufferBuilder));
             Render2DEngine.endBuilding(bufferBuilder);
             RenderSystem.depthMask(true);
             RenderSystem.disableDepthTest();
             RenderSystem.disableBlend();
-            stack.pop();
+            stack.popPose();
         }
 
         if (mode.getValue() != Mode.Off) {
-            stack.push();
+            stack.pushPose();
             RenderSystem.enableBlend();
             RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE);
             RenderSystem.enableDepthTest();
             RenderSystem.depthMask(false);
             RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX_COLOR);
-            BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR);
+            BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
             particles.forEach(p -> p.render(bufferBuilder));
             Render2DEngine.endBuilding(bufferBuilder);
             RenderSystem.depthMask(true);
             RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA);
             RenderSystem.disableDepthTest();
             RenderSystem.disableBlend();
-            stack.pop();
+            stack.popPose();
         }
     }
 
@@ -119,8 +122,8 @@ public class Particles extends Module {
         @Override
         public boolean tick() {
 
-            if (mc.player.squaredDistanceTo(posX, posY, posZ) > 100) age -= 4;
-            else if (!mc.world.getBlockState(new BlockPos((int) posX, (int) posY, (int) posZ)).isAir()) age -= 8;
+            if (mc.player.distanceToSqr(posX, posY, posZ) > 100) age -= 4;
+            else if (!mc.level.getBlockState(new BlockPos((int) posX, (int) posY, (int) posZ)).isAir()) age -= 8;
             else age--;
 
             if (age < 0)
@@ -136,7 +139,7 @@ public class Particles extends Module {
             posY += motionY;
             posZ += motionZ;
 
-            trails.add(new Trails.Trail(new Vec3d(prevposX, prevposY, prevposZ), new Vec3d(posX, posY, posZ), lmode.getValue() == ColorMode.Sync ? HudEditor.getColor(age * 10) : color.getValue().getColorObject()));
+            trails.add(new Trails.Trail(new Vec3(prevposX, prevposY, prevposZ), new Vec3(posX, posY, posZ), lmode.getValue() == ColorMode.Sync ? HudEditor.getColor(age * 10) : color.getValue().getColorObject()));
 
             motionX *= 0.99f;
             motionY *= 0.99f;
@@ -149,21 +152,21 @@ public class Particles extends Module {
         public void render(BufferBuilder bufferBuilder) {
             RenderSystem.setShaderTexture(0, TextureStorage.firefly);
             if (!trails.isEmpty()) {
-                Camera camera = mc.gameRenderer.getCamera();
+                Camera camera = mc.gameRenderer.getMainCamera();
                 for (Trails.Trail ctx : trails) {
-                    Vec3d pos = ctx.interpolate(1f);
-                    MatrixStack matrices = new MatrixStack();
-                    matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(camera.getPitch()));
-                    matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(camera.getYaw() + 180.0F));
+                    Vec3 pos = ctx.interpolate(1f);
+                    PoseStack matrices = new PoseStack();
+                    matrices.mulPose(Axis.XP.rotationDegrees(camera.getXRot()));
+                    matrices.mulPose(Axis.YP.rotationDegrees(camera.getYRot() + 180.0F));
                     matrices.translate(pos.x, pos.y, pos.z);
-                    matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-camera.getYaw()));
-                    matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(camera.getPitch()));
-                    Matrix4f matrix = matrices.peek().getPositionMatrix();
+                    matrices.mulPose(Axis.YP.rotationDegrees(-camera.getYRot()));
+                    matrices.mulPose(Axis.XP.rotationDegrees(camera.getXRot()));
+                    Matrix4f matrix = matrices.last().pose();
 
-                    bufferBuilder.vertex(matrix, 0, -ffsize.getValue(), 0).texture(0f, 1f).color(Render2DEngine.injectAlpha(ctx.color(), (int) (255 * ((float) age / (float) maxAge) * ctx.animation(Render3DEngine.getTickDelta()))).getRGB());
-                    bufferBuilder.vertex(matrix, -ffsize.getValue(), -ffsize.getValue(), 0).texture(1f, 1f).color(Render2DEngine.injectAlpha(ctx.color(), (int) (255 * ((float) age / (float) maxAge) * ctx.animation(Render3DEngine.getTickDelta()))).getRGB());
-                    bufferBuilder.vertex(matrix, -ffsize.getValue(), 0, 0).texture(1f, 0).color(Render2DEngine.injectAlpha(ctx.color(), (int) (255 * ((float) age / (float) maxAge) * ctx.animation(Render3DEngine.getTickDelta()))).getRGB());
-                    bufferBuilder.vertex(matrix, 0, 0, 0).texture(0, 0).color(Render2DEngine.injectAlpha(ctx.color(), (int) (255 * ((float) age / (float) maxAge) * ctx.animation(Render3DEngine.getTickDelta()))).getRGB());
+                    bufferBuilder.addVertex(matrix, 0, -ffsize.getValue(), 0).setUv(0f, 1f).setColor(Render2DEngine.injectAlpha(ctx.color(), (int) (255 * ((float) age / (float) maxAge) * ctx.animation(Render3DEngine.getTickDelta()))).getRGB());
+                    bufferBuilder.addVertex(matrix, -ffsize.getValue(), -ffsize.getValue(), 0).setUv(1f, 1f).setColor(Render2DEngine.injectAlpha(ctx.color(), (int) (255 * ((float) age / (float) maxAge) * ctx.animation(Render3DEngine.getTickDelta()))).getRGB());
+                    bufferBuilder.addVertex(matrix, -ffsize.getValue(), 0, 0).setUv(1f, 0).setColor(Render2DEngine.injectAlpha(ctx.color(), (int) (255 * ((float) age / (float) maxAge) * ctx.animation(Render3DEngine.getTickDelta()))).getRGB());
+                    bufferBuilder.addVertex(matrix, 0, 0, 0).setUv(0, 0).setColor(Render2DEngine.injectAlpha(ctx.color(), (int) (255 * ((float) age / (float) maxAge) * ctx.animation(Render3DEngine.getTickDelta()))).getRGB());
                 }
             }
         }
@@ -189,7 +192,7 @@ public class Particles extends Module {
         }
 
         public boolean tick() {
-            if (mc.player.squaredDistanceTo(posX, posY, posZ) > 4096) age -= 8;
+            if (mc.player.distanceToSqr(posX, posY, posZ) > 4096) age -= 8;
             else age--;
 
             if (age < 0)
@@ -222,23 +225,23 @@ public class Particles extends Module {
                 case Stars -> RenderSystem.setShaderTexture(0, TextureStorage.star);
             }
 
-            Camera camera = mc.gameRenderer.getCamera();
+            Camera camera = mc.gameRenderer.getMainCamera();
             Color color1 = lmode.getValue() == ColorMode.Sync ? HudEditor.getColor(age * 2) : color.getValue().getColorObject();
-            Vec3d pos = Render3DEngine.interpolatePos(prevposX, prevposY, prevposZ, posX, posY, posZ);
+            Vec3 pos = Render3DEngine.interpolatePos(prevposX, prevposY, prevposZ, posX, posY, posZ);
 
-            MatrixStack matrices = new MatrixStack();
-            matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(camera.getPitch()));
-            matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(camera.getYaw() + 180.0F));
+            PoseStack matrices = new PoseStack();
+            matrices.mulPose(Axis.XP.rotationDegrees(camera.getXRot()));
+            matrices.mulPose(Axis.YP.rotationDegrees(camera.getYRot() + 180.0F));
             matrices.translate(pos.x, pos.y, pos.z);
-            matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-camera.getYaw()));
-            matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(camera.getPitch()));
+            matrices.mulPose(Axis.YP.rotationDegrees(-camera.getYRot()));
+            matrices.mulPose(Axis.XP.rotationDegrees(camera.getXRot()));
 
-            Matrix4f matrix1 = matrices.peek().getPositionMatrix();
+            Matrix4f matrix1 = matrices.last().pose();
 
-            bufferBuilder.vertex(matrix1, 0, -size.getValue(), 0).texture(0f, 1f).color(Render2DEngine.injectAlpha(color1, (int) (255 * ((float) age / (float) maxAge))).getRGB());
-            bufferBuilder.vertex(matrix1, -size.getValue(), -size.getValue(), 0).texture(1f, 1f).color(Render2DEngine.injectAlpha(color1, (int) (255 * ((float) age / (float) maxAge))).getRGB());
-            bufferBuilder.vertex(matrix1, -size.getValue(), 0, 0).texture(1f, 0).color(Render2DEngine.injectAlpha(color1, (int) (255 * ((float) age / (float) maxAge))).getRGB());
-            bufferBuilder.vertex(matrix1, 0, 0, 0).texture(0, 0).color(Render2DEngine.injectAlpha(color1, (int) (255 * ((float) age / (float) maxAge))).getRGB());
+            bufferBuilder.addVertex(matrix1, 0, -size.getValue(), 0).setUv(0f, 1f).setColor(Render2DEngine.injectAlpha(color1, (int) (255 * ((float) age / (float) maxAge))).getRGB());
+            bufferBuilder.addVertex(matrix1, -size.getValue(), -size.getValue(), 0).setUv(1f, 1f).setColor(Render2DEngine.injectAlpha(color1, (int) (255 * ((float) age / (float) maxAge))).getRGB());
+            bufferBuilder.addVertex(matrix1, -size.getValue(), 0, 0).setUv(1f, 0).setColor(Render2DEngine.injectAlpha(color1, (int) (255 * ((float) age / (float) maxAge))).getRGB());
+            bufferBuilder.addVertex(matrix1, 0, 0, 0).setUv(0, 0).setColor(Render2DEngine.injectAlpha(color1, (int) (255 * ((float) age / (float) maxAge))).getRGB());
         }
     }
 

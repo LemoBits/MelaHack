@@ -18,10 +18,10 @@
 package thunder.hack.utility.render.shaders.satin.api.managed;
 
 import com.mojang.blaze3d.vertex.VertexFormat;
-import net.minecraft.util.Identifier;
 import thunder.hack.utility.render.shaders.satin.impl.ReloadableShaderEffectManager;
 
 import java.util.function.Consumer;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * @see ManagedShaderEffect
@@ -31,13 +31,13 @@ public interface ShaderEffectManager {
         return ReloadableShaderEffectManager.INSTANCE;
     }
 
-    ManagedShaderEffect manage(Identifier location);
+    ManagedShaderEffect manage(ResourceLocation location);
 
-    ManagedShaderEffect manage(Identifier location, Consumer<ManagedShaderEffect> initCallback);
+    ManagedShaderEffect manage(ResourceLocation location, Consumer<ManagedShaderEffect> initCallback);
 
-    ManagedCoreShader manageCoreShader(Identifier location);
+    ManagedCoreShader manageCoreShader(ResourceLocation location);
 
-    ManagedCoreShader manageCoreShader(Identifier location, VertexFormat vertexFormat);
+    ManagedCoreShader manageCoreShader(ResourceLocation location, VertexFormat vertexFormat);
 
-    ManagedCoreShader manageCoreShader(Identifier location, VertexFormat vertexFormat, Consumer<ManagedCoreShader> initCallback);
+    ManagedCoreShader manageCoreShader(ResourceLocation location, VertexFormat vertexFormat, Consumer<ManagedCoreShader> initCallback);
 }

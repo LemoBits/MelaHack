@@ -1,8 +1,8 @@
 package thunder.hack.gui.clickui;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.util.InputUtil;
+import com.mojang.blaze3d.platform.InputConstants;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import org.lwjgl.glfw.GLFW;
 import thunder.hack.setting.Setting;
 import thunder.hack.setting.impl.ColorSetting;
@@ -20,7 +20,7 @@ public abstract class AbstractElement {
         this.setting = setting;
     }
 
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
         hovered = Render2DEngine.isHovered(mouseX, mouseY, x, y, width, height);
     }
 
@@ -28,7 +28,7 @@ public abstract class AbstractElement {
     }
 
     public void mouseClicked(int mouseX, int mouseY, int button) {
-        if (InputUtil.isKeyPressed(MinecraftClient.getInstance().getWindow().getHandle(), GLFW.GLFW_KEY_DELETE) && button == 2 && hovered) {
+        if (InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_DELETE) && button == 2 && hovered) {
             if (setting.getValue() instanceof ColorSetting cs)
                 cs.setDefault();
             else

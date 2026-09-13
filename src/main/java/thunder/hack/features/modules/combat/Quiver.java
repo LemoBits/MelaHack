@@ -1,13 +1,13 @@
 package thunder.hack.features.modules.combat;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.item.BowItem;
-import net.minecraft.item.Items;
-import net.minecraft.item.TippedArrowItem;
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
-import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
+import net.minecraft.network.protocol.game.ServerboundContainerClosePacket;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.item.BowItem;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.TippedArrowItem;
 import thunder.hack.events.impl.EventSync;
 import thunder.hack.features.modules.Module;
 import thunder.hack.setting.Setting;
@@ -40,20 +40,20 @@ public final class Quiver extends Module {
         if (preBowSlot != -1)
             InventoryUtility.switchTo(preBowSlot);
 
-        mc.options.useKey.setPressed(false);
+        mc.options.keyUse.setDown(false);
     }
 
     @EventHandler
     @SuppressWarnings("unused")
     private void onSync(EventSync event) {
-        if ((!HoleUtility.isHole(mc.player.getBlockPos()) && onlyInHole.getValue()) || (mc.player.isUsingItem() && !mc.player.getMainHandStack().getItem().equals(Items.BOW)))
+        if ((!HoleUtility.isHole(mc.player.blockPosition()) && onlyInHole.getValue()) || (mc.player.isUsingItem() && !mc.player.getMainHandItem().getItem().equals(Items.BOW)))
             return;
 
         SearchInvResult strength = getArrow("strength");
         SearchInvResult swiftness = getArrow("swiftness");
 
-        boolean hasStrength = !strength.found() || (mc.player.hasStatusEffect(StatusEffects.STRENGTH) && mc.player.getStatusEffect(StatusEffects.STRENGTH).getDuration() > 100);
-        boolean hasSwiftness = !swiftness.found() || (mc.player.hasStatusEffect(StatusEffects.SPEED) && mc.player.getStatusEffect(StatusEffects.SPEED).getDuration() > 100);
+        boolean hasStrength = !strength.found() || (mc.player.hasEffect(MobEffects.STRENGTH) && mc.player.getEffect(MobEffects.STRENGTH).getDuration() > 100);
+        boolean hasSwiftness = !swiftness.found() || (mc.player.hasEffect(MobEffects.SPEED) && mc.player.getEffect(MobEffects.SPEED).getDuration() > 100);
 
         if (!strength.found() && !swiftness.found()) {
             disable(isRu() ? "В интвенторе отсутствуют нужные стрелы! Отключение..." : "No arrows in hotbar! Disabling...");
@@ -72,7 +72,7 @@ public final class Quiver extends Module {
         }
         result.switchTo();
 
-        if (BowItem.getPullProgress(mc.player.getItemUseTime()) >= 0.15) {
+        if (BowItem.getPowerForTime(mc.player.getTicksUsingItem()) >= 0.15) {
             releaseBow();
             switchInvSlot(strength.slot(), swiftness.slot());
             return;
@@ -83,20 +83,20 @@ public final class Quiver extends Module {
             return;
         }
 
-        mc.options.useKey.setPressed(true);
+        mc.options.keyUse.setDown(true);
     }
 
     private void releaseBow() {
-        sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(mc.player.getYaw(), -90, mc.player.isOnGround(), mc.player.horizontalCollision));
-        mc.options.useKey.setPressed(false);
-        mc.interactionManager.stopUsingItem(mc.player);
+        sendPacket(new ServerboundMovePlayerPacket.Rot(mc.player.getYRot(), -90, mc.player.onGround(), mc.player.horizontalCollision));
+        mc.options.keyUse.setDown(false);
+        mc.gameMode.releaseUsingItem(mc.player);
         count++;
     }
 
     private SearchInvResult getArrow(String name) {
         return InventoryUtility.findInInventory(stack -> {
             if (stack.getItem() instanceof TippedArrowItem tai) {
-                String key = tai.getTranslationKey();
+                String key = tai.getDescriptionId();
                 return key.contains("effect." + name);
             }
             return false;
@@ -107,10 +107,10 @@ public final class Quiver extends Module {
         if (from == -1 || to == -1)
             return;
 
-        sendPacket(new ClientCommandC2SPacket(Objects.requireNonNull(mc.player), ClientCommandC2SPacket.Mode.STOP_SPRINTING));
+        sendPacket(new ServerboundPlayerCommandPacket(Objects.requireNonNull(mc.player), ServerboundPlayerCommandPacket.Action.STOP_SPRINTING));
         clickSlot(from);
         clickSlot(to);
         clickSlot(from);
-        sendPacket(new CloseHandledScreenC2SPacket(mc.player.currentScreenHandler.syncId));
+        sendPacket(new ServerboundContainerClosePacket(mc.player.containerMenu.containerId));
     }
 }

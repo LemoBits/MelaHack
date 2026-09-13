@@ -1,9 +1,8 @@
 package thunder.hack.features.hud.impl;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.core.Managers;
 import thunder.hack.events.impl.TotemPopEvent;
@@ -35,7 +34,7 @@ public class Companion extends HudElement {
 
     @Override
     public void onUpdate() {
-        for (PlayerEntity player : mc.world.getPlayers()) {
+        for (Player player : mc.level.players()) {
             if (player == mc.player || AntiBot.bots.contains(player) || player.getHealth() > 0 || !Managers.COMBAT.popList.containsKey(player.getName().getString()))
                 continue;
 
@@ -47,30 +46,30 @@ public class Companion extends HudElement {
         }
     }
 
-    public void onRender2D(DrawContext context) {
+    public void onRender2D(GuiGraphics context) {
         super.onRender2D(context);
 
-        context.getMatrices().pushMatrix();
-        context.getMatrices().translate((float) ((int) getPosX() + 100), (float) ((int) getPosY() + 100));
-        context.getMatrices().scale((float) scale.getValue() / 100f, (float) scale.getValue() / 100f);
-        context.getMatrices().translate((float) (-((int) getPosX() + 100)), (float) (-((int) getPosY() + 100)));
+        context.pose().pushMatrix();
+        context.pose().translate((float) ((int) getPosX() + 100), (float) ((int) getPosY() + 100));
+        context.pose().scale((float) scale.getValue() / 100f, (float) scale.getValue() / 100f);
+        context.pose().translate((float) (-((int) getPosX() + 100)), (float) (-((int) getPosY() + 100)));
         if (mode.getValue() == Mode.Boykisser)
-            context.drawTexture(net.minecraft.client.render.RenderPipelines.GUI_TEXTURED, TextureStorage.boykisser, (int) getPosX(), (int) getPosY(), 0, currentFrame * 128, 130, 128, 130, 6784);
+            context.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, TextureStorage.boykisser, (int) getPosX(), (int) getPosY(), 0, currentFrame * 128, 130, 128, 130, 6784);
         else if (mode.getValue() == Mode.Paimon)
-            context.drawTexture(net.minecraft.client.render.RenderPipelines.GUI_TEXTURED, TextureStorage.paimon, (int) getPosX(), (int) getPosY(), 0, currentFrame * 200, 200, 200, 200, 10600);
+            context.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, TextureStorage.paimon, (int) getPosX(), (int) getPosY(), 0, currentFrame * 200, 200, 200, 200, 10600);
         else if (mode.getValue() == Mode.Baltika)
-            context.drawTexture(net.minecraft.client.render.RenderPipelines.GUI_TEXTURED, TextureStorage.baltika, (int) getPosX(), (int) getPosY(), 0, 0, 421, 800, 421, 800);
+            context.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, TextureStorage.baltika, (int) getPosX(), (int) getPosY(), 0, 0, 421, 800, 421, 800);
         else if (mode.getValue() == Mode.Kowk)
-            context.drawTexture(net.minecraft.client.render.RenderPipelines.GUI_TEXTURED, TextureStorage.kowk, (int) getPosX(), (int) getPosY(), 0, 0, 287, 252, 287, 252);
-        context.getMatrices().popMatrix();
+            context.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, TextureStorage.kowk, (int) getPosX(), (int) getPosY(), 0, 0, 287, 252, 287, 252);
+        context.pose().popMatrix();
 
         if (!lastPop.passedMs(2000)) {
             float w = FontRenderers.sf_bold.getStringWidth(message) + 8;
             float factor = MathUtility.clamp(lastPop.getPassedTimeMs(), 0, 500) / 500f;
-            Render2DEngine.drawRound(context.getMatrices(), getPosX() + scale.getValue() / 3f, getPosY() + 70 - scale.getValue(), factor * w, 10, 3, new Color(0xFCD7DD));
+            Render2DEngine.drawRound(context.pose(), getPosX() + scale.getValue() / 3f, getPosY() + 70 - scale.getValue(), factor * w, 10, 3, new Color(0xFCD7DD));
 
-            Render2DEngine.addWindow(context.getMatrices(), getPosX() + scale.getValue() / 3f, getPosY() + 72 - scale.getValue(), factor * w + getPosX() + scale.getValue() / 3f, 20 + getPosY() + 72 - scale.getValue(), 1f);
-            FontRenderers.sf_bold.drawString(context.getMatrices(), message, getPosX() + 2 + scale.getValue() / 3f, getPosY() + 72 - scale.getValue(), new Color(0x484848).getRGB());
+            Render2DEngine.addWindow(context.pose(), getPosX() + scale.getValue() / 3f, getPosY() + 72 - scale.getValue(), factor * w + getPosX() + scale.getValue() / 3f, 20 + getPosY() + 72 - scale.getValue(), 1f);
+            FontRenderers.sf_bold.drawString(context.pose(), message, getPosX() + 2 + scale.getValue() / 3f, getPosY() + 72 - scale.getValue(), new Color(0x484848).getRGB());
             Render2DEngine.popWindow();
         }
 

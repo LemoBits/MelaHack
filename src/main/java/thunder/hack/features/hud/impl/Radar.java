@@ -1,8 +1,5 @@
 package thunder.hack.features.hud.impl;
 
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.Formatting;
 import thunder.hack.core.Managers;
 import thunder.hack.core.manager.client.ModuleManager;
 import thunder.hack.gui.font.FontRenderers;
@@ -15,6 +12,9 @@ import thunder.hack.utility.render.Render2DEngine;
 import thunder.hack.utility.render.Render3DEngine;
 
 import java.awt.*;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.world.entity.player.Player;
 
 public class Radar extends HudElement {
     public Radar() {
@@ -33,22 +33,22 @@ public class Radar extends HudElement {
     private final Setting<Component> c4 = new Setting<>("Component4", Component.None, v -> mode.is(Mode.Text));
     private final Setting<Component> c5 = new Setting<>("Component5", Component.None, v -> mode.is(Mode.Text));
 
-    private final Setting<Formatting> c12 = new Setting<>("Color1", Formatting.WHITE, v -> mode.is(Mode.Text));
-    private final Setting<Formatting> c22 = new Setting<>("Color2", Formatting.WHITE, v -> mode.is(Mode.Text));
-    private final Setting<Formatting> c32 = new Setting<>("Color3", Formatting.WHITE, v -> mode.is(Mode.Text));
-    private final Setting<Formatting> c42 = new Setting<>("Color4", Formatting.WHITE, v -> mode.is(Mode.Text));
+    private final Setting<ChatFormatting> c12 = new Setting<>("Color1", ChatFormatting.WHITE, v -> mode.is(Mode.Text));
+    private final Setting<ChatFormatting> c22 = new Setting<>("Color2", ChatFormatting.WHITE, v -> mode.is(Mode.Text));
+    private final Setting<ChatFormatting> c32 = new Setting<>("Color3", ChatFormatting.WHITE, v -> mode.is(Mode.Text));
+    private final Setting<ChatFormatting> c42 = new Setting<>("Color4", ChatFormatting.WHITE, v -> mode.is(Mode.Text));
 
-    public void onRender2D(DrawContext context) {
+    public void onRender2D(GuiGraphics context) {
         super.onRender2D(context);
 
         if (mode.getValue() == Mode.Rect) {
-            Render2DEngine.drawHudBase(context.getMatrices(), getPosX(), getPosY(), size.getValue(), size.getValue(), HudEditor.hudRound.getValue());
+            Render2DEngine.drawHudBase(context.pose(), getPosX(), getPosY(), size.getValue(), size.getValue(), HudEditor.hudRound.getValue());
 
             if (HudEditor.hudStyle.is(HudEditor.HudStyle.Blurry)) {
-                Render2DEngine.drawRectDumbWay(context.getMatrices(), getPosX(), getPosY() + (size.getValue() / 2F + 0.25f), getPosX() + size.getValue(), getPosY() + (size.getValue() / 2F) - 0.25f, new Color(0x54FFFFFF, true));
-                Render2DEngine.drawRectDumbWay(context.getMatrices(),getPosX() + (size.getValue() / 2F - 0.25f), getPosY() - 0.5f, getPosX() + (size.getValue() / 2F) + 0.25f, getPosY() + size.getValue() - 1, new Color(0x54FFFFFF, true));
+                Render2DEngine.drawRectDumbWay(context.pose(), getPosX(), getPosY() + (size.getValue() / 2F + 0.25f), getPosX() + size.getValue(), getPosY() + (size.getValue() / 2F) - 0.25f, new Color(0x54FFFFFF, true));
+                Render2DEngine.drawRectDumbWay(context.pose(),getPosX() + (size.getValue() / 2F - 0.25f), getPosY() - 0.5f, getPosX() + (size.getValue() / 2F) + 0.25f, getPosY() + size.getValue() - 1, new Color(0x54FFFFFF, true));
             } else {
-                Render2DEngine.draw2DGradientRect(context.getMatrices(),
+                Render2DEngine.draw2DGradientRect(context.pose(),
                         (float) (getPosX() + (size.getValue() / 2F - 0.5)),
                         (float) (getPosY() + 3.5),
                         (float) (getPosX() + (size.getValue() / 2F + 0.2)),
@@ -57,7 +57,7 @@ public class Radar extends HudElement {
                 );
 
                 Render2DEngine.draw2DGradientRect(
-                        context.getMatrices(),
+                        context.pose(),
                         getPosX() + 3.5f,
                         getPosY() + (size.getValue() / 2F - 0.2f),
                         (getPosX() + size.getValue()) - 3.5f,
@@ -66,14 +66,14 @@ public class Radar extends HudElement {
                 );
             }
 
-            for (PlayerEntity entityPlayer : Managers.ASYNC.getAsyncPlayers()) {
+            for (Player entityPlayer : Managers.ASYNC.getAsyncPlayers()) {
                 if (entityPlayer == mc.player)
                     continue;
 
-                float posX = (float) (entityPlayer.lastX + (entityPlayer.lastX - entityPlayer.getX()) * Render3DEngine.getTickDelta() - mc.player.getX()) * 2;
-                float posZ = (float) (entityPlayer.lastZ + (entityPlayer.lastZ - entityPlayer.getZ()) * Render3DEngine.getTickDelta() - mc.player.getZ()) * 2;
-                float cos = (float) Math.cos(mc.player.getYaw(Render3DEngine.getTickDelta()) * 0.017453292);
-                float sin = (float) Math.sin(mc.player.getYaw(Render3DEngine.getTickDelta()) * 0.017453292);
+                float posX = (float) (entityPlayer.xo + (entityPlayer.xo - entityPlayer.getX()) * Render3DEngine.getTickDelta() - mc.player.getX()) * 2;
+                float posZ = (float) (entityPlayer.zo + (entityPlayer.zo - entityPlayer.getZ()) * Render3DEngine.getTickDelta() - mc.player.getZ()) * 2;
+                float cos = (float) Math.cos(mc.player.getViewYRot(Render3DEngine.getTickDelta()) * 0.017453292);
+                float sin = (float) Math.sin(mc.player.getViewYRot(Render3DEngine.getTickDelta()) * 0.017453292);
                 float rotY = -(posZ * cos - posX * sin);
                 float rotX = -(posX * cos + posZ * sin);
                 if (rotY > size.getValue() / 2F - 6) {
@@ -87,21 +87,21 @@ public class Radar extends HudElement {
                     rotX = -(size.getValue() / 2F - 5);
                 }
 
-                Render2DEngine.drawRound(context.getMatrices(), (getPosX() + size.getValue() / 2F + rotX) - 2, (getPosY() + size.getValue() / 2F + rotY) - 2, 4, 4, 2f, color3.getValue().getColorObject());
+                Render2DEngine.drawRound(context.pose(), (getPosX() + size.getValue() / 2F + rotX) - 2, (getPosY() + size.getValue() / 2F + rotY) - 2, 4, 4, 2f, color3.getValue().getColorObject());
             }
         }
 
         if (mode.getValue() == Mode.Text) {
             float offset_y = 0;
-            for (PlayerEntity entityPlayer : Managers.ASYNC.getAsyncPlayers()) {
+            for (Player entityPlayer : Managers.ASYNC.getAsyncPlayers()) {
                 if (entityPlayer == mc.player)
                     continue;
 
                 String str = String.format("%s %s %s %s %s", getText(c1, entityPlayer), getText(c2, entityPlayer), getText(c3, entityPlayer), getText(c4, entityPlayer), getText(c5, entityPlayer));
                 if (colorMode.getValue() == ColorMode.Sync) {
-                    FontRenderers.sf_bold.drawString(context.getMatrices(), str, getPosX(), getPosY() + offset_y, HudEditor.getColor((int) (offset_y * 2f)).getRGB());
+                    FontRenderers.sf_bold.drawString(context.pose(), str, getPosX(), getPosY() + offset_y, HudEditor.getColor((int) (offset_y * 2f)).getRGB());
                 } else {
-                    FontRenderers.sf_bold.drawString(context.getMatrices(), str, getPosX(), getPosY() + offset_y, color2.getValue().getColor());
+                    FontRenderers.sf_bold.drawString(context.pose(), str, getPosX(), getPosY() + offset_y, color2.getValue().getColor());
                 }
                 offset_y += FontRenderers.sf_bold.getFontHeight(str);
             }
@@ -118,26 +118,26 @@ public class Radar extends HudElement {
         Sync, Custom
     }
 
-    public String getText(Setting<Component> c, PlayerEntity player) {
+    public String getText(Setting<Component> c, Player player) {
         switch (c.getValue()) {
             default -> {
                 return "";
             }
             case Hp -> {
                 int health = (int) Math.ceil(player.getHealth() + player.getAbsorptionAmount());
-                return ModuleManager.nameTags.getHealthColor(health) + health + Formatting.RESET;
+                return ModuleManager.nameTags.getHealthColor(health) + health + ChatFormatting.RESET;
             }
             case Name -> {
-                return c12.getValue() + player.getName().getString() + Formatting.RESET;
+                return c12.getValue() + player.getName().getString() + ChatFormatting.RESET;
             }
             case Ping -> {
-                return c22.getValue() + (NameTags.getEntityPing(player) + "ms") + Formatting.RESET;
+                return c22.getValue() + (NameTags.getEntityPing(player) + "ms") + ChatFormatting.RESET;
             }
             case Distance -> {
-                return c32.getValue() + (((int) Math.ceil(mc.player.distanceTo(player))) + "m") + Formatting.RESET;
+                return c32.getValue() + (((int) Math.ceil(mc.player.distanceTo(player))) + "m") + ChatFormatting.RESET;
             }
             case TotemPops -> {
-                return c42.getValue() + (Managers.COMBAT.getPops(player) + "") + Formatting.RESET;
+                return c42.getValue() + (Managers.COMBAT.getPops(player) + "") + ChatFormatting.RESET;
             }
         }
     }

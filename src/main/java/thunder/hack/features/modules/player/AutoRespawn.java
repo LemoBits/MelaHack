@@ -1,7 +1,7 @@
 package thunder.hack.features.modules.player;
 
-import net.minecraft.client.gui.screen.DeathScreen;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.screens.DeathScreen;
 import thunder.hack.core.Managers;
 import thunder.hack.core.manager.world.WayPointManager;
 import thunder.hack.features.modules.Module;
@@ -31,24 +31,24 @@ public class AutoRespawn extends Module {
             timer.reset();
         }
 
-        if (mc.currentScreen instanceof DeathScreen) {
+        if (mc.screen instanceof DeathScreen) {
             if (flag){
                 waypointCount += 1;
                 if(deathcoords.getValue())
-                    sendMessage(Formatting.GOLD + "[PlayerDeath] " + Formatting.YELLOW + (int) mc.player.getX() + " " + (int) mc.player.getY() + " " + (int) mc.player.getZ());
+                    sendMessage(ChatFormatting.GOLD + "[PlayerDeath] " + ChatFormatting.YELLOW + (int) mc.player.getX() + " " + (int) mc.player.getY() + " " + (int) mc.player.getZ());
                 if(autowaypoint.getValue()) {
-                    WayPointManager.WayPoint wp = new WayPointManager.WayPoint((int) mc.player.getX(), (int) mc.player.getY(), (int) mc.player.getZ(), "Death №" + waypointCount, (mc.isInSingleplayer() ? "SinglePlayer" : mc.getNetworkHandler().getServerInfo().address), mc.world.getRegistryKey().getValue().getPath());
+                    WayPointManager.WayPoint wp = new WayPointManager.WayPoint((int) mc.player.getX(), (int) mc.player.getY(), (int) mc.player.getZ(), "Death №" + waypointCount, (mc.isLocalServer() ? "SinglePlayer" : mc.getConnection().getServerData().ip), mc.level.dimension().location().getPath());
                     Managers.WAYPOINT.addWayPoint(wp);
                 }
-                mc.player.requestRespawn();
+                mc.player.respawn();
                 mc.setScreen(null);
 
                 Managers.ASYNC.run(()-> {
                     if (autokit.getValue() && mc.player != null) {
-                        mc.player.networkHandler.sendChatCommand("kit " + kit.getValue());
+                        mc.player.connection.sendCommand("kit " + kit.getValue());
                     }
                     if (autohome.getValue() && mc.player != null) {
-                        mc.player.networkHandler.sendChatCommand("home");
+                        mc.player.connection.sendCommand("home");
                     }
                 },1000);
                 flag = false;

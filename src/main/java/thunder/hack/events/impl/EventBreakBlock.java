@@ -1,6 +1,6 @@
 package thunder.hack.events.impl;
 
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 import thunder.hack.events.Event;
 
 public class EventBreakBlock extends Event {

@@ -1,19 +1,25 @@
 package thunder.hack.utility.player;
 
-import net.minecraft.block.Block;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.Enchantments;
-import net.minecraft.entity.DamageUtil;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.*;
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.tag.ItemTags;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.world.item.*;
+import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.world.damagesource.CombatRules;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.AxeItem;
+import net.minecraft.world.item.BedItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.ShovelItem;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.core.Managers;
 import thunder.hack.core.manager.client.ModuleManager;
@@ -34,7 +40,7 @@ public final class InventoryUtility {
         int counter = 0;
 
         for (int i = 0; i <= 44; ++i) {
-            ItemStack itemStack = mc.player.getInventory().getStack(i);
+            ItemStack itemStack = mc.player.getInventory().getItem(i);
             if (itemStack.getItem() != item) continue;
             counter += itemStack.getCount();
         }
@@ -48,7 +54,7 @@ public final class InventoryUtility {
         float f = 1.0F;
 
         for (int b1 = 9; b1 < 45; b1++) {
-            ItemStack itemStack = mc.player.getInventory().getStack(b1 >= 36 ? b1 - 36 : b1);
+            ItemStack itemStack = mc.player.getInventory().getItem(b1 >= 36 ? b1 - 36 : b1);
             if (itemStack != null && itemStack.getItem() instanceof AxeItem) {
                 float f1 = itemStack.getMaxDamage();
                 f1 += getEnchantmentLevel(Enchantments.SHARPNESS, itemStack);
@@ -62,7 +68,7 @@ public final class InventoryUtility {
         if (slot >= 36) slot = slot - 36;
 
         if (slot == -1) return SearchInvResult.notFound();
-        return new SearchInvResult(slot, true, mc.player.getInventory().getStack(slot));
+        return new SearchInvResult(slot, true, mc.player.getInventory().getItem(slot));
     }
 
     public static SearchInvResult getPickAxeHotbar() {
@@ -71,8 +77,8 @@ public final class InventoryUtility {
         int slot = -1;
         float f = 1.0F;
         for (int b1 = 0; b1 < 9; b1++) {
-            ItemStack itemStack = mc.player.getInventory().getStack(b1);
-            if (itemStack != null && itemStack.isIn(ItemTags.PICKAXES)) {
+            ItemStack itemStack = mc.player.getInventory().getItem(b1);
+            if (itemStack != null && itemStack.is(ItemTags.PICKAXES)) {
                 float f1 = 0;
                 f1 += getEnchantmentLevel(Enchantments.EFFICIENCY, itemStack);
                 if (f1 > f) {
@@ -83,7 +89,7 @@ public final class InventoryUtility {
         }
 
         if (slot == -1) return SearchInvResult.notFound();
-        return new SearchInvResult(slot, true, mc.player.getInventory().getStack(slot));
+        return new SearchInvResult(slot, true, mc.player.getInventory().getItem(slot));
     }
 
     public static SearchInvResult getPickAxe() {
@@ -92,8 +98,8 @@ public final class InventoryUtility {
         int slot = -1;
         float f = 1.0F;
         for (int b1 = 9; b1 < 45; b1++) {
-            ItemStack itemStack = mc.player.getInventory().getStack(b1);
-            if (itemStack != null && itemStack.isIn(ItemTags.PICKAXES)) {
+            ItemStack itemStack = mc.player.getInventory().getItem(b1);
+            if (itemStack != null && itemStack.is(ItemTags.PICKAXES)) {
                 float f1 = 0;
                 f1 += getEnchantmentLevel(Enchantments.EFFICIENCY, itemStack);
                 if (f1 > f) {
@@ -104,7 +110,7 @@ public final class InventoryUtility {
         }
 
         if (slot == -1) return SearchInvResult.notFound();
-        return new SearchInvResult(slot, true, mc.player.getInventory().getStack(slot));
+        return new SearchInvResult(slot, true, mc.player.getInventory().getItem(slot));
     }
 
     public static SearchInvResult getPickAxeHotBar() {
@@ -113,8 +119,8 @@ public final class InventoryUtility {
         int slot = -1;
         float f = 1.0F;
         for (int b1 = 0; b1 < 9; b1++) {
-            ItemStack itemStack = mc.player.getInventory().getStack(b1);
-            if (itemStack != null && itemStack.isIn(ItemTags.PICKAXES)) {
+            ItemStack itemStack = mc.player.getInventory().getItem(b1);
+            if (itemStack != null && itemStack.is(ItemTags.PICKAXES)) {
                 float f1 = 0;
                 f1 += getEnchantmentLevel(Enchantments.EFFICIENCY, itemStack);
                 if (f1 > f) {
@@ -125,14 +131,14 @@ public final class InventoryUtility {
         }
 
         if (slot == -1) return SearchInvResult.notFound();
-        return new SearchInvResult(slot, true, mc.player.getInventory().getStack(slot));
+        return new SearchInvResult(slot, true, mc.player.getInventory().getItem(slot));
     }
 
     public static SearchInvResult getSkull() {
         if (mc.player == null) return SearchInvResult.notFound();
         int slot = -1;
         for (int b1 = 0; b1 < 9; b1++) {
-            ItemStack itemStack = mc.player.getInventory().getStack(b1);
+            ItemStack itemStack = mc.player.getInventory().getItem(b1);
             if (itemStack != null &&
                     (itemStack.getItem().equals(Items.SKELETON_SKULL)
                             || itemStack.getItem().equals(Items.WITHER_SKELETON_SKULL)
@@ -144,7 +150,7 @@ public final class InventoryUtility {
             }
         }
         if (slot == -1) return SearchInvResult.notFound();
-        return new SearchInvResult(slot, true, mc.player.getInventory().getStack(slot));
+        return new SearchInvResult(slot, true, mc.player.getInventory().getItem(slot));
     }
 
     public static SearchInvResult getSword() {
@@ -153,8 +159,8 @@ public final class InventoryUtility {
         int slot = -1;
         float f = 1.0F;
         for (int b1 = 9; b1 < 45; b1++) {
-            ItemStack itemStack = mc.player.getInventory().getStack(b1);
-            if (itemStack != null && itemStack.isIn(ItemTags.SWORDS)) {
+            ItemStack itemStack = mc.player.getInventory().getItem(b1);
+            if (itemStack != null && itemStack.is(ItemTags.SWORDS)) {
                 float f1 = itemStack.getMaxDamage();
                 f1 += getEnchantmentLevel(Enchantments.SHARPNESS, itemStack);
                 if (f1 > f) {
@@ -165,7 +171,7 @@ public final class InventoryUtility {
         }
 
         if (slot == -1) return SearchInvResult.notFound();
-        return new SearchInvResult(slot, true, mc.player.getInventory().getStack(slot));
+        return new SearchInvResult(slot, true, mc.player.getInventory().getItem(slot));
     }
 
     public static SearchInvResult getSwordHotBar() {
@@ -174,8 +180,8 @@ public final class InventoryUtility {
         int slot = -1;
         float f = 1.0F;
         for (int b1 = 0; b1 < 9; b1++) {
-            ItemStack itemStack = mc.player.getInventory().getStack(b1);
-            if (itemStack != null && itemStack.isIn(ItemTags.SWORDS)) {
+            ItemStack itemStack = mc.player.getInventory().getItem(b1);
+            if (itemStack != null && itemStack.is(ItemTags.SWORDS)) {
                 float f1 = itemStack.getMaxDamage();
                 f1 += getEnchantmentLevel(Enchantments.SHARPNESS, itemStack);
                 if (f1 > f) {
@@ -186,7 +192,7 @@ public final class InventoryUtility {
         }
 
         if (slot == -1) return SearchInvResult.notFound();
-        return new SearchInvResult(slot, true, mc.player.getInventory().getStack(slot));
+        return new SearchInvResult(slot, true, mc.player.getInventory().getItem(slot));
     }
 
     // TODO check
@@ -196,7 +202,7 @@ public final class InventoryUtility {
         int slot = -1;
         float f = 1.0F;
         for (int b1 = 0; b1 < 9; b1++) {
-            ItemStack itemStack = mc.player.getInventory().getStack(b1);
+            ItemStack itemStack = mc.player.getInventory().getItem(b1);
             if (itemStack != null && itemStack.getItem() instanceof AxeItem) {
                 float f1 = itemStack.getMaxDamage();
                 f1 += getEnchantmentLevel(Enchantments.SHARPNESS, itemStack);
@@ -208,19 +214,19 @@ public final class InventoryUtility {
         }
 
         if (slot == -1) return SearchInvResult.notFound();
-        return new SearchInvResult(slot, true, mc.player.getInventory().getStack(slot));
+        return new SearchInvResult(slot, true, mc.player.getInventory().getItem(slot));
     }
 
 
     public static int getElytra() {
         for (ItemStack stack : ArmorUtility.getArmorItems(mc.player))
-            if (stack.getItem() == Items.ELYTRA && stack.getDamage() < 430)
+            if (stack.getItem() == Items.ELYTRA && stack.getDamageValue() < 430)
                 return -2;
 
         int slot = -1;
         for (int i = 0; i < 36; i++) {
-            ItemStack s = mc.player.getInventory().getStack(i);
-            if (s.getItem() == Items.ELYTRA && s.getDamage() < 430) {
+            ItemStack s = mc.player.getInventory().getItem(i);
+            if (s.getItem() == Items.ELYTRA && s.getDamageValue() < 430) {
                 slot = i;
                 break;
             }
@@ -235,7 +241,7 @@ public final class InventoryUtility {
     public static SearchInvResult findInHotBar(Searcher searcher) {
         if (mc.player != null) {
             for (int i = 0; i < 9; ++i) {
-                ItemStack stack = mc.player.getInventory().getStack(i);
+                ItemStack stack = mc.player.getInventory().getItem(i);
                 if (searcher.isValid(stack)) {
                     return new SearchInvResult(i, true, stack);
                 }
@@ -256,7 +262,7 @@ public final class InventoryUtility {
     public static SearchInvResult findInInventory(Searcher searcher) {
         if (mc.player != null) {
             for (int i = 36; i >= 0; i--) {
-                ItemStack stack = mc.player.getInventory().getStack(i);
+                ItemStack stack = mc.player.getInventory().getItem(i);
                 if (searcher.isValid(stack)) {
                     if (i < 9) i += 36;
                     return new SearchInvResult(i, true, stack);
@@ -303,50 +309,50 @@ public final class InventoryUtility {
 
     public static void saveAndSwitchTo(int slot) {
         saveSlot();
-        if (mc.player == null || mc.getNetworkHandler() == null) return;
+        if (mc.player == null || mc.getConnection() == null) return;
         if (mc.player.getInventory().getSelectedSlot() == slot && Managers.PLAYER.serverSideSlot == slot)
             return;
         mc.player.getInventory().setSelectedSlot(slot);
-        ((IInteractionManager) mc.interactionManager).syncSlot();
+        ((IInteractionManager) mc.gameMode).syncSlot();
     }
 
     public static void switchTo(int slot) {
-        if (mc.player == null || mc.getNetworkHandler() == null) return;
+        if (mc.player == null || mc.getConnection() == null) return;
         if (mc.player.getInventory().getSelectedSlot() == slot && Managers.PLAYER.serverSideSlot == slot)
             return;
         mc.player.getInventory().setSelectedSlot(slot);
-        ((IInteractionManager) mc.interactionManager).syncSlot();
+        ((IInteractionManager) mc.gameMode).syncSlot();
     }
 
     public static void switchToSilent(int slot) {
-        if (mc.player == null || mc.getNetworkHandler() == null) return;
-        mc.getNetworkHandler().sendPacket(new UpdateSelectedSlotC2SPacket(slot));
+        if (mc.player == null || mc.getConnection() == null) return;
+        mc.getConnection().send(new ServerboundSetCarriedItemPacket(slot));
     }
 
     public static SearchInvResult getAntiWeaknessItem() {
         if (mc.player == null) return SearchInvResult.notFound();
 
-        Item mainHand = mc.player.getMainHandStack().getItem();
-        if (mc.player.getMainHandStack().isIn(ItemTags.SWORDS)
-                || mc.player.getMainHandStack().isIn(ItemTags.PICKAXES)
+        Item mainHand = mc.player.getMainHandItem().getItem();
+        if (mc.player.getMainHandItem().is(ItemTags.SWORDS)
+                || mc.player.getMainHandItem().is(ItemTags.PICKAXES)
                 || mainHand instanceof AxeItem
                 || mainHand instanceof ShovelItem) {
-            return new SearchInvResult(mc.player.getInventory().getSelectedSlot(), true, mc.player.getMainHandStack());
+            return new SearchInvResult(mc.player.getInventory().getSelectedSlot(), true, mc.player.getMainHandItem());
         }
 
         return findInHotBar(
-                itemStack -> itemStack.isIn(ItemTags.SWORDS)
-                        || itemStack.isIn(ItemTags.PICKAXES)
+                itemStack -> itemStack.is(ItemTags.SWORDS)
+                        || itemStack.is(ItemTags.PICKAXES)
                         || itemStack.getItem() instanceof AxeItem
                         || itemStack.getItem() instanceof ShovelItem
         );
     }
 
-    public static float getHitDamage(@NotNull ItemStack weapon, PlayerEntity ent) {
+    public static float getHitDamage(@NotNull ItemStack weapon, Player ent) {
         if (mc.player == null) return 0;
         float baseDamage = 1f;
 
-        if (weapon.isIn(ItemTags.SWORDS))
+        if (weapon.is(ItemTags.SWORDS))
             baseDamage = 7;
 
         if (weapon.getItem() instanceof AxeItem)
@@ -355,22 +361,22 @@ public final class InventoryUtility {
         if (mc.player.fallDistance > 0 || ModuleManager.criticals.isEnabled())
             baseDamage += baseDamage / 2f;
 
-        if (mc.player.hasStatusEffect(StatusEffects.STRENGTH)) {
-            int strength = Objects.requireNonNull(mc.player.getStatusEffect(StatusEffects.STRENGTH)).getAmplifier() + 1;
+        if (mc.player.hasEffect(MobEffects.STRENGTH)) {
+            int strength = Objects.requireNonNull(mc.player.getEffect(MobEffects.STRENGTH)).getAmplifier() + 1;
             baseDamage += 3 * strength;
         }
 
         // Reduce by armour
-        baseDamage = DamageUtil.getDamageLeft(ent, baseDamage, mc.world.getDamageSources().generic(), ent.getArmor(), (float) ent.getAttributeInstance(EntityAttributes.ARMOR_TOUGHNESS).getValue());
+        baseDamage = CombatRules.getDamageAfterAbsorb(ent, baseDamage, mc.level.damageSources().generic(), ent.getArmorValue(), (float) ent.getAttribute(Attributes.ARMOR_TOUGHNESS).getValue());
         return baseDamage;
     }
 
     public static SearchInvResult findBedInHotBar() {
         if (mc.player == null) return SearchInvResult.notFound();
         for (int b1 = 0; b1 < 9; b1++) {
-            ItemStack itemStack = mc.player.getInventory().getStack(b1);
+            ItemStack itemStack = mc.player.getInventory().getItem(b1);
             if (itemStack != null && itemStack.getItem() instanceof BedItem)
-                return new SearchInvResult(b1, true, mc.player.getInventory().getStack(b1));
+                return new SearchInvResult(b1, true, mc.player.getInventory().getItem(b1));
         }
         return SearchInvResult.notFound();
     }
@@ -378,20 +384,20 @@ public final class InventoryUtility {
     public static SearchInvResult findBed() {
         if (mc.player == null) return SearchInvResult.notFound();
         for (int b1 = 9; b1 < 45; b1++) {
-            ItemStack itemStack = mc.player.getInventory().getStack(b1 >= 36 ? b1 - 36 : b1);
+            ItemStack itemStack = mc.player.getInventory().getItem(b1 >= 36 ? b1 - 36 : b1);
             if (itemStack != null && itemStack.getItem() instanceof BedItem)
-                return new SearchInvResult(b1, true, mc.player.getInventory().getStack(b1));
+                return new SearchInvResult(b1, true, mc.player.getInventory().getItem(b1));
         }
         return SearchInvResult.notFound();
     }
 
     public static Item getItem(String Name) {
         if (Name == null) return Items.AIR;
-        for (Block block : Registries.BLOCK)
-            if (block.getTranslationKey().replace("block.minecraft.", "").equals(Name.toLowerCase()))
+        for (Block block : BuiltInRegistries.BLOCK)
+            if (block.getDescriptionId().replace("block.minecraft.", "").equals(Name.toLowerCase()))
                 return block.asItem();
-        for (Item item : Registries.ITEM)
-            if (item.getTranslationKey().replace("item.minecraft.", "").equals(Name.toLowerCase()))
+        for (Item item : BuiltInRegistries.ITEM)
+            if (item.getDescriptionId().replace("item.minecraft.", "").equals(Name.toLowerCase()))
                 return item;
         return Items.DIRT;
     }
@@ -402,7 +408,7 @@ public final class InventoryUtility {
         int counter = 0;
 
         for (int i = 0; i <= 44; ++i) {
-            ItemStack itemStack = mc.player.getInventory().getStack(i);
+            ItemStack itemStack = mc.player.getInventory().getItem(i);
             if (!(itemStack.getItem() instanceof BedItem)) continue;
             counter += itemStack.getCount();
         }
@@ -410,8 +416,8 @@ public final class InventoryUtility {
         return counter;
     }
 
-    private static int getEnchantmentLevel(RegistryKey<Enchantment> enchantment, ItemStack stack) {
-        return EnchantmentHelper.getLevel(mc.world.getRegistryManager().getOrThrow(RegistryKeys.ENCHANTMENT).getOrThrow(enchantment), stack);
+    private static int getEnchantmentLevel(ResourceKey<Enchantment> enchantment, ItemStack stack) {
+        return EnchantmentHelper.getItemEnchantmentLevel(mc.level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(enchantment), stack);
     }
 
     public interface Searcher {

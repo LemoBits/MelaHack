@@ -1,7 +1,5 @@
 package thunder.hack.gui.thundergui.components;
 
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.MathHelper;
 import org.lwjgl.glfw.GLFW;
 import thunder.hack.ThunderHack;
 import thunder.hack.gui.font.FontRenderers;
@@ -9,9 +7,10 @@ import thunder.hack.gui.thundergui.ThunderGui;
 import thunder.hack.setting.Setting;
 import thunder.hack.utility.math.MathUtility;
 import thunder.hack.utility.render.Render2DEngine;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
 import java.util.Objects;
+import net.minecraft.util.Mth;
 
 public class SliderComponent extends SettingElement {
     private final float min;
@@ -37,7 +36,7 @@ public class SliderComponent extends SettingElement {
     }
 
     @Override
-    public void render(MatrixStack stack, int mouseX, int mouseY, float partialTicks) {
+    public void render(PoseStack stack, int mouseX, int mouseY, float partialTicks) {
         super.render(stack, mouseX, mouseY, partialTicks);
         if ((getY() > ThunderGui.getInstance().main_posY + ThunderGui.getInstance().height) || getY() < ThunderGui.getInstance().main_posY) {
             return;
@@ -82,7 +81,7 @@ public class SliderComponent extends SettingElement {
 
     private void setValue(int mouseX, double x, double width) {
         double diff = ((Number) setting.getMax()).floatValue() - ((Number) setting.getMin()).floatValue();
-        double percentBar = MathHelper.clamp((mouseX - x) / width, 0.0, 1.0);
+        double percentBar = Mth.clamp((mouseX - x) / width, 0.0, 1.0);
         double value = ((Number) setting.getMin()).floatValue() + percentBar * diff;
 
         if (this.setting.getValue() instanceof Float) {

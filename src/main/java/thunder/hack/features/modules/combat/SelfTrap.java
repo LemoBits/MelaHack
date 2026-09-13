@@ -1,6 +1,6 @@
 package thunder.hack.features.modules.combat;
 
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.Nullable;
 import thunder.hack.features.modules.base.TrapModule;
 
@@ -15,7 +15,7 @@ public final class SelfTrap extends TrapModule {
     }
 
     @Override
-    protected @Nullable PlayerEntity getTarget() {
+    protected @Nullable Player getTarget() {
         return mc.player;
     }
 }

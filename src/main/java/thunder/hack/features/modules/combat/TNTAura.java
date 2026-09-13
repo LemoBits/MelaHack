@@ -1,17 +1,17 @@
 package thunder.hack.features.modules.combat;
 
 import com.google.common.collect.Lists;
+import com.mojang.blaze3d.vertex.PoseStack;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.block.TntBlock;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Direction;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.TntBlock;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import thunder.hack.core.Managers;
@@ -57,20 +57,20 @@ public class TNTAura extends Module {
 
     private int delay;
 
-    public void onRender3D(MatrixStack stack) {
+    public void onRender3D(PoseStack stack) {
         renderPoses.forEach((pos, time) -> {
             if (System.currentTimeMillis() - time > 500) {
                 renderPoses.remove(pos);
             } else {
                 switch (renderMode.getValue()) {
                     case Fade -> {
-                        Render3DEngine.FILLED_QUEUE.add(new Render3DEngine.FillAction(new Box(pos), Render2DEngine.injectAlpha(renderFillColor.getValue().getColorObject(), (int) (100f * (1f - ((System.currentTimeMillis() - time) / 500f))))));
-                        Render3DEngine.OUTLINE_QUEUE.add(new Render3DEngine.OutlineAction(new Box(pos), Render2DEngine.injectAlpha(renderLineColor.getValue().getColorObject(), (int) (100f * (1f - ((System.currentTimeMillis() - time) / 500f)))), renderLineWidth.getValue()));
+                        Render3DEngine.FILLED_QUEUE.add(new Render3DEngine.FillAction(new AABB(pos), Render2DEngine.injectAlpha(renderFillColor.getValue().getColorObject(), (int) (100f * (1f - ((System.currentTimeMillis() - time) / 500f))))));
+                        Render3DEngine.OUTLINE_QUEUE.add(new Render3DEngine.OutlineAction(new AABB(pos), Render2DEngine.injectAlpha(renderLineColor.getValue().getColorObject(), (int) (100f * (1f - ((System.currentTimeMillis() - time) / 500f)))), renderLineWidth.getValue()));
                     }
                     case Decrease -> {
                         float scale = 1 - (float) (System.currentTimeMillis() - time) / 500;
-                        Box box = new Box(pos.getX(), pos.getY(), pos.getZ(), pos.getX(), pos.getY(), pos.getZ());
-                        Box scaledBox = box.shrink(scale, scale, scale).offset(0.5 + scale * 0.5, 0.5 + scale * 0.5, 0.5 + scale * 0.5);
+                        AABB box = new AABB(pos.getX(), pos.getY(), pos.getZ(), pos.getX(), pos.getY(), pos.getZ());
+                        AABB scaledBox = box.contract(scale, scale, scale).move(0.5 + scale * 0.5, 0.5 + scale * 0.5, 0.5 + scale * 0.5);
                         
                         Render3DEngine.FILLED_QUEUE.add(new Render3DEngine.FillAction(scaledBox, Render2DEngine.injectAlpha(renderFillColor.getValue().getColorObject(), (int) (100f * (1f - ((System.currentTimeMillis() - time) / 500f))))));
                         Render3DEngine.OUTLINE_QUEUE.add(new Render3DEngine.OutlineAction(scaledBox, renderLineColor.getValue().getColorObject(), renderLineWidth.getValue()));
@@ -95,7 +95,7 @@ public class TNTAura extends Module {
             return;
         }
 
-        PlayerEntity targetedPlayer = Managers.COMBAT.getNearestTarget(range.getValue());
+        Player targetedPlayer = Managers.COMBAT.getNearestTarget(range.getValue());
 
         List<BlockPos> blocks = getBlocks(targetedPlayer);
         if (!blocks.isEmpty()) {
@@ -121,68 +121,68 @@ public class TNTAura extends Module {
         }
 
         if (targetedPlayer != null) {
-            BlockPos headBlock = BlockPos.ofFloored(targetedPlayer.getPos()).up(2);
+            BlockPos headBlock = BlockPos.containing(targetedPlayer.position()).above(2);
             InventoryUtility.saveSlot();
             InteractionUtility.placeBlock(headBlock, rotate.getValue(), InteractionUtility.Interact.Vanilla, placeMode.getValue(), getTntSlot(), false, false);
             BlockHitResult igniteResult = getIgniteResult(headBlock);
             InventoryUtility.switchTo(getFlintSlot());
-            if (mc.world.getBlockState(headBlock).getBlock() instanceof TntBlock && igniteResult != null) {
-                sendSequencedPacket(id -> new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND, igniteResult, id));
-                mc.player.swingHand(Hand.MAIN_HAND);
+            if (mc.level.getBlockState(headBlock).getBlock() instanceof TntBlock && igniteResult != null) {
+                sendSequencedPacket(id -> new ServerboundUseItemOnPacket(InteractionHand.MAIN_HAND, igniteResult, id));
+                mc.player.swing(InteractionHand.MAIN_HAND);
             }
             renderPoses.put(headBlock, System.currentTimeMillis());
             InventoryUtility.returnSlot();
         }
     }
 
-    private BlockPos getSequentialPos(PlayerEntity pl) {
+    private BlockPos getSequentialPos(Player pl) {
         List<BlockPos> list = getBlocks(pl);
         if (list.isEmpty()) return null;
         for (BlockPos bp : getBlocks(pl)) {
-            if (InteractionUtility.canPlaceBlock(bp, InteractionUtility.Interact.Vanilla, false) && mc.world.isAir(bp)) {
+            if (InteractionUtility.canPlaceBlock(bp, InteractionUtility.Interact.Vanilla, false) && mc.level.isEmptyBlock(bp)) {
                 return bp;
             }
         }
         return null;
     }
 
-    private List<BlockPos> getBlocks(PlayerEntity pl) {
+    private List<BlockPos> getBlocks(Player pl) {
         if (pl == null) return new ArrayList<>();
         List<BlockPos> blocks = new ArrayList<>();
         for (BlockPos bp : getAffectedBlocks(pl)) {
             for (Direction dir : Direction.values()) {
                 if (dir == Direction.UP || dir == Direction.DOWN) continue;
-                blocks.add(bp.offset(dir));
-                blocks.add(bp.offset(dir).up());
+                blocks.add(bp.relative(dir));
+                blocks.add(bp.relative(dir).above());
 
-                if (!new Box(bp.offset(dir).up(1)).intersects(pl.getBoundingBox()))
-                    blocks.add(bp.offset(dir).up(2));
+                if (!new AABB(bp.relative(dir).above(1)).intersects(pl.getBoundingBox()))
+                    blocks.add(bp.relative(dir).above(2));
 
-                blocks.add(bp.offset(dir).down());
+                blocks.add(bp.relative(dir).below());
             }
 
-            blocks.add(bp.down());
-            blocks.add(bp.up(3));
+            blocks.add(bp.below());
+            blocks.add(bp.above(3));
 
-            if (!InteractionUtility.canPlaceBlock(bp.up(3), InteractionUtility.Interact.Vanilla, false)) {
-                Direction dir = mc.player.getHorizontalFacing();
+            if (!InteractionUtility.canPlaceBlock(bp.above(3), InteractionUtility.Interact.Vanilla, false)) {
+                Direction dir = mc.player.getDirection();
                 if (dir != null) {
-                    blocks.add(bp.up(3).offset(dir, 1));
+                    blocks.add(bp.above(3).relative(dir, 1));
                 }
             }
         }
 
-        return blocks.stream().sorted(Comparator.comparing(b -> mc.player.squaredDistanceTo(b.toCenterPos()) * -1)).toList();
+        return blocks.stream().sorted(Comparator.comparing(b -> mc.player.distanceToSqr(b.getCenter()) * -1)).toList();
     }
 
     private int getObbySlot() {
-        if (mc.player.getMainHandStack().getItem() == Items.OBSIDIAN)
+        if (mc.player.getMainHandItem().getItem() == Items.OBSIDIAN)
             return mc.player.getInventory().getSelectedSlot();
 
         int slot = -1;
 
         for (int i = 0; i < 9; i++) {
-            if (mc.player.getInventory().getStack(i).getItem() == Items.OBSIDIAN) {
+            if (mc.player.getInventory().getItem(i).getItem() == Items.OBSIDIAN) {
                 slot = i;
                 break;
             }
@@ -191,13 +191,13 @@ public class TNTAura extends Module {
     }
 
     private int getTntSlot() {
-        if (mc.player.getMainHandStack().getItem() == Items.TNT)
+        if (mc.player.getMainHandItem().getItem() == Items.TNT)
             return mc.player.getInventory().getSelectedSlot();
 
         int slot = -1;
 
         for (int i = 0; i < 9; i++) {
-            if (mc.player.getInventory().getStack(i).getItem() == Items.TNT) {
+            if (mc.player.getInventory().getItem(i).getItem() == Items.TNT) {
                 slot = i;
                 break;
             }
@@ -206,13 +206,13 @@ public class TNTAura extends Module {
     }
 
     private int getFlintSlot() {
-        if (mc.player.getMainHandStack().getItem() == Items.FLINT_AND_STEEL)
+        if (mc.player.getMainHandItem().getItem() == Items.FLINT_AND_STEEL)
             return mc.player.getInventory().getSelectedSlot();
 
         int slot = -1;
 
         for (int i = 0; i < 9; i++) {
-            if (mc.player.getInventory().getStack(i).getItem() == Items.FLINT_AND_STEEL) {
+            if (mc.player.getInventory().getItem(i).getItem() == Items.FLINT_AND_STEEL) {
                 slot = i;
                 break;
             }
@@ -221,21 +221,21 @@ public class TNTAura extends Module {
     }
 
     private @Nullable BlockHitResult getIgniteResult(BlockPos bp) {
-        if (mc.player == null || mc.world == null) return null;
+        if (mc.player == null || mc.level == null) return null;
 
-        if (PlayerUtility.squaredDistanceFromEyes(bp.toCenterPos()) > range.getPow2Value())
+        if (PlayerUtility.squaredDistanceFromEyes(bp.getCenter()) > range.getPow2Value())
             return null;
 
-        return new BlockHitResult(bp.toCenterPos().add(0, -0.5, 0), Direction.DOWN, bp, false);
+        return new BlockHitResult(bp.getCenter().add(0, -0.5, 0), Direction.DOWN, bp, false);
     }
 
-    private List<BlockPos> getAffectedBlocks(PlayerEntity pl) {
+    private List<BlockPos> getAffectedBlocks(Player pl) {
         List<BlockPos> tempPos = new ArrayList<>();
         List<BlockPos> finalPos = new ArrayList<>();
-        List<Box> boxes = new ArrayList<>();
+        List<AABB> boxes = new ArrayList<>();
 
-        for (PlayerEntity player : mc.world.getPlayers()) {
-            if (player.squaredDistanceTo(pl) < 9 && player != pl)
+        for (Player player : mc.level.players()) {
+            if (player.distanceToSqr(pl) < 9 && player != pl)
                 boxes.add(player.getBoundingBox());
         }
 
@@ -254,21 +254,21 @@ public class TNTAura extends Module {
         tempPos.add(center.east().south());
 
         for (BlockPos bp : tempPos)
-            if (new Box(bp).intersects(pl.getBoundingBox()))
+            if (new AABB(bp).intersects(pl.getBoundingBox()))
                 finalPos.add(bp);
 
         for (BlockPos bp : Lists.newArrayList(finalPos)) {
-            for (Box box : boxes) {
-                if (new Box(bp).intersects(box))
-                    finalPos.add(BlockPos.ofFloored(box.getCenter()));
+            for (AABB box : boxes) {
+                if (new AABB(bp).intersects(box))
+                    finalPos.add(BlockPos.containing(box.getCenter()));
             }
         }
 
         return finalPos;
     }
 
-    private BlockPos getPlayerPos(@NotNull PlayerEntity pl) {
-        return BlockPos.ofFloored(pl.getX(), pl.getY() - Math.floor(pl.getY()) > 0.8 ? Math.floor(pl.getY()) + 1.0 : Math.floor(pl.getY()), pl.getZ());
+    private BlockPos getPlayerPos(@NotNull Player pl) {
+        return BlockPos.containing(pl.getX(), pl.getY() - Math.floor(pl.getY()) > 0.8 ? Math.floor(pl.getY()) + 1.0 : Math.floor(pl.getY()), pl.getZ());
     }
 
     private enum RenderMode {

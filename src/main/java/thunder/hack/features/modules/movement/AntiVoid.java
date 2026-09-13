@@ -2,8 +2,8 @@ package thunder.hack.features.modules.movement;
 
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import thunder.hack.ThunderHack;
 import thunder.hack.events.impl.EventMove;
 import thunder.hack.features.modules.Module;
@@ -37,7 +37,7 @@ public class AntiVoid extends Module {
                 e.cancel();
                 e.setY(0);
                 if (sendPacket.getValue())
-                    sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(mc.player.getX(), mc.player.getY(), mc.player.getZ(), true, mc.player.horizontalCollision));
+                    sendPacket(new ServerboundMovePlayerPacket.Pos(mc.player.getX(), mc.player.getY(), mc.player.getZ(), true, mc.player.horizontalCollision));
             } else {
                 ThunderHack.TICK_TIMER = 0.2f;
                 timerFlag = true;
@@ -50,7 +50,7 @@ public class AntiVoid extends Module {
 
     private boolean fallingToVoid() {
         for (int i = (int) mc.player.getY(); i >= -64; i--)
-            if (!mc.world.isAir(BlockPos.ofFloored(mc.player.getX(), i, mc.player.getZ())))
+            if (!mc.level.isEmptyBlock(BlockPos.containing(mc.player.getX(), i, mc.player.getZ())))
                 return false;
         return mc.player.fallDistance > 0;
     }

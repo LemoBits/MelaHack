@@ -1,39 +1,38 @@
 package thunder.hack.utility.render.shaders.satin.impl;
 
-import com.mojang.blaze3d.textures.Framebuffer;
-import net.minecraft.client.render.effect.PostEffectProcessor;
-import net.minecraft.client.render.FrameGraphBuilder;
-import net.minecraft.client.util.Handle;
-import net.minecraft.client.util.memory.ObjectAllocator;
-import net.minecraft.util.Identifier;
-
+import com.mojang.blaze3d.framegraph.FrameGraphBuilder;
+import com.mojang.blaze3d.pipeline.RenderTarget;
+import com.mojang.blaze3d.resource.GraphicsResourceAllocator;
+import com.mojang.blaze3d.resource.ResourceHandle;
 import java.util.HashMap;
 import java.util.Map;
+import net.minecraft.client.renderer.PostChain;
+import net.minecraft.resources.ResourceLocation;
 
 public final class PostEffectRenderUtil {
     private PostEffectRenderUtil() {
     }
 
-    public static void render(PostEffectProcessor effect, int width, int height, Map<Identifier, Framebuffer> externalTargets, ObjectAllocator allocator) {
+    public static void render(PostChain effect, int width, int height, Map<ResourceLocation, RenderTarget> externalTargets, GraphicsResourceAllocator allocator) {
         FrameGraphBuilder frameGraphBuilder = new FrameGraphBuilder();
-        Map<Identifier, Handle<Framebuffer>> handles = new HashMap<>(externalTargets.size());
-        for (Map.Entry<Identifier, Framebuffer> entry : externalTargets.entrySet()) {
-            handles.put(entry.getKey(), frameGraphBuilder.createObjectNode(entry.getKey().toString(), entry.getValue()));
+        Map<ResourceLocation, ResourceHandle<RenderTarget>> handles = new HashMap<>(externalTargets.size());
+        for (Map.Entry<ResourceLocation, RenderTarget> entry : externalTargets.entrySet()) {
+            handles.put(entry.getKey(), frameGraphBuilder.importExternal(entry.getKey().toString(), entry.getValue()));
         }
 
-        PostEffectProcessor.FramebufferSet framebufferSet = new PostEffectProcessor.FramebufferSet() {
+        PostChain.TargetBundle framebufferSet = new PostChain.TargetBundle() {
             @Override
-            public void set(Identifier id, Handle<Framebuffer> framebuffer) {
+            public void replace(ResourceLocation id, ResourceHandle<RenderTarget> framebuffer) {
                 handles.put(id, framebuffer);
             }
 
             @Override
-            public Handle<Framebuffer> get(Identifier id) {
+            public ResourceHandle<RenderTarget> get(ResourceLocation id) {
                 return handles.get(id);
             }
         };
 
-        effect.render(frameGraphBuilder, width, height, framebufferSet);
-        frameGraphBuilder.run(allocator);
+        effect.addToFrame(frameGraphBuilder, width, height, framebufferSet);
+        frameGraphBuilder.execute(allocator);
     }
 }

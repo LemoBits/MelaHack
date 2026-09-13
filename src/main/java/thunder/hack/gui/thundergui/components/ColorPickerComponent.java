@@ -1,6 +1,5 @@
 package thunder.hack.gui.thundergui.components;
 
-import net.minecraft.client.util.math.MatrixStack;
 import thunder.hack.ThunderHack;
 import thunder.hack.gui.font.FontRenderers;
 import thunder.hack.gui.thundergui.ThunderGui;
@@ -8,7 +7,7 @@ import thunder.hack.setting.Setting;
 import thunder.hack.setting.impl.ColorSetting;
 import thunder.hack.utility.math.MathUtility;
 import thunder.hack.utility.render.Render2DEngine;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
 
 public class ColorPickerComponent extends SettingElement {
@@ -42,7 +41,7 @@ public class ColorPickerComponent extends SettingElement {
     }
 
     @Override
-    public void render(MatrixStack stack, int mouseX, int mouseY, float delta) {
+    public void render(PoseStack stack, int mouseX, int mouseY, float delta) {
         super.render(stack, mouseX, mouseY, delta);
         if ((getY() > ThunderGui.getInstance().main_posY + ThunderGui.getInstance().height) || getY() < ThunderGui.getInstance().main_posY) {
             return;
@@ -59,7 +58,7 @@ public class ColorPickerComponent extends SettingElement {
         super.onTick();
     }
 
-    private void renderPicker(MatrixStack stack, int mouseX, int mouseY, Color color) {
+    private void renderPicker(PoseStack stack, int mouseX, int mouseY, Color color) {
         double cx = x + 6;
         float cy = y + 20;
         double cw = width - 38;

@@ -1,16 +1,15 @@
 package thunder.hack.utility.render;
 
 import thunder.hack.utility.render.compat.RenderSystem;
-import net.minecraft.client.MinecraftClient;
-import com.mojang.blaze3d.textures.Framebuffer;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL30C;
-
+import com.mojang.blaze3d.pipeline.RenderTarget;
 import java.util.HashMap;
 import java.util.Map;
+import net.minecraft.client.Minecraft;
 
-public class MSAAFramebuffer extends Framebuffer {
+public class MSAAFramebuffer extends RenderTarget {
     public static final int MAX_SAMPLES = GL30.glGetInteger(GL30C.GL_MAX_SAMPLES);
     private static final Map<Integer, MSAAFramebuffer> INSTANCES = new HashMap<>();
 
@@ -28,38 +27,38 @@ public class MSAAFramebuffer extends Framebuffer {
     }
 
     public static void use(boolean fancy, Runnable drawAction) {
-        use(Math.min(fancy ? 16 : 4, MAX_SAMPLES), MinecraftClient.getInstance().getFramebuffer(), drawAction);
+        use(Math.min(fancy ? 16 : 4, MAX_SAMPLES), Minecraft.getInstance().getMainRenderTarget(), drawAction);
     }
 
-    public static void use(int samples, @NotNull Framebuffer mainBuffer, @NotNull Runnable drawAction) {
+    public static void use(int samples, @NotNull RenderTarget mainBuffer, @NotNull Runnable drawAction) {
         drawAction.run();
     }
 
     @Override
     public void resize(int width, int height) {
-        if (textureWidth != width || textureHeight != height) {
+        if (width != width || height != height) {
             super.resize(width, height);
         }
     }
 
     @Override
-    public void initFbo(int width, int height) {
+    public void createBuffers(int width, int height) {
         RenderSystem.assertOnRenderThreadOrInit();
-        viewportWidth = width;
-        viewportHeight = height;
-        textureWidth = width;
-        textureHeight = height;
+        viewWidth = width;
+        viewHeight = height;
+        width = width;
+        height = height;
 
-        colorAttachment = MinecraftClient.getInstance().getFramebuffer().getColorAttachment();
-        depthAttachment = MinecraftClient.getInstance().getFramebuffer().getDepthAttachment();
+        colorTexture = Minecraft.getInstance().getMainRenderTarget().getColorTexture();
+        depthTexture = Minecraft.getInstance().getMainRenderTarget().getDepthTexture();
     }
 
     @Override
-    public void delete() {
+    public void destroyBuffers() {
         RenderSystem.assertOnRenderThreadOrInit();
-        colorAttachment = null;
-        depthAttachment = null;
-        textureWidth = -1;
-        textureHeight = -1;
+        colorTexture = null;
+        depthTexture = null;
+        width = -1;
+        height = -1;
     }
 }

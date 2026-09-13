@@ -1,22 +1,22 @@
 package thunder.hack.features.modules.combat;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.decoration.EndCrystalEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
-import net.minecraft.network.packet.s2c.play.PlayerPositionS2CPacket;
-import net.minecraft.network.packet.s2c.play.PositionFlag;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.protocol.game.ClientboundExplodePacket;
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
+import net.minecraft.network.protocol.game.ServerboundInteractPacket;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.network.protocol.game.ServerboundSwingPacket;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.Relative;
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import thunder.hack.events.impl.EventPostSync;
 import thunder.hack.events.impl.PacketEvent;
 import thunder.hack.features.modules.Module;
@@ -73,7 +73,7 @@ public final class Burrow extends Module {
     @EventHandler
     public void onPacketReceive(PacketEvent.Receive event) {
         if (mode.getValue() != Mode.Default) return;
-        if (event.getPacket() instanceof ExplosionS2CPacket explosion) {
+        if (event.getPacket() instanceof ClientboundExplodePacket explosion) {
             if (scaleExplosion.getValue()) {
                 motionY = explosion.playerKnockback().map(vec -> vec.y).orElse(0.0);
                 scaleTimer.reset();
@@ -85,15 +85,15 @@ public final class Burrow extends Module {
             }
         }
 
-        if (event.getPacket() instanceof PlayerPositionS2CPacket packet) {
-            Vec3d position = packet.change().position();
+        if (event.getPacket() instanceof ClientboundPlayerPositionPacket packet) {
+            Vec3 position = packet.change().position();
             double x = position.x;
             double y = position.y;
             double z = position.z;
 
-            if (packet.relatives().contains(PositionFlag.X)) x += mc.player.getX();
-            if (packet.relatives().contains(PositionFlag.Y)) y += mc.player.getY();
-            if (packet.relatives().contains(PositionFlag.Z)) z += mc.player.getZ();
+            if (packet.relatives().contains(Relative.X)) x += mc.player.getX();
+            if (packet.relatives().contains(Relative.Y)) y += mc.player.getY();
+            if (packet.relatives().contains(Relative.Z)) z += mc.player.getZ();
 
             last_x = MathUtility.clamp(x, -3.0E7, 3.0E7);
             last_y = y;
@@ -112,19 +112,19 @@ public final class Burrow extends Module {
         }
 
         BlockPos pos = getPosition(mc.player);
-        if (!mc.world.getBlockState(pos).isReplaceable()) {
+        if (!mc.level.getBlockState(pos).canBeReplaced()) {
             if (!wait.getValue())
                 disable(isRu() ? "Невозможно поставить блок! Отключаю.." : "Can't place the block! Disabling..");
             return;
         }
 
-        for (Entity entity : mc.world.getNonSpectatingEntities(Entity.class, new Box(pos))) {
+        for (Entity entity : mc.level.getEntitiesOfClass(Entity.class, new AABB(pos))) {
             if (entity != null && !mc.player.equals(entity)) {
-                if (entity instanceof EndCrystalEntity && attack.getValue()) {
-                    PlayerInteractEntityC2SPacket attackPacket = PlayerInteractEntityC2SPacket.attack(mc.player, ((mc.player)).isSneaking());
+                if (entity instanceof EndCrystal && attack.getValue()) {
+                    ServerboundInteractPacket attackPacket = ServerboundInteractPacket.createAttackPacket(mc.player, ((mc.player)).isShiftKeyDown());
                     changeId(attackPacket, entity.getId());
                     sendPacket(attackPacket);
-                    sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
+                    sendPacket(new ServerboundSwingPacket(InteractionHand.MAIN_HAND));
                     continue;
                 }
                 if (!wait.getValue())
@@ -149,11 +149,11 @@ public final class Burrow extends Module {
         }
 
         if (timer.passedMs(250)) {
-            if (rotate.getValue()) sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(mc.player.getYaw(), 90, onGround.getValue(), mc.player.horizontalCollision));
+            if (rotate.getValue()) sendPacket(new ServerboundMovePlayerPacket.Rot(mc.player.getYRot(), 90, onGround.getValue(), mc.player.horizontalCollision));
 
             InventoryUtility.saveSlot();
             InteractionUtility.placeBlock(pos, InteractionUtility.Rotate.None, InteractionUtility.Interact.Vanilla, InteractionUtility.PlaceMode.Packet, webResult.slot(), false, true);
-            mc.player.swingHand(Hand.MAIN_HAND);
+            mc.player.swing(InteractionHand.MAIN_HAND);
             timer.reset();
             InventoryUtility.returnSlot();
             if (!wait.getValue() || placeDisable.getValue())
@@ -170,10 +170,10 @@ public final class Burrow extends Module {
         }
 
         if (timer.passedMs(250)) {
-            if (rotate.getValue()) sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(mc.player.getYaw(), 90, onGround.getValue(), mc.player.horizontalCollision));
+            if (rotate.getValue()) sendPacket(new ServerboundMovePlayerPacket.Rot(mc.player.getYRot(), 90, onGround.getValue(), mc.player.horizontalCollision));
             InventoryUtility.saveSlot();
             InteractionUtility.placeBlock(pos, InteractionUtility.Rotate.None, InteractionUtility.Interact.Vanilla, InteractionUtility.PlaceMode.Normal, skullResult.slot(), false, true);
-            mc.player.swingHand(Hand.MAIN_HAND);
+            mc.player.swing(InteractionHand.MAIN_HAND);
             timer.reset();
             InventoryUtility.returnSlot();
             if (!wait.getValue() || placeDisable.getValue())
@@ -182,21 +182,21 @@ public final class Burrow extends Module {
     }
 
     public void handleDefault(BlockPos pos) {
-        if ((mc.world.getBlockState(BlockPos.ofFloored(mc.player.getPos().offset(Direction.UP, 0.2))).isFullCube(mc.world, BlockPos.ofFloored(mc.player.getPos().offset(Direction.UP, 0.2))) || !mc.player.verticalCollision)) {
+        if ((mc.level.getBlockState(BlockPos.containing(mc.player.position().relative(Direction.UP, 0.2))).isCollisionShapeFullBlock(mc.level, BlockPos.containing(mc.player.position().relative(Direction.UP, 0.2))) || !mc.player.verticalCollision)) {
             return;
         }
 
-        PlayerEntity rEntity = mc.player;
+        Player rEntity = mc.player;
 
-        BlockPos posHead = getPosition(rEntity).up().up();
-        if (!mc.world.getBlockState(posHead).isReplaceable() && wait.getValue()) {
+        BlockPos posHead = getPosition(rEntity).above().above();
+        if (!mc.level.getBlockState(posHead).canBeReplaced() && wait.getValue()) {
             return;
         }
 
         if (!allowUp.getValue()) {
-            BlockPos upUp = pos.up(2);
-            BlockState upState = mc.world.getBlockState(upUp);
-            if (upState.isFullCube(mc.world, upUp)) {
+            BlockPos upUp = pos.above(2);
+            BlockState upState = mc.level.getBlockState(upUp);
+            if (upState.isCollisionShapeFullBlock(mc.level, upUp)) {
                 if (!wait.getValue())
                     disable(isRu() ? "Над головой блок, невозможно забурровиться! Отключаю.." : "Above the head block, impossible to burrow! Disabling..");
                 return;
@@ -206,7 +206,7 @@ public final class Burrow extends Module {
         SearchInvResult obbyResult = InventoryUtility.findBlockInHotBar(Blocks.OBSIDIAN);
         SearchInvResult echestResult = InventoryUtility.findBlockInHotBar(Blocks.ENDER_CHEST);
 
-        int slot = (!obbyResult.found() || mc.world.getBlockState(pos.down()).getBlock() == Blocks.ENDER_CHEST ? echestResult.slot() : obbyResult.slot());
+        int slot = (!obbyResult.found() || mc.level.getBlockState(pos.below()).getBlock() == Blocks.ENDER_CHEST ? echestResult.slot() : obbyResult.slot());
         if (slot == -1) {
             disable(isRu() ? "Нет блоков!" : "No Block found!");
             return;
@@ -219,7 +219,7 @@ public final class Burrow extends Module {
 
         float[] r = InteractionUtility.getPlaceAngle(pos, InteractionUtility.Interact.Strict, true);
 
-        if (mc.isInSingleplayer()) {
+        if (mc.isLocalServer()) {
             disable(isRu() ? "Дебил! Ты в одиночке.." : "Retard! You're in singleplayer..");
             return;
         }
@@ -227,20 +227,20 @@ public final class Burrow extends Module {
         if (timer.passedMs(1000)) {
             if (rotate.getValue()) {
                 if (r != null) {
-                    if (rEntity.getPos().equals(new Vec3d(last_x, last_y, last_z))) sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(r[0], r[1], onGround.getValue(), mc.player.horizontalCollision));
-                    else sendPacket(new PlayerMoveC2SPacket.Full(rEntity.getX(), rEntity.getY(), rEntity.getZ(), r[0], r[1], onGround.getValue(), mc.player.horizontalCollision));
+                    if (rEntity.position().equals(new Vec3(last_x, last_y, last_z))) sendPacket(new ServerboundMovePlayerPacket.Rot(r[0], r[1], onGround.getValue(), mc.player.horizontalCollision));
+                    else sendPacket(new ServerboundMovePlayerPacket.PosRot(rEntity.getX(), rEntity.getY(), rEntity.getZ(), r[0], r[1], onGround.getValue(), mc.player.horizontalCollision));
                 }
             }
 
-            sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(rEntity.getX(), rEntity.getY() + 0.42, rEntity.getZ(), onGround.getValue(), mc.player.horizontalCollision));
-            sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(rEntity.getX(), rEntity.getY() + 0.75, rEntity.getZ(), onGround.getValue(), mc.player.horizontalCollision));
-            sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(rEntity.getX(), rEntity.getY() + 1.01, rEntity.getZ(), onGround.getValue(), mc.player.horizontalCollision));
-            sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(rEntity.getX(), rEntity.getY() + 1.16, rEntity.getZ(), onGround.getValue(), mc.player.horizontalCollision));
+            sendPacket(new ServerboundMovePlayerPacket.Pos(rEntity.getX(), rEntity.getY() + 0.42, rEntity.getZ(), onGround.getValue(), mc.player.horizontalCollision));
+            sendPacket(new ServerboundMovePlayerPacket.Pos(rEntity.getX(), rEntity.getY() + 0.75, rEntity.getZ(), onGround.getValue(), mc.player.horizontalCollision));
+            sendPacket(new ServerboundMovePlayerPacket.Pos(rEntity.getX(), rEntity.getY() + 1.01, rEntity.getZ(), onGround.getValue(), mc.player.horizontalCollision));
+            sendPacket(new ServerboundMovePlayerPacket.Pos(rEntity.getX(), rEntity.getY() + 1.16, rEntity.getZ(), onGround.getValue(), mc.player.horizontalCollision));
 
             InventoryUtility.saveSlot();
             InteractionUtility.placeBlock(pos, InteractionUtility.Rotate.None, InteractionUtility.Interact.Vanilla, InteractionUtility.PlaceMode.Packet, slot, false, true);
-            mc.player.swingHand(Hand.MAIN_HAND);
-            sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(rEntity.getX(), y, rEntity.getZ(), false, mc.player.horizontalCollision));
+            mc.player.swing(InteractionHand.MAIN_HAND);
+            sendPacket(new ServerboundMovePlayerPacket.Pos(rEntity.getX(), y, rEntity.getZ(), false, mc.player.horizontalCollision));
             timer.reset();
             InventoryUtility.returnSlot();
 
@@ -249,9 +249,9 @@ public final class Burrow extends Module {
         }
     }
 
-    public static void changeId(PlayerInteractEntityC2SPacket packet, int id) {
+    public static void changeId(ServerboundInteractPacket packet, int id) {
         try {
-            Field field = PlayerInteractEntityC2SPacket.class.getDeclaredField("field_12870");
+            Field field = ServerboundInteractPacket.class.getDeclaredField("field_12870");
             field.setAccessible(true);
             field.setInt(packet, id);
         } catch (Exception ignored) {
@@ -286,7 +286,7 @@ public final class Burrow extends Module {
             y = Math.ceil(entity.getY());
         }
 
-        return BlockPos.ofFloored(entity.getX(), y, entity.getZ());
+        return BlockPos.containing(entity.getX(), y, entity.getZ());
     }
 
     public double getY(Entity entity, double min, double max, boolean add) {
@@ -302,7 +302,7 @@ public final class Burrow extends Module {
         double lastOff = 0.0;
         BlockPos last = null;
         for (double off = min; add ? off < max : off > max; off = (add ? ++off : --off)) {
-            BlockPos pos = BlockPos.ofFloored(x, y - off, z);
+            BlockPos pos = BlockPos.containing(x, y - off, z);
             if (noVoid.getValue() && pos.getY() < 0) {
                 continue;
             }
@@ -314,8 +314,8 @@ public final class Burrow extends Module {
                 continue;
             }
 
-            BlockState state = mc.world.getBlockState(pos);
-            if (!this.air.getValue() && !state.isFullCube(mc.world, pos) || state.getBlock() == Blocks.AIR) {
+            BlockState state = mc.level.getBlockState(pos);
+            if (!this.air.getValue() && !state.isCollisionShapeFullBlock(mc.level, pos) || state.getBlock() == Blocks.AIR) {
                 if (air) {
                     if (add) return discrete.getValue() ? pos.getY() : y - off;
                     else return discrete.getValue() ? last.getY() : lastOff;
@@ -344,7 +344,7 @@ public final class Burrow extends Module {
     }
 
     public static BlockPos getPlayerPos() {
-        return Math.abs(mc.player.getVelocity().getY()) > 0.1 ? BlockPos.ofFloored(mc.player.getPos()) : getPosition(mc.player);
+        return Math.abs(mc.player.getDeltaMovement().y()) > 0.1 ? BlockPos.containing(mc.player.position()) : getPosition(mc.player);
     }
 
     public enum OffsetMode {

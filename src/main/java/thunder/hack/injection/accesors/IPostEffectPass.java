@@ -1,14 +1,14 @@
 package thunder.hack.injection.accesors;
 
 import com.mojang.blaze3d.buffers.GpuBuffer;
-import net.minecraft.client.render.effect.PostEffectPass;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
 import java.util.Map;
+import net.minecraft.client.renderer.PostPass;
 
-@Mixin(PostEffectPass.class)
+@Mixin(PostPass.class)
 public interface IPostEffectPass {
-    @Accessor("uniformBuffers")
+    @Accessor("customUniforms")
     Map<String, GpuBuffer> getUniformBuffers();
 }

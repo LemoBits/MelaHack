@@ -21,60 +21,59 @@ import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import thunder.hack.utility.render.shaders.satin.api.managed.ManagedCoreShader;
 import thunder.hack.utility.render.shaders.satin.api.managed.ManagedShaderEffect;
 import thunder.hack.utility.render.shaders.satin.api.managed.ShaderEffectManager;
-import net.minecraft.client.MinecraftClient;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import net.minecraft.client.render.VertexFormats;
-import net.minecraft.resource.ResourceFactory;
-import net.minecraft.util.Identifier;
 import thunder.hack.features.cmd.Command;
 import thunder.hack.utility.render.WindowResizeCallback;
 
 import java.util.Set;
 import java.util.function.Consumer;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.ResourceProvider;
 
 public final class ReloadableShaderEffectManager implements ShaderEffectManager {
     public static final ReloadableShaderEffectManager INSTANCE = new ReloadableShaderEffectManager();
 
     public ReloadableShaderEffectManager() {
         WindowResizeCallback.EVENT.register((client, window) -> {
-            onResolutionChanged(window.getFramebufferWidth(), window.getFramebufferHeight());
+            onResolutionChanged(window.getWidth(), window.getHeight());
         });
     }
 
     private final Set<ResettableManagedShaderBase<?>> managedShaders = new ReferenceOpenHashSet<>();
 
     @Override
-    public ManagedShaderEffect manage(Identifier location) {
+    public ManagedShaderEffect manage(ResourceLocation location) {
         return manage(location, s -> {
         });
     }
 
     @Override
-    public ManagedShaderEffect manage(Identifier location, Consumer<ManagedShaderEffect> initCallback) {
+    public ManagedShaderEffect manage(ResourceLocation location, Consumer<ManagedShaderEffect> initCallback) {
         ResettableManagedShaderEffect ret = new ResettableManagedShaderEffect(location, initCallback);
         managedShaders.add(ret);
         return ret;
     }
 
     @Override
-    public ManagedCoreShader manageCoreShader(Identifier location) {
-        return manageCoreShader(location, VertexFormats.POSITION_COLOR_TEXTURE_OVERLAY_LIGHT_NORMAL);
+    public ManagedCoreShader manageCoreShader(ResourceLocation location) {
+        return manageCoreShader(location, DefaultVertexFormat.NEW_ENTITY);
     }
 
     @Override
-    public ManagedCoreShader manageCoreShader(Identifier location, VertexFormat vertexFormat) {
+    public ManagedCoreShader manageCoreShader(ResourceLocation location, VertexFormat vertexFormat) {
         return manageCoreShader(location, vertexFormat, (s) -> {
         });
     }
 
     @Override
-    public ManagedCoreShader manageCoreShader(Identifier location, VertexFormat vertexFormat, Consumer<ManagedCoreShader> initCallback) {
+    public ManagedCoreShader manageCoreShader(ResourceLocation location, VertexFormat vertexFormat, Consumer<ManagedCoreShader> initCallback) {
         ResettableManagedCoreShader ret = new ResettableManagedCoreShader(location, vertexFormat, initCallback);
         managedShaders.add(ret);
         return ret;
     }
 
-    public void reload(ResourceFactory shaderResources) {
+    public void reload(ResourceProvider shaderResources) {
         for (ResettableManagedShaderBase<?> ss : managedShaders) {
             ss.initializeOrLog(shaderResources);
         }

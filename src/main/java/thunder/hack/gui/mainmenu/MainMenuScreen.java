@@ -1,15 +1,5 @@
 package thunder.hack.gui.mainmenu;
 
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.TitleScreen;
-import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen;
-import net.minecraft.client.gui.screen.option.OptionsScreen;
-import net.minecraft.client.gui.screen.world.SelectWorldScreen;
-import net.minecraft.client.resource.language.I18n;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Util;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.core.manager.client.ModuleManager;
 import thunder.hack.gui.font.FontRenderers;
@@ -20,6 +10,16 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import net.minecraft.ChatFormatting;
+import net.minecraft.Util;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
+import net.minecraft.client.gui.screens.options.OptionsScreen;
+import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.network.chat.Component;
 
 import static thunder.hack.features.modules.Module.mc;
 
@@ -29,16 +29,16 @@ public class MainMenuScreen extends Screen {
     public static int ticksActive;
 
     protected MainMenuScreen() {
-        super(Text.of("THMainMenuScreen"));
+        super(Component.nullToEmpty("THMainMenuScreen"));
         INSTANCE = this;
 
-        buttons.add(new MainMenuButton(-110, -70, I18n.translate("menu.singleplayer").toUpperCase(Locale.ROOT), () -> mc.setScreen(new SelectWorldScreen(this))));
-        buttons.add(new MainMenuButton(4, -70, I18n.translate("menu.multiplayer").toUpperCase(Locale.ROOT), () -> mc.setScreen(new MultiplayerScreen(this))));
-        buttons.add(new MainMenuButton(-110, -29, I18n.translate("menu.options")
+        buttons.add(new MainMenuButton(-110, -70, I18n.get("menu.singleplayer").toUpperCase(Locale.ROOT), () -> mc.setScreen(new SelectWorldScreen(this))));
+        buttons.add(new MainMenuButton(4, -70, I18n.get("menu.multiplayer").toUpperCase(Locale.ROOT), () -> mc.setScreen(new JoinMultiplayerScreen(this))));
+        buttons.add(new MainMenuButton(-110, -29, I18n.get("menu.options")
                 .toUpperCase(Locale.ROOT)
                 .replace(".", ""), () -> mc.setScreen(new OptionsScreen(this, mc.options))));
         buttons.add(new MainMenuButton(4, -29, "CLICKGUI", () -> ModuleManager.clickGui.setGui()));
-        buttons.add(new MainMenuButton(-110, 12, I18n.translate("menu.quit").toUpperCase(Locale.ROOT), mc::scheduleStop, true));
+        buttons.add(new MainMenuButton(-110, 12, I18n.get("menu.quit").toUpperCase(Locale.ROOT), mc::stop, true));
     }
 
     private static MainMenuScreen INSTANCE = new MainMenuScreen();
@@ -62,9 +62,9 @@ public class MainMenuScreen extends Screen {
     }
 
     @Override
-    public void render(@NotNull DrawContext context, int mouseX, int mouseY, float delta) {
-        float halfOfWidth = mc.getWindow().getScaledWidth() / 2f;
-        float halfOfHeight = mc.getWindow().getScaledHeight() / 2f;
+    public void render(@NotNull GuiGraphics context, int mouseX, int mouseY, float delta) {
+        float halfOfWidth = mc.getWindow().getGuiScaledWidth() / 2f;
+        float halfOfHeight = mc.getWindow().getGuiScaledHeight() / 2f;
 
         float mainX = halfOfWidth - 120f;
         float mainY = halfOfHeight - 80f;
@@ -73,17 +73,17 @@ public class MainMenuScreen extends Screen {
 
         renderCustomBackground(context, halfOfWidth * 2f, halfOfHeight * 2);
 
-        Render2DEngine.drawHudBase(context.getMatrices(), mainX, mainY, mainWidth, mainHeight, 20);
+        Render2DEngine.drawHudBase(context.pose(), mainX, mainY, mainWidth, mainHeight, 20);
 
         buttons.forEach(b -> b.onRender(context, mouseX, mouseY));
 
         boolean hoveredLogo = Render2DEngine.isHovered(mouseX, mouseY, (int) (halfOfWidth - 120), (int) (halfOfHeight - 130), 210, 50);
 
-        FontRenderers.thglitchBig.drawCenteredString(context.getMatrices(), "MELAHACK", (int) (halfOfWidth), (int) (halfOfHeight - 120), new Color(255, 255, 255, hoveredLogo ? 230 : 180).getRGB());
+        FontRenderers.thglitchBig.drawCenteredString(context.pose(), "MELAHACK", (int) (halfOfWidth), (int) (halfOfHeight - 120), new Color(255, 255, 255, hoveredLogo ? 230 : 180).getRGB());
 
         boolean hovered = Render2DEngine.isHovered(mouseX, mouseY, halfOfWidth - 50, halfOfHeight + 70, 100, 10);
 
-        FontRenderers.sf_medium.drawCenteredString(context.getMatrices(), "<-- Back to default menu", halfOfWidth, halfOfHeight + 70, hovered ? -1 : Render2DEngine.applyOpacity(-1, 0.6f));
+        FontRenderers.sf_medium.drawCenteredString(context.pose(), "<-- Back to default menu", halfOfWidth, halfOfHeight + 70, hovered ? -1 : Render2DEngine.applyOpacity(-1, 0.6f));
         //  FontRenderers.sf_medium.drawString(context.getMatrices(), "By Pan4ur & 06ED", halfOfWidth * 2 - FontRenderers.sf_medium.getStringWidth("By Pan4ur & 06ED") - 5f, halfOfHeight * 2 - 10, Render2DEngine.applyOpacity(-1, 0.4f));
 
         /*onlineText:
@@ -113,9 +113,9 @@ public class MainMenuScreen extends Screen {
 //        }
     }
 
-    private void renderCustomBackground(DrawContext context, float width, float height) {
+    private void renderCustomBackground(GuiGraphics context, float width, float height) {
         if (mc.getOverlay() == null) {
-            Render2DEngine.drawMainMenuShader(context.getMatrices(), 0, 0, width, height);
+            Render2DEngine.drawMainMenuShader(context.pose(), 0, 0, width, height);
         } else {
             context.fill(0, 0, Math.round(width), Math.round(height), 0xFF070015);
         }
@@ -125,24 +125,24 @@ public class MainMenuScreen extends Screen {
         String prefix = "";
         if (change.contains("[+]")) {
             change = change.replace("[+] ", "");
-            prefix = Formatting.GREEN + "[+] " + Formatting.RESET;
+            prefix = ChatFormatting.GREEN + "[+] " + ChatFormatting.RESET;
         } else if (change.contains("[-]")) {
             change = change.replace("[-] ", "");
-            prefix = Formatting.RED + "[-] " + Formatting.RESET;
+            prefix = ChatFormatting.RED + "[-] " + ChatFormatting.RESET;
         } else if (change.contains("[/]")) {
             change = change.replace("[/] ", "");
-            prefix = Formatting.LIGHT_PURPLE + "[/] " + Formatting.RESET;
+            prefix = ChatFormatting.LIGHT_PURPLE + "[/] " + ChatFormatting.RESET;
         } else if (change.contains("[*]")) {
             change = change.replace("[*] ", "");
-            prefix = Formatting.GOLD + "[*] " + Formatting.RESET;
+            prefix = ChatFormatting.GOLD + "[*] " + ChatFormatting.RESET;
         }
         return prefix + change;
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        float halfOfWidth = mc.getWindow().getScaledWidth() / 2f;
-        float halfOfHeight = mc.getWindow().getScaledHeight() / 2f;
+        float halfOfWidth = mc.getWindow().getGuiScaledWidth() / 2f;
+        float halfOfHeight = mc.getWindow().getGuiScaledHeight() / 2f;
         buttons.forEach(b -> b.onClick((int) mouseX, (int) mouseY));
 
         if (Render2DEngine.isHovered(mouseX, mouseY, halfOfWidth - 50, halfOfHeight + 70, 100, 10)) {
@@ -152,7 +152,7 @@ public class MainMenuScreen extends Screen {
         }
 
         if (Render2DEngine.isHovered(mouseX, mouseY, (int) (halfOfWidth - 157), (int) (halfOfHeight - 140), 300, 70))
-            Util.getOperatingSystem().open(URI.create("https://github.com/HundSimon/MelaHack/"));
+            Util.getPlatform().openUri(URI.create("https://github.com/HundSimon/MelaHack/"));
 
         return super.mouseClicked(mouseX, mouseY, button);
     }

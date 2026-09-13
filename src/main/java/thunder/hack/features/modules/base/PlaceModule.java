@@ -1,17 +1,5 @@
 package thunder.hack.features.modules.base;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.decoration.EndCrystalEntity;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.features.modules.Module;
 import thunder.hack.features.modules.client.HudEditor;
@@ -28,6 +16,18 @@ import thunder.hack.utility.render.BlockAnimationUtility;
 
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.protocol.game.ServerboundInteractPacket;
+import net.minecraft.network.protocol.game.ServerboundSwingPacket;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.AABB;
 
 public abstract class PlaceModule extends Module {
     protected final Setting<Float> range = new Setting<>("Range", 5f, 0f, 7f);
@@ -101,9 +101,9 @@ public abstract class PlaceModule extends Module {
             return false;
 
         if (crystalBreaker.getValue().isEnabled()
-                && mc.world != null
+                && mc.level != null
                 && attackTimer.passedMs(breakDelay.getValue())) {
-            mc.world.getNonSpectatingEntities(EndCrystalEntity.class, new Box(pos))
+            mc.level.getEntitiesOfClass(EndCrystal.class, new AABB(pos))
                     .stream()
                     .findFirst()
                     .ifPresent(this::breakCrystal);
@@ -120,23 +120,23 @@ public abstract class PlaceModule extends Module {
             if (render.getValue().isEnabled())
                 renderBlock(pos);
             if (swing.getValue())
-                mc.player.swingHand(Hand.MAIN_HAND);
+                mc.player.swing(InteractionHand.MAIN_HAND);
         }
 
         return validInteraction;
     }
 
-    protected void breakCrystal(EndCrystalEntity entity) {
-        if (mc.player == null || mc.world == null
-                || mc.interactionManager == null
+    protected void breakCrystal(EndCrystal entity) {
+        if (mc.player == null || mc.level == null
+                || mc.gameMode == null
                 || shouldPause()
                 || !attackTimer.passedMs(breakDelay.getValue())
-                || mc.player.squaredDistanceTo(entity) > range.getPow2Value()
-                || entity.age < crystalAge.getValue())
+                || mc.player.distanceToSqr(entity) > range.getPow2Value()
+                || entity.tickCount < crystalAge.getValue())
             return;
 
         int preSlot = mc.player.getInventory().getSelectedSlot();
-        if (antiWeakness.getValue() && mc.player.hasStatusEffect(StatusEffects.WEAKNESS)) {
+        if (antiWeakness.getValue() && mc.player.hasEffect(MobEffects.WEAKNESS)) {
             final SearchInvResult result = InventoryUtility.getAntiWeaknessItem();
             if (!result.found())
                 return;
@@ -145,21 +145,21 @@ public abstract class PlaceModule extends Module {
         }
 
         if (breakCrystalMode.getValue() == InteractMode.Packet)
-            sendPacket(PlayerInteractEntityC2SPacket.attack(entity, mc.player.isSneaking()));
+            sendPacket(ServerboundInteractPacket.createAttackPacket(entity, mc.player.isShiftKeyDown()));
 
         if (breakCrystalMode.getValue() == InteractMode.Normal)
-            mc.interactionManager.attackEntity(mc.player, entity);
+            mc.gameMode.attack(mc.player, entity);
 
-        sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
+        sendPacket(new ServerboundSwingPacket(InteractionHand.MAIN_HAND));
         attackTimer.reset();
 
         if (remove.getValue()) {
             entity.discard();
             entity.setRemoved(Entity.RemovalReason.KILLED);
-            entity.onRemoved();
+            entity.onClientRemoval();
         }
 
-        if (antiWeakness.getValue() && mc.player.hasStatusEffect(StatusEffects.WEAKNESS))
+        if (antiWeakness.getValue() && mc.player.hasEffect(MobEffects.WEAKNESS))
             InventoryUtility.switchTo(preSlot);
     }
 
@@ -189,7 +189,7 @@ public abstract class PlaceModule extends Module {
             canUseBlocks.addAll(List.of(Blocks.DIRT, Blocks.GRASS_BLOCK, Blocks.PODZOL));
         if (oakPlanks.getValue())
             canUseBlocks.addAll(List.of(Blocks.OAK_PLANKS, Blocks.BIRCH_PLANKS, Blocks.DARK_OAK_PLANKS));
-        final ItemStack mainHandStack = mc.player.getMainHandStack();
+        final ItemStack mainHandStack = mc.player.getMainHandItem();
         if (mainHandStack != ItemStack.EMPTY && mainHandStack.getItem() instanceof BlockItem) {
             final Block blockFromMainHandItem = ((BlockItem) mainHandStack.getItem()).getBlock();
             if (canUseBlocks.contains(blockFromMainHandItem))

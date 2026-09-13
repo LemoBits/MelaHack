@@ -1,26 +1,24 @@
 package thunder.hack.events.impl;
 
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.ItemStack;
 import thunder.hack.events.Event;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.Hand;
 
 public class EventHeldItemRenderer extends Event {
-    private final Hand hand;
+    private final InteractionHand hand;
     private final ItemStack item;
     private float ep;
-    private final MatrixStack stack;
+    private final PoseStack stack;
 
-    public EventHeldItemRenderer(Hand hand, ItemStack item, float equipProgress, MatrixStack stack) {
+    public EventHeldItemRenderer(InteractionHand hand, ItemStack item, float equipProgress, PoseStack stack) {
         this.hand = hand;
         this.item = item;
         this.ep = equipProgress;
         this.stack = stack;
     }
 
-    public Hand getHand() {
+    public InteractionHand getHand() {
         return hand;
     }
 
@@ -32,7 +30,7 @@ public class EventHeldItemRenderer extends Event {
         return ep;
     }
 
-    public MatrixStack getStack() {
+    public PoseStack getStack() {
         return stack;
     }
 }

@@ -1,7 +1,7 @@
 package thunder.hack.features.modules.misc;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.network.packet.s2c.play.GameMessageS2CPacket;
+import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
 import thunder.hack.ThunderHack;
 import thunder.hack.events.impl.EventSync;
 import thunder.hack.events.impl.PacketEvent;
@@ -28,7 +28,7 @@ public class AutoFlyme extends Module {
     @Override
     public void onEnable() {
         if (!mc.player.getAbilities().flying) {
-            mc.player.networkHandler.sendChatCommand("flyme");
+            mc.player.connection.sendCommand("flyme");
         }
     }
 
@@ -39,11 +39,11 @@ public class AutoFlyme extends Module {
 
     @EventHandler
     public void onPacketReceive(PacketEvent.Receive e) {
-        if (e.getPacket() instanceof GameMessageS2CPacket) {
-            final GameMessageS2CPacket packet = e.getPacket();
+        if (e.getPacket() instanceof ClientboundSystemChatPacket) {
+            final ClientboundSystemChatPacket packet = e.getPacket();
             if ((packet.content().getString().contains("Вы атаковали игрока") || packet.content().getString().contains("Возможность летать была удалена")) && timer.passedMs(1000)) {
-                mc.player.networkHandler.sendChatCommand("flyme");
-                mc.player.networkHandler.sendChatCommand("flyme");
+                mc.player.connection.sendCommand("flyme");
+                mc.player.connection.sendCommand("flyme");
                 timer.reset();
             }
         }
@@ -52,12 +52,12 @@ public class AutoFlyme extends Module {
     @Override
     public void onUpdate() {
         if (useTimer.getValue()) ThunderHack.TICK_TIMER = 1.088f;
-        if (!mc.player.getAbilities().flying && timer.passedMs(1000) && !mc.player.isOnGround() && mc.options.jumpKey.isPressed()) {
-            mc.player.networkHandler.sendChatCommand("flyme");
+        if (!mc.player.getAbilities().flying && timer.passedMs(1000) && !mc.player.onGround() && mc.options.keyJump.isDown()) {
+            mc.player.connection.sendCommand("flyme");
             timer.reset();
         }
-        if (!mc.options.jumpKey.isPressed() && hover.getValue() && mc.player.getAbilities().flying && mc.player.getAbilities().flying && !mc.player.isOnGround() && !mc.world.getBlockCollisions(mc.player, mc.player.getBoundingBox().offset(0.0, -hoverY.getValue(), 0.0)).iterator().hasNext()) {
-            mc.player.setVelocity(mc.player.getVelocity().x, -0.05, mc.player.getVelocity().z);
+        if (!mc.options.keyJump.isDown() && hover.getValue() && mc.player.getAbilities().flying && mc.player.getAbilities().flying && !mc.player.onGround() && !mc.level.getBlockCollisions(mc.player, mc.player.getBoundingBox().move(0.0, -hoverY.getValue(), 0.0)).iterator().hasNext()) {
+            mc.player.setDeltaMovement(mc.player.getDeltaMovement().x, -0.05, mc.player.getDeltaMovement().z);
         }
     }
 
@@ -65,6 +65,6 @@ public class AutoFlyme extends Module {
     public void onUpdateWalkingPlayer(final EventSync event) {
         if (!instantSpeed.getValue() || !mc.player.getAbilities().flying) return;
         final double[] dir = MovementUtility.isMoving() ? MovementUtility.forward(speed.getValue()) : new double[]{0, 0};
-        mc.player.setVelocity(dir[0], mc.player.getVelocity().y, dir[1]);
+        mc.player.setDeltaMovement(dir[0], mc.player.getDeltaMovement().y, dir[1]);
     }
 }

@@ -2,10 +2,10 @@ package thunder.hack.features.cmd.impl;
 
 import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import net.minecraft.command.CommandSource;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.ChatFormatting;
+import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.features.cmd.Command;
 
@@ -17,16 +17,16 @@ public class HClipCommand extends Command {
     }
 
     @Override
-    public void executeBuild(@NotNull LiteralArgumentBuilder<CommandSource> builder) {
+    public void executeBuild(@NotNull LiteralArgumentBuilder<SharedSuggestionProvider> builder) {
         builder.then(literal("s").executes(context -> {
-            final double x = -(MathHelper.sin(mc.player.getYaw() * MathHelper.RADIANS_PER_DEGREE) * 0.8);
-            final double z = MathHelper.cos(mc.player.getYaw() * MathHelper.RADIANS_PER_DEGREE) * 0.8;
+            final double x = -(Mth.sin(mc.player.getYRot() * Mth.DEG_TO_RAD) * 0.8);
+            final double z = Mth.cos(mc.player.getYRot() * Mth.DEG_TO_RAD) * 0.8;
 
             for (int i = 0; i < 10; i++) {
-                mc.player.networkHandler.sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(mc.player.getX() + x, mc.player.getY(), mc.player.getZ() + z, false, mc.player.horizontalCollision));
+                mc.player.connection.send(new ServerboundMovePlayerPacket.Pos(mc.player.getX() + x, mc.player.getY(), mc.player.getZ() + z, false, mc.player.horizontalCollision));
             }
 
-            mc.player.setPosition(mc.player.getX() + x, mc.player.getY(), mc.player.getZ() + z);
+            mc.player.setPos(mc.player.getX() + x, mc.player.getY(), mc.player.getZ() + z);
 
             return SINGLE_SUCCESS;
         }));
@@ -35,8 +35,8 @@ public class HClipCommand extends Command {
             final double speed = context.getArgument("count", Double.class);
 
             try {
-                sendMessage(Formatting.GREEN + "клипаемся на  " + speed + " блоков.");
-                mc.player.setPosition(mc.player.getX() - ((double) MathHelper.sin(mc.player.getYaw() * MathHelper.RADIANS_PER_DEGREE) * speed), mc.player.getY(), mc.player.getZ() + (double) MathHelper.cos(mc.player.getYaw() * MathHelper.RADIANS_PER_DEGREE) * speed);
+                sendMessage(ChatFormatting.GREEN + "клипаемся на  " + speed + " блоков.");
+                mc.player.setPos(mc.player.getX() - ((double) Mth.sin(mc.player.getYRot() * Mth.DEG_TO_RAD) * speed), mc.player.getY(), mc.player.getZ() + (double) Mth.cos(mc.player.getYRot() * Mth.DEG_TO_RAD) * speed);
             } catch (Exception ignored) {
             }
 

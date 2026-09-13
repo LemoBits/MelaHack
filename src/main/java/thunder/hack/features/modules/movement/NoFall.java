@@ -1,10 +1,10 @@
 package thunder.hack.features.modules.movement;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.Items;
 import thunder.hack.events.impl.EventSync;
 import thunder.hack.events.impl.EventTick;
 import thunder.hack.events.impl.PacketEvent;
@@ -43,9 +43,9 @@ public class NoFall extends Module {
         if (isFalling()) {
             switch (mode.getValue()) {
                 case MatrixOffGround, Vanilla -> cancelGround = true;
-                case Rubberband -> sendPacket(new PlayerMoveC2SPacket.OnGroundOnly(true, mc.player.horizontalCollision));
+                case Rubberband -> sendPacket(new ServerboundMovePlayerPacket.StatusOnly(true, mc.player.horizontalCollision));
                 case Items -> {
-                    BlockPos playerPos = BlockPos.ofFloored(mc.player.getPos());
+                    BlockPos playerPos = BlockPos.containing(mc.player.position());
 
                     SearchInvResult snowResult = InventoryUtility.findItemInHotBar(Items.POWDER_SNOW_BUCKET);
                     SearchInvResult pearlResult = InventoryUtility.findItemInHotBar(Items.ENDER_PEARL);
@@ -54,19 +54,19 @@ public class NoFall extends Module {
                     SearchInvResult waterResult = InventoryUtility.findItemInHotBar(Items.WATER_BUCKET);
 
                     if (waterResult.found() && waterBucket.getValue()) {
-                        mc.player.setPitch(90);
+                        mc.player.setXRot(90);
                         doWaterDrop(waterResult, playerPos);
                     } else if (pearlResult.found() && enderPearl.getValue()) {
-                        mc.player.setPitch(90);
+                        mc.player.setXRot(90);
                         doPearlDrop(pearlResult);
                     } else if (webResult.found() && cobweb.getValue()) {
-                        mc.player.setPitch(90);
+                        mc.player.setXRot(90);
                         doWebDrop(webResult, playerPos);
                     } else if (vinesResult.found() && twistingVines.getValue()) {
-                        mc.player.setPitch(90);
+                        mc.player.setXRot(90);
                         doVinesDrop(vinesResult, playerPos);
                     } else if (snowResult.found() && powderSnowBucket.getValue()) {
-                        mc.player.setPitch(90);
+                        mc.player.setXRot(90);
                         doSnowDrop(snowResult, playerPos);
                     }
                 }
@@ -75,9 +75,9 @@ public class NoFall extends Module {
             InventoryUtility.saveSlot();
             SearchInvResult waterResult = InventoryUtility.findItemInHotBar(Items.BUCKET);
             waterResult.switchTo();
-            mc.player.setPitch(90);
-            mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
-            mc.player.swingHand(Hand.MAIN_HAND);
+            mc.player.setXRot(90);
+            mc.gameMode.useItem(mc.player, InteractionHand.MAIN_HAND);
+            mc.player.swing(InteractionHand.MAIN_HAND);
             InventoryUtility.returnSlot();
             retrieveFlag = false;
         }
@@ -86,17 +86,17 @@ public class NoFall extends Module {
     @EventHandler
     public void onTick(EventTick e) {
         if (mode.is(Mode.Grim2b2t) && isFalling()) {
-            sendPacket(new PlayerMoveC2SPacket.Full(mc.player.getX(), mc.player.getY() + 0.000000001, mc.player.getZ(), mc.player.getYaw(), mc.player.getPitch(), false, mc.player.horizontalCollision));
-            mc.player.onLanding();
+            sendPacket(new ServerboundMovePlayerPacket.PosRot(mc.player.getX(), mc.player.getY() + 0.000000001, mc.player.getZ(), mc.player.getYRot(), mc.player.getXRot(), false, mc.player.horizontalCollision));
+            mc.player.resetFallDistance();
         }
     }
 
     private void doWaterDrop(SearchInvResult waterResult, BlockPos playerPos) {
-        if (mc.world.getBlockState(playerPos.down()).isSolidBlock(mc.world, playerPos.down()) || mc.world.getBlockState(playerPos.down().down()).isSolidBlock(mc.world, playerPos.down().down())) {
+        if (mc.level.getBlockState(playerPos.below()).isRedstoneConductor(mc.level, playerPos.below()) || mc.level.getBlockState(playerPos.below().below()).isRedstoneConductor(mc.level, playerPos.below().below())) {
             InventoryUtility.saveSlot();
             waterResult.switchTo();
-            mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
-            mc.player.swingHand(Hand.MAIN_HAND);
+            mc.gameMode.useItem(mc.player, InteractionHand.MAIN_HAND);
+            mc.player.swing(InteractionHand.MAIN_HAND);
             InventoryUtility.returnSlot();
             retrieveFlag = retrieve.getValue();
         }
@@ -106,54 +106,54 @@ public class NoFall extends Module {
         if (pearlCooldown.passedMs(5000)) {
             InventoryUtility.saveSlot();
             pearlResult.switchTo();
-            mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
-            mc.player.swingHand(Hand.MAIN_HAND);
+            mc.gameMode.useItem(mc.player, InteractionHand.MAIN_HAND);
+            mc.player.swing(InteractionHand.MAIN_HAND);
             InventoryUtility.returnSlot();
             pearlCooldown.reset();
         }
     }
 
     private void doWebDrop(SearchInvResult webResult, BlockPos playerPos) {
-        if (mc.world.getBlockState(playerPos.down()).isSolidBlock(mc.world, playerPos.down()) || mc.world.getBlockState(playerPos.down().down()).isSolidBlock(mc.world, playerPos.down().down())) {
+        if (mc.level.getBlockState(playerPos.below()).isRedstoneConductor(mc.level, playerPos.below()) || mc.level.getBlockState(playerPos.below().below()).isRedstoneConductor(mc.level, playerPos.below().below())) {
             InventoryUtility.saveSlot();
-            if (mc.world.getBlockState(playerPos.down()).isSolidBlock(mc.world, playerPos.down()))
+            if (mc.level.getBlockState(playerPos.below()).isRedstoneConductor(mc.level, playerPos.below()))
                 InteractionUtility.placeBlock(playerPos, InteractionUtility.Rotate.None, InteractionUtility.Interact.Vanilla, InteractionUtility.PlaceMode.Normal, webResult.slot(), false, true);
             else
-                InteractionUtility.placeBlock(playerPos.down(), InteractionUtility.Rotate.None, InteractionUtility.Interact.Vanilla, InteractionUtility.PlaceMode.Normal, webResult.slot(), false, true);
-            mc.player.swingHand(Hand.MAIN_HAND);
+                InteractionUtility.placeBlock(playerPos.below(), InteractionUtility.Rotate.None, InteractionUtility.Interact.Vanilla, InteractionUtility.PlaceMode.Normal, webResult.slot(), false, true);
+            mc.player.swing(InteractionHand.MAIN_HAND);
             InventoryUtility.returnSlot();
         }
     }
 
     private void doVinesDrop(SearchInvResult vinesResult, BlockPos playerPos) {
-        if (mc.world.getBlockState(playerPos.down()).isSolidBlock(mc.world, playerPos.down()) || mc.world.getBlockState(playerPos.down().down()).isSolidBlock(mc.world, playerPos.down().down())) {
+        if (mc.level.getBlockState(playerPos.below()).isRedstoneConductor(mc.level, playerPos.below()) || mc.level.getBlockState(playerPos.below().below()).isRedstoneConductor(mc.level, playerPos.below().below())) {
             InventoryUtility.saveSlot();
-            if (mc.world.getBlockState(playerPos.down()).isSolidBlock(mc.world, playerPos.down()))
+            if (mc.level.getBlockState(playerPos.below()).isRedstoneConductor(mc.level, playerPos.below()))
                 InteractionUtility.placeBlock(playerPos, InteractionUtility.Rotate.None, InteractionUtility.Interact.Vanilla, InteractionUtility.PlaceMode.Normal, vinesResult.slot(), false, true);
             else
-                InteractionUtility.placeBlock(playerPos.down(), InteractionUtility.Rotate.None, InteractionUtility.Interact.Vanilla, InteractionUtility.PlaceMode.Normal, vinesResult.slot(), false, true);
-            mc.player.swingHand(Hand.MAIN_HAND);
+                InteractionUtility.placeBlock(playerPos.below(), InteractionUtility.Rotate.None, InteractionUtility.Interact.Vanilla, InteractionUtility.PlaceMode.Normal, vinesResult.slot(), false, true);
+            mc.player.swing(InteractionHand.MAIN_HAND);
             InventoryUtility.returnSlot();
         }
     }
 
     private void doSnowDrop(SearchInvResult snowResult, BlockPos playerPos) {
-        if (mc.world.getBlockState(playerPos.down()).isSolidBlock(mc.world, playerPos.down()) || mc.world.getBlockState(playerPos.down().down()).isSolidBlock(mc.world, playerPos.down().down())) {
+        if (mc.level.getBlockState(playerPos.below()).isRedstoneConductor(mc.level, playerPos.below()) || mc.level.getBlockState(playerPos.below().below()).isRedstoneConductor(mc.level, playerPos.below().below())) {
             InventoryUtility.saveSlot();
-            if (mc.world.getBlockState(playerPos.down()).isSolidBlock(mc.world, playerPos.down()))
+            if (mc.level.getBlockState(playerPos.below()).isRedstoneConductor(mc.level, playerPos.below()))
                 InteractionUtility.placeBlock(playerPos, InteractionUtility.Rotate.None, InteractionUtility.Interact.Vanilla, InteractionUtility.PlaceMode.Normal, snowResult.slot(), false, true);
             else
-                InteractionUtility.placeBlock(playerPos.down(), InteractionUtility.Rotate.None, InteractionUtility.Interact.Vanilla, InteractionUtility.PlaceMode.Normal, snowResult.slot(), false, true);
-            mc.player.swingHand(Hand.MAIN_HAND);
+                InteractionUtility.placeBlock(playerPos.below(), InteractionUtility.Rotate.None, InteractionUtility.Interact.Vanilla, InteractionUtility.PlaceMode.Normal, snowResult.slot(), false, true);
+            mc.player.swing(InteractionHand.MAIN_HAND);
             InventoryUtility.returnSlot();
         }
     }
 
     public boolean isFalling() {
-        if (mc == null || mc.player == null || mc.world == null)
+        if (mc == null || mc.player == null || mc.level == null)
             return false;
 
-        if (mc.player.isGliding())
+        if (mc.player.isFallFlying())
             return false;
 
         if (mode.is(Mode.Grim2b2t))
@@ -177,7 +177,7 @@ public class NoFall extends Module {
 
     @EventHandler
     public void onPacketSend(PacketEvent.Send e) {
-        if (e.getPacket() instanceof PlayerMoveC2SPacket pac) {
+        if (e.getPacket() instanceof ServerboundMovePlayerPacket pac) {
             if (cancelGround)
                 ((IPlayerMoveC2SPacket) pac).setOnGround(false);
         }

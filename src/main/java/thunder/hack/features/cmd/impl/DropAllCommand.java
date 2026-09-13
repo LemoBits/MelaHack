@@ -1,9 +1,9 @@
 package thunder.hack.features.cmd.impl;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import net.minecraft.command.CommandSource;
-import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket;
-import net.minecraft.screen.slot.SlotActionType;
+import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.network.protocol.game.ServerboundContainerClosePacket;
+import net.minecraft.world.inventory.ClickType;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.ThunderHack;
 import thunder.hack.core.Managers;
@@ -17,18 +17,18 @@ public class DropAllCommand extends Command {
     }
 
     @Override
-    public void executeBuild(@NotNull LiteralArgumentBuilder<CommandSource> builder) {
+    public void executeBuild(@NotNull LiteralArgumentBuilder<SharedSuggestionProvider> builder) {
         builder.then(literal("legit").executes(context -> {
             Managers.ASYNC.run(() -> {
                 for (int i = 5; i <= 45; i++) {
-                    mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, i, 1, SlotActionType.THROW, mc.player);
+                    mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, i, 1, ClickType.THROW, mc.player);
                     try {
                         Thread.sleep(70);
                     } catch (InterruptedException e) {
                         throw new RuntimeException(e);
                     }
                 }
-                mc.player.networkHandler.sendPacket(new CloseHandledScreenC2SPacket(mc.player.currentScreenHandler.syncId));
+                mc.player.connection.send(new ServerboundContainerClosePacket(mc.player.containerMenu.containerId));
             }, 1);
             sendMessage("ok");
             return SINGLE_SUCCESS;
@@ -37,8 +37,8 @@ public class DropAllCommand extends Command {
 
         builder.executes(context -> {
             for (int i = 5; i <= 45; i++)
-                mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, i, 1, SlotActionType.THROW, mc.player);
-            mc.player.networkHandler.sendPacket(new CloseHandledScreenC2SPacket(mc.player.currentScreenHandler.syncId));
+                mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, i, 1, ClickType.THROW, mc.player);
+            mc.player.connection.send(new ServerboundContainerClosePacket(mc.player.containerMenu.containerId));
             sendMessage("ok");
             return SINGLE_SUCCESS;
         });

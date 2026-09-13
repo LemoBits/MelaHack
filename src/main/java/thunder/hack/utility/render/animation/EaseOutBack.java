@@ -1,6 +1,6 @@
 package thunder.hack.utility.render.animation;
 
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.Mth;
 import thunder.hack.utility.render.Render3DEngine;
 
 public class EaseOutBack {
@@ -22,7 +22,7 @@ public class EaseOutBack {
 
     public void update(boolean update) {
         prevTick = tick;
-        tick = MathHelper.clamp(tick + (update ? 1 : -1), 0, maxTick);
+        tick = Mth.clamp(tick + (update ? 1 : -1), 0, maxTick);
     }
 
     public double getAnimationd() {

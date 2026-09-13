@@ -1,11 +1,11 @@
 package thunder.hack.features.modules.misc;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
 import thunder.hack.core.Managers;
 import thunder.hack.core.manager.client.ModuleManager;
 import thunder.hack.events.impl.EventEntityRemoved;
@@ -52,15 +52,15 @@ public class VisualRange extends Module {
     public void notify(Entity entity, boolean enter) {
         String message = "";
         if (ModuleManager.nameProtect.isEnabled() && NameProtect.hideFriends.getValue()) {
-            message = Formatting.AQUA + NameProtect.newName.getValue();
+            message = ChatFormatting.AQUA + NameProtect.newName.getValue();
         }
         if (Managers.FRIEND.isFriend(entity.getName().getString()))
-            message = Formatting.AQUA + entity.getName().getString();
-        else message = Formatting.GRAY + entity.getName().getString();
+            message = ChatFormatting.AQUA + entity.getName().getString();
+        else message = ChatFormatting.GRAY + entity.getName().getString();
 
 
-        if (enter) message += Formatting.GREEN + " was found!";
-        else message += Formatting.RED + " left to X:" + (int) entity.getX() + " Z:" + (int) entity.getZ();
+        if (enter) message += ChatFormatting.GREEN + " was found!";
+        else message += ChatFormatting.RED + " left to X:" + (int) entity.getX() + " Z:" + (int) entity.getZ();
 
         if (mode.is(Mode.Chat) || mode.is(Mode.Both)) sendMessage(message);
 
@@ -70,16 +70,16 @@ public class VisualRange extends Module {
         if (soundpl.getValue()) {
             try {
                 if (enter)
-                    mc.world.playSound(mc.player, mc.player.getBlockPos(), SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.BLOCKS, 1f, 1f);
+                    mc.level.playSound(mc.player, mc.player.blockPosition(), SoundEvents.PLAYER_LEVELUP, SoundSource.BLOCKS, 1f, 1f);
                 else
-                    mc.world.playSound(mc.player, mc.player.getBlockPos(), SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.BLOCKS, 1f, 1f);
+                    mc.level.playSound(mc.player, mc.player.blockPosition(), SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.BLOCKS, 1f, 1f);
             } catch (Exception ignored) {
             }
         }
     }
 
     public boolean isValid(Entity entity) {
-        if (!(entity instanceof PlayerEntity)) return false;
+        if (!(entity instanceof Player)) return false;
         return entity != mc.player && (!Managers.FRIEND.isFriend(entity.getName().getString()) || friends.getValue());
     }
 

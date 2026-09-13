@@ -1,20 +1,24 @@
 package thunder.hack.injection;
 
 import thunder.hack.utility.render.compat.RenderSystem;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.RenderTickCounter;
 import thunder.hack.core.Managers;
-import net.minecraft.client.option.Perspective;
-import net.minecraft.client.render.Camera;
-import net.minecraft.client.render.GameRenderer;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.Entity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.tag.ItemTags;
-import net.minecraft.resource.ResourceFactory;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.*;
+import net.minecraft.client.Camera;
+import net.minecraft.client.CameraType;
+import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.server.packs.resources.ResourceProvider;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.util.Mth;
+import net.minecraft.core.*;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.*;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -36,34 +40,37 @@ import thunder.hack.utility.render.Render3DEngine;
 
 import static thunder.hack.features.modules.Module.mc;
 
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
+
 @Mixin(GameRenderer.class)
 public abstract class MixinGameRenderer {
 
     @Shadow
-    private float viewDistanceBlocks;
+    private float renderDistance;
 
     @Shadow
     public abstract void tick();
 
     @Inject(method = "render", at = @At("TAIL"))
-    void postHudRenderHook(RenderTickCounter tickCounter, boolean tick, CallbackInfo ci) {
+    void postHudRenderHook(DeltaTracker tickCounter, boolean tick, CallbackInfo ci) {
         FrameRateCounter.INSTANCE.recordFrame();
         Render2DEngine.BLUR_PROGRAM.invalidateCapture();
     }
 
-    @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/GameRenderer;renderHand(FZLorg/joml/Matrix4f;)V"), method = "renderWorld")
-    void render3dHook(RenderTickCounter tickCounter, CallbackInfo ci) {
+    @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;renderItemInHand(FZLorg/joml/Matrix4f;)V"), method = "renderLevel")
+    void render3dHook(DeltaTracker tickCounter, CallbackInfo ci) {
         if (Module.fullNullCheck()) return;
 
-        Camera camera = mc.gameRenderer.getCamera();
-        MatrixStack matrixStack = new MatrixStack();
-        RenderSystem.getModelViewStack().pushMatrix().mul(matrixStack.peek().getPositionMatrix());
-        matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(camera.getPitch()));
-        matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(camera.getYaw() + 180.0f));
+        Camera camera = mc.gameRenderer.getMainCamera();
+        PoseStack matrixStack = new PoseStack();
+        RenderSystem.getModelViewStack().pushMatrix().mul(matrixStack.last().pose());
+        matrixStack.mulPose(Axis.XP.rotationDegrees(camera.getXRot()));
+        matrixStack.mulPose(Axis.YP.rotationDegrees(camera.getYRot() + 180.0f));
 
         Render3DEngine.lastProjMat.set(RenderSystem.getProjectionMatrix());
         Render3DEngine.lastModMat.set(RenderSystem.getModelViewMatrix());
-        Render3DEngine.lastWorldSpaceMatrix.set(matrixStack.peek().getPositionMatrix());
+        Render3DEngine.lastWorldSpaceMatrix.set(matrixStack.last().pose());
 
         Managers.MODULE.onRender3D(matrixStack);
         BlockAnimationUtility.onRender(matrixStack);
@@ -72,24 +79,24 @@ public abstract class MixinGameRenderer {
         RenderSystem.getModelViewStack().popMatrix();
     }
 
-    @Inject(method = "renderWorld", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/GameRenderer;renderHand(FZLorg/joml/Matrix4f;)V", shift = At.Shift.AFTER))
-    public void postRender3dHook(RenderTickCounter tickCounter, CallbackInfo ci) {
+    @Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;renderItemInHand(FZLorg/joml/Matrix4f;)V", shift = At.Shift.AFTER))
+    public void postRender3dHook(DeltaTracker tickCounter, CallbackInfo ci) {
         if (Module.fullNullCheck()) return;
         Managers.SHADER.renderShaders();
     }
 
-    @Redirect(method = "renderWorld", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/MathHelper;lerp(FFF)F"))
+    @Redirect(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/Mth;lerp(FFF)F"))
     private float renderWorldHook(float delta, float first, float second) {
         if (ModuleManager.noRender.isEnabled() && ModuleManager.noRender.nausea.getValue()) return 0;
-        return MathHelper.lerp(delta, first, second);
+        return Mth.lerp(delta, first, second);
     }
 
-    @Inject(method = "preloadPrograms", at = @At(value = "RETURN"))
-    private void loadSatinPrograms(ResourceFactory factory, CallbackInfo ci) {
+    @Inject(method = "preloadUiShader", at = @At(value = "RETURN"))
+    private void loadSatinPrograms(ResourceProvider factory, CallbackInfo ci) {
         // Reload happens via ResourceManagerHelper to ensure mod assets are available.
     }
 
-    @Inject(method = "updateCrosshairTarget", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/GameRenderer;findCrosshairTarget(Lnet/minecraft/entity/Entity;DDF)Lnet/minecraft/util/hit/HitResult;"), cancellable = true)
+    @Inject(method = "pick(F)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;pick(Lnet/minecraft/world/entity/Entity;DDF)Lnet/minecraft/world/phys/HitResult;"), cancellable = true)
     private void onUpdateTargetedEntity(float tickDelta, CallbackInfo info) {
         if (Module.fullNullCheck()) return;
 
@@ -104,36 +111,36 @@ public abstract class MixinGameRenderer {
 
         if (ModuleManager.freeCam.isEnabled()) {
             info.cancel();
-            mc.crosshairTarget = Managers.PLAYER.getRtxTarget(ModuleManager.freeCam.getFakeYaw(), ModuleManager.freeCam.getFakePitch(), ModuleManager.freeCam.getFakeX(), ModuleManager.freeCam.getFakeY(), ModuleManager.freeCam.getFakeZ());
+            mc.hitResult = Managers.PLAYER.getRtxTarget(ModuleManager.freeCam.getFakeYaw(), ModuleManager.freeCam.getFakePitch(), ModuleManager.freeCam.getFakeX(), ModuleManager.freeCam.getFakeY(), ModuleManager.freeCam.getFakeZ());
         }
     }
 
-    @Inject(method = "findCrosshairTarget", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "pick(Lnet/minecraft/world/entity/Entity;DDF)Lnet/minecraft/world/phys/HitResult;", at = @At("HEAD"), cancellable = true)
     private void findCrosshairTargetHook(Entity camera, double blockInteractionRange, double entityInteractionRange, float tickDelta, CallbackInfoReturnable<HitResult> cir) {
-        if (ModuleManager.noEntityTrace.isEnabled() && (mc.player.getMainHandStack().isIn(ItemTags.PICKAXES) || !NoEntityTrace.ponly.getValue())) {
-            if (mc.player.getMainHandStack().isIn(ItemTags.SWORDS) && NoEntityTrace.noSword.getValue()) return;
+        if (ModuleManager.noEntityTrace.isEnabled() && (mc.player.getMainHandItem().is(ItemTags.PICKAXES) || !NoEntityTrace.ponly.getValue())) {
+            if (mc.player.getMainHandItem().is(ItemTags.SWORDS) && NoEntityTrace.noSword.getValue()) return;
             double d = Math.max(blockInteractionRange, entityInteractionRange);
-            Vec3d vec3d = camera.getCameraPosVec(tickDelta);
-            HitResult hitResult = camera.raycast(d, tickDelta, false);
+            Vec3 vec3d = camera.getEyePosition(tickDelta);
+            HitResult hitResult = camera.pick(d, tickDelta, false);
             cir.setReturnValue(ensureTargetInRangeCustom(hitResult, vec3d, blockInteractionRange));
         }
     }
 
-    @Inject(method = "getBasicProjectionMatrix", at = @At("TAIL"), cancellable = true)
+    @Inject(method = "getProjectionMatrix", at = @At("TAIL"), cancellable = true)
     public void getBasicProjectionMatrixHook(float fov, CallbackInfoReturnable<Matrix4f> cir) {
         if (ModuleManager.aspectRatio.isEnabled()) {
-            MatrixStack matrixStack = new MatrixStack();
-            matrixStack.peek().getPositionMatrix().identity();
-            matrixStack.peek().getPositionMatrix().mul(new Matrix4f().setPerspective((float) (fov * 0.01745329238474369), ModuleManager.aspectRatio.ratio.getValue(), 0.05f, viewDistanceBlocks * 4.0f));
-            cir.setReturnValue(matrixStack.peek().getPositionMatrix());
+            PoseStack matrixStack = new PoseStack();
+            matrixStack.last().pose().identity();
+            matrixStack.last().pose().mul(new Matrix4f().setPerspective((float) (fov * 0.01745329238474369), ModuleManager.aspectRatio.ratio.getValue(), 0.05f, renderDistance * 4.0f));
+            cir.setReturnValue(matrixStack.last().pose());
         }
     }
 
-    @Inject(method = "getFov(Lnet/minecraft/client/render/Camera;FZ)F", at = @At("TAIL"), cancellable = true)
+    @Inject(method = "getFov(Lnet/minecraft/client/Camera;FZ)F", at = @At("TAIL"), cancellable = true)
     public void getFov(Camera camera, float tickDelta, boolean changingFov, CallbackInfoReturnable<Float> cb) {
         if (ModuleManager.fov.isEnabled()) {
             float value = cb.getReturnValue();
-            if (value == 70.0f && !ModuleManager.fov.itemFov.getValue() && mc.options.getPerspective() != Perspective.FIRST_PERSON)
+            if (value == 70.0f && !ModuleManager.fov.itemFov.getValue() && mc.options.getCameraType() != CameraType.FIRST_PERSON)
                 return;
 
             else if (ModuleManager.fov.itemFov.getValue() && value == 70.0f) {
@@ -141,7 +148,7 @@ public abstract class MixinGameRenderer {
                 return;
             }
 
-            if (mc.player.isSubmergedInWater())
+            if (mc.player.isUnderWater())
                 return;
 
             cb.setReturnValue(ModuleManager.fov.fovModifier.getValue().floatValue());
@@ -149,7 +156,7 @@ public abstract class MixinGameRenderer {
     }
 
     @Inject(method = "bobView", at = @At("HEAD"), cancellable = true)
-    private void bobViewHook(MatrixStack matrices, float tickDelta, CallbackInfo ci) {
+    private void bobViewHook(PoseStack matrices, float tickDelta, CallbackInfo ci) {
         if (Module.fullNullCheck()) return;
         if (ModuleManager.noBob.isEnabled()) {
             ModuleManager.noBob.bobView(matrices, tickDelta);
@@ -163,18 +170,18 @@ public abstract class MixinGameRenderer {
     }
 
     @Unique
-    private HitResult ensureTargetInRangeCustom(HitResult hitResult, Vec3d cameraPos, double interactionRange) {
-        Vec3d vec3d = hitResult.getPos();
-        if (!vec3d.isInRange(cameraPos, interactionRange)) {
-            Vec3d vec3d2 = hitResult.getPos();
-            Direction direction = Direction.getFacing(vec3d2.x - cameraPos.x, vec3d2.y - cameraPos.y, vec3d2.z - cameraPos.z);
-            return BlockHitResult.createMissed(vec3d2, direction, BlockPos.ofFloored(vec3d2));
+    private HitResult ensureTargetInRangeCustom(HitResult hitResult, Vec3 cameraPos, double interactionRange) {
+        Vec3 vec3d = hitResult.getLocation();
+        if (!vec3d.closerThan(cameraPos, interactionRange)) {
+            Vec3 vec3d2 = hitResult.getLocation();
+            Direction direction = Direction.getApproximateNearest(vec3d2.x - cameraPos.x, vec3d2.y - cameraPos.y, vec3d2.z - cameraPos.z);
+            return BlockHitResult.miss(vec3d2, direction, BlockPos.containing(vec3d2));
         } else {
             return hitResult;
         }
     }
 
-    @Inject(method = "showFloatingItem", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "displayItemActivation", at = @At("HEAD"), cancellable = true)
     private void showFloatingItemHook(ItemStack floatingItem, CallbackInfo info) {
         if (ModuleManager.totemAnimation.isEnabled()) {
             ModuleManager.totemAnimation.showFloatingItem(floatingItem);
@@ -182,8 +189,8 @@ public abstract class MixinGameRenderer {
         }
     }
 
-    @Inject(method = "tiltViewWhenHurt", at = @At("HEAD"), cancellable = true)
-    private void tiltViewWhenHurtHook(MatrixStack matrices, float tickDelta, CallbackInfo ci) {
+    @Inject(method = "bobHurt", at = @At("HEAD"), cancellable = true)
+    private void tiltViewWhenHurtHook(PoseStack matrices, float tickDelta, CallbackInfo ci) {
         if (ModuleManager.noRender.isEnabled() && ModuleManager.noRender.hurtCam.getValue())
             ci.cancel();
     }

@@ -18,11 +18,9 @@
 package thunder.hack.utility.render.shaders.satin.impl;
 
 import thunder.hack.utility.render.shaders.satin.api.managed.uniform.SamplerUniform;
-import net.minecraft.client.gl.GlUniform;
-import net.minecraft.client.render.effect.PostEffectPass;
-import net.minecraft.client.gl.ShaderProgram;
-
+import com.mojang.blaze3d.opengl.GlProgram;
 import java.util.List;
+import net.minecraft.client.renderer.PostPass;
 
 public abstract class ManagedSamplerUniformBase extends ManagedUniformBase implements SamplerUniform {
     protected SamplerAccess[] targets = new SamplerAccess[0];
@@ -33,13 +31,13 @@ public abstract class ManagedSamplerUniformBase extends ManagedUniformBase imple
     }
 
     @Override
-    public boolean findUniformTargets(List<PostEffectPass> shaders) {
+    public boolean findUniformTargets(List<PostPass> shaders) {
         this.targets = new SamplerAccess[0];
         return false;
     }
 
     @Override
-    public boolean findUniformTarget(ShaderProgram shader) {
+    public boolean findUniformTarget(GlProgram shader) {
         return findUniformTarget1(((SamplerAccess) shader));
     }
 

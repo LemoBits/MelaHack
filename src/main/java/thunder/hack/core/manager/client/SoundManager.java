@@ -1,10 +1,5 @@
 package thunder.hack.core.manager.client;
 
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.util.Identifier;
 import thunder.hack.core.manager.IManager;
 import thunder.hack.core.Managers;
 import thunder.hack.features.modules.client.SoundFX;
@@ -15,6 +10,11 @@ import thunder.hack.utility.math.MathUtility;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.FloatControl;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundSource;
 import java.io.File;
 
 import static thunder.hack.features.cmd.Command.sendMessage;
@@ -22,66 +22,66 @@ import static thunder.hack.core.manager.client.ConfigManager.SOUNDS_FOLDER;
 import static thunder.hack.features.modules.client.ClientSettings.isRu;
 
 public class SoundManager implements IManager {
-    public final Identifier KEYPRESS_SOUND = Identifier.of("thunderhack:keypress");
-    public SoundEvent KEYPRESS_SOUNDEVENT = SoundEvent.of(KEYPRESS_SOUND);
-    public final Identifier KEYRELEASE_SOUND = Identifier.of("thunderhack:keyrelease");
-    public SoundEvent KEYRELEASE_SOUNDEVENT = SoundEvent.of(KEYRELEASE_SOUND);
-    public final Identifier UWU_SOUND = Identifier.of("thunderhack:uwu");
-    public SoundEvent UWU_SOUNDEVENT = SoundEvent.of(UWU_SOUND);
-    public final Identifier ENABLE_SOUND = Identifier.of("thunderhack:enable");
-    public SoundEvent ENABLE_SOUNDEVENT = SoundEvent.of(ENABLE_SOUND);
-    public final Identifier DISABLE_SOUND = Identifier.of("thunderhack:disable");
-    public SoundEvent DISABLE_SOUNDEVENT = SoundEvent.of(DISABLE_SOUND);
-    public final Identifier MOAN1_SOUND = Identifier.of("thunderhack:moan1");
-    public SoundEvent MOAN1_SOUNDEVENT = SoundEvent.of(MOAN1_SOUND);
-    public final Identifier MOAN2_SOUND = Identifier.of("thunderhack:moan2");
-    public SoundEvent MOAN2_SOUNDEVENT = SoundEvent.of(MOAN2_SOUND);
-    public final Identifier MOAN3_SOUND = Identifier.of("thunderhack:moan3");
-    public SoundEvent MOAN3_SOUNDEVENT = SoundEvent.of(MOAN3_SOUND);
-    public final Identifier MOAN4_SOUND = Identifier.of("thunderhack:moan4");
-    public SoundEvent MOAN4_SOUNDEVENT = SoundEvent.of(MOAN4_SOUND);
-    public final Identifier SKEET_SOUND = Identifier.of("thunderhack:skeet");
-    public SoundEvent SKEET_SOUNDEVENT = SoundEvent.of(SKEET_SOUND);
-    public final Identifier ORTHODOX_SOUND = Identifier.of("thunderhack:orthodox");
-    public SoundEvent ORTHODOX_SOUNDEVENT = SoundEvent.of(ORTHODOX_SOUND);
-    public final Identifier BOOLEAN_SOUND = Identifier.of("thunderhack:boolean");
-    public SoundEvent BOOLEAN_SOUNDEVENT = SoundEvent.of(BOOLEAN_SOUND);
-    public final Identifier SCROLL_SOUND = Identifier.of("thunderhack:scroll");
-    public SoundEvent SCROLL_SOUNDEVENT = SoundEvent.of(SCROLL_SOUND);
-    public final Identifier SWIPEIN_SOUND = Identifier.of("thunderhack:swipein");
-    public SoundEvent SWIPEIN_SOUNDEVENT = SoundEvent.of(SWIPEIN_SOUND);
-    public final Identifier SWIPEOUT_SOUND = Identifier.of("thunderhack:swipeout");
-    public SoundEvent SWIPEOUT_SOUNDEVENT = SoundEvent.of(SWIPEOUT_SOUND);
-    public final Identifier PM_SOUND = Identifier.of("thunderhack:pmsound");
-    public SoundEvent PM_SOUNDEVENT = SoundEvent.of(PM_SOUND);
-    public final Identifier RIFK_SOUND = Identifier.of("thunderhack:rifk");
-    public SoundEvent RIFK_SOUNDEVENT = SoundEvent.of(RIFK_SOUND);
-    public final Identifier CUTIE_SOUND = Identifier.of("thunderhack:cutie");
-    public SoundEvent CUTIE_SOUNDEVENT = SoundEvent.of(CUTIE_SOUND);
+    public final ResourceLocation KEYPRESS_SOUND = ResourceLocation.parse("thunderhack:keypress");
+    public SoundEvent KEYPRESS_SOUNDEVENT = SoundEvent.createVariableRangeEvent(KEYPRESS_SOUND);
+    public final ResourceLocation KEYRELEASE_SOUND = ResourceLocation.parse("thunderhack:keyrelease");
+    public SoundEvent KEYRELEASE_SOUNDEVENT = SoundEvent.createVariableRangeEvent(KEYRELEASE_SOUND);
+    public final ResourceLocation UWU_SOUND = ResourceLocation.parse("thunderhack:uwu");
+    public SoundEvent UWU_SOUNDEVENT = SoundEvent.createVariableRangeEvent(UWU_SOUND);
+    public final ResourceLocation ENABLE_SOUND = ResourceLocation.parse("thunderhack:enable");
+    public SoundEvent ENABLE_SOUNDEVENT = SoundEvent.createVariableRangeEvent(ENABLE_SOUND);
+    public final ResourceLocation DISABLE_SOUND = ResourceLocation.parse("thunderhack:disable");
+    public SoundEvent DISABLE_SOUNDEVENT = SoundEvent.createVariableRangeEvent(DISABLE_SOUND);
+    public final ResourceLocation MOAN1_SOUND = ResourceLocation.parse("thunderhack:moan1");
+    public SoundEvent MOAN1_SOUNDEVENT = SoundEvent.createVariableRangeEvent(MOAN1_SOUND);
+    public final ResourceLocation MOAN2_SOUND = ResourceLocation.parse("thunderhack:moan2");
+    public SoundEvent MOAN2_SOUNDEVENT = SoundEvent.createVariableRangeEvent(MOAN2_SOUND);
+    public final ResourceLocation MOAN3_SOUND = ResourceLocation.parse("thunderhack:moan3");
+    public SoundEvent MOAN3_SOUNDEVENT = SoundEvent.createVariableRangeEvent(MOAN3_SOUND);
+    public final ResourceLocation MOAN4_SOUND = ResourceLocation.parse("thunderhack:moan4");
+    public SoundEvent MOAN4_SOUNDEVENT = SoundEvent.createVariableRangeEvent(MOAN4_SOUND);
+    public final ResourceLocation SKEET_SOUND = ResourceLocation.parse("thunderhack:skeet");
+    public SoundEvent SKEET_SOUNDEVENT = SoundEvent.createVariableRangeEvent(SKEET_SOUND);
+    public final ResourceLocation ORTHODOX_SOUND = ResourceLocation.parse("thunderhack:orthodox");
+    public SoundEvent ORTHODOX_SOUNDEVENT = SoundEvent.createVariableRangeEvent(ORTHODOX_SOUND);
+    public final ResourceLocation BOOLEAN_SOUND = ResourceLocation.parse("thunderhack:boolean");
+    public SoundEvent BOOLEAN_SOUNDEVENT = SoundEvent.createVariableRangeEvent(BOOLEAN_SOUND);
+    public final ResourceLocation SCROLL_SOUND = ResourceLocation.parse("thunderhack:scroll");
+    public SoundEvent SCROLL_SOUNDEVENT = SoundEvent.createVariableRangeEvent(SCROLL_SOUND);
+    public final ResourceLocation SWIPEIN_SOUND = ResourceLocation.parse("thunderhack:swipein");
+    public SoundEvent SWIPEIN_SOUNDEVENT = SoundEvent.createVariableRangeEvent(SWIPEIN_SOUND);
+    public final ResourceLocation SWIPEOUT_SOUND = ResourceLocation.parse("thunderhack:swipeout");
+    public SoundEvent SWIPEOUT_SOUNDEVENT = SoundEvent.createVariableRangeEvent(SWIPEOUT_SOUND);
+    public final ResourceLocation PM_SOUND = ResourceLocation.parse("thunderhack:pmsound");
+    public SoundEvent PM_SOUNDEVENT = SoundEvent.createVariableRangeEvent(PM_SOUND);
+    public final ResourceLocation RIFK_SOUND = ResourceLocation.parse("thunderhack:rifk");
+    public SoundEvent RIFK_SOUNDEVENT = SoundEvent.createVariableRangeEvent(RIFK_SOUND);
+    public final ResourceLocation CUTIE_SOUND = ResourceLocation.parse("thunderhack:cutie");
+    public SoundEvent CUTIE_SOUNDEVENT = SoundEvent.createVariableRangeEvent(CUTIE_SOUND);
 
 
     private final Timer scrollTimer = new Timer();
 
     public void registerSounds() {
-        Registry.register(Registries.SOUND_EVENT, KEYPRESS_SOUND, KEYPRESS_SOUNDEVENT);
-        Registry.register(Registries.SOUND_EVENT, KEYRELEASE_SOUND, KEYRELEASE_SOUNDEVENT);
-        Registry.register(Registries.SOUND_EVENT, ENABLE_SOUND, ENABLE_SOUNDEVENT);
-        Registry.register(Registries.SOUND_EVENT, DISABLE_SOUND, DISABLE_SOUNDEVENT);
-        Registry.register(Registries.SOUND_EVENT, MOAN1_SOUND, MOAN1_SOUNDEVENT);
-        Registry.register(Registries.SOUND_EVENT, MOAN2_SOUND, MOAN2_SOUNDEVENT);
-        Registry.register(Registries.SOUND_EVENT, MOAN3_SOUND, MOAN3_SOUNDEVENT);
-        Registry.register(Registries.SOUND_EVENT, MOAN4_SOUND, MOAN4_SOUNDEVENT);
-        Registry.register(Registries.SOUND_EVENT, UWU_SOUND, UWU_SOUNDEVENT);
+        Registry.register(BuiltInRegistries.SOUND_EVENT, KEYPRESS_SOUND, KEYPRESS_SOUNDEVENT);
+        Registry.register(BuiltInRegistries.SOUND_EVENT, KEYRELEASE_SOUND, KEYRELEASE_SOUNDEVENT);
+        Registry.register(BuiltInRegistries.SOUND_EVENT, ENABLE_SOUND, ENABLE_SOUNDEVENT);
+        Registry.register(BuiltInRegistries.SOUND_EVENT, DISABLE_SOUND, DISABLE_SOUNDEVENT);
+        Registry.register(BuiltInRegistries.SOUND_EVENT, MOAN1_SOUND, MOAN1_SOUNDEVENT);
+        Registry.register(BuiltInRegistries.SOUND_EVENT, MOAN2_SOUND, MOAN2_SOUNDEVENT);
+        Registry.register(BuiltInRegistries.SOUND_EVENT, MOAN3_SOUND, MOAN3_SOUNDEVENT);
+        Registry.register(BuiltInRegistries.SOUND_EVENT, MOAN4_SOUND, MOAN4_SOUNDEVENT);
+        Registry.register(BuiltInRegistries.SOUND_EVENT, UWU_SOUND, UWU_SOUNDEVENT);
 
-        Registry.register(Registries.SOUND_EVENT, SKEET_SOUND, SKEET_SOUNDEVENT);
-        Registry.register(Registries.SOUND_EVENT, ORTHODOX_SOUND, ORTHODOX_SOUNDEVENT);
-        Registry.register(Registries.SOUND_EVENT, SCROLL_SOUND, SCROLL_SOUNDEVENT);
-        Registry.register(Registries.SOUND_EVENT, BOOLEAN_SOUND, BOOLEAN_SOUNDEVENT);
-        Registry.register(Registries.SOUND_EVENT, SWIPEIN_SOUND, SWIPEIN_SOUNDEVENT);
-        Registry.register(Registries.SOUND_EVENT, SWIPEOUT_SOUND, SWIPEOUT_SOUNDEVENT);
-        Registry.register(Registries.SOUND_EVENT, PM_SOUND, PM_SOUNDEVENT);
-        Registry.register(Registries.SOUND_EVENT, RIFK_SOUND, RIFK_SOUNDEVENT);
-        Registry.register(Registries.SOUND_EVENT, CUTIE_SOUND, CUTIE_SOUNDEVENT);
+        Registry.register(BuiltInRegistries.SOUND_EVENT, SKEET_SOUND, SKEET_SOUNDEVENT);
+        Registry.register(BuiltInRegistries.SOUND_EVENT, ORTHODOX_SOUND, ORTHODOX_SOUNDEVENT);
+        Registry.register(BuiltInRegistries.SOUND_EVENT, SCROLL_SOUND, SCROLL_SOUNDEVENT);
+        Registry.register(BuiltInRegistries.SOUND_EVENT, BOOLEAN_SOUND, BOOLEAN_SOUNDEVENT);
+        Registry.register(BuiltInRegistries.SOUND_EVENT, SWIPEIN_SOUND, SWIPEIN_SOUNDEVENT);
+        Registry.register(BuiltInRegistries.SOUND_EVENT, SWIPEOUT_SOUND, SWIPEOUT_SOUNDEVENT);
+        Registry.register(BuiltInRegistries.SOUND_EVENT, PM_SOUND, PM_SOUNDEVENT);
+        Registry.register(BuiltInRegistries.SOUND_EVENT, RIFK_SOUND, RIFK_SOUNDEVENT);
+        Registry.register(BuiltInRegistries.SOUND_EVENT, CUTIE_SOUND, CUTIE_SOUNDEVENT);
     }
 
     public void playHitSound(SoundFX.HitSound value) {
@@ -131,8 +131,8 @@ public class SoundManager implements IManager {
     }
 
     public void playSound(SoundEvent sound) {
-        if (mc.player != null && mc.world != null)
-            mc.world.playSound(mc.player, mc.player.getBlockPos(), sound, SoundCategory.BLOCKS, (float) ModuleManager.soundFX.volume.getValue() / 100f, 1f);
+        if (mc.player != null && mc.level != null)
+            mc.level.playSound(mc.player, mc.player.blockPosition(), sound, SoundSource.BLOCKS, (float) ModuleManager.soundFX.volume.getValue() / 100f, 1f);
     }
 
     public void playSound(String name) {

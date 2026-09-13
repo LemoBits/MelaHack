@@ -1,6 +1,6 @@
 package thunder.hack.events.impl;
 
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.item.ItemStack;
 import thunder.hack.events.Event;
 
 public class EventEatFood extends Event {

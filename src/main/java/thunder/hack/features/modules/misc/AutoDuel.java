@@ -1,7 +1,7 @@
 package thunder.hack.features.modules.misc;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.network.packet.s2c.play.GameMessageS2CPacket;
+import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.events.impl.PacketEvent;
 import thunder.hack.features.modules.Module;
@@ -35,7 +35,7 @@ public final class AutoDuel extends Module {
             waiting = false;
         }
 
-        if (event.getPacket() instanceof GameMessageS2CPacket pac) {
+        if (event.getPacket() instanceof ClientboundSystemChatPacket pac) {
             final String message = pac.content().getString().toLowerCase();
 
             switch (mode.getValue()) {
@@ -50,7 +50,7 @@ public final class AutoDuel extends Module {
 
                     if (message.contains("[duels]")
                             && message.contains(nickname.toString().toLowerCase())
-                            && message.contains(mc.getSession().getUsername().toLowerCase())) {
+                            && message.contains(mc.getUser().getName().toLowerCase())) {
                         sendChatCommand("duel " + nickname.getValue());
                         waiting = true;
                     }

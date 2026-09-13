@@ -1,9 +1,9 @@
 package thunder.hack.features.modules.client;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.network.PlayerListEntry;
-import net.minecraft.network.packet.s2c.play.GameMessageS2CPacket;
-import net.minecraft.text.Text;
+import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.events.impl.PacketEvent;
 import thunder.hack.injection.accesors.IGameMessageS2CPacket;
@@ -20,11 +20,11 @@ public final class Media extends Module {
 
     @EventHandler
     public void onPacketReceive(PacketEvent.@NotNull Receive e) {
-        if (e.getPacket() instanceof GameMessageS2CPacket pac && nickProtect.getValue()) {
-            for (PlayerListEntry ple : mc.player.networkHandler.getPlayerList()) {
+        if (e.getPacket() instanceof ClientboundSystemChatPacket pac && nickProtect.getValue()) {
+            for (PlayerInfo ple : mc.player.connection.getOnlinePlayers()) {
                 if (pac.content().getString().contains(ple.getProfile().getName())) {
                     IGameMessageS2CPacket packet = e.getPacket();
-                    packet.setContent(Text.of(pac.content().getString().replace(ple.getProfile().getName(), "Protected")));
+                    packet.setContent(Component.nullToEmpty(pac.content().getString().replace(ple.getProfile().getName(), "Protected")));
                 }
             }
         }

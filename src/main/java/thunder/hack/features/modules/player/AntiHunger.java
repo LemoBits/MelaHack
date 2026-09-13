@@ -1,8 +1,8 @@
 package thunder.hack.features.modules.player;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.events.impl.PacketEvent;
 import thunder.hack.injection.accesors.IPlayerMoveC2SPacket;
@@ -20,11 +20,11 @@ public class AntiHunger extends Module {
 
     @EventHandler
     public void onPacketSend(PacketEvent.@NotNull Send e) {
-        if (e.getPacket() instanceof PlayerMoveC2SPacket pac && ground.getValue())
+        if (e.getPacket() instanceof ServerboundMovePlayerPacket pac && ground.getValue())
             ((IPlayerMoveC2SPacket) pac).setOnGround(false);
 
-        if (e.getPacket() instanceof ClientCommandC2SPacket pac && sprint.getValue())
-            if (pac.getMode() == ClientCommandC2SPacket.Mode.START_SPRINTING)
+        if (e.getPacket() instanceof ServerboundPlayerCommandPacket pac && sprint.getValue())
+            if (pac.getAction() == ServerboundPlayerCommandPacket.Action.START_SPRINTING)
                 e.cancel();
     }
 }

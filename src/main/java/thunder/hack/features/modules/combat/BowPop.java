@@ -1,15 +1,18 @@
 package thunder.hack.features.modules.combat;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.network.packet.c2s.play.*;
+import net.minecraft.network.protocol.game.*;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
+import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.Items;
 import thunder.hack.events.impl.PacketEvent;
 import thunder.hack.features.modules.Module;
 import thunder.hack.setting.Setting;
 import thunder.hack.setting.impl.SettingGroup;
 import thunder.hack.utility.Timer;
-import net.minecraft.item.Items;
-import net.minecraft.util.Hand;
-
 import java.util.Random;
 
 public final class BowPop extends Module {
@@ -38,12 +41,12 @@ public final class BowPop extends Module {
     @EventHandler
     private void onPacketSend(PacketEvent.Send event) {
         if (fullNullCheck() || !delayTimer.passedMs((long) (delay.getValue() * 1000))) return;
-        if (event.getPacket() instanceof PlayerActionC2SPacket && ((PlayerActionC2SPacket) event.getPacket()).getAction() == PlayerActionC2SPacket.Action.RELEASE_USE_ITEM && (mc.player.getActiveItem().getItem() == Items.BOW && bow.getValue())
-                || event.getPacket() instanceof PlayerInteractItemC2SPacket && ((PlayerInteractItemC2SPacket) event.getPacket()).getHand() == Hand.MAIN_HAND && ((mc.player.getMainHandStack().getItem() == Items.ENDER_PEARL && pearls.getValue()) || (mc.player.getMainHandStack().getItem() == Items.EXPERIENCE_BOTTLE && xp.getValue()) || (mc.player.getMainHandStack().getItem() == Items.EGG && eggs.getValue()) || (mc.player.getMainHandStack().getItem() == Items.SPLASH_POTION && potions.getValue()) || (mc.player.getMainHandStack().getItem() == Items.SNOWBALL && snowballs.getValue()))) {
+        if (event.getPacket() instanceof ServerboundPlayerActionPacket && ((ServerboundPlayerActionPacket) event.getPacket()).getAction() == ServerboundPlayerActionPacket.Action.RELEASE_USE_ITEM && (mc.player.getUseItem().getItem() == Items.BOW && bow.getValue())
+                || event.getPacket() instanceof ServerboundUseItemPacket && ((ServerboundUseItemPacket) event.getPacket()).getHand() == InteractionHand.MAIN_HAND && ((mc.player.getMainHandItem().getItem() == Items.ENDER_PEARL && pearls.getValue()) || (mc.player.getMainHandItem().getItem() == Items.EXPERIENCE_BOTTLE && xp.getValue()) || (mc.player.getMainHandItem().getItem() == Items.EGG && eggs.getValue()) || (mc.player.getMainHandItem().getItem() == Items.SPLASH_POTION && potions.getValue()) || (mc.player.getMainHandItem().getItem() == Items.SNOWBALL && snowballs.getValue()))) {
 
-            mc.player.networkHandler.sendPacket(new ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.START_SPRINTING));
+            mc.player.connection.send(new ServerboundPlayerCommandPacket(mc.player, ServerboundPlayerCommandPacket.Action.START_SPRINTING));
 
-            double[] strict_direction = new double[]{100f * -Math.sin(Math.toRadians(mc.player.getYaw())), 100f * Math.cos(Math.toRadians(mc.player.getYaw()))};
+            double[] strict_direction = new double[]{100f * -Math.sin(Math.toRadians(mc.player.getYRot())), 100f * Math.cos(Math.toRadians(mc.player.getYRot()))};
 
             if (exploit.getValue() == exploitEn.Fast) {
                 for (int i = 0; i < getRuns(); i++) {
@@ -83,8 +86,8 @@ public final class BowPop extends Module {
 
     private void spoof(double x, double y, double z, boolean ground) {
         if (rotation.getValue())
-            sendPacket(new PlayerMoveC2SPacket.Full(x, y, z, mc.player.getYaw(), mc.player.getPitch(), ground, mc.player.horizontalCollision));
-        else sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(x, y, z, ground, mc.player.horizontalCollision));
+            sendPacket(new ServerboundMovePlayerPacket.PosRot(x, y, z, mc.player.getYRot(), mc.player.getXRot(), ground, mc.player.horizontalCollision));
+        else sendPacket(new ServerboundMovePlayerPacket.Pos(x, y, z, ground, mc.player.horizontalCollision));
     }
 
     private int getRuns() {
@@ -96,7 +99,7 @@ public final class BowPop extends Module {
     }
 
     private int getWorldBorderRnd() {
-        if (mc.isInSingleplayer()) return 1;
+        if (mc.isLocalServer()) return 1;
 
         int n = rnd.nextInt(29000000);
         if (rnd.nextBoolean()) return n;

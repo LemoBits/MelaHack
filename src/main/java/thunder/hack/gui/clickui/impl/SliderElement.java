@@ -1,9 +1,5 @@
 package thunder.hack.gui.clickui.impl;
 
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.StringHelper;
-import net.minecraft.util.math.MathHelper;
 import org.lwjgl.glfw.GLFW;
 import thunder.hack.ThunderHack;
 import thunder.hack.core.Managers;
@@ -17,6 +13,9 @@ import thunder.hack.utility.render.Render2DEngine;
 
 import java.awt.*;
 import java.util.Objects;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.util.Mth;
+import net.minecraft.util.StringUtil;
 
 import static thunder.hack.core.manager.IManager.mc;
 
@@ -33,14 +32,14 @@ public class SliderElement extends AbstractElement {
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
         animation = Render2DEngine.scrollAnimate(animation, (((Number) setting.getValue()).floatValue() - min) / (max - min), 0.4f);
 
-        var matrixStack = context.getMatrices();
+        var matrixStack = context.pose();
 
         if (setting.group != null)
-            Render2DEngine.drawRect(context.getMatrices(), x + 4, y, 1f, 18, HudEditor.getColor(1));
+            Render2DEngine.drawRect(context.pose(), x + 4, y, 1f, 18, HudEditor.getColor(1));
 
         if (!dragging) {
             FontRenderers.sf_medium_mini.drawString(matrixStack, setting.getName(), (setting.group != null ? 2f : 0f) + x + 6, y + 4, new Color(-1).getRGB());
@@ -66,7 +65,7 @@ public class SliderElement extends AbstractElement {
 
         if (Render2DEngine.isHovered(mouseX, mouseY, (x + 6), y + height - 7, width - 12, 3)) {
             if (GLFW.glfwGetPlatform() != GLFW.GLFW_PLATFORM_WAYLAND) {
-                GLFW.glfwSetCursor(mc.getWindow().getHandle(),
+                GLFW.glfwSetCursor(mc.getWindow().getWindow(),
                         GLFW.glfwCreateStandardCursor(GLFW.GLFW_HRESIZE_CURSOR));
             }
             ClickGUI.anyHovered = true;
@@ -74,7 +73,7 @@ public class SliderElement extends AbstractElement {
     }
 
     private void setValue(int mouseX, double x, double width) {
-        float value = Render2DEngine.interpolateFloat(((Number) setting.getMin()).floatValue(), ((Number) setting.getMax()).floatValue(), MathHelper.clamp(((float) mouseX - x) / width, 0.0, 1.0));
+        float value = Render2DEngine.interpolateFloat(((Number) setting.getMin()).floatValue(), ((Number) setting.getMax()).floatValue(), Mth.clamp(((float) mouseX - x) / width, 0.0, 1.0));
         if (setting.getValue() instanceof Float) {
             setting.setValue(MathUtility.round2(value));
         } else if (setting.getValue() instanceof Integer) {
@@ -142,7 +141,7 @@ public class SliderElement extends AbstractElement {
 
     @Override
     public void charTyped(char key, int keyCode) {
-        if (StringHelper.isValidChar(key)) {
+        if (StringUtil.isAllowedChatCharacter(key)) {
             String k = (key == '-' ? "-" : ".");
             try {
                 k = String.valueOf(Integer.parseInt(String.valueOf(key)));

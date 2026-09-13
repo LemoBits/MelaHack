@@ -3,11 +3,11 @@ package thunder.hack.utility;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.mojang.blaze3d.platform.NativeImage;
 import net.fabricmc.loader.api.metadata.Person;
-import net.minecraft.client.texture.NativeImage;
-import net.minecraft.client.texture.NativeImageBackedTexture;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.ThunderHack;
 import thunder.hack.gui.font.Texture;
@@ -44,7 +44,7 @@ public final class ThunderUtility {
 
     public static String solveName(String notSolved) {
         AtomicReference<String> mb = new AtomicReference<>("FATAL ERROR");
-        Objects.requireNonNull(mc.getNetworkHandler()).getListedPlayerListEntries().forEach(player -> {
+        Objects.requireNonNull(mc.getConnection()).getListedOnlinePlayers().forEach(player -> {
             if (notSolved.contains(player.getProfile().getName())) {
                 mb.set(player.getProfile().getName());
             }
@@ -53,19 +53,19 @@ public final class ThunderUtility {
         return mb.get();
     }
 
-    public static Identifier registerDynamicTexture(String path, NativeImageBackedTexture texture) {
+    public static ResourceLocation registerDynamicTexture(String path, DynamicTexture texture) {
         if (texture == null) {
             return null;
         }
 
-        Identifier id = new Texture(path).getId();
-        mc.execute(() -> mc.getTextureManager().registerTexture(id, texture));
+        ResourceLocation id = new Texture(path).getId();
+        mc.execute(() -> mc.getTextureManager().register(id, texture));
         return id;
     }
 
-    public static Identifier getCustomImg(String name) throws IOException {
+    public static ResourceLocation getCustomImg(String name) throws IOException {
         try (FileInputStream stream = new FileInputStream(IMAGES_FOLDER + "/" + name + ".png")) {
-            return registerDynamicTexture("th-" + name + "-" + (int) MathUtility.random(0, 1000), new NativeImageBackedTexture(() -> "th_" + name, NativeImage.read(stream)));
+            return registerDynamicTexture("th-" + name + "-" + (int) MathUtility.random(0, 1000), new DynamicTexture(() -> "th_" + name, NativeImage.read(stream)));
         }
     }
 
@@ -171,8 +171,8 @@ public final class ThunderUtility {
                         continue;
                     }
 
-                    String formattedDate = Formatting.GRAY + date.split("T")[0] + Formatting.RESET;
-                    String formattedName = "@" + Formatting.RED + name + Formatting.RESET;
+                    String formattedDate = ChatFormatting.GRAY + date.split("T")[0] + ChatFormatting.RESET;
+                    String formattedName = "@" + ChatFormatting.RED + name + ChatFormatting.RESET;
 
                     changeLog.add("- " + info + " [" + formattedDate + "]  (" + formattedName + ")");
                 }

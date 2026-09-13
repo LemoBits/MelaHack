@@ -1,7 +1,6 @@
 package thunder.hack.features.cmd.impl;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import net.minecraft.command.CommandSource;
 import thunder.hack.api.IAddon;
 import thunder.hack.core.Managers;
 import thunder.hack.features.cmd.Command;
@@ -9,6 +8,7 @@ import thunder.hack.features.cmd.Command;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import net.minecraft.commands.SharedSuggestionProvider;
 
 import static com.mojang.brigadier.Command.SINGLE_SUCCESS;
 
@@ -18,7 +18,7 @@ public class AddonsCommand extends Command {
     }
 
     @Override
-    public void executeBuild(LiteralArgumentBuilder<CommandSource> builder) {
+    public void executeBuild(LiteralArgumentBuilder<SharedSuggestionProvider> builder) {
         builder.executes(context -> {
             List<IAddon> sortedAddons = Managers.ADDON.getAddons().stream()
                     .filter(Objects::nonNull)

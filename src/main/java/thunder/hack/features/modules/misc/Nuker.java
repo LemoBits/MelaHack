@@ -1,21 +1,20 @@
 package thunder.hack.features.modules.misc;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.FluidBlock;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.RaycastContext;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.LiquidBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 import thunder.hack.core.Managers;
 import thunder.hack.core.manager.client.ModuleManager;
 import thunder.hack.events.impl.EventAttackBlock;
@@ -34,16 +33,19 @@ import thunder.hack.utility.player.InteractionUtility;
 import thunder.hack.utility.player.PlayerUtility;
 import thunder.hack.utility.render.Render2DEngine;
 import thunder.hack.utility.render.Render3DEngine;
-
+import thunder.hack.utility.render.Render3DEngine.FillAction;
+import thunder.hack.utility.render.Render3DEngine.OutlineAction;
 import java.awt.*;
 import java.util.ArrayList;
 
-import static net.minecraft.block.Blocks.*;
+import static net.minecraft.world.level.block.Blocks.*;
 import static thunder.hack.features.modules.client.ClientSettings.isRu;
 import static thunder.hack.utility.render.Render3DEngine.FILLED_QUEUE;
 import static thunder.hack.utility.render.Render3DEngine.FillAction;
 import static thunder.hack.utility.render.Render3DEngine.OUTLINE_QUEUE;
 import static thunder.hack.utility.render.Render3DEngine.OutlineAction;
+
+import com.mojang.blaze3d.vertex.PoseStack;
 
 public class Nuker extends Module {
     public Nuker() {
@@ -94,10 +96,10 @@ public class Nuker extends Module {
 
     @EventHandler
     public void onBlockInteract(EventAttackBlock e) {
-        if (mc.world.isAir(e.getBlockPos())) return;
-        if (blocks.getValue().equals(BlockSelection.Select) && targetBlockType != mc.world.getBlockState(e.getBlockPos()).getBlock()) {
-            targetBlockType = mc.world.getBlockState(e.getBlockPos()).getBlock();
-            sendMessage(isRu() ? "Выбран блок: " + Formatting.AQUA + targetBlockType.getName().getString() : "Selected block: " + Formatting.AQUA + targetBlockType.getName().getString());
+        if (mc.level.isEmptyBlock(e.getBlockPos())) return;
+        if (blocks.getValue().equals(BlockSelection.Select) && targetBlockType != mc.level.getBlockState(e.getBlockPos()).getBlock()) {
+            targetBlockType = mc.level.getBlockState(e.getBlockPos()).getBlock();
+            sendMessage(isRu() ? "Выбран блок: " + ChatFormatting.AQUA + targetBlockType.getName().getString() : "Selected block: " + ChatFormatting.AQUA + targetBlockType.getName().getString());
         }
     }
 
@@ -106,7 +108,7 @@ public class Nuker extends Module {
         if (blockData != null && e.getPos() == blockData.bp && e.getState().isAir()) {
             blockData = null;
             new Thread(() -> {
-                if ((targetBlockType != null || blocks.getValue().equals(BlockSelection.All)) && !mc.options.attackKey.isPressed() && blockData == null) {
+                if ((targetBlockType != null || blocks.getValue().equals(BlockSelection.All)) && !mc.options.keyAttack.isDown() && blockData == null) {
                     blockData = getNukerBlockPos();
                 }
             }).start();
@@ -116,8 +118,8 @@ public class Nuker extends Module {
     @EventHandler
     public void onSync(EventSync e) {
         if(rotationYaw != -999) {
-            mc.player.setYaw(rotationYaw);
-            mc.player.setPitch(rotationPitch);
+            mc.player.setYRot(rotationYaw);
+            mc.player.setXRot(rotationPitch);
             rotationYaw = -999;
         }
     }
@@ -126,13 +128,13 @@ public class Nuker extends Module {
     @EventHandler
     public void onPlayerUpdate(PlayerUpdateEvent e) {
         if (blockData != null) {
-            if ((mc.world.getBlockState(blockData.bp).getBlock() != targetBlockType && blocks.getValue().equals(BlockSelection.Select))
-                    || PlayerUtility.squaredDistanceFromEyes(blockData.bp.toCenterPos()) > range.getPow2Value()
-                    || mc.world.isAir(blockData.bp))
+            if ((mc.level.getBlockState(blockData.bp).getBlock() != targetBlockType && blocks.getValue().equals(BlockSelection.Select))
+                    || PlayerUtility.squaredDistanceFromEyes(blockData.bp.getCenter()) > range.getPow2Value()
+                    || mc.level.isEmptyBlock(blockData.bp))
                 blockData = null;
         }
 
-        if (blockData == null || mc.options.attackKey.isPressed()) return;
+        if (blockData == null || mc.options.keyAttack.isDown()) return;
 
         float[] angle = InteractionUtility.calculateAngle(blockData.vec3d);
         rotationYaw = (angle[0]);
@@ -145,7 +147,7 @@ public class Nuker extends Module {
 
         if (mode.getValue() == Mode.FastAF) {
             int intRange = (int) (Math.floor(range.getValue()) + 1);
-            Iterable<BlockPos> blocks_ = BlockPos.iterateOutwards(new BlockPos(BlockPos.ofFloored(mc.player.getPos()).up()), intRange, intRange, intRange);
+            Iterable<BlockPos> blocks_ = BlockPos.withinManhattan(new BlockPos(BlockPos.containing(mc.player.position()).above()), intRange, intRange, intRange);
 
             for (BlockPos b : blocks_) {
                 if (flatten.getValue() && b.getY() < mc.player.getY())
@@ -154,14 +156,14 @@ public class Nuker extends Module {
                 if (avoidLava.getValue() && checkLava(b))
                     continue;
 
-                BlockState state = mc.world.getBlockState(b);
+                BlockState state = mc.level.getBlockState(b);
 
-                if (PlayerUtility.squaredDistanceFromEyes(b.toCenterPos()) <= range.getPow2Value()) {
+                if (PlayerUtility.squaredDistanceFromEyes(b.getCenter()) <= range.getPow2Value()) {
                     if (isAllowed(state.getBlock())) {
                         try {
-                            sendSequencedPacket(id -> new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, b, Direction.UP, id));
-                            mc.interactionManager.breakBlock(b);
-                            mc.player.swingHand(Hand.MAIN_HAND);
+                            sendSequencedPacket(id -> new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, b, Direction.UP, id));
+                            mc.gameMode.destroyBlock(b);
+                            mc.player.swing(InteractionHand.MAIN_HAND);
                         } catch (Exception ignored) {
                         }
                     }
@@ -171,22 +173,22 @@ public class Nuker extends Module {
     }
 
     public synchronized void breakBlock() {
-        if (blockData == null || mc.options.attackKey.isPressed()) return;
+        if (blockData == null || mc.options.keyAttack.isDown()) return;
         if (ModuleManager.speedMine.isEnabled() && ModuleManager.speedMine.mode.getValue() == SpeedMine.Mode.Packet) {
             if (!ModuleManager.speedMine.alreadyActing(blockData.bp)) {
-                mc.interactionManager.attackBlock(blockData.bp, blockData.dir);
-                mc.player.swingHand(Hand.MAIN_HAND);
+                mc.gameMode.startDestroyBlock(blockData.bp, blockData.dir);
+                mc.player.swing(InteractionHand.MAIN_HAND);
             }
         } else {
             BlockPos cache = blockData.bp;
-            mc.interactionManager.updateBlockBreakingProgress(blockData.bp, blockData.dir);
-            mc.player.swingHand(Hand.MAIN_HAND);
+            mc.gameMode.continueDestroyBlock(blockData.bp, blockData.dir);
+            mc.player.swing(InteractionHand.MAIN_HAND);
             if (creative.getValue())
-                mc.interactionManager.breakBlock(cache);
+                mc.gameMode.destroyBlock(cache);
         }
     }
 
-    public void onRender3D(MatrixStack stack) {
+    public void onRender3D(PoseStack stack) {
         BlockPos renderBp = null;
 
         if (blockData != null && blockData.bp != null)
@@ -194,8 +196,8 @@ public class Nuker extends Module {
 
         if (renderBp != null) {
             Color color1 = colorMode.getValue() == ColorMode.Sync ? HudEditor.getColor(1) : color.getValue().getColorObject();
-            OUTLINE_QUEUE.add(new OutlineAction(new Box(blockData.bp), color1, 2));
-            FILLED_QUEUE.add(new FillAction(new Box(blockData.bp), Render2DEngine.injectAlpha(color1, 100)));
+            OUTLINE_QUEUE.add(new OutlineAction(new AABB(blockData.bp), color1, 2));
+            FILLED_QUEUE.add(new FillAction(new AABB(blockData.bp), Render2DEngine.injectAlpha(color1, 100)));
         }
 
         if (mode.getValue() == Mode.Fast && breakTimer.passedMs(delay.getValue())) {
@@ -206,28 +208,28 @@ public class Nuker extends Module {
 
     public BlockData getNukerBlockPos() {
         int intRange = (int) (Math.floor(range.getValue()) + 1);
-        Iterable<BlockPos> blocks_ = BlockPos.iterateOutwards(new BlockPos(BlockPos.ofFloored(mc.player.getPos()).up()), intRange, intRange, intRange);
+        Iterable<BlockPos> blocks_ = BlockPos.withinManhattan(new BlockPos(BlockPos.containing(mc.player.position()).above()), intRange, intRange, intRange);
 
         for (BlockPos b : blocks_) {
-            BlockState state = mc.world.getBlockState(b);
+            BlockState state = mc.level.getBlockState(b);
             if (flatten.getValue() && b.getY() < mc.player.getY())
                 continue;
-            if (PlayerUtility.squaredDistanceFromEyes(b.toCenterPos()) <= range.getPow2Value()) {
+            if (PlayerUtility.squaredDistanceFromEyes(b.getCenter()) <= range.getPow2Value()) {
                 if (avoidLava.getValue() && checkLava(b))
                     continue;
                 if (isAllowed(state.getBlock())) {
                     if (ignoreWalls.getValue()) {
-                        BlockHitResult result = ExplosionUtility.rayCastBlock(new RaycastContext(InteractionUtility.getEyesPos(mc.player), b.toCenterPos(), RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, mc.player), b);
+                        BlockHitResult result = ExplosionUtility.rayCastBlock(new ClipContext(InteractionUtility.getEyesPos(mc.player), b.getCenter(), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player), b);
                         if(result != null)
-                            return new BlockData(b, result.getPos(), result.getSide());
+                            return new BlockData(b, result.getLocation(), result.getDirection());
                     } else {
                         for (float x1 = 0f; x1 <= 1f; x1 += 0.2f) {
                             for (float y1 = 0f; y1 <= 1; y1 += 0.2f) {
                                 for (float z1 = 0f; z1 <= 1; z1 += 0.2f) {
-                                    Vec3d p = new Vec3d(b.getX() + x1, b.getY() + y1, b.getZ() + z1);
-                                    BlockHitResult bhr = mc.world.raycast(new RaycastContext(InteractionUtility.getEyesPos(mc.player), p, RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, mc.player));
+                                    Vec3 p = new Vec3(b.getX() + x1, b.getY() + y1, b.getZ() + z1);
+                                    BlockHitResult bhr = mc.level.clip(new ClipContext(InteractionUtility.getEyesPos(mc.player), p, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, mc.player));
                                     if (bhr != null && bhr.getType() == HitResult.Type.BLOCK && bhr.getBlockPos().equals(b))
-                                        return new BlockData(b, p, bhr.getSide());
+                                        return new BlockData(b, p, bhr.getDirection());
                                 }
                             }
                         }
@@ -240,7 +242,7 @@ public class Nuker extends Module {
 
     private boolean checkLava(BlockPos base) {
         for (Direction dir : Direction.values())
-            if (mc.world.getBlockState(base.offset(dir)).getBlock() == Blocks.LAVA)
+            if (mc.level.getBlockState(base.relative(dir)).getBlock() == Blocks.LAVA)
                 return true;
         return false;
     }
@@ -254,7 +256,7 @@ public class Nuker extends Module {
                         while (Managers.ASYNC.ticking.get()) {
                         }
 
-                        if ((targetBlockType != null || !blocks.getValue().equals(BlockSelection.Select)) && !mc.options.attackKey.isPressed() && blockData == null) {
+                        if ((targetBlockType != null || !blocks.getValue().equals(BlockSelection.Select)) && !mc.options.keyAttack.isDown() && blockData == null) {
                             blockData = getNukerBlockPos();
                         }
                     } else {
@@ -267,12 +269,12 @@ public class Nuker extends Module {
     }
 
     private boolean isAllowed(Block block) {
-        boolean allowed = selectedBlocks.getValue().getItemsById().contains(block.getTranslationKey().replace("block.minecraft.", ""));
+        boolean allowed = selectedBlocks.getValue().getItemsById().contains(block.getDescriptionId().replace("block.minecraft.", ""));
         return switch (blocks.getValue()) {
-            case All -> block != BEDROCK && block != AIR && block != CAVE_AIR && !(block instanceof FluidBlock) ;
+            case All -> block != BEDROCK && block != AIR && block != CAVE_AIR && !(block instanceof LiquidBlock) ;
             case Select -> block == targetBlockType;
             case WhiteList -> allowed;
-            default -> !allowed && block != BEDROCK && block != AIR && block != CAVE_AIR && !(block instanceof FluidBlock) ;
+            default -> !allowed && block != BEDROCK && block != AIR && block != CAVE_AIR && !(block instanceof LiquidBlock) ;
         };
     }
 
@@ -288,6 +290,6 @@ public class Nuker extends Module {
         Select, All, BlackList, WhiteList
     }
 
-    public record BlockData(BlockPos bp, Vec3d vec3d, Direction dir) {
+    public record BlockData(BlockPos bp, Vec3 vec3d, Direction dir) {
     }
 }

@@ -1,7 +1,7 @@
 package thunder.hack.features.cmd.impl;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import net.minecraft.command.CommandSource;
+import net.minecraft.commands.SharedSuggestionProvider;
 import thunder.hack.ThunderHack;
 import thunder.hack.features.cmd.Command;
 import baritone.api.BaritoneAPI;
@@ -17,14 +17,14 @@ public class GotoWaypointCommand extends Command {
     }
 
     @Override
-    public void executeBuild(LiteralArgumentBuilder<CommandSource> builder) {
+    public void executeBuild(LiteralArgumentBuilder<SharedSuggestionProvider> builder) {
         builder.then(arg("name", WayPointArgumentType.create()).executes(context -> {
             if (!ThunderHack.baritone) {
                 sendMessage(isRu() ? "Баритон не найден (можешь скачать на https://meteorclient.com)" : "Baritone not found (you can download it at https://meteorclient.com)");
                 return SINGLE_SUCCESS;
             }
             WayPointManager.WayPoint wp = context.getArgument("name", WayPointManager.WayPoint.class);
-            if (!mc.world.getRegistryKey().getValue().getPath().equals(wp.getDimension())) {
+            if (!mc.level.dimension().location().getPath().equals(wp.getDimension())) {
                 sendMessage(isRu() ? "Метка в другом измерении" : "Waypoint is in another dimension");
                 return SINGLE_SUCCESS;
             }

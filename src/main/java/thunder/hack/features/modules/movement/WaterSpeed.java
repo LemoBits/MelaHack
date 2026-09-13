@@ -1,8 +1,8 @@
 package thunder.hack.features.modules.movement;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import thunder.hack.events.impl.EventMove;
 import thunder.hack.features.modules.Module;
 import thunder.hack.setting.Setting;
@@ -27,8 +27,8 @@ public class WaterSpeed extends Module {
     @Override
     public void onUpdate() {
         if (mode.getValue() == Mode.DolphinGrace) {
-             if(mc.player.isSwimming()) mc.player.addStatusEffect(new StatusEffectInstance(StatusEffects.DOLPHINS_GRACE, 2, 2));
-             else mc.player.removeStatusEffect(StatusEffects.DOLPHINS_GRACE);
+             if(mc.player.isSwimming()) mc.player.addEffect(new MobEffectInstance(MobEffects.DOLPHINS_GRACE, 2, 2));
+             else mc.player.removeEffect(MobEffects.DOLPHINS_GRACE);
         }
     }
 
@@ -36,7 +36,7 @@ public class WaterSpeed extends Module {
     public void onMove(EventMove e) {
         if (mode.getValue() == Mode.Intave) {
             if (mc.player.isSwimming()) {
-                double[] dirSpeed = MovementUtility.forward(acceleration / (mc.player.input.getMovementInput().x != 0 ? 2.2f : 2f));
+                double[] dirSpeed = MovementUtility.forward(acceleration / (mc.player.input.getMoveVector().x != 0 ? 2.2f : 2f));
                 e.setX(e.getX() + dirSpeed[0]);
                 e.setZ(e.getZ() + dirSpeed[1]);
                 e.cancel();
@@ -54,7 +54,7 @@ public class WaterSpeed extends Module {
                 e.setZ(e.getZ() + dirSpeed[1]);
                 e.cancel();
 
-                if(Math.abs(mc.player.getYaw() - ((IEntity) mc.player).getLastYaw()) > 3) acceleration -= 0.1f;
+                if(Math.abs(mc.player.getYRot() - ((IEntity) mc.player).getLastYaw()) > 3) acceleration -= 0.1f;
                 else acceleration += 0.015f;
 
                 acceleration = MathUtility.clamp(acceleration, 0f, 1f);
@@ -66,6 +66,6 @@ public class WaterSpeed extends Module {
     @Override
     public void onDisable() {
         if (mode.getValue() == Mode.DolphinGrace)
-            mc.player.removeStatusEffect(StatusEffects.DOLPHINS_GRACE);
+            mc.player.removeEffect(MobEffects.DOLPHINS_GRACE);
     }
 }

@@ -2,9 +2,8 @@ package thunder.hack.utility.render.shaders.satin.impl;
 
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.Std140Builder;
+import com.mojang.blaze3d.opengl.GlProgram;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.render.effect.PostEffectPass;
-import net.minecraft.client.gl.ShaderProgram;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
@@ -19,6 +18,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import net.minecraft.client.renderer.PostPass;
 
 public final class ManagedUniform extends ManagedUniformBase implements
         Uniform1i, Uniform2i, Uniform3i, Uniform4i,
@@ -36,9 +36,9 @@ public final class ManagedUniform extends ManagedUniformBase implements
     }
 
     @Override
-    public boolean findUniformTargets(List<PostEffectPass> shaders) {
+    public boolean findUniformTargets(List<PostPass> shaders) {
         List<GpuBuffer> writableTargets = new ArrayList<>();
-        for (PostEffectPass shader : shaders) {
+        for (PostPass shader : shaders) {
             Map<String, GpuBuffer> uniformBuffers = ((IPostEffectPass) shader).getUniformBuffers();
             GpuBuffer buffer = uniformBuffers.get(BLOCK_NAME);
             if (buffer == null || buffer.isClosed()) {
@@ -63,7 +63,7 @@ public final class ManagedUniform extends ManagedUniformBase implements
     }
 
     @Override
-    public boolean findUniformTarget(ShaderProgram shader) {
+    public boolean findUniformTarget(GlProgram shader) {
         return false;
     }
 

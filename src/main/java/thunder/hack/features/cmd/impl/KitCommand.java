@@ -4,16 +4,16 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import net.minecraft.command.CommandSource;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.PotionItem;
-import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.features.cmd.Command;
 import thunder.hack.core.manager.client.ModuleManager;
 
 import java.io.*;
+import net.minecraft.ChatFormatting;
+import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.PotionItem;
 
 import static com.mojang.brigadier.Command.SINGLE_SUCCESS;
 import static thunder.hack.features.modules.client.ClientSettings.isRu;
@@ -26,7 +26,7 @@ public class KitCommand extends Command {
     }
 
     @Override
-    public void executeBuild(@NotNull LiteralArgumentBuilder<CommandSource> builder) {
+    public void executeBuild(@NotNull LiteralArgumentBuilder<SharedSuggestionProvider> builder) {
         builder.then(literal("list").executes(context -> {
             listMessage();
 
@@ -81,7 +81,7 @@ public class KitCommand extends Command {
             sendMessage(isRu() ? "Доступные киты:" : "Available kits:");
             for (int i = 0; i < json.entrySet().size(); i++) {
                 String item = json.entrySet().toArray()[i].toString().split("=")[0];
-                sendMessage(Formatting.GRAY + "-> " + item + (item.equals("selected") ? (isRu() ? "(Выбран)" : " (Selected)") : ""));
+                sendMessage(ChatFormatting.GRAY + "-> " + item + (item.equals("selected") ? (isRu() ? "(Выбран)" : " (Selected)") : ""));
             }
         } catch (Exception e) {
             sendMessage(isRu() ? "Проблема с конфигурацией китов!" : "Error with kit cfg!");
@@ -130,8 +130,8 @@ public class KitCommand extends Command {
 
         StringBuilder jsonInventory = new StringBuilder();
 
-        for (ItemStack item : mc.player.getInventory().getMainStacks())
-            jsonInventory.append(item.getItem() instanceof PotionItem ? item.getItem().getTranslationKey() + item.getItem().getComponents().get(DataComponentTypes.POTION_CONTENTS).getColor() : item.getItem().getTranslationKey()).append(" ");
+        for (ItemStack item : mc.player.getInventory().getNonEquipmentItems())
+            jsonInventory.append(item.getItem() instanceof PotionItem ? item.getItem().getDescriptionId() + item.getItem().components().get(DataComponents.POTION_CONTENTS).getColor() : item.getItem().getDescriptionId()).append(" ");
 
         json.addProperty(name, jsonInventory.toString());
         saveFile(json, name, isRu() ? "сохранен" : "saved");
@@ -148,7 +148,7 @@ public class KitCommand extends Command {
             BufferedWriter bw = new BufferedWriter(new FileWriter(PATH));
             bw.write(completeJson.toString());
             bw.close();
-            sendMessage((isRu() ? "Кит " : "Kit ") + Formatting.AQUA + name + Formatting.RESET + " " + operation);
+            sendMessage((isRu() ? "Кит " : "Kit ") + ChatFormatting.AQUA + name + ChatFormatting.RESET + " " + operation);
         } catch (IOException e) {
             sendMessage(isRu() ? "Ошибка сохранения файла" : "Error saving the file");
         }

@@ -1,16 +1,15 @@
 package thunder.hack.features.modules.movement;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.gui.screen.ChatScreen;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.util.InputUtil;
-import net.minecraft.network.packet.c2s.play.ClickSlotC2SPacket;
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
-import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.screen.slot.SlotActionType;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.client.gui.screens.ChatScreen;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.protocol.game.ServerboundContainerClickPacket;
+import net.minecraft.network.protocol.game.ServerboundContainerClosePacket;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ClickType;
 import org.lwjgl.glfw.GLFW;
 import thunder.hack.events.impl.EventClickSlot;
 import thunder.hack.events.impl.PacketEvent;
@@ -27,6 +26,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static thunder.hack.features.modules.client.ClientSettings.isRu;
 
+import com.mojang.blaze3d.platform.InputConstants;
+
 public class GuiMove extends Module {
     public GuiMove() {
         super("GuiMove", Category.MOVEMENT);
@@ -39,17 +40,17 @@ public class GuiMove extends Module {
     private final Setting<Bind> closeBind = new Setting<>("CloseAndReopenBind", new Bind(GLFW.GLFW_KEY_B, false, false), v -> true).addToGroup(closeWithoutPacketGroup);
 
     private Screen screen;
-    private ScreenHandler screenHandler;
+    private AbstractContainerMenu screenHandler;
     private Timer bindDelay = new Timer();
 
-    private final Queue<ClickSlotC2SPacket> storedClicks = new LinkedList<>();
+    private final Queue<ServerboundContainerClickPacket> storedClicks = new LinkedList<>();
     private AtomicBoolean pause = new AtomicBoolean();
 
     @Override
     public void onUpdate() {
-        if (mc.currentScreen != null && !(mc.currentScreen instanceof ChatScreen)) {
-            for (KeyBinding k : new KeyBinding[]{mc.options.forwardKey, mc.options.backKey, mc.options.leftKey, mc.options.rightKey, mc.options.jumpKey, mc.options.sprintKey})
-                k.setPressed(isKeyPressed(InputUtil.fromTranslationKey(k.getBoundKeyTranslationKey()).getCode()));
+        if (mc.screen != null && !(mc.screen instanceof ChatScreen)) {
+            for (KeyMapping k : new KeyMapping[]{mc.options.keyUp, mc.options.keyDown, mc.options.keyLeft, mc.options.keyRight, mc.options.keyJump, mc.options.keySprint})
+                k.setDown(isKeyPressed(InputConstants.getKey(k.saveString()).getValue()));
 
             float deltaX = 0;
             float deltaY = 0;
@@ -68,11 +69,11 @@ public class GuiMove extends Module {
                     deltaX -= 30f;
 
                 if (deltaX != 0 || deltaY != 0)
-                    mc.player.changeLookDirection(deltaX, deltaY);
+                    mc.player.turn(deltaX, deltaY);
             }
 
             if (sneak.getValue())
-                mc.options.sneakKey.setPressed(isKeyPressed(InputUtil.fromTranslationKey(mc.options.sneakKey.getBoundKeyTranslationKey()).getCode()));
+                mc.options.keyShift.setDown(isKeyPressed(InputConstants.getKey(mc.options.keyShift.saveString()).getValue()));
 
         }
 
@@ -85,18 +86,18 @@ public class GuiMove extends Module {
     public void closeWithoutPacket() {
         if (isKeyPressed(closeBind) && bindDelay.every(250)) {
 
-            if (mc.currentScreen instanceof ChatScreen) {
+            if (mc.screen instanceof ChatScreen) {
                 return;
             }
 
-            if (mc.currentScreen != null) {
-                screen = mc.currentScreen;
-                screenHandler = mc.player.currentScreenHandler;
+            if (mc.screen != null) {
+                screen = mc.screen;
+                screenHandler = mc.player.containerMenu;
                 mc.setScreen(null);
-                if (mc.currentScreen != screen) sendMessage(isRu() ? "Интерфейс сохранен! Нажмите еще раз чтобы открыть" : "GUI have been saved! Press again to open.");
+                if (mc.screen != screen) sendMessage(isRu() ? "Интерфейс сохранен! Нажмите еще раз чтобы открыть" : "GUI have been saved! Press again to open.");
             } else {
                 mc.setScreen(screen);
-                mc.player.currentScreenHandler = screenHandler;
+                mc.player.containerMenu = screenHandler;
                 sendMessage(isRu() ? "Интерфейс открыт." : "GUI Opened.");
             }
 
@@ -105,41 +106,41 @@ public class GuiMove extends Module {
 
     @EventHandler
     public void onClickSlot(EventClickSlot e) {
-        if (clickBypass.is(Bypass.DisableClicks) && (MovementUtility.isMoving() || mc.options.jumpKey.isPressed()))
+        if (clickBypass.is(Bypass.DisableClicks) && (MovementUtility.isMoving() || mc.options.keyJump.isDown()))
             e.cancel();
     }
 
     @EventHandler
     public void onPacketSend(PacketEvent.Send e) {
-        if (!MovementUtility.isMoving() || !mc.options.jumpKey.isPressed() || pause.get())
+        if (!MovementUtility.isMoving() || !mc.options.keyJump.isDown() || pause.get())
             return;
 
-        if (e.getPacket() instanceof ClickSlotC2SPacket click) {
+        if (e.getPacket() instanceof ServerboundContainerClickPacket click) {
             switch (clickBypass.getValue()) {
                 case GrimSwap -> {
-                    if (click.actionType() != SlotActionType.PICKUP && click.actionType() != SlotActionType.PICKUP_ALL)
-                        sendPacket(new CloseHandledScreenC2SPacket(0));
+                    if (click.clickType() != ClickType.PICKUP && click.clickType() != ClickType.PICKUP_ALL)
+                        sendPacket(new ServerboundContainerClosePacket(0));
                 }
 
                 case StrictNCP -> {
-                    if (mc.player.isOnGround() && !mc.world.getBlockCollisions(mc.player, mc.player.getBoundingBox().offset(0.0, 0.0656, 0.0)).iterator().hasNext()) {
+                    if (mc.player.onGround() && !mc.level.getBlockCollisions(mc.player, mc.player.getBoundingBox().move(0.0, 0.0656, 0.0)).iterator().hasNext()) {
                         if (mc.player.isSprinting())
-                            sendPacket(new ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.STOP_SPRINTING));
-                        sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(mc.player.getX(), mc.player.getY() + 0.0656, mc.player.getZ(), false, mc.player.horizontalCollision));
+                            sendPacket(new ServerboundPlayerCommandPacket(mc.player, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING));
+                        sendPacket(new ServerboundMovePlayerPacket.Pos(mc.player.getX(), mc.player.getY() + 0.0656, mc.player.getZ(), false, mc.player.horizontalCollision));
                     }
                 }
 
                 case StrictNCP2 -> {
-                    if (mc.player.isOnGround() && !mc.world.getBlockCollisions(mc.player, mc.player.getBoundingBox().offset(0.0, 0.000000271875, 0.0)).iterator().hasNext()) {
+                    if (mc.player.onGround() && !mc.level.getBlockCollisions(mc.player, mc.player.getBoundingBox().move(0.0, 0.000000271875, 0.0)).iterator().hasNext()) {
                         if (mc.player.isSprinting())
-                            sendPacket(new ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.STOP_SPRINTING));
-                        sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(mc.player.getX(), mc.player.getY() + 0.000000271875, mc.player.getZ(), false, mc.player.horizontalCollision));
+                            sendPacket(new ServerboundPlayerCommandPacket(mc.player, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING));
+                        sendPacket(new ServerboundMovePlayerPacket.Pos(mc.player.getX(), mc.player.getY() + 0.000000271875, mc.player.getZ(), false, mc.player.horizontalCollision));
                     }
                 }
 
                 case MatrixNcp -> {
-                    sendPacket(new ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.STOP_SPRINTING));
-                    mc.options.forwardKey.setPressed(false);
+                    sendPacket(new ServerboundPlayerCommandPacket(mc.player, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING));
+                    mc.options.keyUp.setDown(false);
                     MovementUtility.setMovementInputY(0f);
                 }
 
@@ -150,7 +151,7 @@ public class GuiMove extends Module {
             }
         }
 
-        if (e.getPacket() instanceof CloseHandledScreenC2SPacket) {
+        if (e.getPacket() instanceof ServerboundContainerClosePacket) {
             if (clickBypass.is(Bypass.Delay)) {
                 pause.set(true);
                 while (!storedClicks.isEmpty())
@@ -162,9 +163,9 @@ public class GuiMove extends Module {
 
     @EventHandler
     public void onPacketSendPost(PacketEvent.SendPost e) {
-        if (e.getPacket() instanceof ClickSlotC2SPacket) {
+        if (e.getPacket() instanceof ServerboundContainerClickPacket) {
             if (mc.player.isSprinting() && clickBypass.is(Bypass.StrictNCP))
-                sendPacket(new ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.START_SPRINTING));
+                sendPacket(new ServerboundPlayerCommandPacket(mc.player, ServerboundPlayerCommandPacket.Action.START_SPRINTING));
         }
     }
 

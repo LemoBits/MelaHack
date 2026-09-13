@@ -7,12 +7,12 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import net.minecraft.command.CommandSource;
-import net.minecraft.text.Text;
 import thunder.hack.core.Managers;
 
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
+import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.network.chat.Component;
 
 import static thunder.hack.features.modules.client.ClientSettings.isRu;
 
@@ -29,7 +29,7 @@ public class CfgArgumentType implements ArgumentType<String> {
     public String parse(StringReader reader) throws CommandSyntaxException {
         String config = reader.readString();
         if (!Managers.CONFIG.getConfigList().contains(config)) throw new DynamicCommandExceptionType(
-                name -> Text.literal(isRu() ? "Конфига " + name.toString() + " не существует(" : "Config " + name.toString() + " does not exist :(")
+                name -> Component.literal(isRu() ? "Конфига " + name.toString() + " не существует(" : "Config " + name.toString() + " does not exist :(")
         ).create(config);
 
         return config;
@@ -37,7 +37,7 @@ public class CfgArgumentType implements ArgumentType<String> {
 
     @Override
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
-        return CommandSource.suggestMatching(Managers.CONFIG.getConfigList(), builder);
+        return SharedSuggestionProvider.suggest(Managers.CONFIG.getConfigList(), builder);
     }
 
     @Override

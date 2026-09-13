@@ -1,7 +1,7 @@
 package thunder.hack.features.cmd.impl;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import net.minecraft.command.CommandSource;
+import net.minecraft.commands.SharedSuggestionProvider;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.features.cmd.Command;
 import thunder.hack.core.manager.client.ModuleManager;
@@ -14,7 +14,7 @@ public class TrackerCommand extends Command {
     }
 
     @Override
-    public void executeBuild(@NotNull LiteralArgumentBuilder<CommandSource> builder) {
+    public void executeBuild(@NotNull LiteralArgumentBuilder<SharedSuggestionProvider> builder) {
         builder.executes(context -> {
             if (ModuleManager.tracker.isEnabled()) {
                 ModuleManager.tracker.sendTrack();

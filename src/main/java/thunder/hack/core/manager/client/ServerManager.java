@@ -1,8 +1,8 @@
 package thunder.hack.core.manager.client;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.network.PlayerListEntry;
-import net.minecraft.network.packet.s2c.play.WorldTimeUpdateS2CPacket;
+import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.network.protocol.game.ClientboundSetTimePacket;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.core.manager.IManager;
 import thunder.hack.events.impl.PacketEvent;
@@ -38,7 +38,7 @@ public class ServerManager implements IManager {
 
     @EventHandler
     public void onPacketReceive(PacketEvent.@NotNull Receive event) {
-        if (event.getPacket() instanceof WorldTimeUpdateS2CPacket) {
+        if (event.getPacket() instanceof ClientboundSetTimePacket) {
             if (time != 0L) {
                 tickTime = System.currentTimeMillis() - time;
 
@@ -58,12 +58,12 @@ public class ServerManager implements IManager {
     }
 
     public int getPing() {
-        if (mc.getNetworkHandler() == null || mc.player == null) return 0;
+        if (mc.getConnection() == null || mc.player == null) return 0;
 
         if (ModuleManager.fastLatency.isEnabled())
             return ModuleManager.fastLatency.resolvedPing;
 
-        PlayerListEntry playerListEntry = mc.getNetworkHandler().getPlayerListEntry(mc.player.getUuid());
+        PlayerInfo playerListEntry = mc.getConnection().getPlayerInfo(mc.player.getUUID());
         if (playerListEntry == null) return 0;
         return playerListEntry.getLatency();
     }

@@ -1,8 +1,8 @@
 package thunder.hack.features.modules.combat;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.item.Items;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.world.item.Items;
 import thunder.hack.core.manager.client.ModuleManager;
 import thunder.hack.events.impl.PostPlayerUpdateEvent;
 import thunder.hack.injection.accesors.IMinecraftClient;
@@ -32,17 +32,17 @@ public final class AutoGApple extends Module {
         if (GapInOffHand()) {
             if (mc.player.getHealth() + (absorption.getValue() ? mc.player.getAbsorptionAmount() : 0) <= health.getValue() && useDelay.passedMs(Delay.getValue())) {
                 isActive = true;
-                if (mc.currentScreen != null && !mc.player.isUsingItem())
+                if (mc.screen != null && !mc.player.isUsingItem())
                     ((IMinecraftClient) mc).idoItemUse();
                 else
-                    mc.options.useKey.setPressed(true);
+                    mc.options.keyUse.setDown(true);
             } else if (isActive) {
                 isActive = false;
-                mc.options.useKey.setPressed(false);
+                mc.options.keyUse.setDown(false);
             }
         } else if (isActive) {
             isActive = false;
-            mc.options.useKey.setPressed(false);
+            mc.options.keyUse.setDown(false);
         }
     }
 
@@ -51,9 +51,9 @@ public final class AutoGApple extends Module {
             if (!ModuleManager.autoTotem.rcGap.is(AutoTotem.RCGap.Off))
                 return true;
             else
-                sendMessage(Formatting.RED + (isRu() ? "Включи RcGap в AutoTotem!" : "Enable RcGap in AutoTotem"));
+                sendMessage(ChatFormatting.RED + (isRu() ? "Включи RcGap в AutoTotem!" : "Enable RcGap in AutoTotem"));
         }
 
-        return !mc.player.getOffHandStack().isEmpty() && (mc.player.getOffHandStack().getItem() == Items.GOLDEN_APPLE || mc.player.getOffHandStack().getItem() == Items.ENCHANTED_GOLDEN_APPLE);
+        return !mc.player.getOffhandItem().isEmpty() && (mc.player.getOffhandItem().getItem() == Items.GOLDEN_APPLE || mc.player.getOffhandItem().getItem() == Items.ENCHANTED_GOLDEN_APPLE);
     }
 }

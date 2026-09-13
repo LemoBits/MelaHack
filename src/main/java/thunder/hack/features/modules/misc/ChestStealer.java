@@ -1,16 +1,15 @@
 package thunder.hack.features.modules.misc;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.block.entity.EnderChestBlockEntity;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.item.ItemStack;
-import net.minecraft.screen.GenericContainerScreenHandler;
-import net.minecraft.screen.slot.Slot;
-import net.minecraft.screen.slot.SlotActionType;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.Direction;
+import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.inventory.ChestMenu;
+import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.EnderChestBlockEntity;
+import net.minecraft.world.phys.BlockHitResult;
 import thunder.hack.core.manager.client.ModuleManager;
 import thunder.hack.events.impl.PlayerUpdateEvent;
 import thunder.hack.features.modules.Module;
@@ -25,6 +24,8 @@ import java.util.Random;
 
 import static thunder.hack.features.modules.client.ClientSettings.isRu;
 import static thunder.hack.features.modules.render.StorageEsp.getBlockEntities;
+
+import com.mojang.blaze3d.vertex.PoseStack;
 
 public class ChestStealer extends Module {
     public ChestStealer() {
@@ -50,31 +51,31 @@ public class ChestStealer extends Module {
         }
     }
 
-    public void onRender3D(MatrixStack stack) {
-        if (mc.player.currentScreenHandler instanceof GenericContainerScreenHandler chest) {
-            for (int i = 0; i < chest.getInventory().size(); i++) {
+    public void onRender3D(PoseStack stack) {
+        if (mc.player.containerMenu instanceof ChestMenu chest) {
+            for (int i = 0; i < chest.getContainer().getContainerSize(); i++) {
                 Slot slot = chest.getSlot(i);
-                if (slot.hasStack() && isAllowed(slot.getStack())
+                if (slot.hasItem() && isAllowed(slot.getItem())
                         && timer.every(delay.getValue() + (random.getValue() && delay.getValue() != 0 ? rnd.nextInt(delay.getValue()) : 0))
-                        && !(mc.currentScreen.getTitle().getString().contains("Аукцион") || mc.currentScreen.getTitle().getString().contains("покупки"))) {
-                    mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, i, 0, SlotActionType.QUICK_MOVE, mc.player);
+                        && !(mc.screen.getTitle().getString().contains("Аукцион") || mc.screen.getTitle().getString().contains("покупки"))) {
+                    mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, i, 0, ClickType.QUICK_MOVE, mc.player);
                     autoMystDelay.reset();
                 }
             }
             if (isContainerEmpty(chest) && close.getValue())
-                mc.player.closeHandledScreen();
+                mc.player.closeContainer();
         }
     }
 
     @EventHandler
     public void onPlayerUpdate(PlayerUpdateEvent event) {
-        if (autoMyst.getValue() && mc.currentScreen == null && autoMystDelay.passedMs(3000)) {
+        if (autoMyst.getValue() && mc.screen == null && autoMystDelay.passedMs(3000)) {
             for (BlockEntity be : getBlockEntities()) {
                 if (be instanceof EnderChestBlockEntity) {
-                    if (mc.player.squaredDistanceTo(be.getPos().toCenterPos()) > 39)
+                    if (mc.player.distanceToSqr(be.getBlockPos().getCenter()) > 39)
                         continue;
-                    mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(be.getPos().toCenterPos().add(MathUtility.random(-0.4, 0.4), 0.375, MathUtility.random(-0.4, 0.4)), Direction.UP, be.getPos(), false));
-                    mc.player.swingHand(Hand.MAIN_HAND);
+                    mc.gameMode.useItemOn(mc.player, InteractionHand.MAIN_HAND, new BlockHitResult(be.getBlockPos().getCenter().add(MathUtility.random(-0.4, 0.4), 0.375, MathUtility.random(-0.4, 0.4)), Direction.UP, be.getBlockPos(), false));
+                    mc.player.swing(InteractionHand.MAIN_HAND);
                     break;
                 }
             }
@@ -82,7 +83,7 @@ public class ChestStealer extends Module {
     }
 
     private boolean isAllowed(ItemStack stack) {
-        boolean allowed = items.getValue().contains(stack.getItem().getTranslationKey().replace("block.minecraft.", "").replace("item.minecraft.", ""));
+        boolean allowed = items.getValue().contains(stack.getItem().getDescriptionId().replace("block.minecraft.", "").replace("item.minecraft.", ""));
         return switch (sort.getValue()) {
             case None -> true;
             case WhiteList -> allowed;
@@ -90,9 +91,9 @@ public class ChestStealer extends Module {
         };
     }
 
-    private boolean isContainerEmpty(GenericContainerScreenHandler container) {
-        for (int i = 0; i < (container.getInventory().size() == 90 ? 54 : 27); i++)
-            if (container.getSlot(i).hasStack()) return false;
+    private boolean isContainerEmpty(ChestMenu container) {
+        for (int i = 0; i < (container.getContainer().getContainerSize() == 90 ? 54 : 27); i++)
+            if (container.getSlot(i).hasItem()) return false;
         return true;
     }
 

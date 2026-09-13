@@ -1,18 +1,17 @@
 package thunder.hack.features.modules.combat;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Direction;
-import net.minecraft.world.RaycastContext;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
 import thunder.hack.core.Managers;
 import thunder.hack.events.impl.EventTick;
 import thunder.hack.features.modules.Module;
@@ -32,6 +31,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static thunder.hack.utility.player.InteractionUtility.squaredDistanceFromEyes;
+
+import com.mojang.blaze3d.vertex.PoseStack;
 
 public final class AutoWeb extends Module {
     private final Setting<Integer> range = new Setting<>("Range", 5, 1, 7);
@@ -65,20 +66,20 @@ public final class AutoWeb extends Module {
         super("AutoWeb", Category.COMBAT);
     }
 
-    public void onRender3D(MatrixStack stack) {
+    public void onRender3D(PoseStack stack) {
         renderPoses.forEach((pos, time) -> {
             if (System.currentTimeMillis() - time > effectDurationMs.getValue()) {
                 renderPoses.remove(pos);
             } else {
                 switch (renderMode.getValue()) {
                     case Fade -> {
-                        Render3DEngine.FILLED_QUEUE.add(new Render3DEngine.FillAction(new Box(pos), Render2DEngine.injectAlpha(renderFillColor.getValue().getColorObject(), (int) (100f * (1f - ((System.currentTimeMillis() - time) / 500f))))));
-                        Render3DEngine.OUTLINE_QUEUE.add(new Render3DEngine.OutlineAction(new Box(pos), Render2DEngine.injectAlpha(renderLineColor.getValue().getColorObject(), (int) (100f * (1f - ((System.currentTimeMillis() - time) / 500f)))), renderLineWidth.getValue()));
+                        Render3DEngine.FILLED_QUEUE.add(new Render3DEngine.FillAction(new AABB(pos), Render2DEngine.injectAlpha(renderFillColor.getValue().getColorObject(), (int) (100f * (1f - ((System.currentTimeMillis() - time) / 500f))))));
+                        Render3DEngine.OUTLINE_QUEUE.add(new Render3DEngine.OutlineAction(new AABB(pos), Render2DEngine.injectAlpha(renderLineColor.getValue().getColorObject(), (int) (100f * (1f - ((System.currentTimeMillis() - time) / 500f)))), renderLineWidth.getValue()));
                     }
                     case Decrease -> {
                         float scale = 1 - (float) (System.currentTimeMillis() - time) / 500;
-                        Box box = new Box(pos.getX(), pos.getY(), pos.getZ(), pos.getX(), pos.getY(), pos.getZ());
-                        Box scaledBox = box.shrink(scale, scale, scale).offset(0.5 + scale * 0.5, 0.5 + scale * 0.5, 0.5 + scale * 0.5);
+                        AABB box = new AABB(pos.getX(), pos.getY(), pos.getZ(), pos.getX(), pos.getY(), pos.getZ());
+                        AABB scaledBox = box.contract(scale, scale, scale).move(0.5 + scale * 0.5, 0.5 + scale * 0.5, 0.5 + scale * 0.5);
 
                         Render3DEngine.FILLED_QUEUE.add(new Render3DEngine.FillAction(scaledBox, Render2DEngine.injectAlpha(renderFillColor.getValue().getColorObject(), (int) (100f * (1f - ((System.currentTimeMillis() - time) / 500f))))));
                         Render3DEngine.OUTLINE_QUEUE.add(new Render3DEngine.OutlineAction(scaledBox, renderLineColor.getValue().getColorObject(), renderLineWidth.getValue()));
@@ -135,17 +136,17 @@ public final class AutoWeb extends Module {
     }
 
     private BlockPos getSequentialPos() {
-        PlayerEntity target = Managers.COMBAT.getNearestTarget(range.getValue());
+        Player target = Managers.COMBAT.getNearestTarget(range.getValue());
         if (target != null) {
 
-            BlockPos targetBp = BlockPos.ofFloored(target.getPos());
+            BlockPos targetBp = BlockPos.containing(target.position());
 
             ArrayList<BlockPos> positions = new ArrayList<>();
             if (leggs.getValue())
                 positions.add(targetBp);
 
             if (head.getValue())
-                positions.add(targetBp.up());
+                positions.add(targetBp.above());
 
             if (surround.getValue()) {
                 positions.add(targetBp.east());
@@ -155,17 +156,17 @@ public final class AutoWeb extends Module {
             }
 
             if (upperSurround.getValue()) {
-                positions.add(targetBp.east().up());
-                positions.add(targetBp.west().up());
-                positions.add(targetBp.south().up());
-                positions.add(targetBp.north().up());
+                positions.add(targetBp.east().above());
+                positions.add(targetBp.west().above());
+                positions.add(targetBp.south().above());
+                positions.add(targetBp.north().above());
             }
 
             for (BlockPos bp : positions) {
-                BlockHitResult wallCheck = mc.world.raycast(new RaycastContext(InteractionUtility.getEyesPos(mc.player), bp.toCenterPos().offset(Direction.UP, 0.5f), RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, mc.player));
+                BlockHitResult wallCheck = mc.level.clip(new ClipContext(InteractionUtility.getEyesPos(mc.player), bp.getCenter().relative(Direction.UP, 0.5f), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player));
                 if (wallCheck != null && wallCheck.getType() == HitResult.Type.BLOCK && wallCheck.getBlockPos() != bp)
-                    if (squaredDistanceFromEyes(bp.toCenterPos()) > placeWallRange.getPow2Value()) continue;
-                if (InteractionUtility.canPlaceBlock(bp, interact.getValue(), true) && mc.world.getBlockState(bp).isReplaceable()) {
+                    if (squaredDistanceFromEyes(bp.getCenter()) > placeWallRange.getPow2Value()) continue;
+                if (InteractionUtility.canPlaceBlock(bp, interact.getValue(), true) && mc.level.getBlockState(bp).canBeReplaced()) {
                     return bp;
                 }
             }
@@ -179,7 +180,7 @@ public final class AutoWeb extends Module {
         List<Block> canUseBlocks = new ArrayList<>();
         canUseBlocks.add(Blocks.COBWEB);
         int slot = -1;
-        final ItemStack mainhandStack = mc.player.getMainHandStack();
+        final ItemStack mainhandStack = mc.player.getMainHandItem();
         if (mainhandStack != ItemStack.EMPTY && mainhandStack.getItem() instanceof BlockItem) {
             final Block blockFromMainhandItem = ((BlockItem) mainhandStack.getItem()).getBlock();
             if (canUseBlocks.contains(blockFromMainhandItem)) {
@@ -188,7 +189,7 @@ public final class AutoWeb extends Module {
         }
         if (slot == -1) {
             for (int i = 0; i < 9; i++) {
-                final ItemStack stack = mc.player.getInventory().getStack(i);
+                final ItemStack stack = mc.player.getInventory().getItem(i);
                 if (stack != ItemStack.EMPTY && stack.getItem() instanceof BlockItem) {
                     final Block blockFromItem = ((BlockItem) stack.getItem()).getBlock();
                     if (canUseBlocks.contains(blockFromItem)) {

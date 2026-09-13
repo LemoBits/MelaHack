@@ -1,6 +1,5 @@
 package thunder.hack.gui.thundergui.components;
 
-import net.minecraft.client.util.math.MatrixStack;
 import thunder.hack.features.modules.Module;
 import thunder.hack.gui.font.FontRenderers;
 import thunder.hack.gui.thundergui.ThunderGui;
@@ -10,6 +9,8 @@ import thunder.hack.utility.render.Render2DEngine;
 import java.awt.*;
 
 import static thunder.hack.utility.render.animation.AnimationUtility.fast;
+
+import com.mojang.blaze3d.vertex.PoseStack;
 
 public class CategoryPlate {
     float category_animation = 0f;
@@ -23,7 +24,7 @@ public class CategoryPlate {
         this.posY = posY;
     }
 
-    public void render(MatrixStack matrixStack, int MouseX, int MouseY) {
+    public void render(PoseStack matrixStack, int MouseX, int MouseY) {
         category_animation = fast(category_animation, isHovered(MouseX, MouseY) ? 1 : 0, 15f);
         Render2DEngine.addWindow(matrixStack, new Render2DEngine.Rectangle(posX, posY + 0.5f, posX + 84, posY + 15.5f));
         if (isHovered(MouseX, MouseY)) {

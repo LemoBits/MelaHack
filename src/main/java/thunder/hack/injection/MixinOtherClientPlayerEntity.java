@@ -1,10 +1,10 @@
 package thunder.hack.injection;
 
 import com.mojang.authlib.GameProfile;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.network.OtherClientPlayerEntity;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.client.player.RemotePlayer;
+import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import thunder.hack.core.manager.client.ModuleManager;
@@ -15,11 +15,11 @@ import thunder.hack.utility.interfaces.IOtherClientPlayerEntity;
 
 import static thunder.hack.features.modules.Module.mc;
 
-@Mixin(OtherClientPlayerEntity.class)
-public class MixinOtherClientPlayerEntity extends AbstractClientPlayerEntity implements IOtherClientPlayerEntity {
+@Mixin(RemotePlayer.class)
+public class MixinOtherClientPlayerEntity extends AbstractClientPlayer implements IOtherClientPlayerEntity {
     @Unique private double backUpX, backUpY, backUpZ;
 
-    public MixinOtherClientPlayerEntity(ClientWorld world, GameProfile profile) {
+    public MixinOtherClientPlayerEntity(ClientLevel world, GameProfile profile) {
         super(world, profile);
     }
 
@@ -37,28 +37,28 @@ public class MixinOtherClientPlayerEntity extends AbstractClientPlayerEntity imp
             double minDst = 999d;
             Aura.Position bestPos = null;
             for (Aura.Position p : ((IEntityLiving) this).getPositionHistory()) {
-                double dst = mc.player.squaredDistanceTo(p.getX(), p.getY(), p.getZ());
+                double dst = mc.player.distanceToSqr(p.getX(), p.getY(), p.getZ());
                 if (dst < minDst) {
                     minDst = dst;
                     bestPos = p;
                 }
             }
             if(bestPos != null) {
-                setPosition(bestPos.getX(), bestPos.getY(), bestPos.getZ());
+                setPos(bestPos.getX(), bestPos.getY(), bestPos.getZ());
                 if(Aura.target == this)
                     ModuleManager.aura.resolvedBox = getBoundingBox();
             }
             return;
         }
 
-        Vec3d from = new Vec3d(((IEntityLiving) this).getPrevServerX(), ((IEntityLiving) this).getPrevServerY(), ((IEntityLiving) this).getPrevServerZ());
-        Vec3d to = new Vec3d(getX(), getY(), getZ());
+        Vec3 from = new Vec3(((IEntityLiving) this).getPrevServerX(), ((IEntityLiving) this).getPrevServerY(), ((IEntityLiving) this).getPrevServerZ());
+        Vec3 to = new Vec3(getX(), getY(), getZ());
 
         if(mode == Aura.Resolver.Advantage) {
-            if (mc.player.squaredDistanceTo(from) > mc.player.squaredDistanceTo(to)) setPosition(to.x, to.y, to.z);
-            else setPosition(from.x, from.y, from.z);
+            if (mc.player.distanceToSqr(from) > mc.player.distanceToSqr(to)) setPos(to.x, to.y, to.z);
+            else setPos(from.x, from.y, from.z);
         } else {
-            setPosition(to.x, to.y, to.z);
+            setPos(to.x, to.y, to.z);
         }
         if(Aura.target == this)
             ModuleManager.aura.resolvedBox = getBoundingBox();
@@ -66,7 +66,7 @@ public class MixinOtherClientPlayerEntity extends AbstractClientPlayerEntity imp
 
     public void releaseResolver() {
         if (backUpY != -999) {
-            setPosition(backUpX, backUpY, backUpZ);
+            setPos(backUpX, backUpY, backUpZ);
             backUpY = -999;
         }
     }

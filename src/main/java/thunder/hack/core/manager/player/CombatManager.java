@@ -1,12 +1,12 @@
 package thunder.hack.core.manager.player;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityStatuses;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.network.packet.s2c.play.EntityStatusS2CPacket;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.network.protocol.game.ClientboundEntityEventPacket;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityEvent;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import thunder.hack.ThunderHack;
@@ -31,10 +31,10 @@ public class CombatManager implements IManager {
     public void onPacketReceive(PacketEvent.Receive event) {
         if (Module.fullNullCheck()) return;
 
-        if (event.getPacket() instanceof EntityStatusS2CPacket pac) {
-            if (pac.getStatus() == EntityStatuses.USE_TOTEM_OF_UNDYING) {
-                Entity ent = pac.getEntity(mc.world);
-                if (!(ent instanceof PlayerEntity)) return;
+        if (event.getPacket() instanceof ClientboundEntityEventPacket pac) {
+            if (pac.getEventId() == EntityEvent.PROTECTED_FROM_DEATH) {
+                Entity ent = pac.getEntity(mc.level);
+                if (!(ent instanceof Player)) return;
                 if (popList == null) {
                     popList = new HashMap<>();
                 }
@@ -43,7 +43,7 @@ public class CombatManager implements IManager {
                 } else if (popList.get(ent.getName().getString()) != null) {
                     popList.put(ent.getName().getString(), popList.get(ent.getName().getString()) + 1);
                 }
-                ThunderHack.EVENT_BUS.post(new TotemPopEvent((PlayerEntity) ent, popList.get(ent.getName().getString())));
+                ThunderHack.EVENT_BUS.post(new TotemPopEvent((Player) ent, popList.get(ent.getName().getString())));
             }
         }
     }
@@ -52,7 +52,7 @@ public class CombatManager implements IManager {
     public void onPostTick(EventPostTick event) {
         if (Module.fullNullCheck())
             return;
-        for (PlayerEntity player : mc.world.getPlayers()) {
+        for (Player player : mc.level.players()) {
             if (AntiBot.bots.contains(player)) continue;
 
             if (player.getHealth() <= 0 && popList.containsKey(player.getName().getString()))
@@ -60,23 +60,23 @@ public class CombatManager implements IManager {
         }
     }
 
-    public int getPops(@NotNull PlayerEntity entity) {
+    public int getPops(@NotNull Player entity) {
         if (popList.get(entity.getName().getString()) == null) return 0;
         return popList.get(entity.getName().getString());
     }
 
-    public List<PlayerEntity> getTargets(float range) {
-        return mc.world.getPlayers().stream()
-                .filter(e -> !e.isDead())
+    public List<Player> getTargets(float range) {
+        return mc.level.players().stream()
+                .filter(e -> !e.isDeadOrDying())
                 .filter(entityPlayer -> !Managers.FRIEND.isFriend(entityPlayer.getName().getString()))
                 .filter(entityPlayer -> entityPlayer != mc.player)
-                .filter(entityPlayer -> mc.player.squaredDistanceTo(entityPlayer) < range * range)
-                .sorted(Comparator.comparing(e -> mc.player.squaredDistanceTo(e)))
+                .filter(entityPlayer -> mc.player.distanceToSqr(entityPlayer) < range * range)
+                .sorted(Comparator.comparing(e -> mc.player.distanceToSqr(e)))
                 .collect(Collectors.toList());
     }
 
-    public @Nullable PlayerEntity getTarget(float range, @NotNull TargetBy targetBy) {
-        PlayerEntity target = null;
+    public @Nullable Player getTarget(float range, @NotNull TargetBy targetBy) {
+        Player target = null;
 
         switch (targetBy) {
             case FOV -> target = getTargetByFOV(range);
@@ -87,26 +87,26 @@ public class CombatManager implements IManager {
         return target;
     }
 
-    public @Nullable PlayerEntity getNearestTarget(float range) {
+    public @Nullable Player getNearestTarget(float range) {
         return getTargets(range).stream().min(Comparator.comparing(t -> mc.player.distanceTo(t))).orElse(null);
     }
 
-    public PlayerEntity getTargetByHealth(float range) {
+    public Player getTargetByHealth(float range) {
         return getTargets(range).stream().min(Comparator.comparing(t -> (t.getHealth() + t.getAbsorptionAmount()))).orElse(null);
     }
 
-    public PlayerEntity getTargetByFOV(float range) {
+    public Player getTargetByFOV(float range) {
         return getTargets(range).stream().min(Comparator.comparing(this::getFOVAngle)).orElse(null);
     }
 
-    public PlayerEntity getTargetByFOV(float range, float fov) {
+    public Player getTargetByFOV(float range, float fov) {
         return getTargets(range).stream()
                 .filter(entityPlayer -> getFOVAngle(entityPlayer) < fov)
                 .min(Comparator.comparing(this::getFOVAngle)).orElse(null);
     }
 
-    public @Nullable PlayerEntity getTarget(float range, @NotNull TargetBy targetBy, @NotNull Predicate<PlayerEntity> predicate) {
-        PlayerEntity target = null;
+    public @Nullable Player getTarget(float range, @NotNull TargetBy targetBy, @NotNull Predicate<Player> predicate) {
+        Player target = null;
 
         switch (targetBy) {
             case FOV -> target = getTargetByFOV(range, predicate);
@@ -117,21 +117,21 @@ public class CombatManager implements IManager {
         return target;
     }
 
-    public @Nullable PlayerEntity getNearestTarget(float range, Predicate<PlayerEntity> predicate) {
+    public @Nullable Player getNearestTarget(float range, Predicate<Player> predicate) {
         return getTargets(range).stream()
                 .filter(predicate)
                 .min(Comparator.comparing(t -> mc.player.distanceTo(t)))
                 .orElse(null);
     }
 
-    public PlayerEntity getTargetByHealth(float range, Predicate<PlayerEntity> predicate) {
+    public Player getTargetByHealth(float range, Predicate<Player> predicate) {
         return getTargets(range).stream()
                 .filter(predicate)
                 .min(Comparator.comparing(t -> (t.getHealth() + t.getAbsorptionAmount())))
                 .orElse(null);
     }
 
-    public PlayerEntity getTargetByFOV(float range, Predicate<PlayerEntity> predicate) {
+    public Player getTargetByFOV(float range, Predicate<Player> predicate) {
         return getTargets(range).stream()
                 .filter(predicate)
                 .min(Comparator.comparing(this::getFOVAngle))
@@ -139,8 +139,8 @@ public class CombatManager implements IManager {
     }
 
     private float getFOVAngle(@NotNull LivingEntity e) {
-        float yaw = (float) MathHelper.wrapDegrees(Math.toDegrees(Math.atan2(e.getZ() - mc.player.getZ(), e.getX() - mc.player.getX())) - 90.0);
-        return Math.abs(yaw - MathHelper.wrapDegrees(mc.player.getYaw()));
+        float yaw = (float) Mth.wrapDegrees(Math.toDegrees(Math.atan2(e.getZ() - mc.player.getZ(), e.getX() - mc.player.getX())) - 90.0);
+        return Math.abs(yaw - Mth.wrapDegrees(mc.player.getYRot()));
     }
 
     public enum TargetBy {

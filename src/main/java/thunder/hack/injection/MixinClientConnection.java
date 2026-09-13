@@ -3,27 +3,26 @@ package thunder.hack.injection;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.proxy.Socks5ProxyHandler;
-
-import net.minecraft.network.packet.s2c.play.BundleS2CPacket;
 import thunder.hack.ThunderHack;
 import thunder.hack.core.Managers;
 import thunder.hack.core.manager.client.ModuleManager;
 import thunder.hack.core.manager.client.ProxyManager;
 import thunder.hack.events.impl.PacketEvent;
 import thunder.hack.features.modules.Module;
-import net.minecraft.network.ClientConnection;
-import net.minecraft.network.listener.PacketListener;
-import net.minecraft.network.packet.Packet;
-import net.minecraft.network.NetworkSide;
-import net.minecraft.network.handler.PacketSizeLogger;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.net.InetSocketAddress;
+import net.minecraft.network.BandwidthDebugMonitor;
+import net.minecraft.network.Connection;
+import net.minecraft.network.PacketListener;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.PacketFlow;
+import net.minecraft.network.protocol.game.ClientboundBundlePacket;
 
-@Mixin(ClientConnection.class)
+@Mixin(Connection.class)
 public class MixinClientConnection {
 
     @Inject(method = "exceptionCaught", at = @At("HEAD"), cancellable = true)
@@ -34,11 +33,11 @@ public class MixinClientConnection {
         }
     }
 
-    @Inject(method = "handlePacket", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "genericsFtw", at = @At("HEAD"), cancellable = true)
     private static <T extends PacketListener> void onHandlePacket(Packet<T> packet, PacketListener listener, CallbackInfo info) {
         if(Module.fullNullCheck()) return;
-        if (packet instanceof BundleS2CPacket packs) {
-            packs.getPackets().forEach(p -> {
+        if (packet instanceof ClientboundBundlePacket packs) {
+            packs.subPackets().forEach(p -> {
                 PacketEvent.Receive event = new PacketEvent.Receive(p);
                 ThunderHack.EVENT_BUS.post(event);
                 if (event.isCancelled()) {
@@ -55,11 +54,11 @@ public class MixinClientConnection {
     }
 
 
-    @Inject(method = "handlePacket", at = @At("TAIL"), cancellable = true)
+    @Inject(method = "genericsFtw", at = @At("TAIL"), cancellable = true)
     private static <T extends PacketListener> void onHandlePacketPost(Packet<T> packet, PacketListener listener, CallbackInfo info) {
         if(Module.fullNullCheck()) return;
-        if (packet instanceof BundleS2CPacket packs) {
-            packs.getPackets().forEach(p -> {
+        if (packet instanceof ClientboundBundlePacket packs) {
+            packs.subPackets().forEach(p -> {
                 PacketEvent.ReceivePost event = new PacketEvent.ReceivePost(p);
                 ThunderHack.EVENT_BUS.post(event);
                 if (event.isCancelled()) {
@@ -75,7 +74,7 @@ public class MixinClientConnection {
         }
     }
 
-    @Inject(method = "send(Lnet/minecraft/network/packet/Packet;)V", at = @At("HEAD"),cancellable = true)
+    @Inject(method = "send(Lnet/minecraft/network/protocol/Packet;)V", at = @At("HEAD"),cancellable = true)
     private void onSendPacketPre(Packet<?> packet, CallbackInfo info) {
         if(Module.fullNullCheck()) return;
         if(ThunderHack.core.silentPackets.contains(packet)) {
@@ -88,7 +87,7 @@ public class MixinClientConnection {
         if (event.isCancelled()) info.cancel();
     }
 
-    @Inject(method = "send(Lnet/minecraft/network/packet/Packet;)V", at = @At("RETURN"),cancellable = true)
+    @Inject(method = "send(Lnet/minecraft/network/protocol/Packet;)V", at = @At("RETURN"),cancellable = true)
     private void onSendPacketPost(Packet<?> packet, CallbackInfo info) {
         if(Module.fullNullCheck()) return;
         PacketEvent.SendPost event = new PacketEvent.SendPost(packet);
@@ -97,10 +96,10 @@ public class MixinClientConnection {
     }
 
     // Thanks to Meteor
-    @Inject(method = "addHandlers", at = @At("RETURN"))
-    private static void addHandlersHook(ChannelPipeline pipeline, NetworkSide side, boolean local, PacketSizeLogger packetSizeLogger, CallbackInfo ci) {
+    @Inject(method = "configureSerialization", at = @At("RETURN"))
+    private static void addHandlersHook(ChannelPipeline pipeline, PacketFlow side, boolean local, BandwidthDebugMonitor packetSizeLogger, CallbackInfo ci) {
         ProxyManager.ThProxy proxy = Managers.PROXY.getActiveProxy();
-        if (proxy != null && side == NetworkSide.CLIENTBOUND && !local)
+        if (proxy != null && side == PacketFlow.CLIENTBOUND && !local)
             pipeline.addFirst(new Socks5ProxyHandler(new InetSocketAddress(proxy.getIp(), proxy.getPort()), proxy.getL(), proxy.getP()));
     }
 }

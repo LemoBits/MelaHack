@@ -1,7 +1,7 @@
 package thunder.hack.features.modules.render;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.network.packet.s2c.play.WorldTimeUpdateS2CPacket;
+import net.minecraft.network.protocol.game.ClientboundSetTimePacket;
 import thunder.hack.events.impl.PacketEvent;
 import thunder.hack.features.modules.Module;
 import thunder.hack.setting.Setting;
@@ -28,21 +28,21 @@ public class WorldTweaks extends Module {
 
     @Override
     public void onEnable() {
-        oldTime = mc.world.getTime();
-        oldTimeOfDay = mc.world.getTimeOfDay();
+        oldTime = mc.level.getGameTime();
+        oldTimeOfDay = mc.level.getDayTime();
     }
 
     @Override
     public void onDisable() {
-        mc.world.setTime(oldTime, oldTimeOfDay, oldTickDayTime);
+        mc.level.setTimeFromServer(oldTime, oldTimeOfDay, oldTickDayTime);
     }
 
     @EventHandler
     private void onPacketReceive(PacketEvent.Receive event) {
-        if (event.getPacket() instanceof WorldTimeUpdateS2CPacket && ctime.getValue()) {
-            WorldTimeUpdateS2CPacket packet = (WorldTimeUpdateS2CPacket) event.getPacket();
-            oldTime = packet.time();
-            oldTimeOfDay = packet.timeOfDay();
+        if (event.getPacket() instanceof ClientboundSetTimePacket && ctime.getValue()) {
+            ClientboundSetTimePacket packet = (ClientboundSetTimePacket) event.getPacket();
+            oldTime = packet.gameTime();
+            oldTimeOfDay = packet.dayTime();
             oldTickDayTime = packet.tickDayTime();
             event.cancel();
         }
@@ -51,6 +51,6 @@ public class WorldTweaks extends Module {
     @Override
     public void onUpdate() {
         if (ctime.getValue())
-            mc.world.setTime(mc.world.getTime(), ctimeVal.getValue() * 1000L, false);
+            mc.level.setTimeFromServer(mc.level.getGameTime(), ctimeVal.getValue() * 1000L, false);
     }
 }

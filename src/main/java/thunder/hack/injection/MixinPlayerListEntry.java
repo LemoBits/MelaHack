@@ -1,10 +1,6 @@
 package thunder.hack.injection;
 
 import com.mojang.authlib.GameProfile;
-import net.minecraft.client.network.PlayerListEntry;
-import net.minecraft.entity.player.SkinTextures;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.Util;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -20,26 +16,30 @@ import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URL;
 import java.util.Objects;
+import net.minecraft.Util;
+import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.client.resources.PlayerSkin;
+import net.minecraft.resources.ResourceLocation;
 
-@Mixin(PlayerListEntry.class)
+@Mixin(PlayerInfo.class)
 public class MixinPlayerListEntry {
 
     @Unique
     private boolean loadedCapeTexture;
 
     @Unique
-    private Identifier customCapeTexture;
+    private ResourceLocation customCapeTexture;
 
     @Inject(method = "<init>(Lcom/mojang/authlib/GameProfile;Z)V", at = @At("TAIL"))
     private void initHook(GameProfile profile, boolean secureChatEnforced, CallbackInfo ci) {
         getTexture(profile);
     }
 
-    @Inject(method = "getSkinTextures", at = @At("TAIL"), cancellable = true)
-    private void getCapeTexture(CallbackInfoReturnable<SkinTextures> cir) {
+    @Inject(method = "getSkin", at = @At("TAIL"), cancellable = true)
+    private void getCapeTexture(CallbackInfoReturnable<PlayerSkin> cir) {
         if (customCapeTexture != null) {
-            SkinTextures prev = cir.getReturnValue();
-            SkinTextures newTextures = new SkinTextures(prev.texture(), prev.textureUrl(), customCapeTexture, customCapeTexture, prev.model(), prev.secure());
+            PlayerSkin prev = cir.getReturnValue();
+            PlayerSkin newTextures = new PlayerSkin(prev.texture(), prev.textureUrl(), customCapeTexture, customCapeTexture, prev.model(), prev.secure());
             cir.setReturnValue(newTextures);
         }
     }
@@ -48,7 +48,7 @@ public class MixinPlayerListEntry {
     private void getTexture(GameProfile profile) {
         if (loadedCapeTexture) return;
         loadedCapeTexture = true;
-        Util.getMainWorkerExecutor().execute(() -> {
+        Util.backgroundExecutor().execute(() -> {
 
             if (ModuleManager.capes.isEnabled())
                 CapeHandler.loadPlayerCape(profile, id -> {
@@ -59,7 +59,7 @@ public class MixinPlayerListEntry {
 
             for (String str : ThunderUtility.starGazer) {
                 if (profile.getName().toLowerCase().equals(str.toLowerCase()))
-                    customCapeTexture = Identifier.of("thunderhack", "textures/capes/starcape.png");
+                    customCapeTexture = ResourceLocation.fromNamespaceAndPath("thunderhack", "textures/capes/starcape.png");
             }
 
             try {
@@ -71,7 +71,7 @@ public class MixinPlayerListEntry {
                     String name = colune.split(":")[0];
                     String cape = colune.split(":")[1];
                     if (Objects.equals(profile.getName(), name)) {
-                        customCapeTexture = Identifier.of("thunderhack", "textures/capes/" + cape + ".png");
+                        customCapeTexture = ResourceLocation.fromNamespaceAndPath("thunderhack", "textures/capes/" + cape + ".png");
                         return;
                     }
                 }

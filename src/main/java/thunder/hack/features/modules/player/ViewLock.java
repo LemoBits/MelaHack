@@ -1,6 +1,6 @@
 package thunder.hack.features.modules.player;
 
-import net.minecraft.client.util.math.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import thunder.hack.features.modules.Module;
 import thunder.hack.setting.Setting;
 
@@ -18,13 +18,13 @@ public class ViewLock extends Module {
     @Override
     public void onEnable() {
         if(lockCurrent.getValue()) {
-            yawValue.setValue(mc.player.getYaw());
-            pitchValue.setValue(mc.player.getPitch());
+            yawValue.setValue(mc.player.getYRot());
+            pitchValue.setValue(mc.player.getXRot());
         }
     }
 
-    public void onRender3D(MatrixStack m) {
-        if (pitch.getValue()) mc.player.setPitch(pitchValue.getValue());
-        if (yaw.getValue()) mc.player.setYaw(yawValue.getValue());
+    public void onRender3D(PoseStack m) {
+        if (pitch.getValue()) mc.player.setXRot(pitchValue.getValue());
+        if (yaw.getValue()) mc.player.setYRot(yawValue.getValue());
     }
 }

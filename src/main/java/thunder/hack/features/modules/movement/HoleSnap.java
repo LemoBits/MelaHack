@@ -2,9 +2,9 @@ package thunder.hack.features.modules.movement;
 
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import thunder.hack.ThunderHack;
@@ -61,9 +61,9 @@ public class HoleSnap extends Module {
     @Override
     public void onUpdate() {
         if (onDeath.getValue() && mc.player != null
-                && (mc.player.getHealth() + mc.player.getAbsorptionAmount() <= 0 || mc.player.isDead()))
+                && (mc.player.getHealth() + mc.player.getAbsorptionAmount() <= 0 || mc.player.isDeadOrDying()))
             disable(isRu() ? "Вы умерли! Выключаюсь..." : "You died! Disabling...");
-        if (mc.player != null && mc.player.getBlockPos().equals(hole) && onInHole.getValue())
+        if (mc.player != null && mc.player.blockPosition().equals(hole) && onInHole.getValue())
             disable(isRu() ? "Ты в холке! Отключаю.." : "You're in a hole already! Disabling..");
     }
 
@@ -72,17 +72,17 @@ public class HoleSnap extends Module {
     private void onMove(EventMove event) {
         if (mc.player == null) return;
 
-        BlockPos bp = BlockPos.ofFloored(mc.player.getPos());
+        BlockPos bp = BlockPos.containing(mc.player.position());
 
         for (int i = 1; i < 5; i++) {
-            if (!HoleUtility.isSingleHole(bp.down(i))) continue;
+            if (!HoleUtility.isSingleHole(bp.below(i))) continue;
 
-            Vec3d center = new Vec3d(
+            Vec3 center = new Vec3(
                     Math.floor(mc.player.getX()) + 0.5,
                     mc.player.getY(),
                     Math.floor(mc.player.getZ()) + 0.5
             );
-            if (center.distanceTo(mc.player.getPos()) < 0.15f) {
+            if (center.distanceTo(mc.player.position()) < 0.15f) {
                 event.setX(0);
                 event.setZ(0);
                 event.cancel();
@@ -91,14 +91,14 @@ public class HoleSnap extends Module {
             break;
         }
 
-        if (mc.player != null && mc.player.horizontalCollision && mc.player.isOnGround())
-            mc.player.jump();
+        if (mc.player != null && mc.player.horizontalCollision && mc.player.onGround())
+            mc.player.jumpFromGround();
 
         if (mode.getValue() == Mode.Move && hole != null) {
-            final double newYaw = Math.cos(Math.toRadians(getNewYaw(hole.toCenterPos()) + 90.0f));
-            final double newPitch = Math.sin(Math.toRadians(getNewYaw(hole.toCenterPos()) + 90.0f));
-            final double diffX = hole.toCenterPos().getX() - mc.player.getX();
-            final double diffZ = hole.toCenterPos().getZ() - mc.player.getZ();
+            final double newYaw = Math.cos(Math.toRadians(getNewYaw(hole.getCenter()) + 90.0f));
+            final double newPitch = Math.sin(Math.toRadians(getNewYaw(hole.getCenter()) + 90.0f));
+            final double diffX = hole.getCenter().x() - mc.player.getX();
+            final double diffZ = hole.getCenter().z() - mc.player.getZ();
             final double x = 0.29 * newYaw;
             final double z = 0.29 * newPitch;
 
@@ -112,7 +112,7 @@ public class HoleSnap extends Module {
     @SuppressWarnings("unused")
     public void modifyVelocity(EventPlayerTravel event) {
         if (mc.player == null) return;
-        if (mc.player.age % 10 == 0) hole = findHole();
+        if (mc.player.tickCount % 10 == 0) hole = findHole();
 
         doYawModeLogic(event.isPre());
     }
@@ -139,13 +139,13 @@ public class HoleSnap extends Module {
             return null;
 
         ArrayList<BlockPos> blocks = new ArrayList<>();
-        BlockPos centerPos = mc.player.getBlockPos();
+        BlockPos centerPos = mc.player.blockPosition();
 
         for (int i = centerPos.getX() - searchRange.getValue(); i < centerPos.getX() + searchRange.getValue(); i++) {
             for (int j = centerPos.getY() - 4; j < centerPos.getY() + 2; j++) {
                 for (int k = centerPos.getZ() - searchRange.getValue(); k < centerPos.getZ() + searchRange.getValue(); k++) {
                     BlockPos pos = new BlockPos(i, j, k);;
-                    if (HoleUtility.isSingleHole(pos) && InteractionUtility.isVecInFOV(pos.toCenterPos(), searchFOV.getValue() / 2)) {
+                    if (HoleUtility.isSingleHole(pos) && InteractionUtility.isVecInFOV(pos.getCenter(), searchFOV.getValue() / 2)) {
                         blocks.add(new BlockPos(pos));
                     }
                 }
@@ -156,12 +156,12 @@ public class HoleSnap extends Module {
         BlockPos fbp = null;
 
         for (BlockPos bp : blocks) {
-            if (BlockPos.ofFloored(mc.player.getPos()).equals(bp) && onInHole.getValue()) {
+            if (BlockPos.containing(mc.player.position()).equals(bp) && onInHole.getValue()) {
                 disable(isRu() ? "Ты в холке! Отключаю.." : "You're in a hole already! Disabling..");
                 return null;
             }
-            if (mc.player.squaredDistanceTo(bp.toCenterPos()) < nearestDistance) {
-                nearestDistance = (float) mc.player.squaredDistanceTo(bp.toCenterPos());
+            if (mc.player.distanceToSqr(bp.getCenter()) < nearestDistance) {
+                nearestDistance = (float) mc.player.distanceToSqr(bp.getCenter());
                 fbp = bp;
             }
         }
@@ -172,21 +172,21 @@ public class HoleSnap extends Module {
         return fbp;
     }
 
-    private float getNewYaw(@NotNull Vec3d pos) {
+    private float getNewYaw(@NotNull Vec3 pos) {
         if (mc.player == null)
             return 0;
 
-        return mc.player.getYaw() + MathHelper.wrapDegrees((float) Math.toDegrees(Math.atan2(pos.getZ() - mc.player.getZ(), pos.getX() - mc.player.getX())) - mc.player.getYaw() - 90);
+        return mc.player.getYRot() + Mth.wrapDegrees((float) Math.toDegrees(Math.atan2(pos.z() - mc.player.getZ(), pos.x() - mc.player.getX())) - mc.player.getYRot() - 90);
     }
 
     private void doYawModeLogic(boolean isPreEvent) {
         if (hole == null || mc.player == null || mode.getValue() != Mode.Yaw) return;
 
         if (isPreEvent) {
-            prevClientYaw = mc.player.getYaw();
-            mc.player.setYaw(InteractionUtility.calculateAngle(hole.toCenterPos())[0]);
+            prevClientYaw = mc.player.getYRot();
+            mc.player.setYRot(InteractionUtility.calculateAngle(hole.getCenter())[0]);
         } else
-            mc.player.setYaw(prevClientYaw);
+            mc.player.setYRot(prevClientYaw);
     }
 
     private enum Mode {

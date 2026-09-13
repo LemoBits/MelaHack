@@ -1,6 +1,5 @@
 package thunder.hack.gui.notification;
 
-import net.minecraft.util.Formatting;
 import thunder.hack.features.modules.client.HudEditor;
 import thunder.hack.gui.font.FontRenderers;
 import thunder.hack.utility.Timer;
@@ -9,6 +8,7 @@ import thunder.hack.utility.render.Render2DEngine;
 import thunder.hack.utility.render.animation.EaseOutBack;
 
 import java.awt.*;
+import net.minecraft.ChatFormatting;
 
 import static thunder.hack.core.manager.client.NotificationManager.isDefault;
 import static thunder.hack.features.modules.Module.mc;
@@ -42,8 +42,8 @@ public class Notification {
 
         animationX = width;
         if (isDefault())
-            y = mc.getWindow().getScaledHeight() - height;
-        else y = mc.getWindow().getScaledHeight() / 2f + 10;
+            y = mc.getWindow().getGuiScaledHeight() - height;
+        else y = mc.getWindow().getGuiScaledHeight() / 2f + 10;
     }
 
     public void render(Object matrix, float getY) {
@@ -55,7 +55,7 @@ public class Notification {
             animationX = (float) (width * animation.getAnimationd());
 
             y = animate(y, getY);
-            float x = mc.getWindow().getScaledWidth() - 6 - width + animationX;
+            float x = mc.getWindow().getGuiScaledWidth() - 6 - width + animationX;
 
             if (HudEditor.hudStyle.is(HudEditor.HudStyle.Glowing)) {
                 Render2DEngine.verticalGradient(matrix, x + 25, y + 1, x + 25.5f, y + 12, Render2DEngine.injectAlpha(HudEditor.textColor.getValue().getColorObject(), 0), HudEditor.textColor.getValue().getColorObject());
@@ -71,7 +71,7 @@ public class Notification {
             direction = isFinished();
             animationX = (float) (width * animation.getAnimationd());
             y = animate(y, getY);
-            float x = mc.getWindow().getScaledWidth() / 2f - width / 2f;
+            float x = mc.getWindow().getGuiScaledWidth() / 2f - width / 2f;
             if (HudEditor.hudStyle.is(HudEditor.HudStyle.Glowing)) {
                 Render2DEngine.verticalGradient(matrix, x + 13, y + 1, x + 13.5f, y + 6, Render2DEngine.injectAlpha(color, 0), Render2DEngine.injectAlpha(color, animatedAlpha));
                 Render2DEngine.verticalGradient(matrix, x + 13, y + 6, x + 13.5f, y + 11, Render2DEngine.injectAlpha(color, animatedAlpha), Render2DEngine.injectAlpha(color, 0));
@@ -92,10 +92,10 @@ public class Notification {
         animationX = (float) (width * animation.getAnimationd());
         y = animate(y, getY);
         if (HudEditor.hudStyle.is(HudEditor.HudStyle.Blurry)) {
-            Render2DEngine.drawHudBase2(matrix, isDefault() ? mc.getWindow().getScaledWidth() - 6 - width + animationX : mc.getWindow().getScaledWidth() / 2f - width / 2f,
+            Render2DEngine.drawHudBase2(matrix, isDefault() ? mc.getWindow().getGuiScaledWidth() - 6 - width + animationX : mc.getWindow().getGuiScaledWidth() / 2f - width / 2f,
                     y, width, height, isDefault() ? 5f : 3f, HudEditor.blurStrength.getValue(), HudEditor.blurOpacity.getValue(), (float) MathUtility.clamp((1 - animation.getAnimationd()), 0f, 1f));
         } else {
-            Render2DEngine.drawHudBase(matrix, isDefault() ? mc.getWindow().getScaledWidth() - 6 - width + animationX : mc.getWindow().getScaledWidth() / 2f - width / 2f,
+            Render2DEngine.drawHudBase(matrix, isDefault() ? mc.getWindow().getGuiScaledWidth() - 6 - width + animationX : mc.getWindow().getGuiScaledWidth() / 2f - width / 2f,
                     y, width, height, isDefault() ? 5f : 3f, (float) MathUtility.clamp((1 - animation.getAnimationd()), 0f, 1f));
         }
     }
@@ -117,17 +117,17 @@ public class Notification {
     }
 
     public enum Type {
-        SUCCESS("Success", Formatting.GREEN),
-        INFO("Information", Formatting.AQUA),
-        WARNING("Warning", Formatting.GOLD),
-        ERROR("Error", Formatting.RED),
-        ENABLED("Module enabled", Formatting.DARK_GREEN),
-        DISABLED("Module disabled", Formatting.DARK_RED);
+        SUCCESS("Success", ChatFormatting.GREEN),
+        INFO("Information", ChatFormatting.AQUA),
+        WARNING("Warning", ChatFormatting.GOLD),
+        ERROR("Error", ChatFormatting.RED),
+        ENABLED("Module enabled", ChatFormatting.DARK_GREEN),
+        DISABLED("Module disabled", ChatFormatting.DARK_RED);
 
         final String name;
-        final Formatting color;
+        final ChatFormatting color;
 
-        Type(String name, Formatting color) {
+        Type(String name, ChatFormatting color) {
             this.name = name;
             this.color = color;
         }
@@ -136,7 +136,7 @@ public class Notification {
             return name;
         }
 
-        public Formatting getColor() {
+        public ChatFormatting getColor() {
             return color;
         }
     }

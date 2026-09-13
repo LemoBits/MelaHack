@@ -1,14 +1,14 @@
 package thunder.hack.injection.accesors;
 
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(PlayerEntity.class)
+@Mixin(Player.class)
 public interface IPlayerEntity {
-    @Accessor("lastStrideDistance")
+    @Accessor("oBob")
     float getLastStrideDistance();
 
-    @Accessor("lastStrideDistance")
+    @Accessor("oBob")
     void setLastStrideDistance(float strideDistance);
 }

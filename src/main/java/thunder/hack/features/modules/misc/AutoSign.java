@@ -1,14 +1,14 @@
 package thunder.hack.features.modules.misc;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.gui.screen.ingame.SignEditScreen;
-import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
-import net.minecraft.network.packet.c2s.play.UpdateSignC2SPacket;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.Direction;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.screens.inventory.SignEditScreen;
+import net.minecraft.core.Direction;
+import net.minecraft.network.protocol.game.ServerboundSignUpdatePacket;
+import net.minecraft.network.protocol.game.ServerboundSwingPacket;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.phys.BlockHitResult;
 import thunder.hack.events.impl.EventScreen;
 import thunder.hack.injection.accesors.ISignEditScreen;
 import thunder.hack.features.modules.Module;
@@ -38,17 +38,17 @@ public class AutoSign extends Module {
     public void onScreen(EventScreen e) {
         if (e.getScreen() instanceof SignEditScreen ses) {
             e.cancel();
-            sendPacketSilent(new UpdateSignC2SPacket(((ISignEditScreen) ses).getBlockEntity().getPos(), ((ISignEditScreen) ses).isFront(), format(line1.getValue()), format(line2.getValue()), format(line3.getValue()), format(line4.getValue())));
+            sendPacketSilent(new ServerboundSignUpdatePacket(((ISignEditScreen) ses).getBlockEntity().getBlockPos(), ((ISignEditScreen) ses).isFront(), format(line1.getValue()), format(line2.getValue()), format(line3.getValue()), format(line4.getValue())));
 
             if (glow.getValue()) {
                 SearchInvResult result = InventoryUtility.findItemInHotBar(Items.GLOW_INK_SAC);
-                boolean offhand = mc.player.getOffHandStack().getItem() == Items.GLOW_INK_SAC;
+                boolean offhand = mc.player.getOffhandItem().getItem() == Items.GLOW_INK_SAC;
                 if (result.found() || offhand) {
                     InventoryUtility.saveSlot();
                     result.switchTo();
-                    mc.interactionManager.interactBlock(mc.player, offhand ? Hand.OFF_HAND : Hand.MAIN_HAND,
-                            new BlockHitResult(((ISignEditScreen) ses).getBlockEntity().getPos().toCenterPos().add(0, 0.5, 0), Direction.UP, ((ISignEditScreen) ses).getBlockEntity().getPos(), false));
-                    sendPacket(new HandSwingC2SPacket(offhand ? Hand.OFF_HAND : Hand.MAIN_HAND));
+                    mc.gameMode.useItemOn(mc.player, offhand ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND,
+                            new BlockHitResult(((ISignEditScreen) ses).getBlockEntity().getBlockPos().getCenter().add(0, 0.5, 0), Direction.UP, ((ISignEditScreen) ses).getBlockEntity().getBlockPos(), false));
+                    sendPacket(new ServerboundSwingPacket(offhand ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND));
                     InventoryUtility.returnSlot();
                 }
             }
@@ -61,9 +61,9 @@ public class AutoSign extends Module {
         try {
             format = new SimpleDateFormat(dateFormat.getValue()).format(new Date());
         } catch (Exception e) {
-            sendMessage(Formatting.RED + (isRu() ? "У тебя не правильный формат даты!" : "Your date format is wrong!"));
+            sendMessage(ChatFormatting.RED + (isRu() ? "У тебя не правильный формат даты!" : "Your date format is wrong!"));
         }
 
-        return s.replace("<player>", mc.getSession().getUsername()).replace("<date>", format);
+        return s.replace("<player>", mc.getUser().getName()).replace("<date>", format);
     }
 }

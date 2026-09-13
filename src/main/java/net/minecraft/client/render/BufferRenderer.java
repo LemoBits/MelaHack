@@ -1,17 +1,17 @@
 package net.minecraft.client.render;
 
+import com.mojang.blaze3d.ProjectionType;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.Std140Builder;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
-import com.mojang.blaze3d.systems.ProjectionType;
+import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.CommandEncoder;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.textures.GpuTextureView;
-import net.minecraft.client.MinecraftClient;
-import com.mojang.blaze3d.textures.Framebuffer;
-import net.minecraft.client.render.RenderPipelines;
+import com.mojang.blaze3d.vertex.MeshData;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gl.ShaderProgramKeys;
-
+import net.minecraft.client.renderer.RenderPipelines;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Map;
@@ -37,8 +37,8 @@ public final class BufferRenderer {
     private BufferRenderer() {
     }
 
-    public static void drawWithGlobalProgram(BuiltBuffer buffer) {
-        BuiltBuffer.DrawParameters parameters = buffer.getDrawParameters();
+    public static void drawWithGlobalProgram(MeshData buffer) {
+        MeshData.DrawState parameters = buffer.drawState();
         RenderPipeline pipeline = thunder.hack.utility.render.compat.RenderSystem.getCurrentPipeline();
         if (pipeline == null) {
             pipeline = parameters.mode().name().contains("LINE")
@@ -66,10 +66,10 @@ public final class BufferRenderer {
             pipeline = ShaderProgramKeys.POSITION_TEX_COLOR_DST_ALPHA;
         }
 
-        GpuBuffer vertices = parameters.format().uploadImmediateVertexBuffer(buffer.getBuffer());
-        com.mojang.blaze3d.systems.RenderSystem.ShapeIndexBuffer shapeIndexBuffer = com.mojang.blaze3d.systems.RenderSystem.getSequentialBuffer(parameters.mode());
-        GpuBuffer indices = shapeIndexBuffer.getIndexBuffer(parameters.indexCount());
-        Framebuffer framebuffer = MinecraftClient.getInstance().getFramebuffer();
+        GpuBuffer vertices = parameters.format().uploadImmediateVertexBuffer(buffer.vertexBuffer());
+        com.mojang.blaze3d.systems.RenderSystem.AutoStorageIndexBuffer shapeIndexBuffer = com.mojang.blaze3d.systems.RenderSystem.getSequentialBuffer(parameters.mode());
+        GpuBuffer indices = shapeIndexBuffer.getBuffer(parameters.indexCount());
+        RenderTarget framebuffer = Minecraft.getInstance().getMainRenderTarget();
         CommandEncoder encoder = com.mojang.blaze3d.systems.RenderSystem.getDevice().createCommandEncoder();
         com.mojang.blaze3d.buffers.GpuBufferSlice thunderHackUniforms = prepareThunderHackUniforms(pipeline, encoder);
         com.mojang.blaze3d.buffers.GpuBufferSlice guiProjection = prepareGuiProjectionUniforms(encoder);
@@ -81,8 +81,8 @@ public final class BufferRenderer {
 
         try (RenderPass pass = encoder.createRenderPass(
                 () -> "thunderhack immediate",
-                framebuffer.getColorAttachmentView(), OptionalInt.empty(),
-                framebuffer.getDepthAttachmentView(), OptionalDouble.empty())) {
+                framebuffer.getColorTextureView(), OptionalInt.empty(),
+                framebuffer.getDepthTextureView(), OptionalDouble.empty())) {
             pass.setPipeline(pipeline);
             thunder.hack.utility.render.compat.RenderSystem.applyScissor(pass);
             setCommonUniforms(pass, thunderHackUniforms, guiProjection, guiTransforms);
@@ -93,7 +93,7 @@ public final class BufferRenderer {
                 }
             }
             pass.setVertexBuffer(0, vertices);
-            pass.setIndexBuffer(indices, shapeIndexBuffer.getIndexType());
+            pass.setIndexBuffer(indices, shapeIndexBuffer.type());
             pass.drawIndexed(0, 0, parameters.indexCount(), 1);
         } finally {
             com.mojang.blaze3d.systems.RenderSystem.setProjectionMatrix(previousProjection, previousProjectionType);
@@ -116,9 +116,9 @@ public final class BufferRenderer {
     }
 
     private static com.mojang.blaze3d.buffers.GpuBufferSlice prepareGuiProjectionUniforms(CommandEncoder encoder) {
-        MinecraftClient client = MinecraftClient.getInstance();
-        int width = client.getWindow().getScaledWidth();
-        int height = client.getWindow().getScaledHeight();
+        Minecraft client = Minecraft.getInstance();
+        int width = client.getWindow().getGuiScaledWidth();
+        int height = client.getWindow().getGuiScaledHeight();
 
         if (guiProjectionBuffer == null || guiProjectionBuffer.isClosed()) {
             guiProjectionBuffer = com.mojang.blaze3d.systems.RenderSystem.getDevice().createBuffer(

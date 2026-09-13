@@ -1,8 +1,8 @@
 package thunder.hack.features.modules.movement;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.CobwebBlock;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.WebBlock;
 import thunder.hack.ThunderHack;
 import thunder.hack.core.Managers;
 import thunder.hack.events.impl.EventCollision;
@@ -31,7 +31,7 @@ public class AntiWeb extends Module {
     public void onPlayerUpdate(PlayerUpdateEvent e) {
         if (Managers.PLAYER.isInWeb()) {
             if (mode.getValue() == Mode.Timer) {
-                if (mc.player.isOnGround()) {
+                if (mc.player.onGround()) {
                     ThunderHack.TICK_TIMER = 1f;
                 } else {
                     ThunderHack.TICK_TIMER = timer.getValue();
@@ -40,11 +40,11 @@ public class AntiWeb extends Module {
             }
             if (mode.getValue() == Mode.Fly) {
                 final double[] dir = MovementUtility.forward(speed.getValue());
-                mc.player.setVelocity(dir[0], 0, dir[1]);
-                if (mc.options.jumpKey.isPressed())
-                    mc.player.setVelocity(mc.player.getVelocity().add(0, speed.getValue(), 0));
-                if (mc.options.sneakKey.isPressed())
-                    mc.player.setVelocity(mc.player.getVelocity().add(0, -speed.getValue(), 0));
+                mc.player.setDeltaMovement(dir[0], 0, dir[1]);
+                if (mc.options.keyJump.isDown())
+                    mc.player.setDeltaMovement(mc.player.getDeltaMovement().add(0, speed.getValue(), 0));
+                if (mc.options.keyShift.isDown())
+                    mc.player.setDeltaMovement(mc.player.getDeltaMovement().add(0, -speed.getValue(), 0));
             }
         } else if (timerEnabled) {
             timerEnabled = false;
@@ -54,7 +54,7 @@ public class AntiWeb extends Module {
 
     @EventHandler
     public void onCollide(EventCollision e) {
-        if (e.getState().getBlock() instanceof CobwebBlock && mode.getValue() == Mode.Solid)
-            e.setState(Blocks.DIRT.getDefaultState());
+        if (e.getState().getBlock() instanceof WebBlock && mode.getValue() == Mode.Solid)
+            e.setState(Blocks.DIRT.defaultBlockState());
     }
 }

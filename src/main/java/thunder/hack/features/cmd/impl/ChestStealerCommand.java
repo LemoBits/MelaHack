@@ -1,11 +1,11 @@
 package thunder.hack.features.cmd.impl;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import net.minecraft.block.Block;
-import net.minecraft.command.CommandSource;
-import net.minecraft.item.Item;
-import net.minecraft.registry.Registries;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.features.cmd.Command;
 import thunder.hack.features.cmd.args.ChestStealerArgumentType;
@@ -20,7 +20,7 @@ public class ChestStealerCommand extends Command {
     }
 
     @Override
-    public void executeBuild(@NotNull LiteralArgumentBuilder<CommandSource> builder) {
+    public void executeBuild(@NotNull LiteralArgumentBuilder<SharedSuggestionProvider> builder) {
         builder.then(literal("reset").executes(context -> {
             ModuleManager.chestStealer.items.getValue().getItemsById().clear();
             sendMessage("ChestStealer got reset.");
@@ -33,9 +33,9 @@ public class ChestStealerCommand extends Command {
             String result = getRegistered(blockName);
             if(result != null){
                 ModuleManager.chestStealer.items.getValue().getItemsById().add(result);
-                sendMessage(Formatting.GREEN + blockName + (isRu() ? " добавлен в ChestStealer" : " added to ChestStealer"));
+                sendMessage(ChatFormatting.GREEN + blockName + (isRu() ? " добавлен в ChestStealer" : " added to ChestStealer"));
             } else {
-                sendMessage(Formatting.RED + (isRu() ? "Такого предмета нет!" : "There is no such item!"));
+                sendMessage(ChatFormatting.RED + (isRu() ? "Такого предмета нет!" : "There is no such item!"));
             }
             return SINGLE_SUCCESS;
         })));
@@ -46,9 +46,9 @@ public class ChestStealerCommand extends Command {
             String result = getRegistered(blockName);
             if(result != null){
                 ModuleManager.chestStealer.items.getValue().getItemsById().remove(result);
-                sendMessage(Formatting.GREEN + blockName + (isRu() ? " удален из ChestStealer" : " removed from ChestStealer"));
+                sendMessage(ChatFormatting.GREEN + blockName + (isRu() ? " удален из ChestStealer" : " removed from ChestStealer"));
             } else {
-                sendMessage(Formatting.RED + (isRu() ? "Такого предмета нет!" : "There is no such item!"));
+                sendMessage(ChatFormatting.RED + (isRu() ? "Такого предмета нет!" : "There is no such item!"));
             }
             return SINGLE_SUCCESS;
         })));
@@ -73,14 +73,14 @@ public class ChestStealerCommand extends Command {
     }
 
     public static String getRegistered(String Name) {
-        for (Block block : Registries.BLOCK) {
-            if (block.getTranslationKey().replace("block.minecraft.","").equalsIgnoreCase(Name)) {
-                return block.getTranslationKey().replace("block.minecraft.","");
+        for (Block block : BuiltInRegistries.BLOCK) {
+            if (block.getDescriptionId().replace("block.minecraft.","").equalsIgnoreCase(Name)) {
+                return block.getDescriptionId().replace("block.minecraft.","");
             }
         }
-        for (Item item : Registries.ITEM) {
-            if (item.getTranslationKey().replace("item.minecraft.","").equalsIgnoreCase(Name)) {
-                return item.getTranslationKey().replace("item.minecraft.","");
+        for (Item item : BuiltInRegistries.ITEM) {
+            if (item.getDescriptionId().replace("item.minecraft.","").equalsIgnoreCase(Name)) {
+                return item.getDescriptionId().replace("item.minecraft.","");
             }
         }
         return null;

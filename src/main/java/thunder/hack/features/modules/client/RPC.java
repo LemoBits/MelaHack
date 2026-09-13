@@ -1,8 +1,5 @@
 package thunder.hack.features.modules.client;
 
-import net.minecraft.client.gui.screen.TitleScreen;
-import net.minecraft.client.gui.screen.multiplayer.AddServerScreen;
-import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen;
 import thunder.hack.ThunderHack;
 import thunder.hack.core.Managers;
 import thunder.hack.features.modules.Module;
@@ -14,6 +11,9 @@ import thunder.hack.utility.discord.DiscordRichPresence;
 
 import java.io.*;
 import java.util.Objects;
+import net.minecraft.client.gui.screens.EditServerScreen;
+import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 
 import static thunder.hack.features.modules.client.ClientSettings.isRu;
 
@@ -102,8 +102,8 @@ public final class RPC extends Module {
                     }
 
                     if (nickname.getValue()) {
-                        presence.smallImageText = "logged as - " + mc.getSession().getUsername();
-                        presence.smallImageKey = "https://minotar.net/helm/" + mc.getSession().getUsername() + "/100.png";
+                        presence.smallImageText = "logged as - " + mc.getUser().getName();
+                        presence.smallImageKey = "https://minotar.net/helm/" + mc.getUser().getName() + "/100.png";
                     } else {
                         presence.smallImageText = "";
                         presence.smallImageKey = "";
@@ -138,16 +138,16 @@ public final class RPC extends Module {
     private String getDetails() {
         String result = "";
 
-        if (mc.currentScreen instanceof MultiplayerScreen || mc.currentScreen instanceof AddServerScreen || mc.currentScreen instanceof TitleScreen) {
+        if (mc.screen instanceof JoinMultiplayerScreen || mc.screen instanceof EditServerScreen || mc.screen instanceof TitleScreen) {
             if(timer_delay.passedMs(60 * 1000)){
                 randomInt = (int)(Math.random() * (5 - 0 + 1) + 0);
                 slov = isRu() ? rpc_perebor_ru[randomInt] : rpc_perebor_en[randomInt];
                 timer_delay.reset();
             }
             result = slov;
-        } else if (mc.getCurrentServerEntry() != null) {
-            result = isRu() ? (showIP.getValue() ? "Играет на " + mc.getCurrentServerEntry().address : "Играет на сервере") : (showIP.getValue() ? "Playing on " + mc.getCurrentServerEntry().address : "Playing on server");
-        } else if (mc.isInSingleplayer()) {
+        } else if (mc.getCurrentServer() != null) {
+            result = isRu() ? (showIP.getValue() ? "Играет на " + mc.getCurrentServer().ip : "Играет на сервере") : (showIP.getValue() ? "Playing on " + mc.getCurrentServer().ip : "Playing on server");
+        } else if (mc.isLocalServer()) {
             result = isRu() ? "Читерит в одиночке" : "SinglePlayer hacker";
         }
         return result;

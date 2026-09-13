@@ -1,7 +1,7 @@
 package thunder.hack.events.impl;
 
-import net.minecraft.block.Block;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.Block;
 import thunder.hack.events.Event;
 
 public class EventPlaceBlock extends Event {

@@ -1,30 +1,35 @@
 package thunder.hack.features.modules.render;
 
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
-
+import com.mojang.math.Axis;
 import com.mojang.blaze3d.platform.GlStateManager;
 import thunder.hack.utility.render.compat.RenderSystem;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.gl.ShaderProgramKeys;
+import net.minecraft.client.model.EndCrystalModel;
+import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.render.*;
-import net.minecraft.client.render.entity.EntityRenderer;
-import net.minecraft.client.render.entity.model.EndCrystalEntityModel;
-import net.minecraft.client.render.entity.state.EndCrystalEntityRenderState;
-import net.minecraft.client.render.entity.LivingEntityRenderer;
-import net.minecraft.client.render.entity.model.EntityModel;
-import net.minecraft.client.render.entity.state.EntityRenderState;
-import net.minecraft.client.render.entity.state.LivingEntityRenderState;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityPose;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.RotationAxis;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.entity.EntityRenderer;
+import net.minecraft.client.renderer.entity.LivingEntityRenderer;
+import net.minecraft.client.renderer.entity.state.EndCrystalRenderState;
+import net.minecraft.client.renderer.entity.state.EntityRenderState;
+import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
+import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec3;
 import org.joml.Quaternionf;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import thunder.hack.ThunderHack;
@@ -63,8 +68,8 @@ public class Chams extends Module {
         One, Two, Three
     }
 
-    private final Identifier crystalTexture = Identifier.of("textures/entity/end_crystal/end_crystal.png");
-    public void renderCrystal(EndCrystalEntityRenderState state, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int light, EndCrystalEntityModel model) {
+    private final ResourceLocation crystalTexture = ResourceLocation.parse("textures/entity/end_crystal/end_crystal.png");
+    public void renderCrystal(EndCrystalRenderState state, PoseStack matrixStack, MultiBufferSource vertexConsumerProvider, int light, EndCrystalModel model) {
         RenderSystem.enableBlend();
         if (alternativeBlending.getValue())
             RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE);
@@ -73,29 +78,29 @@ public class Chams extends Module {
         RenderSystem.disableDepthTest();
 
         RenderSystem.setShaderColor(crystalColor.getValue().getGlRed(), crystalColor.getValue().getGlGreen(), crystalColor.getValue().getGlBlue(), crystalColor.getValue().getGlAlpha());
-        float originalAge = state.age;
+        float originalAge = state.ageInTicks;
         if (staticCrystal.getValue()) {
-            state.age = 0.0f;
+            state.ageInTicks = 0.0f;
         }
 
-        Identifier texture = crystalMode.getValue() == CMode.Two ? TextureStorage.crystalTexture2 : crystalTexture;
-        RenderLayer layer = RenderLayer.getEntityCutoutNoCull(texture);
+        ResourceLocation texture = crystalMode.getValue() == CMode.Two ? TextureStorage.crystalTexture2 : crystalTexture;
+        RenderType layer = RenderType.entityCutoutNoCull(texture);
 
-        matrixStack.push();
+        matrixStack.pushPose();
         matrixStack.scale(2.0f, 2.0f, 2.0f);
         matrixStack.translate(0.0f, -0.5f, 0.0f);
-        model.setAngles(state);
-        model.render(matrixStack, vertexConsumerProvider.getBuffer(layer), light, OverlayTexture.DEFAULT_UV);
-        matrixStack.pop();
+        model.setupAnim(state);
+        model.renderToBuffer(matrixStack, vertexConsumerProvider.getBuffer(layer), light, OverlayTexture.NO_OVERLAY);
+        matrixStack.popPose();
 
-        state.age = originalAge;
+        state.ageInTicks = originalAge;
         RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
         RenderSystem.disableBlend();
         RenderSystem.enableDepthTest();
         RenderSystem.enableCull();
     }
 
-    public void renderPlayer(PlayerEntity pe, float f, float g, MatrixStack matrixStack, int i, EntityModel model, CallbackInfo ci, Runnable post) {
+    public void renderPlayer(Player pe, float f, float g, PoseStack matrixStack, int i, EntityModel model, CallbackInfo ci, Runnable post) {
         RenderSystem.enableBlend();
         if (alternativeBlending.getValue())
             RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE);
@@ -105,18 +110,18 @@ public class Chams extends Module {
         BufferBuilder buffer;
 
         if (!simple.getValue()) {
-            RenderSystem.setShaderTexture(0, ((AbstractClientPlayerEntity) pe).getSkinTextures().texture());
+            RenderSystem.setShaderTexture(0, ((AbstractClientPlayer) pe).getSkin().texture());
             RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX);
-            buffer = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
+            buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
         } else {
             RenderSystem.setShader(ShaderProgramKeys.POSITION);
-            buffer = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION);
+            buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
         }
 
         float n;
         Direction direction;
         Entity entity;
-        matrixStack.push();
+        matrixStack.pushPose();
 
         if (Managers.FRIEND.isFriend(pe)) {
             RenderSystem.setShaderColor(friendColor.getValue().getGlRed(), friendColor.getValue().getGlGreen(), friendColor.getValue().getGlBlue(), friendColor.getValue().getGlAlpha());
@@ -124,14 +129,14 @@ public class Chams extends Module {
             RenderSystem.setShaderColor(playerColor.getValue().getGlRed(), playerColor.getValue().getGlGreen(), playerColor.getValue().getGlBlue(), playerColor.getValue().getGlAlpha());
         }
 
-        float h = MathHelper.lerpAngleDegrees(g, ((thunder.hack.injection.accesors.ILivingEntity) pe).getLastBodyYaw(), pe.bodyYaw);
-        float j = MathHelper.lerpAngleDegrees(g, ((thunder.hack.injection.accesors.ILivingEntity) pe).getLastHeadYaw(), pe.headYaw);
+        float h = Mth.rotLerp(g, ((thunder.hack.injection.accesors.ILivingEntity) pe).getLastBodyYaw(), pe.yBodyRot);
+        float j = Mth.rotLerp(g, ((thunder.hack.injection.accesors.ILivingEntity) pe).getLastHeadYaw(), pe.yHeadRot);
         float k = j - h;
-        if (pe.hasVehicle() && (entity = pe.getVehicle()) instanceof LivingEntity) {
+        if (pe.isPassenger() && (entity = pe.getVehicle()) instanceof LivingEntity) {
             LivingEntity livingEntity2 = (LivingEntity) entity;
-            h = MathHelper.lerpAngleDegrees(g, ((thunder.hack.injection.accesors.ILivingEntity) livingEntity2).getLastBodyYaw(), livingEntity2.bodyYaw);
+            h = Mth.rotLerp(g, ((thunder.hack.injection.accesors.ILivingEntity) livingEntity2).getLastBodyYaw(), livingEntity2.yBodyRot);
             k = j - h;
-            float l = MathHelper.wrapDegrees(k);
+            float l = Mth.wrapDegrees(k);
             if (l < -85.0f) {
                 l = -85.0f;
             }
@@ -144,16 +149,16 @@ public class Chams extends Module {
             }
             k = j - h;
         }
-        float m = MathHelper.lerp(g, ((thunder.hack.injection.accesors.IEntity) pe).getLastPitch(), pe.getPitch());
-        if (LivingEntityRenderer.shouldFlipUpsideDown(pe)) {
+        float m = Mth.lerp(g, ((thunder.hack.injection.accesors.IEntity) pe).getLastPitch(), pe.getXRot());
+        if (LivingEntityRenderer.isEntityUpsideDown(pe)) {
             m *= -1.0f;
             k *= -1.0f;
         }
-        if (pe.isInPose(EntityPose.SLEEPING) && (direction = pe.getSleepingDirection()) != null) {
-            n = pe.getEyeHeight(EntityPose.STANDING) - 0.1f;
-            matrixStack.translate((float) (-direction.getOffsetX()) * n, 0.0f, (float) (-direction.getOffsetZ()) * n);
+        if (pe.hasPose(Pose.SLEEPING) && (direction = pe.getBedOrientation()) != null) {
+            n = pe.getEyeHeight(Pose.STANDING) - 0.1f;
+            matrixStack.translate((float) (-direction.getStepX()) * n, 0.0f, (float) (-direction.getStepZ()) * n);
         }
-        float l = pe.age + g;
+        float l = pe.tickCount + g;
 
         setupTransforms1(pe, matrixStack, l, h, g);
         matrixStack.scale(-1.0f, -1.0f, 1.0f);
@@ -163,9 +168,9 @@ public class Chams extends Module {
 
         n = 0.0f;
         float o = 0.0f;
-        if (!pe.hasVehicle() && pe.isAlive()) {
-            n = pe.limbAnimator.getSpeed();
-            o = pe.limbAnimator.getAnimationProgress(g);
+        if (!pe.isPassenger() && pe.isAlive()) {
+            n = pe.walkAnimation.speed();
+            o = pe.walkAnimation.position(g);
             if (pe.isBaby())
                 o *= 3.0f;
 
@@ -173,22 +178,22 @@ public class Chams extends Module {
                 n = 1.0f;
         }
         LivingEntityRenderState renderState = null;
-        EntityRenderer<? super PlayerEntity, ? extends EntityRenderState> renderer = mc.getEntityRenderDispatcher().getRenderer(pe);
-        EntityRenderState state = renderer.getAndUpdateRenderState(pe, g);
+        EntityRenderer<? super Player, ? extends EntityRenderState> renderer = mc.getEntityRenderDispatcher().getRenderer(pe);
+        EntityRenderState state = renderer.createRenderState(pe, g);
         if (state instanceof LivingEntityRenderState livingState) {
             renderState = livingState;
         }
         if (renderState != null) {
             @SuppressWarnings("unchecked")
             EntityModel<LivingEntityRenderState> typedModel = (EntityModel<LivingEntityRenderState>) model;
-            typedModel.setAngles(renderState);
-            int p = LivingEntityRenderer.getOverlay(renderState, 0);
-            typedModel.render(matrixStack, buffer, i, p);
+            typedModel.setupAnim(renderState);
+            int p = LivingEntityRenderer.getOverlayCoords(renderState, 0);
+            typedModel.renderToBuffer(matrixStack, buffer, i, p);
         }
         Render2DEngine.endBuilding(buffer);
         RenderSystem.disableBlend();
         RenderSystem.disableCull();
-        matrixStack.pop();
+        matrixStack.popPose();
         RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
         RenderSystem.enableDepthTest();
         if (!playerTexture.getValue()) {
@@ -197,34 +202,34 @@ public class Chams extends Module {
         }
     }
 
-    public void setupTransforms1(PlayerEntity abstractClientPlayerEntity, MatrixStack matrixStack, float f, float g, float h) {
-        float j = abstractClientPlayerEntity.getLeaningPitch(h);
-        float k = abstractClientPlayerEntity.getPitch(h);
+    public void setupTransforms1(Player abstractClientPlayerEntity, PoseStack matrixStack, float f, float g, float h) {
+        float j = abstractClientPlayerEntity.getSwimAmount(h);
+        float k = abstractClientPlayerEntity.getViewXRot(h);
         float l;
         float m;
-        if (abstractClientPlayerEntity.isGliding()) {
+        if (abstractClientPlayerEntity.isFallFlying()) {
             setupTransforms(abstractClientPlayerEntity, matrixStack, f, g, h);
-            l = abstractClientPlayerEntity.age + h;
-            m = MathHelper.clamp(l * l / 100.0F, 0.0F, 1.0F);
-            if (!abstractClientPlayerEntity.isUsingRiptide()) {
-                matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(m * (-90.0F - k)));
+            l = abstractClientPlayerEntity.tickCount + h;
+            m = Mth.clamp(l * l / 100.0F, 0.0F, 1.0F);
+            if (!abstractClientPlayerEntity.isAutoSpinAttack()) {
+                matrixStack.mulPose(Axis.XP.rotationDegrees(m * (-90.0F - k)));
             }
 
-            Vec3d vec3d = abstractClientPlayerEntity.getRotationVec(h);
-            Vec3d vec3d2 = abstractClientPlayerEntity.getVelocity();
-            double d = vec3d2.horizontalLengthSquared();
-            double e = vec3d.horizontalLengthSquared();
+            Vec3 vec3d = abstractClientPlayerEntity.getViewVector(h);
+            Vec3 vec3d2 = abstractClientPlayerEntity.getDeltaMovement();
+            double d = vec3d2.horizontalDistanceSqr();
+            double e = vec3d.horizontalDistanceSqr();
             if (d > 0.0 && e > 0.0) {
                 double n = (vec3d2.x * vec3d.x + vec3d2.z * vec3d.z) / Math.sqrt(d * e);
                 double o = vec3d2.x * vec3d.z - vec3d2.z * vec3d.x;
-                matrixStack.multiply(RotationAxis.POSITIVE_Y.rotation((float) (Math.signum(o) * Math.acos(n))));
+                matrixStack.mulPose(Axis.YP.rotation((float) (Math.signum(o) * Math.acos(n))));
             }
         } else if (j > 0.0F) {
             setupTransforms(abstractClientPlayerEntity, matrixStack, f, g, h);
-            l = abstractClientPlayerEntity.isTouchingWater() ? -90.0F - k : -90.0F;
-            m = MathHelper.lerp(j, 0.0F, l);
-            matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(m));
-            if (abstractClientPlayerEntity.isInSwimmingPose()) {
+            l = abstractClientPlayerEntity.isInWater() ? -90.0F - k : -90.0F;
+            m = Mth.lerp(j, 0.0F, l);
+            matrixStack.mulPose(Axis.XP.rotationDegrees(m));
+            if (abstractClientPlayerEntity.isVisuallySwimming()) {
                 matrixStack.translate(0.0F, -1.0F, 0.3F);
             }
         } else {
@@ -232,28 +237,28 @@ public class Chams extends Module {
         }
     }
 
-    private void setupTransforms(PlayerEntity entity, MatrixStack matrices, float animationProgress, float bodyYaw, float tickDelta) {
-        if (!entity.isInPose(EntityPose.SLEEPING)) {
-            matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180.0F - bodyYaw));
+    private void setupTransforms(Player entity, PoseStack matrices, float animationProgress, float bodyYaw, float tickDelta) {
+        if (!entity.hasPose(Pose.SLEEPING)) {
+            matrices.mulPose(Axis.YP.rotationDegrees(180.0F - bodyYaw));
         }
 
         if (entity.deathTime > 0) {
             float f = ((float) entity.deathTime + tickDelta - 1.0F) / 20.0F * 1.6F;
-            f = MathHelper.sqrt(f);
+            f = Mth.sqrt(f);
             if (f > 1.0F) {
                 f = 1.0F;
             }
 
-            matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(f * 90.0F));
-        } else if (entity.isUsingRiptide()) {
-            matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(-90.0F - entity.getPitch()));
-            matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(((float) entity.age + tickDelta) * -75.0F));
-        } else if (entity.isInPose(EntityPose.SLEEPING)) {
-            Direction direction = entity.getSleepingDirection();
+            matrices.mulPose(Axis.ZP.rotationDegrees(f * 90.0F));
+        } else if (entity.isAutoSpinAttack()) {
+            matrices.mulPose(Axis.XP.rotationDegrees(-90.0F - entity.getXRot()));
+            matrices.mulPose(Axis.YP.rotationDegrees(((float) entity.tickCount + tickDelta) * -75.0F));
+        } else if (entity.hasPose(Pose.SLEEPING)) {
+            Direction direction = entity.getBedOrientation();
             float g = direction != null ? getYaw(direction) : bodyYaw;
-            matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(g));
-            matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(90.0F));
-            matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(270.0F));
+            matrices.mulPose(Axis.YP.rotationDegrees(g));
+            matrices.mulPose(Axis.ZP.rotationDegrees(90.0F));
+            matrices.mulPose(Axis.YP.rotationDegrees(270.0F));
         }
     }
 

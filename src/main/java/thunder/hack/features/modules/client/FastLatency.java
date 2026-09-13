@@ -1,9 +1,9 @@
 package thunder.hack.features.modules.client;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.network.packet.c2s.play.RequestCommandCompletionsC2SPacket;
-import net.minecraft.network.packet.s2c.play.CommandSuggestionsS2CPacket;
+import net.minecraft.network.protocol.game.ClientboundCommandSuggestionsPacket;
+import net.minecraft.network.protocol.game.ServerboundCommandSuggestionPacket;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.events.impl.PacketEvent;
 import thunder.hack.features.modules.Module;
@@ -24,9 +24,9 @@ public final class FastLatency extends Module {
     }
 
     @Override
-    public void onRender3D(MatrixStack stack) {
+    public void onRender3D(PoseStack stack) {
         if (timer.passedMs(5000) && limitTimer.every(delay.getValue())) {
-            sendPacket(new RequestCommandCompletionsC2SPacket(1337, "w "));
+            sendPacket(new ServerboundCommandSuggestionPacket(1337, "w "));
             ping = System.currentTimeMillis();
             timer.reset();
         }
@@ -34,7 +34,7 @@ public final class FastLatency extends Module {
 
     @EventHandler
     public void onPacketReceive(PacketEvent.@NotNull Receive e) {
-        if (e.getPacket() instanceof CommandSuggestionsS2CPacket c && c.id() == 1337) {
+        if (e.getPacket() instanceof ClientboundCommandSuggestionsPacket c && c.id() == 1337) {
             resolvedPing = (int) MathUtility.clamp(System.currentTimeMillis() - ping, 0, 1000);
             timer.setMs(5000);
         }

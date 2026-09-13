@@ -1,7 +1,7 @@
 package thunder.hack.features.modules.client;
 
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.Vec3;
 import thunder.hack.core.Managers;
 import thunder.hack.core.manager.client.ModuleManager;
 import thunder.hack.events.impl.EventFixVelocity;
@@ -29,18 +29,18 @@ public class Rotations extends Module {
     private float prevYaw, prevPitch;
 
     public void onJump(EventPlayerJump e) {
-        if (Float.isNaN(fixRotation) || moveFix.getValue() == MoveFix.Off || mc.player.isRiding())
+        if (Float.isNaN(fixRotation) || moveFix.getValue() == MoveFix.Off || mc.player.isHandsBusy())
             return;
 
         if (e.isPre()) {
-            prevYaw = mc.player.getYaw();
-            mc.player.setYaw(fixRotation);
-        } else mc.player.setYaw(prevYaw);
+            prevYaw = mc.player.getYRot();
+            mc.player.setYRot(fixRotation);
+        } else mc.player.setYRot(prevYaw);
     }
 
     public void onPlayerMove(EventFixVelocity event) {
         if (moveFix.getValue() == MoveFix.Free) {
-            if (Float.isNaN(fixRotation) || mc.player.isRiding())
+            if (Float.isNaN(fixRotation) || mc.player.isHandsBusy())
                 return;
             event.setVelocity(fix(fixRotation, event.getMovementInput(), event.getSpeed()));
         }
@@ -50,50 +50,50 @@ public class Rotations extends Module {
         if (ModuleManager.aura.isEnabled() && ModuleManager.aura.target != null && ModuleManager.aura.rotationMode.not(Aura.Mode.None)
                 && ModuleManager.aura.elytraTarget.getValue() && Managers.PLAYER.ticksElytraFlying > 5) {
             if (e.isPre()) {
-                prevYaw = mc.player.getYaw();
-                prevPitch = mc.player.getPitch();
+                prevYaw = mc.player.getYRot();
+                prevPitch = mc.player.getXRot();
 
-                mc.player.setYaw(fixRotation);
-                mc.player.setPitch(ModuleManager.aura.rotationPitch);
+                mc.player.setYRot(fixRotation);
+                mc.player.setXRot(ModuleManager.aura.rotationPitch);
             } else {
-                mc.player.setYaw(prevYaw);
-                mc.player.setPitch(prevPitch);
+                mc.player.setYRot(prevYaw);
+                mc.player.setXRot(prevPitch);
             }
             return;
         }
 
-        if (moveFix.getValue() == MoveFix.Focused && !Float.isNaN(fixRotation) && !mc.player.isRiding()) {
+        if (moveFix.getValue() == MoveFix.Focused && !Float.isNaN(fixRotation) && !mc.player.isHandsBusy()) {
             if (e.isPre()) {
-                prevYaw = mc.player.getYaw();
-                mc.player.setYaw(fixRotation);
+                prevYaw = mc.player.getYRot();
+                mc.player.setYRot(fixRotation);
             } else {
-                mc.player.setYaw(prevYaw);
+                mc.player.setYRot(prevYaw);
             }
         }
     }
 
     public void onKeyInput(EventKeyboardInput e) {
         if (moveFix.getValue() == MoveFix.Free) {
-            if (Float.isNaN(fixRotation) || mc.player.isRiding())
+            if (Float.isNaN(fixRotation) || mc.player.isHandsBusy())
                 return;
 
-            float mF = mc.player.input.getMovementInput().y;
-            float mS = mc.player.input.getMovementInput().x;
-            float delta = (mc.player.getYaw() - fixRotation) * MathHelper.RADIANS_PER_DEGREE;
-            float cos = MathHelper.cos(delta);
-            float sin = MathHelper.sin(delta);
+            float mF = mc.player.input.getMoveVector().y;
+            float mS = mc.player.input.getMoveVector().x;
+            float delta = (mc.player.getYRot() - fixRotation) * Mth.DEG_TO_RAD;
+            float cos = Mth.cos(delta);
+            float sin = Mth.sin(delta);
             MovementUtility.setMovementInput((float) Math.round(mS * cos - mF * sin), (float) Math.round(mF * cos + mS * sin));
         }
     }
 
-    private Vec3d fix(float yaw, Vec3d movementInput, float speed) {
-        double d = movementInput.lengthSquared();
+    private Vec3 fix(float yaw, Vec3 movementInput, float speed) {
+        double d = movementInput.lengthSqr();
         if (d < 1.0E-7)
-            return Vec3d.ZERO;
-        Vec3d vec3d = (d > 1.0 ? movementInput.normalize() : movementInput).multiply(speed);
-        float f = MathHelper.sin(yaw * MathHelper.RADIANS_PER_DEGREE);
-        float g = MathHelper.cos(yaw * MathHelper.RADIANS_PER_DEGREE);
-        return new Vec3d(vec3d.x * (double) g - vec3d.z * (double) f, vec3d.y, vec3d.z * (double) g + vec3d.x * (double) f);
+            return Vec3.ZERO;
+        Vec3 vec3d = (d > 1.0 ? movementInput.normalize() : movementInput).scale(speed);
+        float f = Mth.sin(yaw * Mth.DEG_TO_RAD);
+        float g = Mth.cos(yaw * Mth.DEG_TO_RAD);
+        return new Vec3(vec3d.x * (double) g - vec3d.z * (double) f, vec3d.y, vec3d.z * (double) g + vec3d.x * (double) f);
     }
 
     @Override

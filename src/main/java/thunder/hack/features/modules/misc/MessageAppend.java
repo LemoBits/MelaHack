@@ -1,8 +1,8 @@
 package thunder.hack.features.modules.misc;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket;
+import net.minecraft.network.protocol.game.ServerboundChatPacket;
+import net.minecraft.world.item.Items;
 import thunder.hack.core.Managers;
 import thunder.hack.events.impl.PacketEvent;
 import thunder.hack.features.modules.Module;
@@ -21,20 +21,20 @@ public class MessageAppend extends Module {
     @EventHandler
     public void onPacketSend(PacketEvent.Send e) {
         if (fullNullCheck()) return;
-        if (e.getPacket() instanceof ChatMessageC2SPacket pac) {
-            if (Objects.equals(pac.chatMessage(), skip)) {
+        if (e.getPacket() instanceof ServerboundChatPacket pac) {
+            if (Objects.equals(pac.message(), skip)) {
                 return;
             }
 
             // Чтоб не добавляло когда ты вводишь капчу на сервере
-            if (mc.player.getMainHandStack().getItem() == Items.FILLED_MAP || mc.player.getOffHandStack().getItem() == Items.FILLED_MAP)
+            if (mc.player.getMainHandItem().getItem() == Items.FILLED_MAP || mc.player.getOffhandItem().getItem() == Items.FILLED_MAP)
                 return;
 
-            if (pac.chatMessage().startsWith("/") || pac.chatMessage().startsWith(Managers.COMMAND.getPrefix()))
+            if (pac.message().startsWith("/") || pac.message().startsWith(Managers.COMMAND.getPrefix()))
                 return;
 
-            skip = pac.chatMessage() + word.getValue();
-            mc.player.networkHandler.sendChatMessage(pac.chatMessage() + word.getValue());
+            skip = pac.message() + word.getValue();
+            mc.player.connection.sendChat(pac.message() + word.getValue());
             e.cancel();
         }
     }

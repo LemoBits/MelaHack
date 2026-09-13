@@ -3,13 +3,13 @@ package thunder.hack.utility.render.shaders;
 import com.mojang.blaze3d.pipeline.BlendFunction;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.platform.DepthTestFunction;
-import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.shaders.UniformType;
-import net.minecraft.client.render.VertexFormats;
-import net.minecraft.util.Identifier;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import thunder.hack.utility.render.compat.RenderSystem;
 
 import java.awt.*;
+import net.minecraft.resources.ResourceLocation;
 
 import static thunder.hack.features.modules.Module.mc;
 
@@ -27,16 +27,16 @@ public class ArcShader {
     private Color color2 = Color.WHITE;
 
     public static final RenderPipeline ARC_SHADER = RenderPipeline.builder()
-            .withLocation(Identifier.of("thunderhack", "pipeline/arc"))
-            .withVertexShader(Identifier.of("minecraft", "core/position_only"))
-            .withFragmentShader(Identifier.of("minecraft", "core/arc"))
+            .withLocation(ResourceLocation.fromNamespaceAndPath("thunderhack", "pipeline/arc"))
+            .withVertexShader(ResourceLocation.fromNamespaceAndPath("minecraft", "core/position_only"))
+            .withFragmentShader(ResourceLocation.fromNamespaceAndPath("minecraft", "core/arc"))
             .withBlend(BlendFunction.TRANSLUCENT)
             .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
             .withDepthWrite(false)
             .withUniform("Projection", UniformType.UNIFORM_BUFFER)
             .withUniform("DynamicTransforms", UniformType.UNIFORM_BUFFER)
             .withUniform("ThunderHackCustom", UniformType.UNIFORM_BUFFER)
-            .withVertexFormat(VertexFormats.POSITION, VertexFormat.DrawMode.QUADS)
+            .withVertexFormat(DefaultVertexFormat.POSITION, VertexFormat.Mode.QUADS)
             .build();
 
     public ArcShader() {
@@ -47,15 +47,15 @@ public class ArcShader {
             return;
         }
 
-        float i = (float) mc.getWindow().getScaleFactor();
+        float i = (float) mc.getWindow().getGuiScale();
         radius = r * i;
         uLocationX = x * i;
-        uLocationY = -y * i + mc.getWindow().getScaledHeight() * i - height * i;
+        uLocationY = -y * i + mc.getWindow().getGuiScaledHeight() * i - height * i;
         uSizeX = width * i;
         uSizeY = height * i;
         color1 = c1;
         color2 = c2;
-        time = mc.player.age * 4f;
+        time = mc.player.tickCount * 4f;
         this.thickness = thickness;
         this.start = start;
         this.end = end;

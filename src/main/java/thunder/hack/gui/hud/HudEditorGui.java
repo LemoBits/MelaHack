@@ -1,10 +1,7 @@
 package thunder.hack.gui.hud;
 
 import com.google.common.collect.Lists;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.util.InputUtil;
-import net.minecraft.text.Text;
+import com.mojang.blaze3d.platform.InputConstants;
 import org.lwjgl.glfw.GLFW;
 import thunder.hack.ThunderHack;
 import thunder.hack.core.Managers;
@@ -17,6 +14,9 @@ import thunder.hack.gui.clickui.Category;
 import thunder.hack.gui.clickui.ClickGUI;
 
 import java.util.List;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 
 import static thunder.hack.features.modules.Module.mc;
 
@@ -29,7 +29,7 @@ public class HudEditorGui extends Screen {
     private double dWheel;
 
     public HudEditorGui() {
-        super(Text.of("HudEditorGui"));
+        super(Component.nullToEmpty("HudEditorGui"));
         windows = Lists.newArrayList();
         firstOpen = true;
 
@@ -39,7 +39,7 @@ public class HudEditorGui extends Screen {
     @Override
     protected void init() {
         if (firstOpen) {
-            Category window = new Category(Module.Category.HUD, Managers.MODULE.getModulesByCategory(Module.Category.HUD), mc.getWindow().getScaledWidth() / 2f - 50, 20f, 100f, 18f);
+            Category window = new Category(Module.Category.HUD, Managers.MODULE.getModulesByCategory(Module.Category.HUD), mc.getWindow().getGuiScaledWidth() / 2f - 50, 20f, 100f, 18f);
             window.setOpen(true);
             windows.add(window);
             firstOpen = false;
@@ -48,23 +48,23 @@ public class HudEditorGui extends Screen {
     }
 
     @Override
-    public boolean shouldPause() {
+    public boolean isPauseScreen() {
         return false;
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
         ClickGUI.anyHovered = false;
 
         if (ModuleManager.clickGui.scrollMode.getValue() == ClickGui.scrollModeEn.Old) {
             for (AbstractCategory window : windows) {
-                if (InputUtil.isKeyPressed(mc.getWindow().getHandle(), 264))
+                if (InputConstants.isKeyDown(mc.getWindow().getWindow(), 264))
                     window.setY(window.getY() + 2);
-                if (InputUtil.isKeyPressed(mc.getWindow().getHandle(), 265))
+                if (InputConstants.isKeyDown(mc.getWindow().getWindow(), 265))
                     window.setY(window.getY() - 2);
-                if (InputUtil.isKeyPressed(mc.getWindow().getHandle(), 262))
+                if (InputConstants.isKeyDown(mc.getWindow().getWindow(), 262))
                     window.setX(window.getX() + 2);
-                if (InputUtil.isKeyPressed(mc.getWindow().getHandle(), 263))
+                if (InputConstants.isKeyDown(mc.getWindow().getWindow(), 263))
                     window.setX(window.getX() - 2);
                 if (dWheel != 0)
                     window.setY((float) (window.getY() + dWheel));

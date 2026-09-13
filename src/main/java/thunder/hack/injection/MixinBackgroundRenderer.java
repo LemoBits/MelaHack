@@ -1,9 +1,9 @@
 package thunder.hack.injection;
 
-import net.minecraft.client.render.Camera;
-import net.minecraft.client.render.RenderTickCounter;
-import net.minecraft.client.render.fog.FogRenderer;
-import net.minecraft.client.world.ClientWorld;
+import net.minecraft.client.Camera;
+import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.fog.FogRenderer;
 import org.joml.Vector4f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -20,9 +20,9 @@ public class MixinBackgroundRenderer {
     @Unique
     private int thunderHack$viewDistance;
 
-    @Inject(method = "applyFog", at = @At("HEAD"))
-    private void captureFogContext(Camera camera, int viewDistance, boolean thickFog, RenderTickCounter tickCounter,
-                                   float skyDarkness, ClientWorld world, CallbackInfoReturnable<Vector4f> cir) {
+    @Inject(method = "setupFog", at = @At("HEAD"))
+    private void captureFogContext(Camera camera, int viewDistance, boolean thickFog, DeltaTracker tickCounter,
+                                   float skyDarkness, ClientLevel world, CallbackInfoReturnable<Vector4f> cir) {
         thunderHack$viewDistance = viewDistance;
     }
 

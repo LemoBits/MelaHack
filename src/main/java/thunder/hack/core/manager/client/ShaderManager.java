@@ -5,23 +5,23 @@ import thunder.hack.utility.render.Render3DEngine;
 import thunder.hack.utility.render.shaders.satin.api.managed.ManagedShaderEffect;
 import thunder.hack.utility.render.shaders.satin.api.managed.ShaderEffectManager;
 import thunder.hack.utility.render.shaders.satin.impl.PostEffectRenderUtil;
-import net.minecraft.client.MinecraftClient;
-import com.mojang.blaze3d.textures.Framebuffer;
-import net.minecraft.client.render.effect.PostEffectProcessor;
-import net.minecraft.client.render.SimpleFramebuffer;
-import net.minecraft.client.util.memory.ObjectAllocator;
-import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.core.manager.IManager;
 import thunder.hack.features.modules.render.Shaders;
+import com.mojang.blaze3d.pipeline.RenderTarget;
+import com.mojang.blaze3d.pipeline.TextureTarget;
+import com.mojang.blaze3d.resource.GraphicsResourceAllocator;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.PostChain;
+import net.minecraft.resources.ResourceLocation;
 
 public class ShaderManager implements IManager {
-    public static final Identifier BUF_IN = Identifier.of("thunderhack", "buf_in");
-    public static final Identifier BUF_OUT = Identifier.of("thunderhack", "buf_out");
+    public static final ResourceLocation BUF_IN = ResourceLocation.fromNamespaceAndPath("thunderhack", "buf_in");
+    public static final ResourceLocation BUF_OUT = ResourceLocation.fromNamespaceAndPath("thunderhack", "buf_out");
     private final static List<RenderTask> tasks = new ArrayList<>();
     private ThunderHackFramebuffer shaderBuffer;
 
@@ -45,7 +45,7 @@ public class ShaderManager implements IManager {
 
     public void renderShaders() {
         if (DEFAULT == null) {
-            shaderBuffer = new ThunderHackFramebuffer(mc.getFramebuffer().textureWidth, mc.getFramebuffer().textureHeight);
+            shaderBuffer = new ThunderHackFramebuffer(mc.getMainRenderTarget().width, mc.getMainRenderTarget().height);
             reloadShaders();
         }
 
@@ -57,22 +57,22 @@ public class ShaderManager implements IManager {
     }
 
     public void applyShader(Runnable runnable, Shader mode) {
-        Framebuffer MCBuffer = MinecraftClient.getInstance().getFramebuffer();
+        RenderTarget MCBuffer = Minecraft.getInstance().getMainRenderTarget();
         RenderSystem.assertOnRenderThreadOrInit();
-        if (shaderBuffer.textureWidth != MCBuffer.textureWidth || shaderBuffer.textureHeight != MCBuffer.textureHeight)
-            shaderBuffer.resize(MCBuffer.textureWidth, MCBuffer.textureHeight);
+        if (shaderBuffer.width != MCBuffer.width || shaderBuffer.height != MCBuffer.height)
+            shaderBuffer.resize(MCBuffer.width, MCBuffer.height);
         runnable.run();
         ManagedShaderEffect shader = getShader(mode);
-        Framebuffer mainBuffer = MinecraftClient.getInstance().getFramebuffer();
-        PostEffectProcessor effect = shader.getShaderEffect();
+        RenderTarget mainBuffer = Minecraft.getInstance().getMainRenderTarget();
+        PostChain effect = shader.getShaderEffect();
 
         setupShader(mode, shader);
         if (effect != null) {
-            Map<Identifier, Framebuffer> externalTargets = new HashMap<>();
-            externalTargets.put(PostEffectProcessor.MAIN, shaderBuffer);
+            Map<ResourceLocation, RenderTarget> externalTargets = new HashMap<>();
+            externalTargets.put(PostChain.MAIN_TARGET_ID, shaderBuffer);
             externalTargets.put(BUF_IN, shaderBuffer);
             externalTargets.put(BUF_OUT, shaderBuffer);
-            PostEffectRenderUtil.render(effect, shaderBuffer.textureWidth, shaderBuffer.textureHeight, externalTargets, ObjectAllocator.TRIVIAL);
+            PostEffectRenderUtil.render(effect, shaderBuffer.width, shaderBuffer.height, externalTargets, GraphicsResourceAllocator.UNPOOLED);
         }
         RenderSystem.enableBlend();
         RenderSystem.backupProjectionMatrix();
@@ -113,7 +113,7 @@ public class ShaderManager implements IManager {
             effect.setUniformValue("quality", shaders.quality.getValue());
             effect.setUniformValue("factor", shaders.factor.getValue());
             effect.setUniformValue("moreGradient", shaders.gradient.getValue());
-            effect.setUniformValue("resolution", (float) mc.getWindow().getScaledWidth(), (float) mc.getWindow().getScaledHeight());
+            effect.setUniformValue("resolution", (float) mc.getWindow().getGuiScaledWidth(), (float) mc.getWindow().getGuiScaledHeight());
             effect.setUniformValue("time", time);
             time += 0.008f;
         } else if (shader == Shader.Smoke) {
@@ -128,7 +128,7 @@ public class ShaderManager implements IManager {
             effect.setUniformValue("fsecond", shaders.fillColor2.getValue().getGlRed(), shaders.fillColor2.getValue().getGlGreen(), shaders.fillColor2.getValue().getGlBlue());
             effect.setUniformValue("fthird", shaders.fillColor3.getValue().getGlRed(), shaders.fillColor3.getValue().getGlGreen(), shaders.fillColor3.getValue().getGlBlue());
             effect.setUniformValue("oct", shaders.octaves.getValue());
-            effect.setUniformValue("resolution", (float) mc.getWindow().getScaledWidth(), (float) mc.getWindow().getScaledHeight());
+            effect.setUniformValue("resolution", (float) mc.getWindow().getGuiScaledWidth(), (float) mc.getWindow().getGuiScaledHeight());
             effect.setUniformValue("time", time);
             time += 0.008f;
         } else if (shader == Shader.Default) {
@@ -140,7 +140,7 @@ public class ShaderManager implements IManager {
         } else if (shader == Shader.Snow) {
             effect.setUniformValue("color", shaders.fillColor1.getValue().getGlRed(), shaders.fillColor1.getValue().getGlGreen(), shaders.fillColor1.getValue().getGlBlue(), shaders.fillColor1.getValue().getGlAlpha());
             effect.setUniformValue("quality", shaders.quality.getValue());
-            effect.setUniformValue("resolution", (float) mc.getWindow().getScaledWidth(), (float) mc.getWindow().getScaledHeight());
+            effect.setUniformValue("resolution", (float) mc.getWindow().getGuiScaledWidth(), (float) mc.getWindow().getGuiScaledHeight());
             effect.setUniformValue("time", time);
             time += 0.008f;
         } else if (shader == Shader.Fade) {
@@ -156,20 +156,20 @@ public class ShaderManager implements IManager {
     }
 
     public void reloadShaders() {
-        DEFAULT = ShaderEffectManager.getInstance().manage(Identifier.of("thunderhack", "outline"));
-        SMOKE = ShaderEffectManager.getInstance().manage(Identifier.of("thunderhack", "smoke"));
-        GRADIENT = ShaderEffectManager.getInstance().manage(Identifier.of("thunderhack", "gradient"));
-        SNOW = ShaderEffectManager.getInstance().manage(Identifier.of("thunderhack", "snow"));
-        FADE = ShaderEffectManager.getInstance().manage(Identifier.of("thunderhack", "fade"));
+        DEFAULT = ShaderEffectManager.getInstance().manage(ResourceLocation.fromNamespaceAndPath("thunderhack", "outline"));
+        SMOKE = ShaderEffectManager.getInstance().manage(ResourceLocation.fromNamespaceAndPath("thunderhack", "smoke"));
+        GRADIENT = ShaderEffectManager.getInstance().manage(ResourceLocation.fromNamespaceAndPath("thunderhack", "gradient"));
+        SNOW = ShaderEffectManager.getInstance().manage(ResourceLocation.fromNamespaceAndPath("thunderhack", "snow"));
+        FADE = ShaderEffectManager.getInstance().manage(ResourceLocation.fromNamespaceAndPath("thunderhack", "fade"));
 
-        FADE_OUTLINE = ShaderEffectManager.getInstance().manage(Identifier.of("thunderhack", "fade"));
-        DEFAULT_OUTLINE = ShaderEffectManager.getInstance().manage(Identifier.of("thunderhack", "outline"));
-        SMOKE_OUTLINE = ShaderEffectManager.getInstance().manage(Identifier.of("thunderhack", "smoke"));
-        GRADIENT_OUTLINE = ShaderEffectManager.getInstance().manage(Identifier.of("thunderhack", "gradient"));
-        SNOW_OUTLINE = ShaderEffectManager.getInstance().manage(Identifier.of("thunderhack", "snow"));
+        FADE_OUTLINE = ShaderEffectManager.getInstance().manage(ResourceLocation.fromNamespaceAndPath("thunderhack", "fade"));
+        DEFAULT_OUTLINE = ShaderEffectManager.getInstance().manage(ResourceLocation.fromNamespaceAndPath("thunderhack", "outline"));
+        SMOKE_OUTLINE = ShaderEffectManager.getInstance().manage(ResourceLocation.fromNamespaceAndPath("thunderhack", "smoke"));
+        GRADIENT_OUTLINE = ShaderEffectManager.getInstance().manage(ResourceLocation.fromNamespaceAndPath("thunderhack", "gradient"));
+        SNOW_OUTLINE = ShaderEffectManager.getInstance().manage(ResourceLocation.fromNamespaceAndPath("thunderhack", "snow"));
     }
 
-    public static class ThunderHackFramebuffer extends SimpleFramebuffer {
+    public static class ThunderHackFramebuffer extends TextureTarget {
         public ThunderHackFramebuffer(int width, int height) {
             super("melahack_shader", width, height, false);
             RenderSystem.assertOnRenderThreadOrInit();
@@ -179,7 +179,7 @@ public class ShaderManager implements IManager {
 
     public boolean fullNullCheck() {
         if (GRADIENT == null || SMOKE == null || DEFAULT == null) {
-            shaderBuffer = new ThunderHackFramebuffer(mc.getFramebuffer().textureWidth, mc.getFramebuffer().textureHeight);
+            shaderBuffer = new ThunderHackFramebuffer(mc.getMainRenderTarget().width, mc.getMainRenderTarget().height);
             reloadShaders();
             return true;
         }

@@ -3,14 +3,14 @@ package thunder.hack.utility.render.shaders;
 import com.mojang.blaze3d.pipeline.BlendFunction;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.platform.DepthTestFunction;
-import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.shaders.UniformType;
-import net.minecraft.client.render.VertexFormats;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.MathHelper;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import thunder.hack.utility.render.compat.RenderSystem;
 
 import java.awt.*;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 
 import static thunder.hack.features.modules.Module.mc;
 
@@ -30,26 +30,26 @@ public class HudShader {
     private Color color4 = Color.WHITE;
 
     public static final RenderPipeline HUD_SHADER = RenderPipeline.builder()
-            .withLocation(Identifier.of("thunderhack", "pipeline/hudshader"))
-            .withVertexShader(Identifier.of("minecraft", "core/position_only"))
-            .withFragmentShader(Identifier.of("minecraft", "core/hudshader"))
+            .withLocation(ResourceLocation.fromNamespaceAndPath("thunderhack", "pipeline/hudshader"))
+            .withVertexShader(ResourceLocation.fromNamespaceAndPath("minecraft", "core/position_only"))
+            .withFragmentShader(ResourceLocation.fromNamespaceAndPath("minecraft", "core/hudshader"))
             .withBlend(BlendFunction.TRANSLUCENT)
             .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
             .withDepthWrite(false)
             .withUniform("Projection", UniformType.UNIFORM_BUFFER)
             .withUniform("DynamicTransforms", UniformType.UNIFORM_BUFFER)
             .withUniform("ThunderHackCustom", UniformType.UNIFORM_BUFFER)
-            .withVertexFormat(VertexFormats.POSITION, VertexFormat.DrawMode.QUADS)
+            .withVertexFormat(DefaultVertexFormat.POSITION, VertexFormat.Mode.QUADS)
             .build();
 
     public HudShader() {
     }
 
     public void setParameters(float x, float y, float width, float height, float r, float externalAlpha, float internalAlpha) {
-        float i = (float) mc.getWindow().getScaleFactor();
+        float i = (float) mc.getWindow().getGuiScale();
         radius = r * i;
         uLocationX = x * i;
-        uLocationY = -y * i + mc.getWindow().getScaledHeight() * i - height * i;
+        uLocationY = -y * i + mc.getWindow().getGuiScaledHeight() * i - height * i;
         uSizeX = width * i;
         uSizeY = height * i;
 
@@ -57,7 +57,7 @@ public class HudShader {
         Color c2 = thunder.hack.features.modules.client.HudEditor.getColor(0);
         Color c3 = thunder.hack.features.modules.client.HudEditor.getColor(180);
         Color c4 = thunder.hack.features.modules.client.HudEditor.getColor(90);
-        int alphaByte = MathHelper.clamp(Math.round(externalAlpha * 255f), 0, 255);
+        int alphaByte = Mth.clamp(Math.round(externalAlpha * 255f), 0, 255);
 
         color1 = new Color(c1.getRed(), c1.getGreen(), c1.getBlue(), alphaByte);
         color2 = new Color(c2.getRed(), c2.getGreen(), c2.getBlue(), alphaByte);
@@ -66,7 +66,7 @@ public class HudShader {
         blend = thunder.hack.features.modules.client.HudEditor.blend.getValue();
         outline = thunder.hack.features.modules.client.HudEditor.outline.getValue();
         glow = thunder.hack.features.modules.client.HudEditor.glow1.getValue();
-        alpha = MathHelper.clamp(internalAlpha, 0f, 1f);
+        alpha = Mth.clamp(internalAlpha, 0f, 1f);
     }
 
     public void use() {

@@ -2,11 +2,10 @@ package thunder.hack.features.hud.impl;
 
 import thunder.hack.utility.render.compat.RenderSystem;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.util.math.RotationAxis;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import thunder.hack.core.manager.client.ModuleManager;
 import thunder.hack.events.impl.TotemPopEvent;
 import thunder.hack.gui.font.FontRenderers;
@@ -23,7 +22,7 @@ public class TotemCounter extends HudElement {
 
     private float angle, prevAngle;
 
-    public void onRender2D(DrawContext context) {
+    public void onRender2D(GuiGraphics context) {
         if (getItemCount(Items.TOTEM_OF_UNDYING) == 0)
             return;
 
@@ -32,23 +31,23 @@ public class TotemCounter extends HudElement {
 
         float factor = Math.abs(angle < 0 ? angle / 15f : 0f);
 
-        context.getMatrices().pushMatrix();
-        context.getMatrices().translate((float) (xPos), (float) (yPos));
-        context.getMatrices().rotate(-((float) Math.toRadians(-Render2DEngine.interpolateFloat(prevAngle, angle, Render3DEngine.getTickDelta()))));
-        context.getMatrices().translate((float) (-xPos), (float) (-yPos));
+        context.pose().pushMatrix();
+        context.pose().translate((float) (xPos), (float) (yPos));
+        context.pose().rotate(-((float) Math.toRadians(-Render2DEngine.interpolateFloat(prevAngle, angle, Render3DEngine.getTickDelta()))));
+        context.pose().translate((float) (-xPos), (float) (-yPos));
 
         RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
-        context.getMatrices().translate((float) (xPos - 36), (float) (yPos - 9));
-        context.drawItem(Items.TOTEM_OF_UNDYING.getDefaultStack(), 0, 0);
-        context.getMatrices().translate((float) (-(xPos - 36)), (float) (-(yPos - 9)));
+        context.pose().translate((float) (xPos - 36), (float) (yPos - 9));
+        context.renderItem(Items.TOTEM_OF_UNDYING.getDefaultInstance(), 0, 0);
+        context.pose().translate((float) (-(xPos - 36)), (float) (-(yPos - 9)));
         RenderSystem.setShaderColor(1f, 1f - factor, 1f - factor, 1f);
 
         if (factor > 0)
-            Render2DEngine.drawBlurredShadow(context.getMatrices(), xPos - 34, yPos - 6, 11, 11, 8, Render2DEngine.injectAlpha(new Color(0xFF0000), (int) (255 * factor)));
+            Render2DEngine.drawBlurredShadow(context.pose(), xPos - 34, yPos - 6, 11, 11, 8, Render2DEngine.injectAlpha(new Color(0xFF0000), (int) (255 * factor)));
 
-        FontRenderers.sf_bold_mini.drawCenteredString(context.getMatrices(), getItemCount(Items.TOTEM_OF_UNDYING) + "",xPos - 28, yPos + 8, -1);
+        FontRenderers.sf_bold_mini.drawCenteredString(context.pose(), getItemCount(Items.TOTEM_OF_UNDYING) + "",xPos - 28, yPos + 8, -1);
         RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
-        context.getMatrices().popMatrix();
+        context.pose().popMatrix();
     }
 
     @EventHandler
@@ -69,7 +68,7 @@ public class TotemCounter extends HudElement {
         int n = 0;
         int n2 = 44;
         for (int i = 0; i <= n2; ++i) {
-            ItemStack itemStack = mc.player.getInventory().getStack(i);
+            ItemStack itemStack = mc.player.getInventory().getItem(i);
             if (itemStack.getItem() != item) continue;
             n += itemStack.getCount();
         }

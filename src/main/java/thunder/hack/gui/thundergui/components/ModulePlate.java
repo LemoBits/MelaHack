@@ -1,8 +1,5 @@
 package thunder.hack.gui.thundergui.components;
 
-import net.minecraft.client.resource.language.I18n;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.RotationAxis;
 import thunder.hack.features.cmd.Command;
 import thunder.hack.features.modules.Module;
 import thunder.hack.features.modules.client.ThunderHackGui;
@@ -14,8 +11,12 @@ import thunder.hack.utility.render.animation.AnimationUtility;
 
 import java.awt.*;
 import java.util.Objects;
+import net.minecraft.client.resources.language.I18n;
 
 import static thunder.hack.features.modules.Module.mc;
+
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
 
 public class ModulePlate {
     float scroll_animation = 0f;
@@ -42,7 +43,7 @@ public class ModulePlate {
         scroll_animation = 0;
     }
 
-    public void render(MatrixStack stack, int MouseX, int MouseY) {
+    public void render(PoseStack stack, int MouseX, int MouseY) {
         if (scrollPosY != posY) {
             scroll_animation = AnimationUtility.fast(scroll_animation, 1, 15f);
             posY = (int) Render2DEngine.interpolate(prevPosY, scrollPosY, scroll_animation);
@@ -77,15 +78,15 @@ public class ModulePlate {
             FontRenderers.icons.drawString(stack, "H", (int) (posX + 80f), (int) (posY + 22f), Render2DEngine.applyOpacity(new Color(0xFFECECEC, true).getRGB(), getFadeFactor()));
         else {
 
-            stack.push();
+            stack.pushPose();
             stack.translate((posX + 91f), (posY + 15f), 0.0F);
-            stack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(mc.player.age * 4));
+            stack.mulPose(Axis.ZP.rotationDegrees(mc.player.tickCount * 4));
             stack.translate(-(posX + 91f), -(posY + 15f), 0.0F);
             FontRenderers.big_icons.drawString(stack, "H", (posX + 78f), (posY + 5f), Render2DEngine.applyOpacity(new Color(0xFF646464, true).getRGB(), getFadeFactor()));
             stack.translate((posX + 91f), (posY + 15f), 0.0F);
-            stack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(-mc.player.age * 4));
+            stack.mulPose(Axis.ZP.rotationDegrees(-mc.player.tickCount * 4));
             stack.translate(-(posX + 91f), -(posY + 15f), 0.0F);
-            stack.pop();
+            stack.popPose();
         }
 
         if (!listening_bind) {
@@ -121,7 +122,7 @@ public class ModulePlate {
         if (!listening_bind && module.getDescription() != null) {
             int step = 0;
             StringBuilder firstString = new StringBuilder();
-            for (String word : I18n.translate(module.getDescription()).split(" ")) {
+            for (String word : I18n.get(module.getDescription()).split(" ")) {
                 firstString.append(word + " ");
                 String[] splitString2 = firstString.toString().split("\n");
                 if (FontRenderers.sf_medium_mini.getStringWidth(splitString2[step]) > 70) {

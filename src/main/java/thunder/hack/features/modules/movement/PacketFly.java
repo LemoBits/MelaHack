@@ -1,20 +1,20 @@
 package thunder.hack.features.modules.movement;
 
 import meteordevelopment.orbit.EventHandler;
+import net.minecraft.client.gui.screens.ReceivingLevelScreen;
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
+import net.minecraft.network.protocol.game.ServerboundAcceptTeleportationPacket;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.world.entity.PositionMoveRotation;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.ThunderHack;
 import thunder.hack.events.impl.EventMove;
 import thunder.hack.events.impl.EventSync;
 import thunder.hack.events.impl.PacketEvent;
-import thunder.hack.injection.accesors.IPlayerPositionS2CPacket;
+import thunder.hack.injection.accesors.IPlayerPositionLookS2CPacket;
 import thunder.hack.features.modules.Module;
 import thunder.hack.setting.Setting;
-import net.minecraft.client.gui.screen.DownloadingTerrainScreen;
-import net.minecraft.entity.EntityPosition;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.network.packet.c2s.play.TeleportConfirmC2SPacket;
-import net.minecraft.network.packet.s2c.play.PlayerPositionS2CPacket;
-import net.minecraft.util.math.Vec3d;
 import thunder.hack.setting.impl.BooleanSettingGroup;
 import thunder.hack.utility.player.MovementUtility;
 
@@ -43,7 +43,7 @@ public class PacketFly extends Module {
     private final Setting<Float> offset = new Setting<>("Offset", 1337f, 1f, 1337f, v-> type.is(Type.Up) || type.is(Type.Down));
 
     private final ConcurrentHashMap<Integer,Teleport> teleports = new ConcurrentHashMap<>();
-    private final ArrayList<PlayerMoveC2SPacket> movePackets = new ArrayList<>();
+    private final ArrayList<ServerboundMovePlayerPacket> movePackets = new ArrayList<>();
     private int ticks, factorTicks, teleportId = -1;
     private boolean flip = false;
 
@@ -74,7 +74,7 @@ public class PacketFly extends Module {
     }
 
     private int getWorldBorder() {
-        if (mc.isInSingleplayer()) {
+        if (mc.isLocalServer()) {
             return 1;
         }
         int n = ThreadLocalRandom.current().nextInt(29000000);
@@ -84,31 +84,31 @@ public class PacketFly extends Module {
         return -n;
     }
 
-    public Vec3d getVectorByMode(@NotNull Vec3d vec3d, Vec3d vec3d2) {
-        Vec3d vec3d3 = vec3d.add(vec3d2);
+    public Vec3 getVectorByMode(@NotNull Vec3 vec3d, Vec3 vec3d2) {
+        Vec3 vec3d3 = vec3d.add(vec3d2);
         switch (type.getValue()) {
             case Preserve -> vec3d3 = vec3d3.add(getWorldBorder(), 0.0, getWorldBorder());
             case Up -> vec3d3 = vec3d3.add(0.0, offset.getValue(), 0.0);
             case Down -> vec3d3 = vec3d3.add(0.0, -offset.getValue(), 0.0);
-            case Bounds -> vec3d3 = new Vec3d(vec3d3.x, mc.player.getY() <= 10.0 ? 255.0 : 1.0, vec3d3.z);
+            case Bounds -> vec3d3 = new Vec3(vec3d3.x, mc.player.getY() <= 10.0 ? 255.0 : 1.0, vec3d3.z);
         }
         return vec3d3;
     }
 
-    public void sendPackets(Vec3d vec3d, boolean confirm) {
-        Vec3d motion = mc.player.getPos().add(vec3d);
-        Vec3d rubberBand = getVectorByMode(vec3d, motion);
+    public void sendPackets(Vec3 vec3d, boolean confirm) {
+        Vec3 motion = mc.player.position().add(vec3d);
+        Vec3 rubberBand = getVectorByMode(vec3d, motion);
 
-        PlayerMoveC2SPacket motionPacket =  new PlayerMoveC2SPacket.PositionAndOnGround(motion.x, motion.y, motion.z, mc.player.isOnGround(), mc.player.horizontalCollision);
+        ServerboundMovePlayerPacket motionPacket =  new ServerboundMovePlayerPacket.Pos(motion.x, motion.y, motion.z, mc.player.onGround(), mc.player.horizontalCollision);
         movePackets.add(motionPacket);
         sendPacket(motionPacket);
 
-        PlayerMoveC2SPacket rubberBandPacket = new PlayerMoveC2SPacket.PositionAndOnGround(rubberBand.x, rubberBand.y, rubberBand.z, mc.player.isOnGround(), mc.player.horizontalCollision);
+        ServerboundMovePlayerPacket rubberBandPacket = new ServerboundMovePlayerPacket.Pos(rubberBand.x, rubberBand.y, rubberBand.z, mc.player.onGround(), mc.player.horizontalCollision);
         movePackets.add(rubberBandPacket);
         sendPacket(rubberBandPacket);
 
         if (confirm) {
-            sendPacket(new TeleportConfirmC2SPacket(++teleportId));
+            sendPacket(new ServerboundAcceptTeleportationPacket(++teleportId));
             teleports.put(teleportId, new Teleport(motion.x, motion.y, motion.z, System.currentTimeMillis()));
         }
     }
@@ -116,13 +116,13 @@ public class PacketFly extends Module {
     @EventHandler
     public void onPacketReceive(PacketEvent.Receive event) {
         if (fullNullCheck()) return;
-        if (mc.player != null && event.getPacket() instanceof PlayerPositionS2CPacket pac) {
-            Teleport teleport = teleports.remove(pac.teleportId());
-            Vec3d pos = pac.change().position();
+        if (mc.player != null && event.getPacket() instanceof ClientboundPlayerPositionPacket pac) {
+            Teleport teleport = teleports.remove(pac.id());
+            Vec3 pos = pac.change().position();
             if (
                     mc.player.isAlive()
-                    && mc.world.isChunkLoaded((int) mc.player.getX() >> 4, (int) mc.player.getZ() >> 4)
-                    && !(mc.currentScreen instanceof DownloadingTerrainScreen)
+                    && mc.level.hasChunk((int) mc.player.getX() >> 4, (int) mc.player.getZ() >> 4)
+                    && !(mc.screen instanceof ReceivingLevelScreen)
                     && mode.getValue() != Mode.Rubber
                     && teleport != null
                     && teleport.x == pos.x
@@ -132,18 +132,18 @@ public class PacketFly extends Module {
                 event.cancel();
                 return;
             }
-            EntityPosition change = pac.change();
-            EntityPosition updated = new EntityPosition(change.position(), change.deltaMovement(), mc.player.getYaw(), mc.player.getPitch());
-            ((IPlayerPositionS2CPacket) (Object) pac).setChange(updated);
-            teleportId = pac.teleportId();
+            PositionMoveRotation change = pac.change();
+            PositionMoveRotation updated = new PositionMoveRotation(change.position(), change.deltaMovement(), mc.player.getYRot(), mc.player.getXRot());
+            ((IPlayerPositionLookS2CPacket) (Object) pac).setChange(updated);
+            teleportId = pac.id();
         }
     }
 
     @EventHandler
     public void onPacketSend(PacketEvent.@NotNull Send event) {
-        if (event.getPacket() instanceof PlayerMoveC2SPacket) {
-            if (movePackets.contains((PlayerMoveC2SPacket) event.getPacket())) {
-                movePackets.remove((PlayerMoveC2SPacket) event.getPacket());
+        if (event.getPacket() instanceof ServerboundMovePlayerPacket) {
+            if (movePackets.contains((ServerboundMovePlayerPacket) event.getPacket())) {
+                movePackets.remove((ServerboundMovePlayerPacket) event.getPacket());
                 return;
             }
             event.cancel();
@@ -162,11 +162,11 @@ public class PacketFly extends Module {
                 return;
 
             event.cancel();
-            event.setX(mc.player.getVelocity().x);
-            event.setY(mc.player.getVelocity().y);
-            event.setZ(mc.player.getVelocity().z);
-            if (phase.getValue() != Phase.Off && (phase.getValue() == Phase.Semi || mc.world.getBlockCollisions(mc.player, mc.player.getBoundingBox().expand(-0.0625, -0.0625, -0.0625)).iterator().hasNext())) {
-                mc.player.noClip = true;
+            event.setX(mc.player.getDeltaMovement().x);
+            event.setY(mc.player.getDeltaMovement().y);
+            event.setZ(mc.player.getDeltaMovement().z);
+            if (phase.getValue() != Phase.Off && (phase.getValue() == Phase.Semi || mc.level.getBlockCollisions(mc.player, mc.player.getBoundingBox().inflate(-0.0625, -0.0625, -0.0625)).iterator().hasNext())) {
+                mc.player.noPhysics = true;
             }
         }
     }
@@ -176,35 +176,35 @@ public class PacketFly extends Module {
         if (timer.getValue() != 1.0)
             ThunderHack.TICK_TIMER = timer.getValue();
 
-        mc.player.setVelocity(0.0, 0.0, 0.0);
+        mc.player.setDeltaMovement(0.0, 0.0, 0.0);
 
         if (mode.getValue() != Mode.Rubber && teleportId == 0) {
             if (getTickCounter(4))
-                sendPackets(Vec3d.ZERO, false);
+                sendPackets(Vec3.ZERO, false);
             return;
         }
 
-        boolean insideBlock = mc.world.getBlockCollisions(mc.player, mc.player.getBoundingBox().expand(-0.0625, -0.0625, -0.0625)).iterator().hasNext();
+        boolean insideBlock = mc.level.getBlockCollisions(mc.player, mc.player.getBoundingBox().inflate(-0.0625, -0.0625, -0.0625)).iterator().hasNext();
 
         double upMotion = 0;
 
-        if (mc.options.jumpKey.isPressed() && (insideBlock || !MovementUtility.isMoving())) {
+        if (mc.options.keyJump.isDown() && (insideBlock || !MovementUtility.isMoving())) {
             if (antiKick.getValue().isEnabled() && !insideBlock)
                 upMotion = getTickCounter(mode.is(Mode.Rubber) ? upInterval.getValue() / 2 : upInterval.getValue()) ? -upSpeed.getValue() / 2f : upSpeed.getValue();
             else
                 upMotion = upSpeed.getValue();
-        } else if (mc.options.sneakKey.isPressed())
+        } else if (mc.options.keyShift.isDown())
             upMotion = -upSpeed.getValue();
         else if(antiKick.getValue().isEnabled() && !insideBlock)
             upMotion = getTickCounter(interval.getValue()) ? -anticKickOffset.getValue() : 0.0;
 
         if (phase.is(Phase.Full) && insideBlock && MovementUtility.isMoving() && upMotion != 0.0)
-            upMotion = mc.options.jumpKey.isPressed()  ? upMotion / 2.5 : upMotion / 1.5;
+            upMotion = mc.options.keyJump.isDown()  ? upMotion / 2.5 : upMotion / 1.5;
 
         double[] motion = MovementUtility.forward(phase.is(Phase.Full) && insideBlock ? 0.034444444444444444 : (double) (speed.getValue()) * 0.26);
 
         int factorInt = 1;
-        if (mode.getValue() == Mode.Factor && mc.player.age % increaseTicks.getValue() == 0) {
+        if (mode.getValue() == Mode.Factor && mc.player.tickCount % increaseTicks.getValue() == 0) {
             factorInt = (int) Math.floor(factor.getValue());
             factorTicks++;
             if (factorTicks > (int) (20D / ((factor.getValue() - factorInt) * 20D))) {
@@ -215,21 +215,21 @@ public class PacketFly extends Module {
 
         for (int i = 1; i <= factorInt; ++i) {
             if (mode.getValue() == Mode.Limit) {
-                if (mc.player.age % 2 == 0) {
+                if (mc.player.tickCount % 2 == 0) {
                     if (flip && upMotion >= 0.0) {
                         flip = false;
                         upMotion = -upSpeed.getValue() / 2f;
                     }
-                    mc.player.setVelocity(motion[0] * i,upMotion * i,motion[1] * i);
-                    sendPackets(mc.player.getVelocity(), !limit.getValue());
+                    mc.player.setDeltaMovement(motion[0] * i,upMotion * i,motion[1] * i);
+                    sendPackets(mc.player.getDeltaMovement(), !limit.getValue());
                     continue;
                 }
                 if (!(upMotion < 0.0)) continue;
                 flip = true;
                 continue;
             }
-            mc.player.setVelocity(motion[0] * i,upMotion * i,motion[1] * i);
-            sendPackets(mc.player.getVelocity(), !mode.is(Mode.Rubber));
+            mc.player.setDeltaMovement(motion[0] * i,upMotion * i,motion[1] * i);
+            sendPackets(mc.player.getDeltaMovement(), !mode.is(Mode.Rubber));
         }
     }
 

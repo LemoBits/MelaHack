@@ -1,17 +1,5 @@
 package thunder.hack.injection;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.entity.LivingEntityRenderer;
-import net.minecraft.client.render.entity.model.EntityModel;
-import net.minecraft.client.render.entity.state.LivingEntityRenderState;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityPose;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.MathHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -34,6 +22,19 @@ import thunder.hack.utility.render.Render3DEngine;
 
 import static thunder.hack.features.modules.Module.mc;
 
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.entity.LivingEntityRenderer;
+import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
+import net.minecraft.core.Direction;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.player.Player;
+
 @Mixin(LivingEntityRenderer.class)
 public abstract class MixinLivingEntityRenderer {
     private LivingEntity lastEntity;
@@ -43,27 +44,27 @@ public abstract class MixinLivingEntityRenderer {
     @Shadow
     protected EntityModel<LivingEntityRenderState> model;
 
-    @Inject(method = "updateRenderState", at = @At("HEAD"))
+    @Inject(method = "extractRenderState", at = @At("HEAD"))
     private void onUpdateRenderState(LivingEntity entity, LivingEntityRenderState state, float tickDelta, CallbackInfo ci) {
         lastEntity = entity;
     }
 
     @Inject(method = "render", at = @At("HEAD"), cancellable = true)
-    public void onRenderPre(LivingEntityRenderState state, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo ci) {
+    public void onRenderPre(LivingEntityRenderState state, PoseStack matrixStack, MultiBufferSource vertexConsumerProvider, int i, CallbackInfo ci) {
         if (Module.fullNullCheck()) return;
         if (lastEntity == null) return;
 
         LivingEntity livingEntity = lastEntity;
-        if (mc.player != null && livingEntity == mc.player && mc.player.getControllingVehicle() == null && ClientSettings.renderRotations.getValue() && !ThunderHack.isFuturePresent()) {
-            originalHeadYaw = livingEntity.headYaw;
+        if (mc.player != null && livingEntity == mc.player && mc.player.getControlledVehicle() == null && ClientSettings.renderRotations.getValue() && !ThunderHack.isFuturePresent()) {
+            originalHeadYaw = livingEntity.yHeadRot;
             originalPrevHeadYaw = ((ILivingEntity) livingEntity).getLastHeadYaw();
             originalPrevHeadPitch = ((IEntity) livingEntity).getLastPitch();
-            originalHeadPitch = livingEntity.getPitch();
+            originalHeadPitch = livingEntity.getXRot();
 
-            livingEntity.setPitch(((IEntity) MinecraftClient.getInstance().player).getLastPitch());
+            livingEntity.setXRot(((IEntity) Minecraft.getInstance().player).getLastPitch());
             ((IEntity) livingEntity).setLastPitch(Managers.PLAYER.lastPitch);
-            livingEntity.headYaw = ((IEntity) MinecraftClient.getInstance().player).getLastYaw();
-            livingEntity.bodyYaw = Render2DEngine.interpolateFloat(Managers.PLAYER.prevBodyYaw, Managers.PLAYER.bodyYaw, Render3DEngine.getTickDelta());
+            livingEntity.yHeadRot = ((IEntity) Minecraft.getInstance().player).getLastYaw();
+            livingEntity.yBodyRot = Render2DEngine.interpolateFloat(Managers.PLAYER.prevBodyYaw, Managers.PLAYER.bodyYaw, Render3DEngine.getTickDelta());
             ((ILivingEntity) livingEntity).setLastHeadYaw(Managers.PLAYER.lastYaw);
             ((ILivingEntity) livingEntity).setLastBodyYaw(Render2DEngine.interpolateFloat(Managers.PLAYER.prevBodyYaw, Managers.PLAYER.bodyYaw, Render3DEngine.getTickDelta()));
         }
@@ -73,23 +74,23 @@ public abstract class MixinLivingEntityRenderer {
             return;
         }
 
-        if (livingEntity instanceof PlayerEntity pe && ModuleManager.chams.isEnabled() && ModuleManager.chams.players.getValue()) {
-            ModuleManager.chams.renderPlayer(pe, state.bodyYaw, Render3DEngine.getTickDelta(), matrixStack, i, model, ci, () -> postRender(livingEntity));
+        if (livingEntity instanceof Player pe && ModuleManager.chams.isEnabled() && ModuleManager.chams.players.getValue()) {
+            ModuleManager.chams.renderPlayer(pe, state.bodyRot, Render3DEngine.getTickDelta(), matrixStack, i, model, ci, () -> postRender(livingEntity));
 
             if (!pe.isSpectator()) {
                 float g = Render3DEngine.getTickDelta();
                 float n;
                 Direction direction;
                 Entity entity;
-                matrixStack.push();
-                float h = MathHelper.lerpAngleDegrees(g, ((ILivingEntity) pe).getLastBodyYaw(), pe.bodyYaw);
-                float j = MathHelper.lerpAngleDegrees(g, ((ILivingEntity) pe).getLastHeadYaw(), pe.headYaw);
+                matrixStack.pushPose();
+                float h = Mth.rotLerp(g, ((ILivingEntity) pe).getLastBodyYaw(), pe.yBodyRot);
+                float j = Mth.rotLerp(g, ((ILivingEntity) pe).getLastHeadYaw(), pe.yHeadRot);
                 float k = j - h;
-                if (pe.hasVehicle() && (entity = pe.getVehicle()) instanceof LivingEntity) {
+                if (pe.isPassenger() && (entity = pe.getVehicle()) instanceof LivingEntity) {
                     LivingEntity livingEntity2 = (LivingEntity) entity;
-                    h = MathHelper.lerpAngleDegrees(g, ((ILivingEntity) livingEntity2).getLastBodyYaw(), livingEntity2.bodyYaw);
+                    h = Mth.rotLerp(g, ((ILivingEntity) livingEntity2).getLastBodyYaw(), livingEntity2.yBodyRot);
                     k = j - h;
-                    float l = MathHelper.wrapDegrees(k);
+                    float l = Mth.wrapDegrees(k);
                     if (l < -85.0f) {
                         l = -85.0f;
                     }
@@ -102,32 +103,32 @@ public abstract class MixinLivingEntityRenderer {
                     }
                     k = j - h;
                 }
-                float m = MathHelper.lerp(g, ((IEntity) pe).getLastPitch(), pe.getPitch());
-                if (LivingEntityRenderer.shouldFlipUpsideDown(pe)) {
+                float m = Mth.lerp(g, ((IEntity) pe).getLastPitch(), pe.getXRot());
+                if (LivingEntityRenderer.isEntityUpsideDown(pe)) {
                     m *= -1.0f;
                     k *= -1.0f;
                 }
-                if (pe.isInPose(EntityPose.SLEEPING) && (direction = pe.getSleepingDirection()) != null) {
-                    n = pe.getEyeHeight(EntityPose.STANDING) - 0.1f;
-                    matrixStack.translate((float) (-direction.getOffsetX()) * n, 0.0f, (float) (-direction.getOffsetZ()) * n);
+                if (pe.hasPose(Pose.SLEEPING) && (direction = pe.getBedOrientation()) != null) {
+                    n = pe.getEyeHeight(Pose.STANDING) - 0.1f;
+                    matrixStack.translate((float) (-direction.getStepX()) * n, 0.0f, (float) (-direction.getStepZ()) * n);
                 }
-                float l = pe.age + g;
+                float l = pe.tickCount + g;
                 ModuleManager.chams.setupTransforms1(pe, matrixStack, l, h, g);
                 matrixStack.scale(-1.0f, -1.0f, 1.0f);
                 matrixStack.scale(0.9375f, 0.9375f, 0.9375f);
                 matrixStack.translate(0.0f, -1.501f, 0.0f);
                 n = 0.0f;
                 float o = 0.0f;
-                if (!pe.hasVehicle() && pe.isAlive()) {
-                    n = pe.limbAnimator.getSpeed();
-                    o = pe.limbAnimator.getAnimationProgress(g);
+                if (!pe.isPassenger() && pe.isAlive()) {
+                    n = pe.walkAnimation.speed();
+                    o = pe.walkAnimation.position(g);
                     if (pe.isBaby())
                         o *= 3.0f;
 
                     if (n > 1.0f)
                         n = 1.0f;
                 }
-                matrixStack.pop();
+                matrixStack.popPose();
             }
         }
     }
@@ -135,16 +136,16 @@ public abstract class MixinLivingEntityRenderer {
     @Unique
     public void postRender(LivingEntity livingEntity) {
         if (Module.fullNullCheck()) return;
-        if (mc.player != null && livingEntity == mc.player && mc.player.getControllingVehicle() == null && ClientSettings.renderRotations.getValue() && !ThunderHack.isFuturePresent()) {
+        if (mc.player != null && livingEntity == mc.player && mc.player.getControlledVehicle() == null && ClientSettings.renderRotations.getValue() && !ThunderHack.isFuturePresent()) {
             ((IEntity) livingEntity).setLastPitch(originalPrevHeadPitch);
-            livingEntity.setPitch(originalHeadPitch);
-            livingEntity.headYaw = originalHeadYaw;
+            livingEntity.setXRot(originalHeadPitch);
+            livingEntity.yHeadRot = originalHeadYaw;
             ((ILivingEntity) livingEntity).setLastHeadYaw(originalPrevHeadYaw);
         }
     }
 
     @Inject(method = "render", at = @At("TAIL"))
-    public void onRenderPost(LivingEntityRenderState state, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo ci) {
+    public void onRenderPost(LivingEntityRenderState state, PoseStack matrixStack, MultiBufferSource vertexConsumerProvider, int i, CallbackInfo ci) {
         if (Module.fullNullCheck()) return;
         if (lastEntity != null) {
             postRender(lastEntity);
@@ -157,10 +158,10 @@ public abstract class MixinLivingEntityRenderer {
 
         float alpha = -1f;
 
-        if (ModuleManager.noRender.isEnabled() && ModuleManager.noRender.antiPlayerCollision.getValue() && lastEntity != mc.player && lastEntity instanceof PlayerEntity pl && !pl.isInvisible())
-            alpha = MathUtility.clamp((float) (mc.player.squaredDistanceTo(lastEntity.getPos()) / 3f) + 0.2f, 0f, 1f);
+        if (ModuleManager.noRender.isEnabled() && ModuleManager.noRender.antiPlayerCollision.getValue() && lastEntity != mc.player && lastEntity instanceof Player pl && !pl.isInvisible())
+            alpha = MathUtility.clamp((float) (mc.player.distanceToSqr(lastEntity.position()) / 3f) + 0.2f, 0f, 1f);
 
-        if (lastEntity != mc.player && lastEntity instanceof PlayerEntity pl && pl.isInvisible() && ModuleManager.serverHelper.isEnabled() && ModuleManager.serverHelper.trueSight.getValue())
+        if (lastEntity != mc.player && lastEntity instanceof Player pl && pl.isInvisible() && ModuleManager.serverHelper.isEnabled() && ModuleManager.serverHelper.trueSight.getValue())
             alpha = 0.3f;
 
         if (alpha != -1)

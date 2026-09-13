@@ -17,15 +17,15 @@
  */
 package thunder.hack.injection.accesors;
 
-import net.minecraft.client.render.effect.PostEffectPass;
-import net.minecraft.client.render.effect.PostEffectProcessor;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
 import java.util.List;
+import net.minecraft.client.renderer.PostChain;
+import net.minecraft.client.renderer.PostPass;
 
-@Mixin(PostEffectProcessor.class)
+@Mixin(PostChain.class)
 public interface AccessiblePassesShaderEffect {
     @Accessor
-    List<PostEffectPass> getPasses();
+    List<PostPass> getPasses();
 }

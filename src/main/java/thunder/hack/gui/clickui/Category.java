@@ -1,14 +1,17 @@
 package thunder.hack.gui.clickui;
 
 import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.shaders.UniformType;
 import com.mojang.blaze3d.pipeline.BlendFunction;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.platform.DepthTestFunction;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import net.minecraft.client.gui.DrawContext;
-import com.mojang.blaze3d.shaders.UniformType;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.render.*;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import org.joml.Matrix4f;
 import thunder.hack.ThunderHack;
 import thunder.hack.utility.render.compat.RenderSystem;
@@ -27,18 +30,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Category extends AbstractCategory {
-    private final Identifier ICON;
+    private final ResourceLocation ICON;
     private static final RenderPipeline HEADER_ICON_PIPELINE = RenderPipeline.builder()
-            .withLocation(Identifier.of("thunderhack", "pipeline/clickgui_header_icon"))
-            .withVertexShader(Identifier.of("minecraft", "core/position_tex_color"))
-            .withFragmentShader(Identifier.of("minecraft", "core/position_tex_color"))
+            .withLocation(ResourceLocation.fromNamespaceAndPath("thunderhack", "pipeline/clickgui_header_icon"))
+            .withVertexShader(ResourceLocation.fromNamespaceAndPath("minecraft", "core/position_tex_color"))
+            .withFragmentShader(ResourceLocation.fromNamespaceAndPath("minecraft", "core/position_tex_color"))
             .withSampler("Sampler0")
             .withUniform("Projection", UniformType.UNIFORM_BUFFER)
             .withUniform("DynamicTransforms", UniformType.UNIFORM_BUFFER)
             .withBlend(BlendFunction.ADDITIVE)
             .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
             .withDepthWrite(false)
-            .withVertexFormat(VertexFormats.POSITION_TEXTURE_COLOR, VertexFormat.DrawMode.QUADS)
+            .withVertexFormat(DefaultVertexFormat.POSITION_TEX_COLOR, VertexFormat.Mode.QUADS)
             .build();
 
     private boolean scrollHover;
@@ -49,7 +52,7 @@ public class Category extends AbstractCategory {
     public Category(Module.Category category, ArrayList<Module> features, float x, float y, float width, float height) {
         super(category.getName(), x, y, width, height);
         buttons = new ArrayList<>();
-        ICON = Identifier.of("thunderhack", "textures/gui/headers/" + (Module.Category.isCustomCategory(category) ? "stock" : category.getName().toLowerCase()) + ".png");
+        ICON = ResourceLocation.fromNamespaceAndPath("thunderhack", "textures/gui/headers/" + (Module.Category.isCustomCategory(category) ? "stock" : category.getName().toLowerCase()) + ".png");
 
         if (category.getName().equals("Client"))
             buttons.add(new SearchBar());
@@ -66,14 +69,14 @@ public class Category extends AbstractCategory {
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
 
         setWidth(ModuleManager.clickGui.moduleWidth.getValue());
 
         scrollHover = Render2DEngine.isHovered(mouseX, mouseY, getX(), getY() + height, width, catHeight + 20);
 
-        context.getMatrices().pushMatrix();
+        context.pose().pushMatrix();
 
         boolean popStack = false;
 
@@ -86,14 +89,14 @@ public class Category extends AbstractCategory {
         catHeight = AnimationUtility.fast(catHeight, height1, 30f);
 
         if (isOpen()) {
-            Render2DEngine.drawHudBase(context.getMatrices(), getX() + 3, getY() + height - 6, width - 6, catHeight, 1, false);
+            Render2DEngine.drawHudBase(context.pose(), getX() + 3, getY() + height - 6, width - 6, catHeight, 1, false);
 
             if (!(ModuleManager.clickGui.scrollMode.getValue() == ClickGui.scrollModeEn.Old || getButtonsHeight() < ModuleManager.clickGui.catHeight.getValue())) {
-                Render2DEngine.addWindow(context.getMatrices(), getX() + 3, getY() + height - 6, getX() + 3 + width - 6, (getY() + height - 6) + (float) ((ModuleManager.clickGui.catHeight.getValue())), 1f);
+                Render2DEngine.addWindow(context.pose(), getX() + 3, getY() + height - 6, getX() + 3 + width - 6, (getY() + height - 6) + (float) ((ModuleManager.clickGui.catHeight.getValue())), 1f);
                 popStack = true;
             }
 
-            Render2DEngine.drawBlurredShadow(context.getMatrices(), (int) getX() + 4, (int) (getY() + height - 6), (int) width - 8, 8, 7, new Color(0, 0, 0, 180));
+            Render2DEngine.drawBlurredShadow(context.pose(), (int) getX() + 4, (int) (getY() + height - 6), (int) width - 8, 8, 7, new Color(0, 0, 0, 180));
             for (AbstractButton button : buttons) {
                 if (button instanceof ModuleButton mb && SearchBar.listening && !mb.module.getName().toLowerCase().contains(SearchBar.moduleName.toLowerCase()))
                     continue;
@@ -114,7 +117,7 @@ public class Category extends AbstractCategory {
         if (popStack)
             Render2DEngine.popWindow();
 
-        Render2DEngine.drawHudBase(context.getMatrices(), getX() + 2, getY() - 5, width - 4, height, 1, false);
+        Render2DEngine.drawHudBase(context.pose(), getX() + 2, getY() - 5, width - 4, height, 1, false);
 
         Color m1 = HudEditor.getColor(270);
         Color m2 = HudEditor.getColor(0);
@@ -125,7 +128,7 @@ public class Category extends AbstractCategory {
             RenderSystem.enableBlend();
             RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE);
             RenderSystem.setShader(HEADER_ICON_PIPELINE);
-            BufferBuilder b = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR);
+            BufferBuilder b = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
             float clipX0 = getX() + 2;
             float clipY0 = getY() - 5;
             float clipX1 = clipX0 + width - 4;
@@ -139,20 +142,20 @@ public class Category extends AbstractCategory {
             renderHeaderIcon(b, context, getX() + 25, (getY() + (height - 21) / 2), 8, 8, 0, 0, 8, 8, 8, 8, clipX0, clipY0, clipX1, clipY1, m1, m2, m3, m4);
             renderHeaderIcon(b, context, getX() + 15, (getY() + (height - 22) / 2), 12, 12, 0, 0, 12, 12, 12, 12, clipX0, clipY0, clipX1, clipY1, m1.darker().darker().darker(), m2.darker().darker().darker(), m3.darker().darker().darker(), m4.darker().darker().darker());
             renderHeaderIcon(b, context, getX() + 5, (getY() + (height - 28) / 2), 20, 20, 0, 0, 20, 20, 20, 20, clipX0, clipY0, clipX1, clipY1, m1, m2, m3, m4);
-            BufferRenderer.drawWithGlobalProgram(b.end());
+            BufferRenderer.drawWithGlobalProgram(b.buildOrThrow());
             RenderSystem.defaultBlendFunc();
             RenderSystem.disableBlend();
         }
 
-        Render2DEngine.drawBlurredShadow(context.getMatrices(),
+        Render2DEngine.drawBlurredShadow(context.pose(),
                 ((int) getX() + (width - 4) / 2) - FontRenderers.categories.getStringWidth(getName()) / 2f, (int) getY() + (int) height / 2f - 10, FontRenderers.categories.getStringWidth(getName()) + 6, 13, 20, Render2DEngine.injectAlpha(Color.black, 170));
 
-        FontRenderers.categories.drawCenteredString(context.getMatrices(), getName(), ((int) getX() + 2 + (width - 4) / 2), (int) getY() + (int) height / 2f - 7, new Color(-1).getRGB());
-        context.getMatrices().popMatrix();
+        FontRenderers.categories.drawCenteredString(context.pose(), getName(), ((int) getX() + 2 + (width - 4) / 2), (int) getY() + (int) height / 2f - 7, new Color(-1).getRGB());
+        context.pose().popMatrix();
         updatePosition();
     }
 
-    private void renderHeaderIcon(BufferBuilder b, DrawContext context,
+    private void renderHeaderIcon(BufferBuilder b, GuiGraphics context,
                                   float x, float y, float width, float height,
                                   float u, float v, float regionWidth, float regionHeight,
                                   float textureWidth, float textureHeight,
@@ -170,12 +173,12 @@ public class Category extends AbstractCategory {
         float clippedU1 = u + (x1 - x) / width * regionWidth;
         float clippedV0 = v + (y0 - y) / height * regionHeight;
         float clippedV1 = v + (y1 - y) / height * regionHeight;
-        Matrix4f matrix = thunder.hack.utility.render.GuiMatrix.positionMatrix(context.getMatrices());
+        Matrix4f matrix = thunder.hack.utility.render.GuiMatrix.positionMatrix(context.pose());
 
-        b.vertex(matrix, x0, y1, 0).texture(clippedU0 / textureWidth, clippedV1 / textureHeight).color(c1.getRGB());
-        b.vertex(matrix, x1, y1, 0).texture(clippedU1 / textureWidth, clippedV1 / textureHeight).color(c2.getRGB());
-        b.vertex(matrix, x1, y0, 0).texture(clippedU1 / textureWidth, clippedV0 / textureHeight).color(c3.getRGB());
-        b.vertex(matrix, x0, y0, 0).texture(clippedU0 / textureWidth, clippedV0 / textureHeight).color(c4.getRGB());
+        b.addVertex(matrix, x0, y1, 0).setUv(clippedU0 / textureWidth, clippedV1 / textureHeight).setColor(c1.getRGB());
+        b.addVertex(matrix, x1, y1, 0).setUv(clippedU1 / textureWidth, clippedV1 / textureHeight).setColor(c2.getRGB());
+        b.addVertex(matrix, x1, y0, 0).setUv(clippedU1 / textureWidth, clippedV0 / textureHeight).setColor(c3.getRGB());
+        b.addVertex(matrix, x0, y0, 0).setUv(clippedU0 / textureWidth, clippedV0 / textureHeight).setColor(c4.getRGB());
     }
 
     @Override

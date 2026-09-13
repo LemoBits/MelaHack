@@ -1,26 +1,36 @@
 package thunder.hack.features.modules.combat;
 
 import com.google.common.collect.Lists;
+import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.blaze3d.vertex.PoseStack;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.RespawnAnchorBlock;
-import net.minecraft.client.util.InputUtil;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.*;
-import net.minecraft.screen.slot.SlotActionType;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.*;
-import net.minecraft.world.RaycastContext;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.protocol.game.*;
+import net.minecraft.network.protocol.game.ServerboundContainerClosePacket;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
+import net.minecraft.util.Mth;
+import net.minecraft.core.*;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.*;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.RespawnAnchorBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
@@ -51,7 +61,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static net.minecraft.util.math.MathHelper.wrapDegrees;
+import static net.minecraft.util.Mth.wrapDegrees;
 
 public final class AutoAnchor extends Module {
     /*   MAIN   */
@@ -125,7 +135,7 @@ public final class AutoAnchor extends Module {
     private final Setting<Boolean> confirmInfo = new Setting<>("ConfirmTime", true, v -> page.getValue() == Pages.Info);
     private final Setting<Boolean> calcInfo = new Setting<>("CalcInfo", false, v -> page.getValue() == Pages.Info);
 
-    public static PlayerEntity target;
+    public static Player target;
     private PlaceData bestPosition;
     private BlockHitResult bestAnchor;
 
@@ -181,10 +191,10 @@ public final class AutoAnchor extends Module {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onTick(EventTick e) {
-        if (mc.player == null || mc.world == null) return;
+        if (mc.player == null || mc.level == null) return;
 
         long currentTime = System.currentTimeMillis();
-        final List<PlaceData> blocks = getPossibleBlocks(target, mc.player.getPos(), placeRange.getValue());
+        final List<PlaceData> blocks = getPossibleBlocks(target, mc.player.position(), placeRange.getValue());
         calcPosition(blocks);
         getAnchorToExplode(blocks);
         calcTime = System.currentTimeMillis() - currentTime;
@@ -206,11 +216,11 @@ public final class AutoAnchor extends Module {
 
     @EventHandler
     public void onSync(EventSync e) {
-        if (mc.player == null || mc.world == null) return;
+        if (mc.player == null || mc.level == null) return;
 
         target = Managers.COMBAT.getTarget(targetRange.getValue(), targetLogic.getValue());
 
-        if (target != null && (target.isDead() || target.getHealth() < 0)) {
+        if (target != null && (target.isDeadOrDying() || target.getHealth() < 0)) {
             target = null;
             return;
         }
@@ -222,9 +232,9 @@ public final class AutoAnchor extends Module {
         }
 
         // Rotate
-        if (rotate.getValue() && mc.player != null && rotationYaw != mc.player.getYaw() && rotationPitch != mc.player.getPitch()) {
-            mc.player.setYaw(rotationYaw);
-            mc.player.setPitch(rotationPitch);
+        if (rotate.getValue() && mc.player != null && rotationYaw != mc.player.getYRot() && rotationPitch != mc.player.getXRot()) {
+            mc.player.setYRot(rotationYaw);
+            mc.player.setXRot(rotationPitch);
         }
     }
 
@@ -243,7 +253,7 @@ public final class AutoAnchor extends Module {
     public String getDisplayInfo() {
         StringBuilder info = new StringBuilder();
 
-        Direction side = bestPosition == null ? null : bestPosition.bhr().getSide();
+        Direction side = bestPosition == null ? null : bestPosition.bhr().getDirection();
         if (side != null) {
             if (targetName.getValue() && target != null) info.append(target.getName().getString()).append(" | ");
             if (speed.getValue()) info.append(anchorSpeed).append(" c/s").append(" | ");
@@ -256,12 +266,12 @@ public final class AutoAnchor extends Module {
 
     @EventHandler
     public void onBlockDestruct(EventSetBlockState e) {
-        if (mc.player == null || mc.world == null) return;
+        if (mc.player == null || mc.level == null) return;
 
         if (e.getPrevState() == null || e.getState() == null)
             return;
 
-        if (target != null && target.squaredDistanceTo(e.getPos().toCenterPos()) <= 4 && e.getState().getBlock() instanceof RespawnAnchorBlock && e.getPrevState().isReplaceable()) {
+        if (target != null && target.distanceToSqr(e.getPos().getCenter()) <= 4 && e.getState().getBlock() instanceof RespawnAnchorBlock && e.getPrevState().canBeReplaced()) {
             debug("Detected change of state " + e.getPos() + ", exploding...");
             //explodeAnchor(getInteractResult(e.getPos()));
         }
@@ -269,12 +279,12 @@ public final class AutoAnchor extends Module {
 
     public void calcRotations() {
         if (rotate.getValue() && !shouldPause() && (bestPosition != null || bestAnchor != null) && mc.player != null) {
-            Vec3d vec = bestPosition == null ? bestAnchor.getPos() : bestPosition.bhr().getPos();
+            Vec3 vec = bestPosition == null ? bestAnchor.getLocation() : bestPosition.bhr().getLocation();
 
             float yawDelta = wrapDegrees((float) wrapDegrees(Math.toDegrees(Math.atan2(vec.z - mc.player.getZ(), (vec.x - mc.player.getX()))) - 90) - rotationYaw);
-            float pitchDelta = ((float) (-Math.toDegrees(Math.atan2(vec.y - (mc.player.getPos().y + mc.player.getEyeHeight(mc.player.getPose())), Math.sqrt(Math.pow((vec.x - mc.player.getX()), 2) + Math.pow(vec.z - mc.player.getZ(), 2))))) - rotationPitch);
+            float pitchDelta = ((float) (-Math.toDegrees(Math.atan2(vec.y - (mc.player.position().y + mc.player.getEyeHeight(mc.player.getPose())), Math.sqrt(Math.pow((vec.x - mc.player.getX()), 2) + Math.pow(vec.z - mc.player.getZ(), 2))))) - rotationPitch);
 
-            yawDelta = (float) (yawDelta + Render2DEngine.interpolate(-1.2f, 1.2f, Math.sin(mc.player.age % 80)) + MathUtility.random(-1.2f, 1.2f));
+            yawDelta = (float) (yawDelta + Render2DEngine.interpolate(-1.2f, 1.2f, Math.sin(mc.player.tickCount % 80)) + MathUtility.random(-1.2f, 1.2f));
             pitchDelta = pitchDelta + MathUtility.random(-0.8f, 0.8f);
 
             if (yawDelta > 180)
@@ -285,28 +295,28 @@ public final class AutoAnchor extends Module {
             if (yawStep.getValue().isEnabled())
                 yawStepVal = yawAngle.getValue();
 
-            float clampedYawDelta = MathHelper.clamp(MathHelper.abs(yawDelta), -yawStepVal, yawStepVal);
-            float clampedPitchDelta = MathHelper.clamp(pitchDelta, -45, 45);
+            float clampedYawDelta = Mth.clamp(Mth.abs(yawDelta), -yawStepVal, yawStepVal);
+            float clampedPitchDelta = Mth.clamp(pitchDelta, -45, 45);
 
-            rotated = MathHelper.abs(yawDelta) <= yawStepVal || !yawStep.getValue().isEnabled();
+            rotated = Mth.abs(yawDelta) <= yawStepVal || !yawStep.getValue().isEnabled();
 
             float newYaw = rotationYaw + (yawDelta > 0 ? clampedYawDelta : -clampedYawDelta);
-            float newPitch = MathHelper.clamp(rotationPitch + clampedPitchDelta, -90.0F, 90.0F);
+            float newPitch = Mth.clamp(rotationPitch + clampedPitchDelta, -90.0F, 90.0F);
 
-            double gcdFix = (Math.pow(mc.options.getMouseSensitivity().getValue() * 0.6 + 0.2, 3.0)) * 1.2;
+            double gcdFix = (Math.pow(mc.options.sensitivity().get() * 0.6 + 0.2, 3.0)) * 1.2;
 
             rotationYaw = (float) (newYaw - (newYaw - rotationYaw) % gcdFix);
             rotationPitch = (float) (newPitch - (newPitch - rotationPitch) % gcdFix);
 
             ModuleManager.rotations.fixRotation = rotationYaw;
         } else {
-            rotationYaw = mc.player.getYaw();
-            rotationPitch = mc.player.getPitch();
+            rotationYaw = mc.player.getYRot();
+            rotationPitch = mc.player.getXRot();
         }
     }
 
     @Override
-    public void onRender3D(MatrixStack stack) {
+    public void onRender3D(PoseStack stack) {
         if (render.getValue()) {
             final Object2ObjectMap<BlockPos, Long> cache = new Object2ObjectOpenHashMap<>(renderPositions);
 
@@ -322,22 +332,22 @@ public final class AutoAnchor extends Module {
                     if (System.currentTimeMillis() - time < 500) {
                         int alpha = (int) (100f * (1f - ((System.currentTimeMillis() - time) / 500f)));
 
-                        Render3DEngine.FILLED_QUEUE.add(new Render3DEngine.FillAction(new Box(pos), Render2DEngine.injectAlpha(fillColor.getValue().getColorObject(), alpha)));
-                        Render3DEngine.OUTLINE_QUEUE.add(new Render3DEngine.OutlineAction(new Box(pos), Render2DEngine.injectAlpha(lineColor.getValue().getColorObject(), alpha), lineWidth.getValue()));
+                        Render3DEngine.FILLED_QUEUE.add(new Render3DEngine.FillAction(new AABB(pos), Render2DEngine.injectAlpha(fillColor.getValue().getColorObject(), alpha)));
+                        Render3DEngine.OUTLINE_QUEUE.add(new Render3DEngine.OutlineAction(new AABB(pos), Render2DEngine.injectAlpha(lineColor.getValue().getColorObject(), alpha), lineWidth.getValue()));
 
                         if (drawDamage.getValue())
-                            Render3DEngine.drawTextIn3D(dmg, pos.toCenterPos(), 0, 0.1, 0, Render2DEngine.applyOpacity(textColor.getValue().getColorObject(), alpha / 100f));
+                            Render3DEngine.drawTextIn3D(dmg, pos.getCenter(), 0, 0.1, 0, Render2DEngine.applyOpacity(textColor.getValue().getColorObject(), alpha / 100f));
                     }
                 });
             } else if (renderMode.getValue() == Render.Slide && renderPos != null) {
                 if (prevRenderPos == null) prevRenderPos = renderPos;
                 if (renderPositions.isEmpty()) return;
                 float mult = MathUtility.clamp((System.currentTimeMillis() - renderMultiplier) / (float) slideDelay.getValue(), 0f, 1f);
-                Box interpolatedBox = Render3DEngine.interpolateBox(new Box(prevRenderPos), new Box(renderPos), mult);
+                AABB interpolatedBox = Render3DEngine.interpolateBox(new AABB(prevRenderPos), new AABB(renderPos), mult);
 
                 renderBox(dmg, interpolatedBox);
             } else if (renderPos != null) {
-                Box box = new Box(renderPos);
+                AABB box = new AABB(renderPos);
                 if (renderPositions.isEmpty())
                     return;
 
@@ -346,7 +356,7 @@ public final class AutoAnchor extends Module {
         }
     }
 
-    private void renderBox(String dmg, Box box) {
+    private void renderBox(String dmg, AABB box) {
         Render3DEngine.FILLED_QUEUE.add(new Render3DEngine.FillAction(box, fillColor.getValue().getColorObject()));
         Render3DEngine.OUTLINE_QUEUE.add(new Render3DEngine.OutlineAction(box, lineColor.getValue().getColorObject(), lineWidth.getValue()));
 
@@ -355,18 +365,18 @@ public final class AutoAnchor extends Module {
     }
 
     public boolean shouldPause() {
-        if (mc.player == null || mc.world == null || mc.interactionManager == null) return true;
+        if (mc.player == null || mc.level == null || mc.gameMode == null) return true;
 
-        boolean offhand = mc.player.getOffHandStack().getItem() == Items.RESPAWN_ANCHOR;
-        boolean mainHand = mc.player.getMainHandStack().getItem() == Items.RESPAWN_ANCHOR;
+        boolean offhand = mc.player.getOffhandItem().getItem() == Items.RESPAWN_ANCHOR;
+        boolean mainHand = mc.player.getMainHandItem().getItem() == Items.RESPAWN_ANCHOR;
 
-        boolean offhandGlow = mc.player.getOffHandStack().getItem() == Items.GLOWSTONE;
-        boolean mainHandGlow = mc.player.getMainHandStack().getItem() == Items.GLOWSTONE;
+        boolean offhandGlow = mc.player.getOffhandItem().getItem() == Items.GLOWSTONE;
+        boolean mainHandGlow = mc.player.getMainHandItem().getItem() == Items.GLOWSTONE;
 
         if (!pauseTimer.passedMs(1000))
             return true;
 
-        if (mc.interactionManager.isBreakingBlock() && !offhand && mining.getValue())
+        if (mc.gameMode.isDestroying() && !offhand && mining.getValue())
             return true;
 
         if (autoSwitch.is(Switch.NONE) && !offhand && !mainHand)
@@ -407,7 +417,7 @@ public final class AutoAnchor extends Module {
         if (ModuleManager.surround.isEnabled() && !ModuleManager.surround.inactivityTimer.passedMs(500) && surround.getValue())
             return true;
 
-        if (ModuleManager.middleClick.isEnabled() && mc.options.pickItemKey.isPressed() && middleClick.getValue())
+        if (ModuleManager.middleClick.isEnabled() && mc.options.keyPickItem.isDown() && middleClick.getValue())
             return true;
 
         if (ModuleManager.autoTrap.isEnabled() && !ModuleManager.surround.inactivityTimer.passedMs(500))
@@ -433,8 +443,8 @@ public final class AutoAnchor extends Module {
         SearchInvResult anchorResult = InventoryUtility.findInHotBar(stack -> !(stack.getItem() instanceof BlockItem));
         SearchInvResult glowInvResult = InventoryUtility.findItemInInventory(Items.GLOWSTONE);
 
-        boolean offhand = mc.player.getOffHandStack().getItem() == Items.GLOWSTONE;
-        boolean holdingAnchor = mc.player.getMainHandStack().getItem() == Items.GLOWSTONE || offhand;
+        boolean offhand = mc.player.getOffhandItem().getItem() == Items.GLOWSTONE;
+        boolean holdingAnchor = mc.player.getMainHandItem().getItem() == Items.GLOWSTONE || offhand;
 
         if (rotate.getValue() && !rotated)
             return;
@@ -442,30 +452,30 @@ public final class AutoAnchor extends Module {
         if (autoSwitch.getValue() != Switch.NONE && !holdingAnchor)
             prevSlot = switchTo(glowResult, glowInvResult, autoSwitch);
 
-        if (!(mc.player.getMainHandStack().getItem() == Items.GLOWSTONE || offhand || autoSwitch.getValue() == Switch.SILENT))
+        if (!(mc.player.getMainHandItem().getItem() == Items.GLOWSTONE || offhand || autoSwitch.getValue() == Switch.SILENT))
             return;
 
         if (ak47.is(AK47.OFF)) {
-            if (mc.player.isSneaking())
-                sendPacket(new net.minecraft.network.packet.c2s.play.PlayerInputC2SPacket(new net.minecraft.util.PlayerInput(false, false, false, false, false, false, false)));
+            if (mc.player.isShiftKeyDown())
+                sendPacket(new net.minecraft.network.protocol.game.ServerboundPlayerInputPacket(new net.minecraft.world.entity.player.Input(false, false, false, false, false, false, false)));
 
-            if (mc.world.getBlockState(bhr.getBlockPos()).get(RespawnAnchorBlock.CHARGES) == 0) {
-                sendSequencedPacket(id -> new PlayerInteractBlockC2SPacket(offhand ? Hand.OFF_HAND : Hand.MAIN_HAND, bhr, id));
-                mc.player.swingHand(offhand ? Hand.OFF_HAND : Hand.MAIN_HAND);
+            if (mc.level.getBlockState(bhr.getBlockPos()).getValue(RespawnAnchorBlock.CHARGE) == 0) {
+                sendSequencedPacket(id -> new ServerboundUseItemOnPacket(offhand ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND, bhr, id));
+                mc.player.swing(offhand ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND);
             } else {
                 anchorResult.switchTo();
-                sendSequencedPacket(id -> new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND, bhr, id));
-                mc.player.swingHand(Hand.MAIN_HAND);
+                sendSequencedPacket(id -> new ServerboundUseItemOnPacket(InteractionHand.MAIN_HAND, bhr, id));
+                mc.player.swing(InteractionHand.MAIN_HAND);
             }
         } else {
-            if (mc.player.isSneaking())
-                sendPacket(new net.minecraft.network.packet.c2s.play.PlayerInputC2SPacket(new net.minecraft.util.PlayerInput(false, false, false, false, false, false, false)));
-            sendSequencedPacket(id -> new PlayerInteractBlockC2SPacket(offhand ? Hand.OFF_HAND : Hand.MAIN_HAND, bhr, id));
-            mc.player.swingHand(offhand ? Hand.OFF_HAND : Hand.MAIN_HAND);
+            if (mc.player.isShiftKeyDown())
+                sendPacket(new net.minecraft.network.protocol.game.ServerboundPlayerInputPacket(new net.minecraft.world.entity.player.Input(false, false, false, false, false, false, false)));
+            sendSequencedPacket(id -> new ServerboundUseItemOnPacket(offhand ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND, bhr, id));
+            mc.player.swing(offhand ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND);
 
             anchorResult.switchTo();
-            sendSequencedPacket(id -> new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND, bhr, id));
-            mc.player.swingHand(Hand.MAIN_HAND);
+            sendSequencedPacket(id -> new ServerboundUseItemOnPacket(InteractionHand.MAIN_HAND, bhr, id));
+            mc.player.swing(InteractionHand.MAIN_HAND);
         }
 
         breakTimer.reset();
@@ -474,7 +484,7 @@ public final class AutoAnchor extends Module {
     }
 
     private int switchTo(SearchInvResult result, SearchInvResult resultInv, @NotNull Setting<Switch> switchMode) {
-        if (mc.player == null || mc.world == null || mc.interactionManager == null) return -1;
+        if (mc.player == null || mc.level == null || mc.gameMode == null) return -1;
 
         int prevSlot = mc.player.getInventory().getSelectedSlot();
 
@@ -482,8 +492,8 @@ public final class AutoAnchor extends Module {
             case INVENTORY -> {
                 if (resultInv.found()) {
                     prevSlot = resultInv.slot();
-                    mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, prevSlot, mc.player.getInventory().getSelectedSlot(), SlotActionType.SWAP, mc.player);
-                    sendPacket(new CloseHandledScreenC2SPacket(mc.player.currentScreenHandler.syncId));
+                    mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, prevSlot, mc.player.getInventory().getSelectedSlot(), ClickType.SWAP, mc.player);
+                    sendPacket(new ServerboundContainerClosePacket(mc.player.containerMenu.containerId));
                 }
             }
             case NORMAL -> result.switchTo();
@@ -501,13 +511,13 @@ public final class AutoAnchor extends Module {
         SearchInvResult anchorResult = InventoryUtility.findItemInHotBar(Items.RESPAWN_ANCHOR);
         SearchInvResult anchorInvResult = InventoryUtility.findItemInInventory(Items.RESPAWN_ANCHOR);
 
-        boolean offhand = mc.player.getOffHandStack().getItem() == Items.RESPAWN_ANCHOR;
-        boolean holdingAnchor = mc.player.getMainHandStack().getItem() == Items.RESPAWN_ANCHOR || offhand;
+        boolean offhand = mc.player.getOffhandItem().getItem() == Items.RESPAWN_ANCHOR;
+        boolean holdingAnchor = mc.player.getMainHandItem().getItem() == Items.RESPAWN_ANCHOR || offhand;
 
         if (rotate.getValue()) {
             if (instant) {
-                float[] angle = InteractionUtility.calculateAngle(data.bhr().getPos());
-                sendPacket(new PlayerMoveC2SPacket.Full(mc.player.getX(), mc.player.getY(), mc.player.getZ(), angle[0], angle[1], mc.player.isOnGround(), mc.player.horizontalCollision));
+                float[] angle = InteractionUtility.calculateAngle(data.bhr().getLocation());
+                sendPacket(new ServerboundMovePlayerPacket.PosRot(mc.player.getX(), mc.player.getY(), mc.player.getZ(), angle[0], angle[1], mc.player.onGround(), mc.player.horizontalCollision));
             } else if (!rotated)
                 return;
         }
@@ -515,12 +525,12 @@ public final class AutoAnchor extends Module {
         if (autoSwitch.getValue() != Switch.NONE && !holdingAnchor)
             prevSlot = switchTo(anchorResult, anchorInvResult, autoSwitch);
 
-        if (!(mc.player.getMainHandStack().getItem() == Items.RESPAWN_ANCHOR || offhand || autoSwitch.getValue() == Switch.SILENT))
+        if (!(mc.player.getMainHandItem().getItem() == Items.RESPAWN_ANCHOR || offhand || autoSwitch.getValue() == Switch.SILENT))
             return;
 
-        sendSequencedPacket(id -> new PlayerInteractBlockC2SPacket(offhand ? Hand.OFF_HAND : Hand.MAIN_HAND, data.bhr(), id));
+        sendSequencedPacket(id -> new ServerboundUseItemOnPacket(offhand ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND, data.bhr(), id));
 
-        mc.player.swingHand(offhand ? Hand.OFF_HAND : Hand.MAIN_HAND);
+        mc.player.swing(offhand ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND);
         placeTimer.reset();
 
         if (!data.bp().equals(renderPos)) {
@@ -544,19 +554,19 @@ public final class AutoAnchor extends Module {
     }
 
     private void postPlaceSwitch(int slot) {
-        if (mc.player == null || mc.world == null || mc.interactionManager == null) return;
+        if (mc.player == null || mc.level == null || mc.gameMode == null) return;
 
         if (autoSwitch.getValue() == Switch.SILENT )
             InventoryUtility.switchTo(slot);
 
         if (autoSwitch.getValue() == Switch.INVENTORY && slot != -1) {
-            mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, slot, mc.player.getInventory().getSelectedSlot(), SlotActionType.SWAP, mc.player);
-            sendPacket(new CloseHandledScreenC2SPacket(mc.player.currentScreenHandler.syncId));
+            mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, slot, mc.player.getInventory().getSelectedSlot(), ClickType.SWAP, mc.player);
+            sendPacket(new ServerboundContainerClosePacket(mc.player.containerMenu.containerId));
         }
     }
 
     public void calcPosition(List<PlaceData> blocks) {
-        if (mc.player == null || mc.world == null) return;
+        if (mc.player == null || mc.level == null) return;
         if (target == null) {
             renderPos = null;
             prevRenderPos = null;
@@ -567,9 +577,9 @@ public final class AutoAnchor extends Module {
         bestPosition = list.isEmpty() ? null : filterPositions(list);
     }
 
-    private @NotNull List<PlaceData> getPossibleBlocks(PlayerEntity target, Vec3d center, float range) {
+    private @NotNull List<PlaceData> getPossibleBlocks(Player target, Vec3 center, float range) {
         List<PlaceData> blocks = new ArrayList<>();
-        BlockPos playerPos = BlockPos.ofFloored(center);
+        BlockPos playerPos = BlockPos.containing(center);
 
         for (int x = (int) Math.floor(playerPos.getX() - range); x <= Math.ceil(playerPos.getX() + range); x++) {
             for (int y = (int) Math.floor(playerPos.getY() - range); y <= Math.ceil(playerPos.getY() + range); y++) {
@@ -595,7 +605,7 @@ public final class AutoAnchor extends Module {
     }
 
     public boolean isSafe(float damage, float selfDamage, boolean overrideDamage) {
-        if (mc.player == null || mc.world == null) return false;
+        if (mc.player == null || mc.level == null) return false;
 
         if (overrideDamage)
             return true;
@@ -640,12 +650,12 @@ public final class AutoAnchor extends Module {
 
         if (armorBreaker.getValue().isEnabled())
             for (ItemStack armor : thunder.hack.utility.player.ArmorUtility.getArmorItems(target))
-                if (armor != null && !armor.getItem().equals(Items.AIR) && ((armor.getMaxDamage() - armor.getDamage()) / (float) armor.getMaxDamage()) * 100 < armorScale.getValue()) {
+                if (armor != null && !armor.getItem().equals(Items.AIR) && ((armor.getMaxDamage() - armor.getDamageValue()) / (float) armor.getMaxDamage()) * 100 < armorScale.getValue()) {
                     override = true;
                     break;
                 }
 
-        if (facePlaceButton.getValue().getKey() != -1 && InputUtil.isKeyPressed(mc.getWindow().getHandle(), facePlaceButton.getValue().getKey()))
+        if (facePlaceButton.getValue().getKey() != -1 && InputConstants.isKeyDown(mc.getWindow().getWindow(), facePlaceButton.getValue().getKey()))
             override = true;
 
         if ((target.getHealth() + target.getAbsorptionAmount()) - (damage * lethalMultiplier.getValue()) < 0.5)
@@ -679,45 +689,45 @@ public final class AutoAnchor extends Module {
         return bestData.bhr;
     }
 
-    public @Nullable PlaceData getPlaceData(BlockPos bp, PlayerEntity target) {
-        if (mc.player == null || mc.world == null)
+    public @Nullable PlaceData getPlaceData(BlockPos bp, Player target) {
+        if (mc.player == null || mc.level == null)
             return null;
 
-        if (target != null && target.getPos().squaredDistanceTo(bp.toCenterPos()) > 144)
+        if (target != null && target.position().distanceToSqr(bp.getCenter()) > 144)
             return null;
 
-        BlockState state = mc.world.getBlockState(bp);
+        BlockState state = mc.level.getBlockState(bp);
         boolean isAnchor = state.getBlock() instanceof RespawnAnchorBlock;
 
-        if (!state.isReplaceable() && !isAnchor)
+        if (!state.canBeReplaced() && !isAnchor)
             return null;
 
         if (isAnchor)
-            mc.world.setBlockState(bp, Blocks.AIR.getDefaultState());
+            mc.level.setBlockAndUpdate(bp, Blocks.AIR.defaultBlockState());
 
         BlockHitResult placeResult = InteractionUtility.getPlaceResult(bp, interact.getValue(), false);
 
         if (placeResult == null) {
             if (isAnchor)
-                mc.world.setBlockState(bp, state);
+                mc.level.setBlockAndUpdate(bp, state);
             return null;
         }
 
-        float damage = target == null ? 10f : ExplosionUtility.getAutoCrystalDamage(bp.toCenterPos(), target, predictTicks.getValue(), useOptimizedCalc.getValue());
+        float damage = target == null ? 10f : ExplosionUtility.getAutoCrystalDamage(bp.getCenter(), target, predictTicks.getValue(), useOptimizedCalc.getValue());
         if (damage < 1.5f) {
             if (isAnchor)
-                mc.world.setBlockState(bp, state);
+                mc.level.setBlockAndUpdate(bp, state);
             return null;
         }
 
-        float selfDamage = ExplosionUtility.getAutoCrystalDamage(bp.toCenterPos(), mc.player, selfPredictTicks.getValue(), useOptimizedCalc.getValue());
+        float selfDamage = ExplosionUtility.getAutoCrystalDamage(bp.getCenter(), mc.player, selfPredictTicks.getValue(), useOptimizedCalc.getValue());
         boolean overrideDamage = shouldOverrideDamage(damage, selfDamage);
 
         if (protectFriends.getValue()) {
-            List<PlayerEntity> players = Lists.newArrayList(mc.world.getPlayers());
-            for (PlayerEntity pl : players) {
+            List<Player> players = Lists.newArrayList(mc.level.players());
+            for (Player pl : players) {
                 if (!Managers.FRIEND.isFriend(pl)) continue;
-                float fdamage = ExplosionUtility.getAutoCrystalDamage(bp.toCenterPos(), pl, selfPredictTicks.getValue(), useOptimizedCalc.getValue());
+                float fdamage = ExplosionUtility.getAutoCrystalDamage(bp.getCenter(), pl, selfPredictTicks.getValue(), useOptimizedCalc.getValue());
                 if (fdamage > selfDamage) {
                     selfDamage = fdamage;
                 }
@@ -725,7 +735,7 @@ public final class AutoAnchor extends Module {
         }
 
         if (isAnchor) {
-            mc.world.setBlockState(bp, state);
+            mc.level.setBlockAndUpdate(bp, state);
             placeResult = getInteractResult(bp);
         }
 
@@ -739,13 +749,13 @@ public final class AutoAnchor extends Module {
 
     public boolean shouldOverrideDamage(float damage, float selfDamage) {
         if (overrideSelfDamage.getValue() && target != null) {
-            if (mc.player == null || mc.world == null) return false;
+            if (mc.player == null || mc.level == null) return false;
 
-            boolean targetSafe = (target.getOffHandStack().getItem() == Items.TOTEM_OF_UNDYING
-                    || target.getMainHandStack().getItem() == Items.TOTEM_OF_UNDYING);
+            boolean targetSafe = (target.getOffhandItem().getItem() == Items.TOTEM_OF_UNDYING
+                    || target.getMainHandItem().getItem() == Items.TOTEM_OF_UNDYING);
 
-            boolean playerSafe = (mc.player.getOffHandStack().getItem() == Items.TOTEM_OF_UNDYING
-                    || mc.player.getMainHandStack().getItem() == Items.TOTEM_OF_UNDYING);
+            boolean playerSafe = (mc.player.getOffhandItem().getItem() == Items.TOTEM_OF_UNDYING
+                    || mc.player.getMainHandItem().getItem() == Items.TOTEM_OF_UNDYING);
 
             float targetHp = target.getHealth() + target.getAbsorptionAmount() - 1f;
 
@@ -778,45 +788,45 @@ public final class AutoAnchor extends Module {
     }
 
     private @Nullable BlockHitResult getDefaultInteract(BlockPos bp) {
-        if (mc.player == null || mc.world == null) return null;
+        if (mc.player == null || mc.level == null) return null;
 
-        Vec3d vec = bp.toCenterPos().add(0, -0.5, 0);
+        Vec3 vec = bp.getCenter().add(0, -0.5, 0);
 
         if (PlayerUtility.squaredDistanceFromEyes(vec) > placeRange.getPow2Value())
             return null;
 
-        BlockHitResult wallCheck = mc.world.raycast(new RaycastContext(InteractionUtility.getEyesPos(mc.player), vec, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, mc.player));
+        BlockHitResult wallCheck = mc.level.clip(new ClipContext(InteractionUtility.getEyesPos(mc.player), vec, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player));
 
         if (wallCheck != null && wallCheck.getType() == HitResult.Type.BLOCK && wallCheck.getBlockPos() != bp)
             if (PlayerUtility.squaredDistanceFromEyes(vec) > placeWallRange.getPow2Value())
                 return null;
 
-        return new BlockHitResult(vec, mc.world.isInBuildLimit(bp.up()) ? Direction.UP : Direction.DOWN, bp, false);
+        return new BlockHitResult(vec, mc.level.isInWorldBounds(bp.above()) ? Direction.UP : Direction.DOWN, bp, false);
     }
 
     public BlockHitResult getStrictInteract(@NotNull BlockPos bp) {
-        if (mc.player == null || mc.world == null) return null;
+        if (mc.player == null || mc.level == null) return null;
 
         float bestDistance = Float.MAX_VALUE;
         Direction bestDirection = null;
-        Vec3d bestVector = null;
+        Vec3 bestVector = null;
 
-        float upPoint = bp.up().getY();
+        float upPoint = bp.above().getY();
 
-        if (mc.player.getEyePos().getY() > upPoint) {
+        if (mc.player.getEyePosition().y() > upPoint) {
             bestDirection = Direction.UP;
-            bestVector = new Vec3d(bp.getX() + 0.5, bp.getY() + 1, bp.getZ() + 0.5);
-        } else if (mc.player.getEyePos().getY() < bp.getY() && mc.world.isAir(bp.down())) {
+            bestVector = new Vec3(bp.getX() + 0.5, bp.getY() + 1, bp.getZ() + 0.5);
+        } else if (mc.player.getEyePosition().y() < bp.getY() && mc.level.isEmptyBlock(bp.below())) {
             bestDirection = Direction.DOWN;
-            bestVector = new Vec3d(bp.getX() + 0.5, bp.getY(), bp.getZ() + 0.5);
+            bestVector = new Vec3(bp.getX() + 0.5, bp.getY(), bp.getZ() + 0.5);
         } else {
             for (Direction dir : InteractionUtility.getStrictBlockDirections(bp)) {
                 if (dir == Direction.UP || dir == Direction.DOWN)
                     continue;
 
-                Vec3d directionVec = new Vec3d(bp.getX() + 0.5 + dir.getVector().getX() * 0.5, bp.getY() + 0.9, bp.getZ() + 0.5 + dir.getVector().getZ() * 0.5);
+                Vec3 directionVec = new Vec3(bp.getX() + 0.5 + dir.getUnitVec3i().getX() * 0.5, bp.getY() + 0.9, bp.getZ() + 0.5 + dir.getUnitVec3i().getZ() * 0.5);
 
-                if (!mc.world.isAir(bp.offset(dir)))
+                if (!mc.level.isEmptyBlock(bp.relative(dir)))
                     continue;
 
                 float distance = PlayerUtility.squaredDistanceFromEyes(directionVec);
@@ -833,7 +843,7 @@ public final class AutoAnchor extends Module {
         if (PlayerUtility.squaredDistanceFromEyes(bestVector) > placeRange.getPow2Value())
             return null;
 
-        BlockHitResult wallCheck = mc.world.raycast(new RaycastContext(InteractionUtility.getEyesPos(mc.player), bestVector, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, mc.player));
+        BlockHitResult wallCheck = mc.level.clip(new ClipContext(InteractionUtility.getEyesPos(mc.player), bestVector, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player));
 
         if (wallCheck != null && wallCheck.getType() == HitResult.Type.BLOCK && wallCheck.getBlockPos() != bp)
             if (PlayerUtility.squaredDistanceFromEyes(bestVector) > placeWallRange.getPow2Value())
@@ -843,23 +853,23 @@ public final class AutoAnchor extends Module {
     }
 
     public BlockHitResult getLegitInteract(BlockPos bp) {
-        if (mc.player == null || mc.world == null) return null;
+        if (mc.player == null || mc.level == null) return null;
 
         float bestDistance = Float.MAX_VALUE;
         BlockHitResult bestResult = null;
         for (float x = 0f; x <= 1f; x += 0.2f) {
             for (float y = 0f; y <= 1f; y += 0.2f) {
                 for (float z = 0f; z <= 1f; z += 0.2f) {
-                    Vec3d point = new Vec3d(bp.getX() + x, bp.getY() + y, bp.getZ() + z);
+                    Vec3 point = new Vec3(bp.getX() + x, bp.getY() + y, bp.getZ() + z);
                     float distance = PlayerUtility.squaredDistanceFromEyes(point);
 
-                    BlockHitResult wallCheck = mc.world.raycast(new RaycastContext(InteractionUtility.getEyesPos(mc.player), point, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, mc.player));
+                    BlockHitResult wallCheck = mc.level.clip(new ClipContext(InteractionUtility.getEyesPos(mc.player), point, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player));
                     if (wallCheck != null && wallCheck.getType() == HitResult.Type.BLOCK && wallCheck.getBlockPos() != bp)
                         if (distance > placeWallRange.getPow2Value())
                             continue;
 
 
-                    BlockHitResult result = ExplosionUtility.rayCastBlock(new RaycastContext(InteractionUtility.getEyesPos(mc.player), point, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, mc.player), bp);
+                    BlockHitResult result = ExplosionUtility.rayCastBlock(new ClipContext(InteractionUtility.getEyesPos(mc.player), point, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player), bp);
                     if (distance > placeRange.getPow2Value())
                         continue;
 

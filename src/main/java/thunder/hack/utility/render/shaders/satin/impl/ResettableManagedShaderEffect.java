@@ -2,52 +2,51 @@ package thunder.hack.utility.render.shaders.satin.impl;
 
 import com.google.common.base.Preconditions;
 import thunder.hack.utility.render.compat.RenderSystem;
+import com.mojang.blaze3d.resource.GraphicsResourceAllocator;
 import com.mojang.logging.LogUtils;
 import thunder.hack.utility.render.shaders.satin.api.managed.ManagedFramebuffer;
 import thunder.hack.utility.render.shaders.satin.api.managed.ManagedShaderEffect;
 import thunder.hack.utility.render.shaders.satin.api.managed.uniform.SamplerUniformV2;
 import thunder.hack.injection.accesors.AccessiblePassesShaderEffect;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.effect.PostEffectProcessor;
-import net.minecraft.client.gl.ShaderLoader;
-import net.minecraft.client.util.memory.ObjectAllocator;
-import net.minecraft.resource.ResourceFactory;
-import net.minecraft.util.Identifier;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.PostChain;
+import net.minecraft.client.renderer.ShaderManager;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.ResourceProvider;
 
 import static org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA;
 import static org.lwjgl.opengl.GL11.GL_SRC_ALPHA;
 
-public final class ResettableManagedShaderEffect extends ResettableManagedShaderBase<PostEffectProcessor> implements ManagedShaderEffect {
+public final class ResettableManagedShaderEffect extends ResettableManagedShaderBase<PostChain> implements ManagedShaderEffect {
 
-    private static final Identifier BUF_IN = Identifier.of("thunderhack", "buf_in");
-    private static final Identifier BUF_OUT = Identifier.of("thunderhack", "buf_out");
-    private static final Set<Identifier> EXTERNAL_TARGETS = Set.of(PostEffectProcessor.MAIN, BUF_IN, BUF_OUT);
+    private static final ResourceLocation BUF_IN = ResourceLocation.fromNamespaceAndPath("thunderhack", "buf_in");
+    private static final ResourceLocation BUF_OUT = ResourceLocation.fromNamespaceAndPath("thunderhack", "buf_out");
+    private static final Set<ResourceLocation> EXTERNAL_TARGETS = Set.of(PostChain.MAIN_TARGET_ID, BUF_IN, BUF_OUT);
 
     private final Consumer<ManagedShaderEffect> initCallback;
     private final Map<String, FramebufferWrapper> managedTargets;
     private final Map<String, ManagedSamplerUniformV2> managedSamplers = new HashMap<>();
 
-    public ResettableManagedShaderEffect(Identifier location, Consumer<ManagedShaderEffect> initCallback) {
+    public ResettableManagedShaderEffect(ResourceLocation location, Consumer<ManagedShaderEffect> initCallback) {
         super(location);
         this.initCallback = initCallback;
         this.managedTargets = new HashMap<>();
     }
 
     @Override
-    public PostEffectProcessor getShaderEffect() {
+    public PostChain getShaderEffect() {
         return getShaderOrLog();
     }
 
     @Override
-    protected PostEffectProcessor parseShader(ResourceFactory resourceFactory, MinecraftClient mc, Identifier location) throws IOException {
-        ShaderLoader loader = mc.getShaderLoader();
-        return loader.loadPostEffect(location, EXTERNAL_TARGETS);
+    protected PostChain parseShader(ResourceProvider resourceFactory, Minecraft mc, ResourceLocation location) throws IOException {
+        ShaderManager loader = mc.getShaderManager();
+        return loader.getPostChain(location, EXTERNAL_TARGETS);
     }
 
     @Override
@@ -66,18 +65,18 @@ public final class ResettableManagedShaderEffect extends ResettableManagedShader
 
     @Override
     public void render(float tickDelta) {
-        PostEffectProcessor sg = this.getShaderEffect();
+        PostChain sg = this.getShaderEffect();
         if (sg != null) {
             RenderSystem.disableBlend();
             RenderSystem.disableDepthTest();
             RenderSystem.resetTextureMatrix();
-            MinecraftClient client = MinecraftClient.getInstance();
-            Map<Identifier, com.mojang.blaze3d.textures.Framebuffer> externalTargets = Map.of(
-                PostEffectProcessor.MAIN, client.getFramebuffer(),
-                BUF_IN, client.getFramebuffer(),
-                BUF_OUT, client.getFramebuffer()
+            Minecraft client = Minecraft.getInstance();
+            Map<ResourceLocation, com.mojang.blaze3d.pipeline.RenderTarget> externalTargets = Map.of(
+                PostChain.MAIN_TARGET_ID, client.getMainRenderTarget(),
+                BUF_IN, client.getMainRenderTarget(),
+                BUF_OUT, client.getMainRenderTarget()
             );
-            PostEffectRenderUtil.render(sg, client.getFramebuffer().textureWidth, client.getFramebuffer().textureHeight, externalTargets, ObjectAllocator.TRIVIAL);
+            PostEffectRenderUtil.render(sg, client.getMainRenderTarget().width, client.getMainRenderTarget().height, externalTargets, GraphicsResourceAllocator.UNPOOLED);
             RenderSystem.disableBlend();
             RenderSystem.blendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             RenderSystem.enableDepthTest();
@@ -126,7 +125,7 @@ public final class ResettableManagedShaderEffect extends ResettableManagedShader
     }
 
     @Override
-    protected boolean setupUniform(ManagedUniformBase uniform, PostEffectProcessor shader) {
+    protected boolean setupUniform(ManagedUniformBase uniform, PostChain shader) {
         return uniform.findUniformTargets(((AccessiblePassesShaderEffect) shader).getPasses());
     }
 
@@ -135,9 +134,9 @@ public final class ResettableManagedShaderEffect extends ResettableManagedShader
         LogUtils.getLogger().error("Could not create screen shader {}", this.getLocation(), e);
     }
 
-    private PostEffectProcessor getShaderOrLog() {
+    private PostChain getShaderOrLog() {
         if (!this.isInitialized() && !this.isErrored()) {
-            this.initializeOrLog(MinecraftClient.getInstance().getResourceManager());
+            this.initializeOrLog(Minecraft.getInstance().getResourceManager());
         }
         return this.shader;
     }

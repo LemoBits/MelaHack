@@ -2,10 +2,6 @@ package thunder.hack.injection;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.logging.LogUtils;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.text.Style;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -30,6 +26,10 @@ import java.io.FileReader;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Style;
 
 import static thunder.hack.features.modules.Module.mc;
 import static thunder.hack.features.modules.client.ClientSettings.isRu;
@@ -37,9 +37,9 @@ import static thunder.hack.features.modules.client.ClientSettings.isRu;
 @Mixin(Screen.class)
 public abstract class MixinScreen {
     @Shadow
-    public abstract void init(MinecraftClient client, int width, int height);
+    public abstract void init(Minecraft client, int width, int height);
 
-    @Inject(method = "handleTextClick", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "handleComponentClicked", at = @At("HEAD"), cancellable = true)
     private void onRunCommand(Style style, CallbackInfoReturnable<Boolean> cir) {
         if (Objects.requireNonNull(style.getClickEvent()) instanceof ClientClickEvent clientClickEvent && clientClickEvent.getValue().startsWith(Managers.COMMAND.getPrefix()))
             try {
@@ -50,7 +50,7 @@ public abstract class MixinScreen {
             }
     }
 
-    @Inject(method = "onFilesDropped", at = @At("HEAD"))
+    @Inject(method = "onFilesDrop", at = @At("HEAD"))
     public void filesDragged(List<Path> paths, CallbackInfo ci) {
         String configPath = paths.get(0).toString();
         File cfgFile = new File(configPath);
@@ -111,31 +111,31 @@ public abstract class MixinScreen {
         }
     }
 
-    @Inject(method = "renderPanoramaBackground", at = @At("HEAD"), cancellable = true)
-    public void renderPanoramaBackgroundHook(DrawContext context, float delta, CallbackInfo ci) {
-        if (ClientSettings.customPanorama.getValue() && mc.world == null) {
+    @Inject(method = "renderPanorama", at = @At("HEAD"), cancellable = true)
+    public void renderPanoramaBackgroundHook(GuiGraphics context, float delta, CallbackInfo ci) {
+        if (ClientSettings.customPanorama.getValue() && mc.level == null) {
             ci.cancel();
-            Render2DEngine.drawMainMenuShader(context.getMatrices(), 0, 0, mc.getWindow().getScaledWidth(), mc.getWindow().getScaledHeight());
+            Render2DEngine.drawMainMenuShader(context.pose(), 0, 0, mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight());
         }
     }
 
-    @Inject(method = "renderInGameBackground", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "renderTransparentBackground", at = @At("HEAD"), cancellable = true)
     private void renderInGameBackground(CallbackInfo info) {
         Render2DEngine.resetScissorStack();
         if (ModuleManager.noRender.isEnabled() && ModuleManager.noRender.disableGuiBackGround.getValue()) {
             info.cancel();
         }
         // Custom GUIs render their own background — skip vanilla to avoid double dark gradient
-        if (mc.currentScreen instanceof thunder.hack.gui.clickui.ClickGUI
-            || mc.currentScreen instanceof thunder.hack.gui.thundergui.ThunderGui
-            || mc.currentScreen instanceof thunder.hack.gui.windows.WindowsScreen) {
+        if (mc.screen instanceof thunder.hack.gui.clickui.ClickGUI
+            || mc.screen instanceof thunder.hack.gui.thundergui.ThunderGui
+            || mc.screen instanceof thunder.hack.gui.windows.WindowsScreen) {
             info.cancel();
         }
     }
 
-    @Inject(method = "renderBackground(Lnet/minecraft/client/gui/DrawContext;IIF)V", at = @At("HEAD"), cancellable = true)
-    public void onRenderBackground(DrawContext context, int mouseX, int mouseY, float partialTicks, CallbackInfo ci) {
-        if (ModuleManager.noRender.isEnabled() && ModuleManager.noRender.disableGuiBackGround.getValue() && mc.world != null) {
+    @Inject(method = "renderBackground(Lnet/minecraft/client/gui/GuiGraphics;IIF)V", at = @At("HEAD"), cancellable = true)
+    public void onRenderBackground(GuiGraphics context, int mouseX, int mouseY, float partialTicks, CallbackInfo ci) {
+        if (ModuleManager.noRender.isEnabled() && ModuleManager.noRender.disableGuiBackGround.getValue() && mc.level != null) {
             ci.cancel();
         }
     }

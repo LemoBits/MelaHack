@@ -1,14 +1,14 @@
 package thunder.hack.features.modules.player;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.item.Item;
-import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
-import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket;
-import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket;
-import net.minecraft.screen.slot.SlotActionType;
-import net.minecraft.util.Hand;
+import net.minecraft.network.protocol.game.ServerboundContainerClosePacket;
+import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
+import net.minecraft.network.protocol.game.ServerboundSwingPacket;
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
 import thunder.hack.core.Managers;
 import thunder.hack.events.impl.PacketEvent;
 import thunder.hack.features.modules.Module;
@@ -53,19 +53,19 @@ public class ElytraSwap extends Module {
 
     @Override
     public void onUpdate() {
-        if (mode.getValue() == Mode.Bind && mc.currentScreen == null) {
+        if (mode.getValue() == Mode.Bind && mc.screen == null) {
             if (switchButton.getValue().getKey() != -1 && isKeyPressed(switchButton.getValue().getKey()) && switchTimer.every(500))
                 swapChest(false);
 
-            if (fireWorkButton.getValue().getKey() != -1 && isKeyPressed(fireWorkButton.getValue().getKey()) && fireworkTimer.every(500) && mc.player.isGliding())
+            if (fireWorkButton.getValue().getKey() != -1 && isKeyPressed(fireWorkButton.getValue().getKey()) && fireworkTimer.every(500) && mc.player.isFallFlying())
                 useFireWork();
         }
     }
 
     @EventHandler
     public void onPacketSend(PacketEvent.SendPost e) {
-        if (e.getPacket() instanceof ClientCommandC2SPacket command
-                && command.getMode() == ClientCommandC2SPacket.Mode.START_FALL_FLYING
+        if (e.getPacket() instanceof ServerboundPlayerCommandPacket command
+                && command.getAction() == ServerboundPlayerCommandPacket.Action.START_FALL_FLYING
                 && mode.getValue() == Mode.Bind
                 && startFireWork.getValue()) {
             useFireWork();
@@ -80,21 +80,21 @@ public class ElytraSwap extends Module {
         if (hotbarFireWorkResult.found()) {
             hotbarFireWorkResult.switchTo();
         } else if (fireWorkResult.found()) {
-            mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, fireWorkResult.slot(), mc.player.getInventory().getSelectedSlot(), SlotActionType.SWAP, mc.player);
-            sendPacket(new CloseHandledScreenC2SPacket(mc.player.currentScreenHandler.syncId));
+            mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, fireWorkResult.slot(), mc.player.getInventory().getSelectedSlot(), ClickType.SWAP, mc.player);
+            sendPacket(new ServerboundContainerClosePacket(mc.player.containerMenu.containerId));
         } else {
             sendMessage(isRu() ? "У тебя нет фейерверков!" : "You've got no fireworks!");
             return;
         }
 
-        sendSequencedPacket(id -> new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, id, mc.player.getYaw(), mc.player.getPitch()));
-        sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
+        sendSequencedPacket(id -> new ServerboundUseItemPacket(InteractionHand.MAIN_HAND, id, mc.player.getYRot(), mc.player.getXRot()));
+        sendPacket(new ServerboundSwingPacket(InteractionHand.MAIN_HAND));
 
         if (fireWorkMode.getValue() == FireWorkMode.Silent) {
             InventoryUtility.returnSlot();
             if (!hotbarFireWorkResult.found()) {
-                mc.interactionManager.clickSlot(mc.player.currentScreenHandler.syncId, fireWorkResult.slot(), mc.player.getInventory().getSelectedSlot(), SlotActionType.SWAP, mc.player);
-                sendPacket(new CloseHandledScreenC2SPacket(mc.player.currentScreenHandler.syncId));
+                mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, fireWorkResult.slot(), mc.player.getInventory().getSelectedSlot(), ClickType.SWAP, mc.player);
+                sendPacket(new ServerboundContainerClosePacket(mc.player.containerMenu.containerId));
             }
         }
     }
@@ -114,7 +114,7 @@ public class ElytraSwap extends Module {
         SearchInvResult result = InventoryUtility.findItemInInventory(Items.ELYTRA);
 
 
-        if (mc.player.getInventory().getStack(38).getItem() == Items.ELYTRA) {
+        if (mc.player.getInventory().getItem(38).getItem() == Items.ELYTRA) {
             int slot = getChestPlateSlot();
             if (slot != -1) {
                 if (delay.getValue())
@@ -131,14 +131,14 @@ public class ElytraSwap extends Module {
                         } catch (Exception ignored) {
                         }
                         clickSlot(slot);
-                        sendPacket(new CloseHandledScreenC2SPacket(mc.player.currentScreenHandler.syncId));
+                        sendPacket(new ServerboundContainerClosePacket(mc.player.containerMenu.containerId));
                         swapping = false;
                     });
                 else {
                     clickSlot(slot);
                     clickSlot(6);
                     clickSlot(slot);
-                    sendPacket(new CloseHandledScreenC2SPacket(mc.player.currentScreenHandler.syncId));
+                    sendPacket(new ServerboundContainerClosePacket(mc.player.containerMenu.containerId));
                 }
             } else {
                 if (disable) disable(isRu() ? "У тебя нет нагрудника!" : "You don't have a chestplate!");
@@ -160,18 +160,18 @@ public class ElytraSwap extends Module {
                     } catch (Exception ignored) {
                     }
                     clickSlot(result.slot());
-                    sendPacket(new CloseHandledScreenC2SPacket(mc.player.currentScreenHandler.syncId));
+                    sendPacket(new ServerboundContainerClosePacket(mc.player.containerMenu.containerId));
                     if (startFireWork.getValue() && mc.player.fallDistance > 0)
-                        sendPacket(new ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.START_FALL_FLYING));
+                        sendPacket(new ServerboundPlayerCommandPacket(mc.player, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING));
                     swapping = false;
                 }).start();
             else {
                 clickSlot(result.slot());
                 clickSlot(6);
                 clickSlot(result.slot());
-                sendPacket(new CloseHandledScreenC2SPacket(mc.player.currentScreenHandler.syncId));
+                sendPacket(new ServerboundContainerClosePacket(mc.player.containerMenu.containerId));
                 if (startFireWork.getValue() && mc.player.fallDistance > 0)
-                    sendPacket(new ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.START_FALL_FLYING));
+                    sendPacket(new ServerboundPlayerCommandPacket(mc.player, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING));
             }
         } else {
             if (disable) disable(isRu() ? "У тебя нет элитры!" : "You don't have an elytra!");

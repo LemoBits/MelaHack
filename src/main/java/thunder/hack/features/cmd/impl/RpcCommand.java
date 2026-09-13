@@ -2,7 +2,7 @@ package thunder.hack.features.cmd.impl;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import net.minecraft.command.CommandSource;
+import net.minecraft.commands.SharedSuggestionProvider;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.features.cmd.Command;
 import thunder.hack.features.modules.client.RPC;
@@ -15,7 +15,7 @@ public class RpcCommand extends Command {
     }
 
     @Override
-    public void executeBuild(@NotNull LiteralArgumentBuilder<CommandSource> builder) {
+    public void executeBuild(@NotNull LiteralArgumentBuilder<SharedSuggestionProvider> builder) {
         builder.then(arg("bigImg", StringArgumentType.greedyString()).executes(context -> {
             String bigImg = context.getArgument("bigImg", String.class);
 

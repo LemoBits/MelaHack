@@ -1,13 +1,13 @@
 package thunder.hack.features.modules.combat;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.decoration.EndCrystalEntity;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.protocol.game.ServerboundInteractPacket;
+import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
+import net.minecraft.world.level.block.Blocks;
 import thunder.hack.core.manager.client.ModuleManager;
 import thunder.hack.events.impl.PacketEvent;
 import thunder.hack.features.modules.Module;
@@ -30,45 +30,45 @@ public class MoreKnockback extends Module {
     @EventHandler
     public void onSendPacket(PacketEvent.Send event) {
         if ((!MovementUtility.isMoving() || inMove.getValue())
-                && event.getPacket() instanceof PlayerInteractEntityC2SPacket
+                && event.getPacket() instanceof ServerboundInteractPacket
                 && getInteractType(event.getPacket()) == Criticals.InteractType.ATTACK
-                && !(getEntity(event.getPacket()) instanceof EndCrystalEntity)
+                && !(getEntity(event.getPacket()) instanceof EndCrystal)
                 && getEntity(event.getPacket()) instanceof LivingEntity lent
                 && lent.hurtTime <= hurtTime.getValue()
                 && MathUtility.random(0, 100) >= (100 - chance.getValue())
                 && !canCrit()) {
 
-            if (mc.player.isSprinting()) sendPacket(new ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.STOP_SPRINTING));
-            sendPacket(new ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.START_SPRINTING));
-            sendPacket(new ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.STOP_SPRINTING));
-            sendPacket(new ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.START_SPRINTING));
+            if (mc.player.isSprinting()) sendPacket(new ServerboundPlayerCommandPacket(mc.player, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING));
+            sendPacket(new ServerboundPlayerCommandPacket(mc.player, ServerboundPlayerCommandPacket.Action.START_SPRINTING));
+            sendPacket(new ServerboundPlayerCommandPacket(mc.player, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING));
+            sendPacket(new ServerboundPlayerCommandPacket(mc.player, ServerboundPlayerCommandPacket.Action.START_SPRINTING));
             debug("wtap");
             mc.player.setSprinting(true);
-            mc.player.lastSprinting = true;
+            mc.player.wasSprinting = true;
         }
     }
 
     private boolean canCrit() {
         boolean reasonForSkipCrit =
                         mc.player.getAbilities().flying
-                        || (mc.player.isGliding()
+                        || (mc.player.isFallFlying()
                         || ModuleManager.elytraPlus.isEnabled())
-                        || mc.player.hasStatusEffect(StatusEffects.BLINDNESS)
-                        || mc.world.getBlockState(BlockPos.ofFloored(mc.player.getPos())).getBlock() == Blocks.COBWEB
+                        || mc.player.hasEffect(MobEffects.BLINDNESS)
+                        || mc.level.getBlockState(BlockPos.containing(mc.player.position())).getBlock() == Blocks.COBWEB
                         || mc.player.isInLava()
-                        || mc.player.isSubmergedInWater();
+                        || mc.player.isUnderWater();
 
-        if (mc.player.getAttackCooldownProgress(0.5f) < 0.9f)
+        if (mc.player.getAttackStrengthScale(0.5f) < 0.9f)
             return false;
 
         if (ModuleManager.criticals.isEnabled() && !ModuleManager.criticals.mode.is(Criticals.Mode.Grim))
             return true;
 
-        if (ModuleManager.criticals.isEnabled() && ModuleManager.criticals.mode.is(Criticals.Mode.Grim) && !mc.player.isOnGround())
+        if (ModuleManager.criticals.isEnabled() && ModuleManager.criticals.mode.is(Criticals.Mode.Grim) && !mc.player.onGround())
             return true;
 
         if (!reasonForSkipCrit)
-            return !mc.player.isOnGround() && mc.player.fallDistance > 0f;
+            return !mc.player.onGround() && mc.player.fallDistance > 0f;
 
         return false;
     }

@@ -1,9 +1,8 @@
 package thunder.hack.features.cmd.impl;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import net.minecraft.client.util.InputUtil;
-import net.minecraft.command.CommandSource;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 import thunder.hack.ThunderHack;
@@ -13,6 +12,7 @@ import thunder.hack.features.cmd.args.MacroArgumentType;
 import thunder.hack.core.manager.client.MacroManager;
 
 import java.lang.reflect.Field;
+import net.minecraft.commands.SharedSuggestionProvider;
 
 import static com.mojang.brigadier.Command.SINGLE_SUCCESS;
 import static thunder.hack.features.modules.client.ClientSettings.isRu;
@@ -23,7 +23,7 @@ public class MacroCommand extends Command {
     }
 
     @Override
-    public void executeBuild(@NotNull LiteralArgumentBuilder<CommandSource> builder) {
+    public void executeBuild(@NotNull LiteralArgumentBuilder<SharedSuggestionProvider> builder) {
         builder.then(literal("list").executes(context -> {
             sendMessage(isRu() ? "Макросы:" : "Macros:");
             sendMessage(" ");
@@ -52,12 +52,12 @@ public class MacroCommand extends Command {
                                     String bind = context.getArgument("bind", String.class).toUpperCase();
                                     String args = context.getArgument("args", String.class);
 
-                                    if (InputUtil.fromTranslationKey("key.keyboard." + bind.toLowerCase()).getCode() == -1) {
+                                    if (InputConstants.getKey("key.keyboard." + bind.toLowerCase()).getValue() == -1) {
                                         sendMessage(isRu() ? "Неправильный бинд!" : "Wrong bind!");
                                         return SINGLE_SUCCESS;
                                     }
 
-                                    MacroManager.Macro macro = new MacroManager.Macro(name, args, InputUtil.fromTranslationKey("key.keyboard." + bind.toLowerCase()).getCode());
+                                    MacroManager.Macro macro = new MacroManager.Macro(name, args, InputConstants.getKey("key.keyboard." + bind.toLowerCase()).getValue());
                                     MacroManager.addMacro(macro);
                                     sendMessage(isRu() ? "Добавлен макрос " + name + " на кнопку " + toString(macro.getBind()) : "Added macro " + name + " to " + toString(macro.getBind()));
 

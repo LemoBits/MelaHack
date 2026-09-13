@@ -1,13 +1,13 @@
 package thunder.hack.features.modules.movement;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket;
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.Direction;
+import net.minecraft.core.Direction;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
+import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.Items;
 import thunder.hack.events.impl.EventKeyboardInput;
 import thunder.hack.features.modules.Module;
 import thunder.hack.setting.Setting;
@@ -38,55 +38,55 @@ public class NoSlow extends Module {
     @Override
     public void onUpdate() {
         if (returnSneak) {
-            mc.options.sneakKey.setPressed(false);
+            mc.options.keyShift.setDown(false);
             mc.player.setSprinting(true);
             returnSneak = false;
         }
 
-        if (mc.player.isUsingItem() && !mc.player.isRiding() && !mc.player.isGliding()) {
+        if (mc.player.isUsingItem() && !mc.player.isHandsBusy() && !mc.player.isFallFlying()) {
             switch (mode.getValue()) {
-                case StrictNCP -> sendPacket(new UpdateSelectedSlotC2SPacket(mc.player.getInventory().getSelectedSlot()));
+                case StrictNCP -> sendPacket(new ServerboundSetCarriedItemPacket(mc.player.getInventory().getSelectedSlot()));
                 case MusteryGrief -> {
-                    if (mc.player.isOnGround() && mc.options.jumpKey.isPressed()) {
-                        mc.options.sneakKey.setPressed(true);
+                    if (mc.player.onGround() && mc.options.keyJump.isDown()) {
+                        mc.options.keyShift.setDown(true);
                         returnSneak = true;
                     }
                 }
                 case Grim -> {
-                    if (mc.player.getActiveHand() == Hand.OFF_HAND) {
-                        sendPacket(new UpdateSelectedSlotC2SPacket(mc.player.getInventory().getSelectedSlot() % 8 + 1));
-                        sendPacket(new UpdateSelectedSlotC2SPacket(mc.player.getInventory().getSelectedSlot() % 7 + 2));
-                        sendPacket(new UpdateSelectedSlotC2SPacket(mc.player.getInventory().getSelectedSlot()));
+                    if (mc.player.getUsedItemHand() == InteractionHand.OFF_HAND) {
+                        sendPacket(new ServerboundSetCarriedItemPacket(mc.player.getInventory().getSelectedSlot() % 8 + 1));
+                        sendPacket(new ServerboundSetCarriedItemPacket(mc.player.getInventory().getSelectedSlot() % 7 + 2));
+                        sendPacket(new ServerboundSetCarriedItemPacket(mc.player.getInventory().getSelectedSlot()));
                     } else if (mainHand.getValue()) {
                         // TODO rotations
-                        sendSequencedPacket(id -> new PlayerInteractItemC2SPacket(Hand.OFF_HAND, id, mc.player.getYaw(), mc.player.getPitch()));
+                        sendSequencedPacket(id -> new ServerboundUseItemPacket(InteractionHand.OFF_HAND, id, mc.player.getYRot(), mc.player.getXRot()));
                     }
                 }
                 case Matrix -> {
-                    if (mc.player.isOnGround() && !mc.options.jumpKey.isPressed()) {
-                        mc.player.setVelocity(mc.player.getVelocity().x * 0.3, mc.player.getVelocity().y, mc.player.getVelocity().z * 0.3);
+                    if (mc.player.onGround() && !mc.options.keyJump.isDown()) {
+                        mc.player.setDeltaMovement(mc.player.getDeltaMovement().x * 0.3, mc.player.getDeltaMovement().y, mc.player.getDeltaMovement().z * 0.3);
                     } else if (mc.player.fallDistance > 0.2f)
-                        mc.player.setVelocity(mc.player.getVelocity().x * 0.95f, mc.player.getVelocity().y, mc.player.getVelocity().z * 0.95f);
+                        mc.player.setDeltaMovement(mc.player.getDeltaMovement().x * 0.95f, mc.player.getDeltaMovement().y, mc.player.getDeltaMovement().z * 0.95f);
                 }
                 case GrimNew -> {
-                    if (mc.player.getActiveHand() == Hand.OFF_HAND) {
-                        sendPacket(new UpdateSelectedSlotC2SPacket(mc.player.getInventory().getSelectedSlot() % 8 + 1));
-                        sendPacket(new UpdateSelectedSlotC2SPacket(mc.player.getInventory().getSelectedSlot() % 7 + 2));
-                        sendPacket(new UpdateSelectedSlotC2SPacket(mc.player.getInventory().getSelectedSlot()));
-                    } else if (mainHand.getValue() && (mc.player.getItemUseTime() <= 3 || mc.player.age % 2 == 0)) {
-                        sendSequencedPacket(id -> new PlayerInteractItemC2SPacket(Hand.OFF_HAND, id, mc.player.getYaw(), mc.player.getPitch()));
+                    if (mc.player.getUsedItemHand() == InteractionHand.OFF_HAND) {
+                        sendPacket(new ServerboundSetCarriedItemPacket(mc.player.getInventory().getSelectedSlot() % 8 + 1));
+                        sendPacket(new ServerboundSetCarriedItemPacket(mc.player.getInventory().getSelectedSlot() % 7 + 2));
+                        sendPacket(new ServerboundSetCarriedItemPacket(mc.player.getInventory().getSelectedSlot()));
+                    } else if (mainHand.getValue() && (mc.player.getTicksUsingItem() <= 3 || mc.player.tickCount % 2 == 0)) {
+                        sendSequencedPacket(id -> new ServerboundUseItemPacket(InteractionHand.OFF_HAND, id, mc.player.getYRot(), mc.player.getXRot()));
                     }
                 }
                 case Matrix2 -> {
-                    if (mc.player.isOnGround())
-                        if (mc.player.age % 2 == 0)
-                            mc.player.setVelocity(mc.player.getVelocity().x * 0.5f, mc.player.getVelocity().y, mc.player.getVelocity().z * 0.5f);
+                    if (mc.player.onGround())
+                        if (mc.player.tickCount % 2 == 0)
+                            mc.player.setDeltaMovement(mc.player.getDeltaMovement().x * 0.5f, mc.player.getDeltaMovement().y, mc.player.getDeltaMovement().z * 0.5f);
                         else
-                            mc.player.setVelocity(mc.player.getVelocity().x * 0.95f, mc.player.getVelocity().y, mc.player.getVelocity().z * 0.95f);
+                            mc.player.setDeltaMovement(mc.player.getDeltaMovement().x * 0.95f, mc.player.getDeltaMovement().y, mc.player.getDeltaMovement().z * 0.95f);
                 }
                 case LFCraft -> {
-                    if (mc.player.getItemUseTime() <= 3)
-                        sendSequencedPacket(id -> new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.ABORT_DESTROY_BLOCK, mc.player.getBlockPos().up(), Direction.NORTH, id));
+                    if (mc.player.getTicksUsingItem() <= 3)
+                        sendSequencedPacket(id -> new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.ABORT_DESTROY_BLOCK, mc.player.blockPosition().above(), Direction.NORTH, id));
                 }
             }
         }
@@ -94,18 +94,18 @@ public class NoSlow extends Module {
 
     @EventHandler
     public void onKeyboardInput(EventKeyboardInput e) {
-        if (mode.getValue() == Mode.Matrix3 && mc.player.isUsingItem() && !mc.player.isGliding()) {
+        if (mode.getValue() == Mode.Matrix3 && mc.player.isUsingItem() && !mc.player.isFallFlying()) {
             MovementUtility.scaleMovementInput(5f, 5f);
             float mult = 1f;
 
-            if (mc.player.isOnGround()) {
-                if (mc.player.input.getMovementInput().y != 0 && mc.player.input.getMovementInput().x != 0) {
+            if (mc.player.onGround()) {
+                if (mc.player.input.getMoveVector().y != 0 && mc.player.input.getMoveVector().x != 0) {
                     MovementUtility.scaleMovementInput(0.35f, 0.35f);
                 } else {
                     MovementUtility.scaleMovementInput(0.5f, 0.5f);
                 }
             } else {
-                if (mc.player.input.getMovementInput().y != 0 && mc.player.input.getMovementInput().x != 0) {
+                if (mc.player.input.getMoveVector().y != 0 && mc.player.input.getMoveVector().x != 0) {
                     mult = 0.47f;
                 } else {
                     mult = 0.67f;
@@ -119,24 +119,24 @@ public class NoSlow extends Module {
         if (mode.getValue() == Mode.Matrix3)
             return false;
 
-        if (!food.getValue() && mc.player.getActiveItem().getComponents().contains(DataComponentTypes.FOOD))
+        if (!food.getValue() && mc.player.getUseItem().getComponents().has(DataComponents.FOOD))
             return false;
 
-        if (!shield.getValue() && mc.player.getActiveItem().getItem() == Items.SHIELD)
+        if (!shield.getValue() && mc.player.getUseItem().getItem() == Items.SHIELD)
             return false;
 
         if (!projectiles.getValue()
-                && (mc.player.getActiveItem().getItem() == Items.CROSSBOW || mc.player.getActiveItem().getItem() == Items.BOW || mc.player.getActiveItem().getItem() == Items.TRIDENT))
+                && (mc.player.getUseItem().getItem() == Items.CROSSBOW || mc.player.getUseItem().getItem() == Items.BOW || mc.player.getUseItem().getItem() == Items.TRIDENT))
             return false;
 
-        if (mode.getValue() == Mode.MusteryGrief && mc.player.isOnGround() && !mc.options.jumpKey.isPressed())
+        if (mode.getValue() == Mode.MusteryGrief && mc.player.onGround() && !mc.options.keyJump.isDown())
             return false;
 
-        if (!mainHand.getValue() && mc.player.getActiveHand() == Hand.MAIN_HAND)
+        if (!mainHand.getValue() && mc.player.getUsedItemHand() == InteractionHand.MAIN_HAND)
             return false;
 
-        if ((mc.player.getOffHandStack().getComponents().contains(DataComponentTypes.FOOD) || mc.player.getOffHandStack().getItem() == Items.SHIELD)
-                && (mode.getValue() == Mode.GrimNew || mode.getValue() == Mode.Grim) && mc.player.getActiveHand() == Hand.MAIN_HAND)
+        if ((mc.player.getOffhandItem().getComponents().has(DataComponents.FOOD) || mc.player.getOffhandItem().getItem() == Items.SHIELD)
+                && (mode.getValue() == Mode.GrimNew || mode.getValue() == Mode.Grim) && mc.player.getUsedItemHand() == InteractionHand.MAIN_HAND)
             return false;
 
         return true;

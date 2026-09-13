@@ -17,13 +17,13 @@
  */
 package thunder.hack.utility.render.shaders.satin.api.managed;
 
+import net.minecraft.client.renderer.PostChain;
 import thunder.hack.utility.render.shaders.satin.api.managed.uniform.SamplerUniformV2;
 import thunder.hack.utility.render.shaders.satin.api.managed.uniform.UniformFinder;
-import net.minecraft.client.render.effect.PostEffectProcessor;
 
 public interface ManagedShaderEffect extends UniformFinder {
 
-    PostEffectProcessor getShaderEffect();
+    PostChain getShaderEffect();
 
     void release();
 

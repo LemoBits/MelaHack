@@ -1,11 +1,8 @@
 package thunder.hack.gui.font;
 
 import thunder.hack.utility.render.compat.RenderSystem;
+import com.mojang.blaze3d.platform.NativeImage;
 import it.unimi.dsi.fastutil.chars.Char2ObjectArrayMap;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.texture.NativeImage;
-import net.minecraft.client.texture.NativeImageBackedTexture;
-import net.minecraft.util.Identifier;
 import org.lwjgl.system.MemoryUtil;
 import thunder.hack.injection.accesors.INativeImage;
 
@@ -20,18 +17,21 @@ import java.awt.image.WritableRaster;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.resources.ResourceLocation;
 
 class GlyphMap {
     final char fromIncl, toExcl;
     final Font font;
-    final Identifier bindToTexture;
+    final ResourceLocation bindToTexture;
     final int pixelPadding;
     private final Char2ObjectArrayMap<Glyph> glyphs = new Char2ObjectArrayMap<>();
     int width, height;
 
     boolean generated = false;
 
-    public GlyphMap(char from, char to, Font font, Identifier identifier, int padding) {
+    public GlyphMap(char from, char to, Font font, ResourceLocation identifier, int padding) {
         this.fromIncl = from;
         this.toExcl = to;
         this.font = font;
@@ -47,7 +47,7 @@ class GlyphMap {
     }
 
     public void destroy() {
-        MinecraftClient.getInstance().getTextureManager().destroyTexture(this.bindToTexture);
+        Minecraft.getInstance().getTextureManager().release(this.bindToTexture);
         this.glyphs.clear();
         this.width = -1;
         this.height = -1;
@@ -124,7 +124,7 @@ class GlyphMap {
         generated = true;
     }
 
-    public static void registerBufferedImageTexture(Identifier i, BufferedImage bi) {
+    public static void registerBufferedImageTexture(ResourceLocation i, BufferedImage bi) {
         try {
             // argb from BufferedImage is little endian, alpha is actually where the `a` is in the label
             // rgba from NativeImage (and by extension opengl) is big endian, alpha is on the other side (abgr)
@@ -161,12 +161,12 @@ class GlyphMap {
                     backingBuffer.put(abgr);
                 }
             }
-            NativeImageBackedTexture tex = new NativeImageBackedTexture(() -> "glyph_map_" + i, image);
+            DynamicTexture tex = new DynamicTexture(() -> "glyph_map_" + i, image);
             tex.upload();
             if (RenderSystem.isOnRenderThread()) {
-                MinecraftClient.getInstance().getTextureManager().registerTexture(i, tex);
+                Minecraft.getInstance().getTextureManager().register(i, tex);
             } else {
-                RenderSystem.recordRenderCall(() -> MinecraftClient.getInstance().getTextureManager().registerTexture(i, tex));
+                RenderSystem.recordRenderCall(() -> Minecraft.getInstance().getTextureManager().register(i, tex));
             }
         } catch (Throwable e) {
             e.printStackTrace();

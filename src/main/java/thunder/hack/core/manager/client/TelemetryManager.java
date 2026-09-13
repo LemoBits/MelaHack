@@ -26,7 +26,7 @@ public class TelemetryManager implements IManager {
 
     public void fetchData() {
         if (ClientSettings.telemetry.getValue())
-            pingServer(mc.getSession().getUsername());
+            pingServer(mc.getUser().getName());
         onlinePlayers = getPlayers(true);
         allPlayers = getPlayers(false);
     }

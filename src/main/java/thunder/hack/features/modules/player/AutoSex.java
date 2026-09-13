@@ -1,6 +1,5 @@
 package thunder.hack.features.modules.player;
 
-import net.minecraft.entity.player.PlayerEntity;
 import thunder.hack.core.Managers;
 import thunder.hack.core.manager.client.ModuleManager;
 import thunder.hack.features.modules.Module;
@@ -11,6 +10,7 @@ import thunder.hack.utility.math.MathUtility;
 
 import java.util.Arrays;
 import java.util.List;
+import net.minecraft.world.entity.player.Player;
 
 import static thunder.hack.features.modules.client.ClientSettings.isRu;
 
@@ -37,7 +37,7 @@ public class AutoSex extends Module {
             "Oh, im inside u"
     };
 
-    private PlayerEntity target;
+    private Player target;
     private final Timer messageTimer = new Timer();
     private final Timer sneakTimer = new Timer();
 
@@ -60,7 +60,7 @@ public class AutoSex extends Module {
             target = Managers.COMBAT.getNearestTarget(targetRange.getValue());
             return;
         }
-        if (target.getPos().squaredDistanceTo(mc.player.getPos()) >= targetRange.getPow2Value()) {
+        if (target.position().distanceToSqr(mc.player.position()) >= targetRange.getPow2Value()) {
             target = null;
             return;
         }
@@ -68,19 +68,19 @@ public class AutoSex extends Module {
         switch (mode.getValue()) {
             case Active -> {
                 if (sneakTimer.passedMs((long) MathUtility.random(200, 1200))) {
-                    mc.options.sneakKey.setPressed(!mc.options.sneakKey.isPressed());
+                    mc.options.keyShift.setDown(!mc.options.keyShift.isDown());
                     sneakTimer.reset();
                 }
             }
             case Passive -> {
-                if (!mc.options.sneakKey.isPressed())
-                    mc.options.sneakKey.setPressed(true);
+                if (!mc.options.keyShift.isDown())
+                    mc.options.keyShift.setDown(true);
             }
         }
 
-        if (messageTimer.passedMs(msgDelay.getValue() * 1000) && mc.getNetworkHandler() != null) {
+        if (messageTimer.passedMs(msgDelay.getValue() * 1000) && mc.getConnection() != null) {
             List<String> messages = Arrays.stream(mode.getValue() == SexMode.Active ? ACTIVE_MESSAGES : PASSIVE_MESSAGES).toList();
-            mc.getNetworkHandler().sendChatCommand("msg " + target.getName().getString() + " " + messages.get((int) (Math.random() * messages.size())));
+            mc.getConnection().sendCommand("msg " + target.getName().getString() + " " + messages.get((int) (Math.random() * messages.size())));
             messageTimer.reset();
         }
     }

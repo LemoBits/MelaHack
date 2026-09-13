@@ -1,12 +1,11 @@
 package thunder.hack.gui.thundergui.components;
 
-import net.minecraft.client.util.math.MatrixStack;
 import thunder.hack.features.modules.client.HudEditor;
 import thunder.hack.gui.font.FontRenderers;
 import thunder.hack.gui.thundergui.ThunderGui;
 import thunder.hack.setting.Setting;
 import thunder.hack.utility.render.Render2DEngine;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
 
 public class ModeComponent extends SettingElement {
@@ -19,7 +18,7 @@ public class ModeComponent extends SettingElement {
     }
 
     @Override
-    public void render(MatrixStack stack, int mouseX, int mouseY, float partialTicks) {
+    public void render(PoseStack stack, int mouseX, int mouseY, float partialTicks) {
         super.render(stack, mouseX, mouseY, partialTicks);
         if ((getY() > ThunderGui.getInstance().main_posY + ThunderGui.getInstance().height) || getY() < ThunderGui.getInstance().main_posY) {
             return;

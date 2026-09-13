@@ -17,11 +17,10 @@
  */
 package thunder.hack.utility.render.shaders.satin.api.managed;
 
-import com.mojang.blaze3d.textures.Framebuffer;
-import net.minecraft.client.render.RenderLayer;
+import com.mojang.blaze3d.pipeline.RenderTarget;
 
 public interface ManagedFramebuffer {
-    Framebuffer getFramebuffer();
+    RenderTarget getFramebuffer();
 
     void beginWrite(boolean updateViewport);
 

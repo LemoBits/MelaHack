@@ -1,13 +1,13 @@
 package thunder.hack.features.modules.combat;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.network.packet.s2c.play.BlockBreakingProgressS2CPacket;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Vec3i;
+import net.minecraft.network.protocol.game.ClientboundBlockDestructionPacket;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.AABB;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.events.impl.*;
 import thunder.hack.features.modules.base.PlaceModule;
@@ -49,9 +49,9 @@ public final class Blocker extends PlaceModule {
     @Override
     public void onEnable() {
         tickCounter = 0;
-        sendMessage(Formatting.RED + (isRu() ?
-                "ВНИМАНИЕ!!! " + Formatting.RESET + "Использование блокера на серверах осуждается игроками, а в некоторых странах карается набутыливанием!" :
-                "WARNING!!! " + Formatting.RESET + "The use of blocker on servers is condemned by players, and in some countries is punishable by jail!"
+        sendMessage(ChatFormatting.RED + (isRu() ?
+                "ВНИМАНИЕ!!! " + ChatFormatting.RESET + "Использование блокера на серверах осуждается игроками, а в некоторых странах карается набутыливанием!" :
+                "WARNING!!! " + ChatFormatting.RESET + "The use of blocker on servers is condemned by players, and in some countries is punishable by jail!"
         ));
     }
 
@@ -68,17 +68,17 @@ public final class Blocker extends PlaceModule {
         if (!getBlockResult().found() || placePositions.isEmpty())
             return;
 
-        placePositions.removeIf(b -> PlayerUtility.squaredDistanceFromEyes(b.toCenterPos()) > range.getPow2Value());
+        placePositions.removeIf(b -> PlayerUtility.squaredDistanceFromEyes(b.getCenter()) > range.getPow2Value());
 
         int blocksPlaced = 0;
 
         while (blocksPlaced < actionShift.getValue()) {
             BlockPos pos = placePositions.stream()
                     .filter(p -> InteractionUtility.canPlaceBlock(p, interact.getValue(), true))
-                    .min(Comparator.comparing(p -> mc.player.getPos().distanceTo(p.toCenterPos())))
+                    .min(Comparator.comparing(p -> mc.player.position().distanceTo(p.getCenter())))
                     .orElse(null);
 
-            if (pos != null && mc.player.isOnGround() && placeBlock(pos)) {
+            if (pos != null && mc.player.onGround() && placeBlock(pos)) {
                 blocksPlaced++;
                 tickCounter = 0;
                 placePositions.remove(pos);
@@ -90,8 +90,8 @@ public final class Blocker extends PlaceModule {
     @EventHandler
     @SuppressWarnings("unused")
     private void onPacketReceive(PacketEvent.@NotNull Receive event) {
-        if (event.getPacket() instanceof BlockBreakingProgressS2CPacket && onPacket.getValue()) {
-            BlockBreakingProgressS2CPacket packet = event.getPacket();
+        if (event.getPacket() instanceof ClientboundBlockDestructionPacket && onPacket.getValue()) {
+            ClientboundBlockDestructionPacket packet = event.getPacket();
             doLogic(packet.getPos());
         }
     }
@@ -113,12 +113,12 @@ public final class Blocker extends PlaceModule {
     @EventHandler
     @SuppressWarnings("unused")
     private void onPlaceBlock(@NotNull EventPlaceBlock event) {
-        if (event.getBlockPos().equals(mc.player.getBlockPos().up(2))
+        if (event.getBlockPos().equals(mc.player.blockPosition().above(2))
                 && event.getBlock().equals(Blocks.TNT)
                 && antiTntAura.getValue()) {
             placePositions.add(event.getBlockPos());
         }
-        if (event.getBlockPos().equals(mc.player.getBlockPos().up(2))
+        if (event.getBlockPos().equals(mc.player.blockPosition().above(2))
                 && event.getBlock().equals(Blocks.RESPAWN_ANCHOR)
                 && antiAutoAnchor.getValue()) {
             placePositions.add(event.getBlockPos());
@@ -126,29 +126,29 @@ public final class Blocker extends PlaceModule {
     }
 
     private void doLogic(BlockPos pos) {
-        if (mc.world == null || mc.player == null || !HoleUtility.isHole(mc.player.getBlockPos()))
+        if (mc.level == null || mc.player == null || !HoleUtility.isHole(mc.player.blockPosition()))
             return;
 
         if (antiCev.getValue()) {
-            for (BlockPos checkPos : HoleUtility.getHolePoses(mc.player.getPos())) {
-                if (pos.equals(checkPos.up(2))) {
-                    placePositions.add(checkPos.up(3));
+            for (BlockPos checkPos : HoleUtility.getHolePoses(mc.player.position())) {
+                if (pos.equals(checkPos.above(2))) {
+                    placePositions.add(checkPos.above(3));
                     return;
                 }
             }
         }
 
-        if (HoleUtility.getSurroundPoses(mc.player.getPos()).contains(pos)) {
-            if (mc.world.getBlockState(pos).getBlock() == Blocks.BEDROCK || mc.world.getBlockState(pos).isReplaceable())
+        if (HoleUtility.getSurroundPoses(mc.player.position()).contains(pos)) {
+            if (mc.level.getBlockState(pos).getBlock() == Blocks.BEDROCK || mc.level.getBlockState(pos).canBeReplaced())
                 return;
 
-            placePositions.add(pos.up());
+            placePositions.add(pos.above());
 
             if (expand.getValue()) {
                 for (Vec3i vec : HoleUtility.VECTOR_PATTERN) {
-                    BlockPos checkPos = pos.add(vec);
+                    BlockPos checkPos = pos.offset(vec);
                     if (canPlaceBlock(checkPos, true)) {
-                        if (mc.world.getNonSpectatingEntities(PlayerEntity.class, new Box(checkPos)).isEmpty())
+                        if (mc.level.getEntitiesOfClass(Player.class, new AABB(checkPos)).isEmpty())
                             placePositions.add(checkPos);
                     }
                 }
@@ -158,9 +158,9 @@ public final class Blocker extends PlaceModule {
         }
 
         if (antiCiv.getValue()) {
-            for (BlockPos checkPos : HoleUtility.getSurroundPoses(mc.player.getPos())) {
-                if (pos.equals(checkPos.up())) {
-                    placePositions.add(checkPos.up(2));
+            for (BlockPos checkPos : HoleUtility.getSurroundPoses(mc.player.position())) {
+                if (pos.equals(checkPos.above())) {
+                    placePositions.add(checkPos.above(2));
                     return;
                 }
             }

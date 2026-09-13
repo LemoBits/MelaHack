@@ -1,10 +1,5 @@
 package thunder.hack.features.modules.misc;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
 import org.lwjgl.glfw.GLFW;
 import thunder.hack.core.Managers;
 import thunder.hack.core.manager.client.ModuleManager;
@@ -16,6 +11,12 @@ import thunder.hack.utility.Timer;
 import thunder.hack.utility.player.InventoryUtility;
 
 import static thunder.hack.features.modules.client.ClientSettings.isRu;
+
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Items;
 
 public class AutoLeave extends Module {
     public AutoLeave() {
@@ -46,7 +47,7 @@ public class AutoLeave extends Module {
 
     @Override
     public void onUpdate() {
-        if (mc.player == null || mc.world == null)
+        if (mc.player == null || mc.level == null)
             return;
 
         if (mc.player.hurtTime > 0)
@@ -55,20 +56,20 @@ public class AutoLeave extends Module {
         if (antiKTLeave.getValue() && !hurtTimer.passedMs(30000))
             return;
 
-        for (PlayerEntity pl : mc.world.getPlayers()) {
-            if (pl.getScoreboardTeam() != null && antiHelperLeave.getValue()) {
-                String prefix = pl.getScoreboardTeam().getPrefix().getString();
-                if (isStaff(Formatting.strip(prefix)))
+        for (Player pl : mc.level.players()) {
+            if (pl.getTeam() != null && antiHelperLeave.getValue()) {
+                String prefix = pl.getTeam().getPlayerPrefix().getString();
+                if (isStaff(ChatFormatting.stripFormatting(prefix)))
                     continue;
             }
 
 
-            if (pl != mc.player && !Managers.FRIEND.isFriend(pl) && players.getValue() != LeaveMode.None && mc.player.squaredDistanceTo(pl.getPos()) <= distance.getPow2Value()) {
+            if (pl != mc.player && !Managers.FRIEND.isFriend(pl) && players.getValue() != LeaveMode.None && mc.player.distanceToSqr(pl.position()) <= distance.getPow2Value()) {
                 switch (players.getValue()) {
                     case Command -> {
                         if (autoDisable.getValue()) disable();
                         sendMessage(isRu() ? "Ливнул т.к. рядом появился игрок!" : "Logged out because there was a player!");
-                        mc.player.networkHandler.sendChatCommand(command.getValue());
+                        mc.player.connection.sendCommand(command.getValue());
                         return;
                     }
                     case Leave -> {
@@ -85,7 +86,7 @@ public class AutoLeave extends Module {
         if (mc.player.getHealth() < leaveHp.getValue() && low_hp.getValue())
             leave(isRu() ? "Ливнул т.к. мало хп" : "Logged out because ur hp is low");
 
-        if (staff.getValue() != LeaveMode.None && ModuleManager.staffBoard.isDisabled() && mc.player.age % 5 == 0)
+        if (staff.getValue() != LeaveMode.None && ModuleManager.staffBoard.isDisabled() && mc.player.tickCount % 5 == 0)
             sendMessage(isRu() ? "Включи StaffBoard!" : "Turn on StaffBoard!");
 
         if (isKeyPressed(leaveBind) && leaveOnBind.getValue())
@@ -103,14 +104,14 @@ public class AutoLeave extends Module {
 
         if (leaveChat.getValue() != null || leaveChat.getValue() != "") {
             if (leaveChat.getValue().contains("/")) {
-                mc.getNetworkHandler().sendChatCommand(leaveChat.getValue());
+                mc.getConnection().sendCommand(leaveChat.getValue());
             } else {
-                mc.getNetworkHandler().sendChatMessage(leaveChat.getValue());
+                mc.getConnection().sendChat(leaveChat.getValue());
             }
         }
 
-        if (fastLeave.getValue()) sendPacket(new UpdateSelectedSlotC2SPacket(228));
-        else mc.player.networkHandler.getConnection().disconnect(Text.of("[AutoLeave] " + message));
+        if (fastLeave.getValue()) sendPacket(new ServerboundSetCarriedItemPacket(228));
+        else mc.player.connection.getConnection().disconnect(Component.nullToEmpty("[AutoLeave] " + message));
     }
 
     /*public void onStaff() { todo

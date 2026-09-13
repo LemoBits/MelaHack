@@ -1,15 +1,14 @@
 package thunder.hack.utility;
 
 import com.mojang.authlib.GameProfile;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.texture.NativeImage;
-import net.minecraft.client.texture.NativeImageBackedTexture;
-import net.minecraft.util.Identifier;
+import com.mojang.blaze3d.platform.NativeImage;
 import thunder.hack.core.manager.client.ModuleManager;
 import thunder.hack.features.modules.client.Capes;
 import thunder.hack.utility.ThunderUtility;
 
 import javax.net.ssl.HttpsURLConnection;
+import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.resources.ResourceLocation;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,37 +25,37 @@ public final class CapeHandler {
      */
 
     public interface ReturnCapeTexture {
-        void response(Identifier id);
+        void response(ResourceLocation id);
     }
 
     public static void loadPlayerCape(GameProfile player, ReturnCapeTexture response) {
         try {
             String uuid = player.getId().toString();
-            NativeImageBackedTexture optifineCape = getCapeFromURL(String.format("http://s.optifine.net/capes/%s.png", player.getName()));
-            NativeImageBackedTexture minecraftcapesCape = getCapeFromURL(String.format("https://api.minecraftcapes.net/profile/%s/cape/map", player.getId().toString().replace("-","")));
-            NativeImageBackedTexture minecraftcapesCapeCrack = getCapeFromURL(String.format("https://api.minecraftcapes.net/profile/%s/cape/map", getUUID(player)));
+            DynamicTexture optifineCape = getCapeFromURL(String.format("http://s.optifine.net/capes/%s.png", player.getName()));
+            DynamicTexture minecraftcapesCape = getCapeFromURL(String.format("https://api.minecraftcapes.net/profile/%s/cape/map", player.getId().toString().replace("-","")));
+            DynamicTexture minecraftcapesCapeCrack = getCapeFromURL(String.format("https://api.minecraftcapes.net/profile/%s/cape/map", getUUID(player)));
             switch (ModuleManager.capes.priority.getValue()) {
                 case Capes.capePriority.Optifine:
                     if (optifineCape != null && ModuleManager.capes.optifineCapes.getValue()) {
-                        Identifier capeTexture = ThunderUtility.registerDynamicTexture("th-cape-" + uuid, optifineCape);
+                        ResourceLocation capeTexture = ThunderUtility.registerDynamicTexture("th-cape-" + uuid, optifineCape);
                         if (capeTexture != null) response.response(capeTexture);
                     } else if (ModuleManager.capes.minecraftcapesCapes.getValue() && minecraftcapesCape != null) {
-                        Identifier capeTexture = ThunderUtility.registerDynamicTexture("th-cape-" + uuid, minecraftcapesCape);
+                        ResourceLocation capeTexture = ThunderUtility.registerDynamicTexture("th-cape-" + uuid, minecraftcapesCape);
                         if (capeTexture != null) response.response(capeTexture);
                     } else if(ModuleManager.capes.minecraftcapesCapes.getValue()) {
-                        Identifier capeTexture = ThunderUtility.registerDynamicTexture("th-cape-" + uuid, minecraftcapesCapeCrack);
+                        ResourceLocation capeTexture = ThunderUtility.registerDynamicTexture("th-cape-" + uuid, minecraftcapesCapeCrack);
                         if (capeTexture != null) response.response(capeTexture);
                     }
                     break;
                 case Capes.capePriority.Minecraftcapes:
                     if (minecraftcapesCape != null && ModuleManager.capes.minecraftcapesCapes.getValue()) {
-                        Identifier capeTexture = ThunderUtility.registerDynamicTexture("th-cape-" + uuid, minecraftcapesCape);
+                        ResourceLocation capeTexture = ThunderUtility.registerDynamicTexture("th-cape-" + uuid, minecraftcapesCape);
                         if (capeTexture != null) response.response(capeTexture);
                     } else if (minecraftcapesCapeCrack != null && ModuleManager.capes.minecraftcapesCapes.getValue()) {
-                        Identifier capeTexture = ThunderUtility.registerDynamicTexture("th-cape-" + uuid, minecraftcapesCapeCrack);
+                        ResourceLocation capeTexture = ThunderUtility.registerDynamicTexture("th-cape-" + uuid, minecraftcapesCapeCrack);
                         if (capeTexture != null) response.response(capeTexture);
                     } else if (ModuleManager.capes.optifineCapes.getValue()) {
-                        Identifier capeTexture = ThunderUtility.registerDynamicTexture("th-cape-" + uuid, optifineCape);
+                        ResourceLocation capeTexture = ThunderUtility.registerDynamicTexture("th-cape-" + uuid, optifineCape);
                         if (capeTexture != null) response.response(capeTexture);
                     }
                     break;
@@ -96,7 +95,7 @@ public final class CapeHandler {
         return parsin[3];
     }
 
-    public static NativeImageBackedTexture getCapeFromURL(String capeStringURL) {
+    public static DynamicTexture getCapeFromURL(String capeStringURL) {
         try {
             URL capeURL = new URL(capeStringURL);
             return getCapeFromStream(capeURL.openStream());
@@ -105,7 +104,7 @@ public final class CapeHandler {
         }
     }
 
-    public static NativeImageBackedTexture getCapeFromStream(InputStream image) {
+    public static DynamicTexture getCapeFromStream(InputStream image) {
         NativeImage cape = null;
         try {
             cape = NativeImage.read(image);
@@ -113,7 +112,7 @@ public final class CapeHandler {
             e.printStackTrace();
         }
         if (cape != null) {
-            return new NativeImageBackedTexture(() -> "cape_texture", parseCape(cape));
+            return new DynamicTexture(() -> "cape_texture", parseCape(cape));
         }
         return null;
     }
@@ -130,7 +129,7 @@ public final class CapeHandler {
         NativeImage imgNew = new NativeImage(imageWidth, imageHeight, true);
         for (int x = 0; x < imageSrcWidth; x++) {
             for (int y = 0; y < srcHeight; y++) {
-                imgNew.setColorArgb(x, y, image.getColorArgb(x, y));
+                imgNew.setPixel(x, y, image.getPixel(x, y));
             }
         }
         image.close();

@@ -2,11 +2,11 @@ package thunder.hack.features.hud.impl;
 
 import com.google.common.collect.Lists;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.entity.EntityStatuses;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.network.packet.s2c.play.EntityStatusS2CPacket;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.protocol.game.ClientboundEntityEventPacket;
+import net.minecraft.world.entity.EntityEvent;
+import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.events.impl.PacketEvent;
 import thunder.hack.gui.font.FontRenderers;
@@ -34,7 +34,7 @@ public class KillFeed extends HudElement {
 
     private float vAnimation, hAnimation;
 
-    public void onRender2D(DrawContext context) {
+    public void onRender2D(GuiGraphics context) {
         super.onRender2D(context);
         int y_offset1 = 0;
         float scale_x = 30;
@@ -48,27 +48,27 @@ public class KillFeed extends HudElement {
         vAnimation = AnimationUtility.fast(vAnimation, 14 + y_offset1, 15);
         hAnimation = AnimationUtility.fast(hAnimation, scale_x + 10, 15);
 
-        Render2DEngine.drawHudBase(context.getMatrices(), getPosX(), getPosY(), hAnimation, vAnimation, HudEditor.hudRound.getValue());
+        Render2DEngine.drawHudBase(context.pose(), getPosX(), getPosY(), hAnimation, vAnimation, HudEditor.hudRound.getValue());
 
         if (HudEditor.hudStyle.is(HudEditor.HudStyle.Glowing)) {
-            FontRenderers.sf_bold.drawCenteredString(context.getMatrices(), "KillFeed", getPosX() + hAnimation / 2, getPosY() + 4, HudEditor.textColor.getValue().getColorObject());
+            FontRenderers.sf_bold.drawCenteredString(context.pose(), "KillFeed", getPosX() + hAnimation / 2, getPosY() + 4, HudEditor.textColor.getValue().getColorObject());
         } else {
-            FontRenderers.sf_bold.drawGradientCenteredString(context.getMatrices(), "KillFeed", getPosX() + hAnimation / 2, getPosY() + 4, 10);
+            FontRenderers.sf_bold.drawGradientCenteredString(context.pose(), "KillFeed", getPosX() + hAnimation / 2, getPosY() + 4, 10);
         }
 
         if (y_offset1 > 0) {
             if (HudEditor.hudStyle.is(HudEditor.HudStyle.Glowing)) {
-                Render2DEngine.horizontalGradient(context.getMatrices(), getPosX() + 2, getPosY() + 13.7f, getPosX() + 2 + hAnimation / 2f - 2, getPosY() + 14, Render2DEngine.injectAlpha(HudEditor.textColor.getValue().getColorObject(), 0), HudEditor.textColor.getValue().getColorObject());
-                Render2DEngine.horizontalGradient(context.getMatrices(), getPosX() + 2 + hAnimation / 2f - 2, getPosY() + 13.7f, getPosX() + 2 + hAnimation - 4, getPosY() + 14, HudEditor.textColor.getValue().getColorObject(), Render2DEngine.injectAlpha(HudEditor.textColor.getValue().getColorObject(), 0));
+                Render2DEngine.horizontalGradient(context.pose(), getPosX() + 2, getPosY() + 13.7f, getPosX() + 2 + hAnimation / 2f - 2, getPosY() + 14, Render2DEngine.injectAlpha(HudEditor.textColor.getValue().getColorObject(), 0), HudEditor.textColor.getValue().getColorObject());
+                Render2DEngine.horizontalGradient(context.pose(), getPosX() + 2 + hAnimation / 2f - 2, getPosY() + 13.7f, getPosX() + 2 + hAnimation - 4, getPosY() + 14, HudEditor.textColor.getValue().getColorObject(), Render2DEngine.injectAlpha(HudEditor.textColor.getValue().getColorObject(), 0));
             } else {
-                Render2DEngine.drawRectDumbWay(context.getMatrices(), getPosX() + 4, getPosY() + 13, getPosX() + getWidth() - 4, getPosY() + 13.5f, new Color(0x54FFFFFF, true));
+                Render2DEngine.drawRectDumbWay(context.pose(), getPosX() + 4, getPosY() + 13, getPosX() + getWidth() - 4, getPosY() + 13.5f, new Color(0x54FFFFFF, true));
             }
         }
 
-        Render2DEngine.addWindow(context.getMatrices(), getPosX(), getPosY(), getPosX() + hAnimation, getPosY() + vAnimation, 1f);
+        Render2DEngine.addWindow(context.pose(), getPosX(), getPosY(), getPosX() + hAnimation, getPosY() + vAnimation, 1f);
         int y_offset = 3;
         for (KillComponent kc : Lists.newArrayList(players)) {
-            FontRenderers.modules.drawString(context.getMatrices(), kc.getString(), getPosX() + 5, getPosY() + 18 + y_offset, -1);
+            FontRenderers.modules.drawString(context.pose(), kc.getString(), getPosX() + 5, getPosY() + 18 + y_offset, -1);
             y_offset += 10;
         }
         Render2DEngine.popWindow();
@@ -77,15 +77,15 @@ public class KillFeed extends HudElement {
 
     @EventHandler
     public void onPacket(PacketEvent.@NotNull Receive e) {
-        if (!(e.getPacket() instanceof EntityStatusS2CPacket pac)) return;
-        if (pac.getStatus() == EntityStatuses.PLAY_DEATH_SOUND_OR_ADD_PROJECTILE_HIT_PARTICLES && pac.getEntity(mc.world) instanceof PlayerEntity pl) {
+        if (!(e.getPacket() instanceof ClientboundEntityEventPacket pac)) return;
+        if (pac.getEventId() == EntityEvent.DEATH && pac.getEntity(mc.level) instanceof Player pl) {
 
             if(pl == mc.player && resetOnDeath.getValue()) {
                 players.clear();
                 return;
             }
 
-            if ((Aura.target != null && Aura.target == pac.getEntity(mc.world)) || (AutoCrystal.target != null && AutoCrystal.target == pac.getEntity(mc.world))) {
+            if ((Aura.target != null && Aura.target == pac.getEntity(mc.level)) || (AutoCrystal.target != null && AutoCrystal.target == pac.getEntity(mc.level))) {
                 for (KillComponent kc : Lists.newArrayList(players))
                     if (Objects.equals(kc.getName(), pl.getName().getString())) {
                         kc.increase();
@@ -119,7 +119,7 @@ public class KillFeed extends HudElement {
         }
 
         public String getString() {
-            return Formatting.RED + "EZ - " + Formatting.RESET + name + (count > 1 ?  (" [" + Formatting.GRAY + "x" + count + Formatting.RESET + "]") : "");
+            return ChatFormatting.RED + "EZ - " + ChatFormatting.RESET + name + (count > 1 ?  (" [" + ChatFormatting.GRAY + "x" + count + ChatFormatting.RESET + "]") : "");
         }
     }
 }

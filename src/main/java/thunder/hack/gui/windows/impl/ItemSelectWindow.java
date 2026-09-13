@@ -1,19 +1,22 @@
 package thunder.hack.gui.windows.impl;
 
+import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 
 import com.google.common.collect.Lists;
 import thunder.hack.utility.render.compat.RenderSystem;
-import net.minecraft.block.Block;
-import net.minecraft.client.gui.DrawContext;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.gl.ShaderProgramKeys;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.render.*;
-import net.minecraft.client.resource.language.I18n;
-import net.minecraft.client.util.InputUtil;
-import net.minecraft.item.Item;
-import net.minecraft.registry.Registries;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.StringHelper;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.util.StringUtil;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.Block;
 import org.lwjgl.glfw.GLFW;
 import thunder.hack.core.Managers;
 import thunder.hack.gui.clickui.ClickGUI;
@@ -40,83 +43,83 @@ public class ItemSelectWindow extends WindowBase {
     private String search = "Search";
 
     public ItemSelectWindow(Setting<ItemSelectSetting> itemSetting) {
-        this(mc.getWindow().getScaledWidth() / 2f - 100, mc.getWindow().getScaledHeight() / 2f - 150, 200, 300, itemSetting);
+        this(mc.getWindow().getGuiScaledWidth() / 2f - 100, mc.getWindow().getGuiScaledHeight() / 2f - 150, 200, 300, itemSetting);
     }
 
     public ItemSelectWindow(float x, float y, float width, float height, Setting<ItemSelectSetting> itemSetting) {
-        super(x, y, width, height, "Items / " + Formatting.GRAY + itemSetting.getModule().getName(), null, null);
+        super(x, y, width, height, "Items / " + ChatFormatting.GRAY + itemSetting.getModule().getName(), null, null);
         this.itemSetting = itemSetting;
         refreshItemPlates();
 
         int id1 = 0;
-        for (Block block : Registries.BLOCK) {
-            allItems.add(new ItemPlate(id1, id1 * 20, block.asItem(), block.getTranslationKey()));
+        for (Block block : BuiltInRegistries.BLOCK) {
+            allItems.add(new ItemPlate(id1, id1 * 20, block.asItem(), block.getDescriptionId()));
             id1++;
         }
 
-        for (Item item : Registries.ITEM) {
-            allItems.add(new ItemPlate(id1, id1 * 20, item, item.getTranslationKey()));
+        for (Item item : BuiltInRegistries.ITEM) {
+            allItems.add(new ItemPlate(id1, id1 * 20, item, item.getDescriptionId()));
             id1++;
         }
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY) {
+    public void render(GuiGraphics context, int mouseX, int mouseY) {
         super.render(context, mouseX, mouseY);
         boolean hover1 = Render2DEngine.isHovered(mouseX, mouseY, getX() + getWidth() - 90, getY() + 3, 70, 10);
 
-        Render2DEngine.drawRect(context.getMatrices(), getX() + getWidth() - 90, getY() + 3, 70, 10, hover1 ? new Color(0xC5838383, true) : new Color(0xC5575757, true));
-        FontRenderers.sf_medium_mini.drawString(context.getMatrices(), search, getX() + getWidth() - 86, getY() + 7, new Color(0xD5D5D5).getRGB());
+        Render2DEngine.drawRect(context.pose(), getX() + getWidth() - 90, getY() + 3, 70, 10, hover1 ? new Color(0xC5838383, true) : new Color(0xC5575757, true));
+        FontRenderers.sf_medium_mini.drawString(context.pose(), search, getX() + getWidth() - 86, getY() + 7, new Color(0xD5D5D5).getRGB());
 
         RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
 
         int tabColor1 = allTab ? new Color(0xD5D5D5).getRGB() : Color.GRAY.getRGB();
         int tabColor2 = allTab ? Color.GRAY.getRGB() : new Color(0xBDBDBD).getRGB();
-        BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.DEBUG_LINE_STRIP, VertexFormats.POSITION_COLOR);
-        bufferBuilder.vertex(getX() + 1.5f, getY() + 29, 0f).color(Color.DARK_GRAY.getRGB());
-        bufferBuilder.vertex(getX() + 8, getY() + 29, 0f).color(tabColor1);
-        bufferBuilder.vertex(getX() + 8, getY() + 19, 0f).color(tabColor1);
-        bufferBuilder.vertex(getX() + 48, getY() + 19, 0f).color(tabColor1);
-        bufferBuilder.vertex(getX() + 54, getY() + 29, 0f).color(tabColor1);
-        bufferBuilder.vertex(getX() + 52, getY() + 25, 0f).color(tabColor2);
-        bufferBuilder.vertex(getX() + 52, getY() + 19, 0f).color(tabColor2);
-        bufferBuilder.vertex(getX() + 92, getY() + 19, 0f).color(tabColor2);
-        bufferBuilder.vertex(getX() + 100, getY() + 29, 0f).color(Color.GRAY.getRGB());
-        bufferBuilder.vertex(getX() + getWidth() - 1, getY() + 29, 0f).color(Color.DARK_GRAY.getRGB());
-        BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
+        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.DEBUG_LINE_STRIP, DefaultVertexFormat.POSITION_COLOR);
+        bufferBuilder.addVertex(getX() + 1.5f, getY() + 29, 0f).setColor(Color.DARK_GRAY.getRGB());
+        bufferBuilder.addVertex(getX() + 8, getY() + 29, 0f).setColor(tabColor1);
+        bufferBuilder.addVertex(getX() + 8, getY() + 19, 0f).setColor(tabColor1);
+        bufferBuilder.addVertex(getX() + 48, getY() + 19, 0f).setColor(tabColor1);
+        bufferBuilder.addVertex(getX() + 54, getY() + 29, 0f).setColor(tabColor1);
+        bufferBuilder.addVertex(getX() + 52, getY() + 25, 0f).setColor(tabColor2);
+        bufferBuilder.addVertex(getX() + 52, getY() + 19, 0f).setColor(tabColor2);
+        bufferBuilder.addVertex(getX() + 92, getY() + 19, 0f).setColor(tabColor2);
+        bufferBuilder.addVertex(getX() + 100, getY() + 29, 0f).setColor(Color.GRAY.getRGB());
+        bufferBuilder.addVertex(getX() + getWidth() - 1, getY() + 29, 0f).setColor(Color.DARK_GRAY.getRGB());
+        BufferRenderer.drawWithGlobalProgram(bufferBuilder.buildOrThrow());
 
-        FontRenderers.sf_medium_mini.drawString(context.getMatrices(), "All", getX() + 25, getY() + 25, tabColor1);
-        FontRenderers.sf_medium_mini.drawString(context.getMatrices(), "Selected", getX() + 60, getY() + 25, tabColor2);
+        FontRenderers.sf_medium_mini.drawString(context.pose(), "All", getX() + 25, getY() + 25, tabColor1);
+        FontRenderers.sf_medium_mini.drawString(context.pose(), "Selected", getX() + 60, getY() + 25, tabColor2);
 
         if (!allTab && itemPlates.isEmpty()) {
-            FontRenderers.sf_medium.drawCenteredString(context.getMatrices(), isRu() ? "Тут пока пусто" : "It's empty here yet",
+            FontRenderers.sf_medium.drawCenteredString(context.pose(), isRu() ? "Тут пока пусто" : "It's empty here yet",
                     getX() + getWidth() / 2f, getY() + getHeight() / 2f, new Color(0xBDBDBD).getRGB());
         }
 
-        Render2DEngine.addWindow(context.getMatrices(), getX(), getY() + 30, getX() + getWidth(), getY() + getHeight() - 1, 1f);
+        Render2DEngine.addWindow(context.pose(), getX(), getY() + 30, getX() + getWidth(), getY() + getHeight() - 1, 1f);
 
         for (ItemPlate itemPlate : (allTab ? allItems : itemPlates)) {
             if (itemPlate.offset + getY() + 25 + getScrollOffset() > getY() + getHeight() || itemPlate.offset + getScrollOffset() + getY() + 10 < getY())
                 continue;
 
-            context.getMatrices().pushMatrix();
-            context.getMatrices().translate((float) (getX() + 6), (float) (itemPlate.offset + getY() + 32 + getScrollOffset()));
-            context.drawItem(itemPlate.item().getDefaultStack(), 0, 0);
-            context.getMatrices().popMatrix();
+            context.pose().pushMatrix();
+            context.pose().translate((float) (getX() + 6), (float) (itemPlate.offset + getY() + 32 + getScrollOffset()));
+            context.renderItem(itemPlate.item().getDefaultInstance(), 0, 0);
+            context.pose().popMatrix();
 
-            FontRenderers.sf_medium.drawString(context.getMatrices(), I18n.translate(itemPlate.key()), getX() + 26, itemPlate.offset + getY() + 38 + getScrollOffset(), new Color(0xBDBDBD).getRGB());
+            FontRenderers.sf_medium.drawString(context.pose(), I18n.get(itemPlate.key()), getX() + 26, itemPlate.offset + getY() + 38 + getScrollOffset(), new Color(0xBDBDBD).getRGB());
 
             boolean hover2 = Render2DEngine.isHovered(mouseX, mouseY, getX() + getWidth() - 20, itemPlate.offset + getY() + 35 + getScrollOffset(), 11, 11);
 
-            Render2DEngine.drawRect(context.getMatrices(), getX() + getWidth() - 20, itemPlate.offset + getY() + 35 + getScrollOffset(), 11, 11,
+            Render2DEngine.drawRect(context.pose(), getX() + getWidth() - 20, itemPlate.offset + getY() + 35 + getScrollOffset(), 11, 11,
                     hover2 ? new Color(0xC57A7A7A, true) : new Color(0xC5575757, true));
 
             boolean selected = itemPlates.stream().anyMatch(sI -> Objects.equals(sI.key, itemPlate.key));
 
             if (allTab && !selected) {
-                FontRenderers.categories.drawString(context.getMatrices(), "+", getX() + getWidth() - 17, itemPlate.offset + getY() + 39 + getScrollOffset(), -1);
+                FontRenderers.categories.drawString(context.pose(), "+", getX() + getWidth() - 17, itemPlate.offset + getY() + 39 + getScrollOffset(), -1);
             } else {
-                FontRenderers.icons.drawString(context.getMatrices(), "w", getX() + getWidth() - 19.5f, itemPlate.offset + getY() + 39 + getScrollOffset(), -1);
+                FontRenderers.icons.drawString(context.pose(), "w", getX() + getWidth() - 19.5f, itemPlate.offset + getY() + 39 + getScrollOffset(), -1);
             }
         }
         setMaxElementsHeight((allTab ? allItems : itemPlates).size() * 20);
@@ -173,7 +176,7 @@ public class ItemSelectWindow extends WindowBase {
 
     @Override
     public void keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (keyCode == GLFW.GLFW_KEY_F && (InputUtil.isKeyPressed(mc.getWindow().getHandle(), GLFW.GLFW_KEY_LEFT_CONTROL) || InputUtil.isKeyPressed(mc.getWindow().getHandle(), GLFW.GLFW_KEY_RIGHT_CONTROL))) {
+        if (keyCode == GLFW.GLFW_KEY_F && (InputConstants.isKeyDown(mc.getWindow().getWindow(), GLFW.GLFW_KEY_LEFT_CONTROL) || InputConstants.isKeyDown(mc.getWindow().getWindow(), GLFW.GLFW_KEY_RIGHT_CONTROL))) {
             listening = !listening;
             return;
         }
@@ -203,7 +206,7 @@ public class ItemSelectWindow extends WindowBase {
 
     @Override
     public void charTyped(char key, int keyCode) {
-        if (StringHelper.isValidChar(key) && listening) {
+        if (StringUtil.isAllowedChatCharacter(key) && listening) {
             search = search + key;
             refreshAllItems();
         }
@@ -214,16 +217,16 @@ public class ItemSelectWindow extends WindowBase {
         itemPlates.clear();
 
         int id = 0;
-        for (Block block : Registries.BLOCK) {
-            if (itemSetting.getValue().getItemsById().contains(block.getTranslationKey().replace("block.minecraft.", ""))) {
-                itemPlates.add(new ItemPlate(id, id * 20, block.asItem(), block.getTranslationKey()));
+        for (Block block : BuiltInRegistries.BLOCK) {
+            if (itemSetting.getValue().getItemsById().contains(block.getDescriptionId().replace("block.minecraft.", ""))) {
+                itemPlates.add(new ItemPlate(id, id * 20, block.asItem(), block.getDescriptionId()));
                 id++;
             }
         }
 
-        for (Item item : Registries.ITEM)
-            if (itemSetting.getValue().getItemsById().contains(item.getTranslationKey().replace("item.minecraft.", ""))) {
-                itemPlates.add(new ItemPlate(id, id * 20, item, item.getTranslationKey()));
+        for (Item item : BuiltInRegistries.ITEM)
+            if (itemSetting.getValue().getItemsById().contains(item.getDescriptionId().replace("item.minecraft.", ""))) {
+                itemPlates.add(new ItemPlate(id, id * 20, item, item.getDescriptionId()));
                 id++;
             }
     }
@@ -232,16 +235,16 @@ public class ItemSelectWindow extends WindowBase {
         allItems.clear();
         resetScroll();
         int id1 = 0;
-        for (Block block : Registries.BLOCK) {
-            if (search.equals("Search") || search.isEmpty() || block.getTranslationKey().contains(search) || I18n.translate(block.getTranslationKey()).toLowerCase().contains(search.toLowerCase())) {
-                allItems.add(new ItemPlate(id1, id1 * 20, block.asItem(), block.getTranslationKey()));
+        for (Block block : BuiltInRegistries.BLOCK) {
+            if (search.equals("Search") || search.isEmpty() || block.getDescriptionId().contains(search) || I18n.get(block.getDescriptionId()).toLowerCase().contains(search.toLowerCase())) {
+                allItems.add(new ItemPlate(id1, id1 * 20, block.asItem(), block.getDescriptionId()));
                 id1++;
             }
         }
 
-        for (Item item : Registries.ITEM) {
-            if (search.equals("Search") || search.isEmpty() || item.getTranslationKey().contains(search) || item.getName().getString().toLowerCase().contains(search.toLowerCase())) {
-                allItems.add(new ItemPlate(id1, id1 * 20, item, item.getTranslationKey()));
+        for (Item item : BuiltInRegistries.ITEM) {
+            if (search.equals("Search") || search.isEmpty() || item.getDescriptionId().contains(search) || item.getName().getString().toLowerCase().contains(search.toLowerCase())) {
+                allItems.add(new ItemPlate(id1, id1 * 20, item, item.getDescriptionId()));
                 id1++;
             }
         }

@@ -1,10 +1,10 @@
 package thunder.hack.features.modules.client;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket;
-import net.minecraft.network.packet.s2c.play.GameMessageS2CPacket;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
+import net.minecraft.network.protocol.game.ServerboundChatPacket;
+import net.minecraft.world.item.Items;
 import thunder.hack.core.Managers;
 import thunder.hack.events.impl.PacketEvent;
 import thunder.hack.features.modules.Module;
@@ -42,7 +42,7 @@ public class ChatTranslator extends Module {
     public void onPacketReceive(PacketEvent.Receive e) {
         if (fullNullCheck()) return;
 
-        if (e.getPacket() instanceof GameMessageS2CPacket mPacket) {
+        if (e.getPacket() instanceof ClientboundSystemChatPacket mPacket) {
             String message = mPacket.content().getString();
 
             for (String s : exceptions)
@@ -51,7 +51,7 @@ public class ChatTranslator extends Module {
 
             Managers.ASYNC.run(() -> {
                 try {
-                    sendMessage(Formatting.WHITE + translate(message, urLang.getValue().name()));
+                    sendMessage(ChatFormatting.WHITE + translate(message, urLang.getValue().name()));
                 } catch (Exception exc) {
                     exc.printStackTrace();
                 }
@@ -62,24 +62,24 @@ public class ChatTranslator extends Module {
     @EventHandler
     public void onPacketSend(PacketEvent.Send e) {
         if (fullNullCheck()) return;
-        if (e.getPacket() instanceof ChatMessageC2SPacket pac) {
-            if (Objects.equals(pac.chatMessage(), skip))
+        if (e.getPacket() instanceof ServerboundChatPacket pac) {
+            if (Objects.equals(pac.message(), skip))
                 return;
-            if (mc.player.getMainHandStack().getItem() == Items.FILLED_MAP || mc.player.getOffHandStack().getItem() == Items.FILLED_MAP)
+            if (mc.player.getMainHandItem().getItem() == Items.FILLED_MAP || mc.player.getOffhandItem().getItem() == Items.FILLED_MAP)
                 return;
-            if (pac.chatMessage().startsWith("/") || pac.chatMessage().startsWith(Managers.COMMAND.getPrefix()))
+            if (pac.message().startsWith("/") || pac.message().startsWith(Managers.COMMAND.getPrefix()))
                 return;
 
             Managers.ASYNC.run(() -> {
                 try {
-                    String outMessage = translate(pac.chatMessage(), outMessages.getValue().name());
+                    String outMessage = translate(pac.message(), outMessages.getValue().name());
 
-                    if (Objects.equals(pac.chatMessage(), outMessage)) {
-                        skip = pac.chatMessage();
-                        mc.player.networkHandler.sendChatMessage(pac.chatMessage());
+                    if (Objects.equals(pac.message(), outMessage)) {
+                        skip = pac.message();
+                        mc.player.connection.sendChat(pac.message());
                     } else {
                         skip = outMessage;
-                        mc.player.networkHandler.sendChatMessage(outMessage);
+                        mc.player.connection.sendChat(outMessage);
                     }
                 } catch (Exception exc) {
                     exc.printStackTrace();

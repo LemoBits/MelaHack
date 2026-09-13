@@ -1,11 +1,11 @@
 package thunder.hack.features.modules.render;
 
 import com.google.common.collect.Lists;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
 import thunder.hack.utility.render.compat.RenderSystem;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.RotationAxis;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.phys.Vec3;
 import thunder.hack.core.Managers;
 import thunder.hack.core.manager.client.ModuleManager;
 import thunder.hack.events.impl.EventAttack;
@@ -30,21 +30,21 @@ public class HitBubbles extends Module {
 
     @EventHandler
     public void onHit(EventAttack e) {
-        Vec3d point = Managers.PLAYER.getRtxPoint(((IEntity) mc.player).getLastYaw(), ((IEntity) mc.player).getLastPitch(), ModuleManager.aura.attackRange.getValue());
+        Vec3 point = Managers.PLAYER.getRtxPoint(((IEntity) mc.player).getLastYaw(), ((IEntity) mc.player).getLastPitch(), ModuleManager.aura.attackRange.getValue());
         if (point != null && !e.isPre())
             bubbles.add(new HitBubble((float) point.x, (float) point.y, (float) point.z, -((IEntity) mc.player).getLastYaw(), ((IEntity) mc.player).getLastPitch(), new Timer()));
     }
 
-    public void onRender3D(MatrixStack matrixStack) {
+    public void onRender3D(PoseStack matrixStack) {
         RenderSystem.disableDepthTest();
         ArrayList<HitBubble> bubblesCopy = Lists.newArrayList(bubbles);
         bubblesCopy.forEach(b -> {
-            matrixStack.push();
-            matrixStack.translate(b.x - mc.getEntityRenderDispatcher().camera.getPos().getX(), b.y - mc.getEntityRenderDispatcher().camera.getPos().getY(), b.z - mc.getEntityRenderDispatcher().camera.getPos().getZ());
-            matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(b.yaw));
-            matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(b.pitch));
+            matrixStack.pushPose();
+            matrixStack.translate(b.x - mc.getEntityRenderDispatcher().camera.getPosition().x(), b.y - mc.getEntityRenderDispatcher().camera.getPosition().y(), b.z - mc.getEntityRenderDispatcher().camera.getPosition().z());
+            matrixStack.mulPose(Axis.YP.rotationDegrees(b.yaw));
+            matrixStack.mulPose(Axis.XP.rotationDegrees(b.pitch));
             drawBubble(matrixStack, -b.life.getPassedTimeMs() / 4f, b.life.getPassedTimeMs() / 1500f);
-            matrixStack.pop();
+            matrixStack.popPose();
         });
         RenderSystem.enableDepthTest();
         bubbles.removeIf(b -> b.life.passedMs(lifeTime.getValue() * 50));

@@ -1,7 +1,7 @@
 package thunder.hack.features.modules.misc;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.events.impl.EventAttack;
 import thunder.hack.features.modules.Module;
@@ -80,9 +80,9 @@ public class EbatteSratte extends Module {
     @EventHandler
     @SuppressWarnings("unused")
     public void onAttackEntity(@NotNull EventAttack event) {
-        if (event.getEntity() instanceof PlayerEntity && !event.isPre()) {
+        if (event.getEntity() instanceof Player && !event.isPre()) {
             if (timer.passedS(delay.getValue())) {
-                PlayerEntity entity = (PlayerEntity) event.getEntity();
+                Player entity = (Player) event.getEntity();
                 if (entity == null) return;
 
                 int n;
@@ -105,9 +105,9 @@ public class EbatteSratte extends Module {
                 };
 
                 if (chatPrefix.contains("/"))
-                    mc.getNetworkHandler().sendChatCommand("/msg " + entity.getName().getString() + " " + (mode.getValue() == Messages.Default ? WORDS[n] : words.get(n)));
+                    mc.getConnection().sendCommand("/msg " + entity.getName().getString() + " " + (mode.getValue() == Messages.Default ? WORDS[n] : words.get(n)));
                 else
-                    mc.getNetworkHandler().sendChatMessage(chatPrefix + entity.getName().getString() + " " + (mode.getValue() == Messages.Default ? WORDS[n] : words.get(n)));
+                    mc.getConnection().sendChat(chatPrefix + entity.getName().getString() + " " + (mode.getValue() == Messages.Default ? WORDS[n] : words.get(n)));
 
 
                 timer.reset();

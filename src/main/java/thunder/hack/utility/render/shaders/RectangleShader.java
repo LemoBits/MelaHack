@@ -3,15 +3,15 @@ package thunder.hack.utility.render.shaders;
 import com.mojang.blaze3d.pipeline.BlendFunction;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.platform.DepthTestFunction;
-import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.shaders.UniformType;
-import net.minecraft.client.render.VertexFormats;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.MathHelper;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import thunder.hack.features.modules.client.HudEditor;
 import thunder.hack.utility.render.compat.RenderSystem;
 
 import java.awt.*;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 
 import static thunder.hack.features.modules.Module.mc;
 
@@ -27,26 +27,26 @@ public class RectangleShader {
     private Color color4 = Color.WHITE;
 
     public static final RenderPipeline RECTANGLE_SHADER = RenderPipeline.builder()
-            .withLocation(Identifier.of("thunderhack", "pipeline/rectangle"))
-            .withVertexShader(Identifier.of("minecraft", "core/position_only"))
-            .withFragmentShader(Identifier.of("minecraft", "core/rectangle"))
+            .withLocation(ResourceLocation.fromNamespaceAndPath("thunderhack", "pipeline/rectangle"))
+            .withVertexShader(ResourceLocation.fromNamespaceAndPath("minecraft", "core/position_only"))
+            .withFragmentShader(ResourceLocation.fromNamespaceAndPath("minecraft", "core/rectangle"))
             .withBlend(BlendFunction.TRANSLUCENT)
             .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
             .withDepthWrite(false)
             .withUniform("Projection", UniformType.UNIFORM_BUFFER)
             .withUniform("DynamicTransforms", UniformType.UNIFORM_BUFFER)
             .withUniform("ThunderHackCustom", UniformType.UNIFORM_BUFFER)
-            .withVertexFormat(VertexFormats.POSITION, VertexFormat.DrawMode.QUADS)
+            .withVertexFormat(DefaultVertexFormat.POSITION, VertexFormat.Mode.QUADS)
             .build();
 
     public RectangleShader() {
     }
 
     public void setParameters(float x, float y, float width, float height, float r, float alpha) {
-        float i = (float) mc.getWindow().getScaleFactor();
+        float i = (float) mc.getWindow().getGuiScale();
         radius = r * i;
         uLocationX = x * i;
-        uLocationY = -y * i + mc.getWindow().getScaledHeight() * i - height * i;
+        uLocationY = -y * i + mc.getWindow().getGuiScaledHeight() * i - height * i;
         uSizeX = width * i;
         uSizeY = height * i;
 
@@ -54,7 +54,7 @@ public class RectangleShader {
         Color c2 = HudEditor.getColor(0);
         Color c3 = HudEditor.getColor(180);
         Color c4 = HudEditor.getColor(90);
-        int alphaByte = MathHelper.clamp(Math.round(alpha * 255f), 0, 255);
+        int alphaByte = Mth.clamp(Math.round(alpha * 255f), 0, 255);
 
         color1 = new Color(c1.getRed(), c1.getGreen(), c1.getBlue(), alphaByte);
         color2 = new Color(c2.getRed(), c2.getGreen(), c2.getBlue(), alphaByte);
@@ -63,13 +63,13 @@ public class RectangleShader {
     }
 
     public void setParameters(float x, float y, float width, float height, float r, float alpha, Color c1, Color c2, Color c3, Color c4) {
-        float i = (float) mc.getWindow().getScaleFactor();
+        float i = (float) mc.getWindow().getGuiScale();
         radius = r * i;
         uLocationX = x * i;
-        uLocationY = -y * i + mc.getWindow().getScaledHeight() * i - height * i;
+        uLocationY = -y * i + mc.getWindow().getGuiScaledHeight() * i - height * i;
         uSizeX = width * i;
         uSizeY = height * i;
-        int alphaByte = MathHelper.clamp(Math.round(alpha * 255f), 0, 255);
+        int alphaByte = Mth.clamp(Math.round(alpha * 255f), 0, 255);
         color1 = new Color(c1.getRed(), c1.getGreen(), c1.getBlue(), alphaByte);
         color2 = new Color(c2.getRed(), c2.getGreen(), c2.getBlue(), alphaByte);
         color3 = new Color(c3.getRed(), c3.getGreen(), c3.getBlue(), alphaByte);

@@ -1,28 +1,30 @@
 package thunder.hack.features.modules.render;
 
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
-
+import com.mojang.math.Axis;
 import com.google.common.collect.Maps;
 import com.mojang.blaze3d.platform.GlStateManager;
 import thunder.hack.utility.render.compat.RenderSystem;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.network.OtherClientPlayerEntity;
 import net.minecraft.client.gl.ShaderProgramKeys;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.model.PlayerModel;
+import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.player.RemotePlayer;
 import net.minecraft.client.render.*;
-import net.minecraft.client.render.entity.EntityRenderer;
-import net.minecraft.client.render.entity.EntityRendererFactory;
-import net.minecraft.client.render.entity.model.EntityModelLayers;
-import net.minecraft.client.render.entity.model.PlayerEntityModel;
-import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket;
-import net.minecraft.network.packet.s2c.play.PlayerRemoveS2CPacket;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.RotationAxis;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.client.renderer.entity.EntityRenderer;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.client.renderer.entity.state.PlayerRenderState;
+import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket;
+import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 import org.joml.Vector4d;
@@ -53,17 +55,17 @@ public class LogoutSpots extends Module {
     private final Setting<Boolean> notifications = new Setting<>("Notifications", true);
     private final Setting<Boolean> ignoreBots = new Setting<>("IgnoreBots", true);
 
-    private final Map<UUID, PlayerEntity> playerCache = Maps.newConcurrentMap();
-    private final Map<UUID, PlayerEntity> logoutCache = Maps.newConcurrentMap();
+    private final Map<UUID, Player> playerCache = Maps.newConcurrentMap();
+    private final Map<UUID, Player> logoutCache = Maps.newConcurrentMap();
 
     @EventHandler
     public void onPacketReceive(PacketEvent.Receive e) {
-        if (e.getPacket() instanceof PlayerListS2CPacket pac) {
-            if (pac.getActions().contains(PlayerListS2CPacket.Action.ADD_PLAYER)) {
-                for (PlayerListS2CPacket.Entry ple : pac.getPlayerAdditionEntries()) {
+        if (e.getPacket() instanceof ClientboundPlayerInfoUpdatePacket pac) {
+            if (pac.actions().contains(ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER)) {
+                for (ClientboundPlayerInfoUpdatePacket.Entry ple : pac.newEntries()) {
                     for (UUID uuid : logoutCache.keySet()) {
                         if (!uuid.equals(ple.profile().getId())) continue;
-                        PlayerEntity pl = logoutCache.get(uuid);
+                        Player pl = logoutCache.get(uuid);
                         if (ignoreBots.getValue() && isABot(pl)) continue;
                         if (notifications.getValue())
                             sendMessage(pl.getName().getString() + " logged back at  X: " + (int) pl.getX() + " Y: " + (int) pl.getY() + " Z: " + (int) pl.getZ());
@@ -74,11 +76,11 @@ public class LogoutSpots extends Module {
             playerCache.clear();
         }
 
-        if (e.getPacket() instanceof PlayerRemoveS2CPacket pac) {
+        if (e.getPacket() instanceof ClientboundPlayerInfoRemovePacket pac) {
             for (UUID uuid2 : pac.profileIds) {
                 for (UUID uuid : playerCache.keySet()) {
                     if (!uuid.equals(uuid2)) continue;
-                    final PlayerEntity pl = playerCache.get(uuid);
+                    final Player pl = playerCache.get(uuid);
                     if (ignoreBots.getValue() && isABot(pl)) continue;
                     if (pl != null) {
                         if (notifications.getValue())
@@ -100,30 +102,30 @@ public class LogoutSpots extends Module {
 
     @Override
     public void onUpdate() {
-        for (PlayerEntity player : mc.world.getPlayers()) {
+        for (Player player : mc.level.players()) {
             if (player == null || player.equals(mc.player)) continue;
             playerCache.put(player.getGameProfile().getId(), player);
         }
     }
 
-    public void onRender3D(MatrixStack s) {
+    public void onRender3D(PoseStack s) {
         RenderSystem.enableBlend();
         RenderSystem.disableDepthTest();
         if (renderMode.is(RenderMode.Box)) RenderSystem.defaultBlendFunc();
         else RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE);
         for (UUID uuid : logoutCache.keySet()) {
-            final PlayerEntity data = logoutCache.get(uuid);
+            final Player data = logoutCache.get(uuid);
             if (data != null) {
                 if (renderMode.is(RenderMode.Box)) {
                     Render3DEngine.OUTLINE_QUEUE.add(new Render3DEngine.OutlineAction(data.getBoundingBox(), color.getValue().getColorObject(), 2));
                 } else {
-                    PlayerEntityModel modelPlayer = new PlayerEntityModel(new EntityRendererFactory.Context(
-                            mc.getEntityRenderDispatcher(), mc.getItemModelManager(), mc.getMapRenderer(),
-                            mc.getBlockRenderManager(), mc.getResourceManager(), mc.getLoadedEntityModels(),
-                            ((IEntityRenderDispatcher) mc.getEntityRenderDispatcher()).getEquipmentModelLoader(), mc.textRenderer).getPart(EntityModelLayers.PLAYER), false);
-                    modelPlayer.getHead().scale(new Vector3f(-0.3f, -0.3f, -0.3f));
+                    PlayerModel modelPlayer = new PlayerModel(new EntityRendererProvider.Context(
+                            mc.getEntityRenderDispatcher(), mc.getItemModelResolver(), mc.getMapRenderer(),
+                            mc.getBlockRenderer(), mc.getResourceManager(), mc.getEntityModels(),
+                            ((IEntityRenderDispatcher) mc.getEntityRenderDispatcher()).getEquipmentModelLoader(), mc.font).bakeLayer(ModelLayers.PLAYER), false);
+                    modelPlayer.getHead().offsetScale(new Vector3f(-0.3f, -0.3f, -0.3f));
 
-                    renderEntity(s, data, modelPlayer, ((OtherClientPlayerEntity)data).getSkinTextures().texture(), color.getValue().getAlpha());
+                    renderEntity(s, data, modelPlayer, ((RemotePlayer)data).getSkin().texture(), color.getValue().getAlpha());
                 }
             }
         }
@@ -131,14 +133,14 @@ public class LogoutSpots extends Module {
         RenderSystem.disableBlend();
     }
 
-    public void onRender2D(DrawContext context) {
+    public void onRender2D(GuiGraphics context) {
         for (UUID uuid : logoutCache.keySet()) {
-            final PlayerEntity data = logoutCache.get(uuid);
+            final Player data = logoutCache.get(uuid);
             if (data != null) {
-                Vec3d vector = new Vec3d(data.getX(), data.getY() + 2, data.getZ());
+                Vec3 vector = new Vec3(data.getX(), data.getY() + 2, data.getZ());
                 Vector4d position = null;
 
-                vector = Render3DEngine.worldSpaceToScreenSpace(new Vec3d(vector.x, vector.y, vector.z));
+                vector = Render3DEngine.worldSpaceToScreenSpace(new Vec3(vector.x, vector.y, vector.z));
                 if (vector.z > 0 && vector.z < 1) {
                     position = new Vector4d(vector.x, vector.y, vector.z, 0);
                     position.x = Math.min(vector.x, position.x);
@@ -153,14 +155,14 @@ public class LogoutSpots extends Module {
                     float textWidth = (FontRenderers.sf_bold.getStringWidth(string) * 1);
                     float tagX = (float) ((position.x + diff - textWidth / 2) * 1);
 
-                    Render2DEngine.drawRect(context.getMatrices(), tagX - 2, (float) (position.y - 13f), textWidth + 4, 11, new Color(0x99000001, true));
-                    FontRenderers.sf_bold.drawString(context.getMatrices(), string, tagX, (float) position.y - 10, -1);
+                    Render2DEngine.drawRect(context.pose(), tagX - 2, (float) (position.y - 13f), textWidth + 4, 11, new Color(0x99000001, true));
+                    FontRenderers.sf_bold.drawString(context.pose(), string, tagX, (float) position.y - 10, -1);
                 }
             }
         }
     }
 
-    private void renderEntity(@NotNull MatrixStack matrices, @NotNull LivingEntity entity, @NotNull PlayerEntityModel modelBase, Identifier texture, int alpha) {
+    private void renderEntity(@NotNull PoseStack matrices, @NotNull LivingEntity entity, @NotNull PlayerModel modelBase, ResourceLocation texture, int alpha) {
         modelBase.leftPants.visible = true;
         modelBase.rightPants.visible = true;
         modelBase.leftSleeve.visible = true;
@@ -168,43 +170,43 @@ public class LogoutSpots extends Module {
         modelBase.jacket.visible = true;
         modelBase.hat.visible = true;
 
-        double x = entity.getX() - mc.getEntityRenderDispatcher().camera.getPos().getX();
-        double y = entity.getY() - mc.getEntityRenderDispatcher().camera.getPos().getY();
-        double z = entity.getZ() - mc.getEntityRenderDispatcher().camera.getPos().getZ();
-        ((IEntity) entity).setPos(entity.getPos());
-        matrices.push();
+        double x = entity.getX() - mc.getEntityRenderDispatcher().camera.getPosition().x();
+        double y = entity.getY() - mc.getEntityRenderDispatcher().camera.getPosition().y();
+        double z = entity.getZ() - mc.getEntityRenderDispatcher().camera.getPosition().z();
+        ((IEntity) entity).setPos(entity.position());
+        matrices.pushPose();
         matrices.translate((float) x, (float) y, (float) z);
-        matrices.multiply(RotationAxis.POSITIVE_Y.rotation(MathUtility.rad(180 - entity.bodyYaw)));
+        matrices.mulPose(Axis.YP.rotation(MathUtility.rad(180 - entity.yBodyRot)));
         prepareScale(matrices);
         @SuppressWarnings("unchecked")
-        PlayerEntityRenderState renderState = ((EntityRenderer<PlayerEntity, PlayerEntityRenderState>) mc.getEntityRenderDispatcher()
-                .getRenderer((PlayerEntity) entity))
-                .getAndUpdateRenderState((PlayerEntity) entity, Render3DEngine.getTickDelta());
-        modelBase.setAngles(renderState);
+        PlayerRenderState renderState = ((EntityRenderer<Player, PlayerRenderState>) mc.getEntityRenderDispatcher()
+                .getRenderer((Player) entity))
+                .createRenderState((Player) entity, Render3DEngine.getTickDelta());
+        modelBase.setupAnim(renderState);
         BufferBuilder buffer;
         if (renderMode.is(RenderMode.TexturedChams)) {
             RenderSystem.setShaderTexture(0, texture);
             RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX);
-            buffer = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
+            buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
         } else {
             RenderSystem.setShader(ShaderProgramKeys.POSITION);
-            buffer = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION);
+            buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
         }
         RenderSystem.setShaderColor(color.getValue().getGlRed(), color.getValue().getGlGreen(), color.getValue().getGlBlue(), alpha / 255f);
-        modelBase.render(matrices, buffer, 10, 0);
+        modelBase.renderToBuffer(matrices, buffer, 10, 0);
         Render2DEngine.endBuilding(buffer);
         RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
-        matrices.pop();
+        matrices.popPose();
     }
 
-    private static void prepareScale(@NotNull MatrixStack matrixStack) {
+    private static void prepareScale(@NotNull PoseStack matrixStack) {
         matrixStack.scale(-1.0F, -1.0F, 1.0F);
         matrixStack.scale(1.6f, 1.8f, 1.6f);
         matrixStack.translate(0.0F, -1.501F, 0.0F);
     }
 
-    private boolean isABot(PlayerEntity ent) {
-        return !ent.getUuid().equals(UUID.nameUUIDFromBytes(("OfflinePlayer:" + ent.getName().getString()).getBytes(StandardCharsets.UTF_8))) && ent instanceof OtherClientPlayerEntity
+    private boolean isABot(Player ent) {
+        return !ent.getUUID().equals(UUID.nameUUIDFromBytes(("OfflinePlayer:" + ent.getName().getString()).getBytes(StandardCharsets.UTF_8))) && ent instanceof RemotePlayer
                 && (FakePlayer.fakePlayer == null || ent.getId() != FakePlayer.fakePlayer.getId())
                 && !ent.getName().getString().contains("-");
     }

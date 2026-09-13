@@ -1,9 +1,8 @@
 package thunder.hack.features.modules.player;
 
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.item.Items;
-import net.minecraft.screen.slot.SlotActionType;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.item.Items;
 import thunder.hack.features.modules.Module;
 import thunder.hack.utility.Timer;
 
@@ -16,24 +15,24 @@ public class MouseElytraFix extends Module {
 
     @Override
     public void onUpdate() {
-        if (mc.player.getPreferredEquipmentSlot(mc.player.currentScreenHandler.getCursorStack()).isArmorSlot() && !ElytraSwap.swapping) {
-            if (delay.every(300) && mc.player.getPreferredEquipmentSlot(mc.player.currentScreenHandler.getCursorStack()) == EquipmentSlot.CHEST)
-                if (mc.player.getEquippedStack(EquipmentSlot.CHEST).getItem() == Items.ELYTRA) {
-                    mc.interactionManager.clickSlot(0, 6, 1, SlotActionType.PICKUP, mc.player);
+        if (mc.player.getEquipmentSlotForItem(mc.player.containerMenu.getCarried()).isArmor() && !ElytraSwap.swapping) {
+            if (delay.every(300) && mc.player.getEquipmentSlotForItem(mc.player.containerMenu.getCarried()) == EquipmentSlot.CHEST)
+                if (mc.player.getItemBySlot(EquipmentSlot.CHEST).getItem() == Items.ELYTRA) {
+                    mc.gameMode.handleInventoryMouseClick(0, 6, 1, ClickType.PICKUP, mc.player);
                     int empty = findEmptySlot();
                     boolean needDrop = (empty == 999);
                     if (needDrop)
                         empty = 9;
-                    mc.interactionManager.clickSlot(0, empty, 1, SlotActionType.PICKUP, mc.player);
+                    mc.gameMode.handleInventoryMouseClick(0, empty, 1, ClickType.PICKUP, mc.player);
                     if (needDrop)
-                        mc.interactionManager.clickSlot(0, -999, 1, SlotActionType.PICKUP, mc.player);
+                        mc.gameMode.handleInventoryMouseClick(0, -999, 1, ClickType.PICKUP, mc.player);
                 }
         }
     }
 
     public static int findEmptySlot() {
         for (int i = 0; i < 36; i++)
-            if (mc.player.getInventory().getStack(i).isEmpty()) return i < 9 ? i + 36 : i;
+            if (mc.player.getInventory().getItem(i).isEmpty()) return i < 9 ? i + 36 : i;
         return 999;
     }
 }

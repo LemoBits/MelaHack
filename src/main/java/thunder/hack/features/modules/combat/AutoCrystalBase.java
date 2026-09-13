@@ -2,14 +2,14 @@ package thunder.hack.features.modules.combat;
 
 import com.google.common.collect.Lists;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.protocol.game.ServerboundSwingPacket;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import thunder.hack.core.Managers;
@@ -54,7 +54,7 @@ public class AutoCrystalBase extends Module {
     private final Setting<ColorSetting> renderLineColor = new Setting<>("RenderLineColor", new ColorSetting(HudEditor.getColor(0))).addToGroup(render);
     private final Setting<Integer> renderLineWidth = new Setting<>("RenderLineWidth", 2, 1, 5).addToGroup(render);
 
-    private PlayerEntity target;
+    private Player target;
     private ObbyData bestData;
     private final Timer placeTimer = new Timer();
     private final Timer calcTimer = new Timer();
@@ -65,7 +65,7 @@ public class AutoCrystalBase extends Module {
 
     @EventHandler
     public void onTick(EventTick e) {
-        if (mc.player == null || mc.world == null) return;
+        if (mc.player == null || mc.level == null) return;
 
         if (!InventoryUtility.findBlockInHotBar(Blocks.OBSIDIAN).found() && disableNoObby.getValue()) {
             disable(isRu() ? "Нет обсидиана!" : "No obsidian!");
@@ -78,21 +78,21 @@ public class AutoCrystalBase extends Module {
             case FOV -> target = Managers.COMBAT.getTargetByFOV(15);
         }
 
-        if (target != null && (target.isDead() || target.getHealth() < 0)) {
+        if (target != null && (target.isDeadOrDying() || target.getHealth() < 0)) {
             target = null;
             return;
         }
 
         if (calcTimer.every(calcDelay.getValue()))
-            Managers.ASYNC.run(() -> calcPosition(range.getValue(), mc.player.getPos()));
+            Managers.ASYNC.run(() -> calcPosition(range.getValue(), mc.player.position()));
     }
 
     @EventHandler
     public void onSync(EventSync e) {
         if (rotate.getValue() && bestData != null && isWorth()) {
-            float[] angle = InteractionUtility.calculateAngle(bestData.bhr().getPos());
-            mc.player.setYaw(angle[0]);
-            mc.player.setPitch(angle[1]);
+            float[] angle = InteractionUtility.calculateAngle(bestData.bhr().getLocation());
+            mc.player.setYRot(angle[0]);
+            mc.player.setXRot(angle[1]);
         }
     }
 
@@ -102,8 +102,8 @@ public class AutoCrystalBase extends Module {
         if (placeTimer.every(placeDelay.getValue()) && bestData != null && obbyResult.found() && isWorth()) {
             InventoryUtility.saveSlot();
             obbyResult.switchTo();
-            mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, bestData.bhr());
-            sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
+            mc.gameMode.useItemOn(mc.player, InteractionHand.MAIN_HAND, bestData.bhr());
+            sendPacket(new ServerboundSwingPacket(InteractionHand.MAIN_HAND));
             if (render.getValue().isEnabled())
                 BlockAnimationUtility.renderBlock(bestData.position(),
                         renderLineColor.getValue().getColorObject(),
@@ -116,9 +116,9 @@ public class AutoCrystalBase extends Module {
             if (notification.getValue()) {
                 String content;
                 if (isRu())
-                    content = "Ставлю на" + Formatting.GRAY + " X:" + bestData.position().getX() + " Y:" + bestData.position().getY() + " Z:" + bestData.position().getZ() + Formatting.WHITE + " урон возрастет на " + Formatting.RED + MathUtility.round2(bestData.damage - ModuleManager.autoCrystal.renderDamage);
+                    content = "Ставлю на" + ChatFormatting.GRAY + " X:" + bestData.position().getX() + " Y:" + bestData.position().getY() + " Z:" + bestData.position().getZ() + ChatFormatting.WHITE + " урон возрастет на " + ChatFormatting.RED + MathUtility.round2(bestData.damage - ModuleManager.autoCrystal.renderDamage);
                 else
-                    content = "Placing obby on" + Formatting.GRAY + " X:" + bestData.position().getX() + " Y:" + bestData.position().getY() + " Z:" + bestData.position().getZ() + Formatting.WHITE + " damage will increase by " + Formatting.RED + MathUtility.round2(bestData.damage - ModuleManager.autoCrystal.renderDamage);
+                    content = "Placing obby on" + ChatFormatting.GRAY + " X:" + bestData.position().getX() + " Y:" + bestData.position().getY() + " Z:" + bestData.position().getZ() + ChatFormatting.WHITE + " damage will increase by " + ChatFormatting.RED + MathUtility.round2(bestData.damage - ModuleManager.autoCrystal.renderDamage);
                 Managers.NOTIFICATION.publicity("AutoCrystalBase", content, 2, Notification.Type.INFO);
             }
 
@@ -132,8 +132,8 @@ public class AutoCrystalBase extends Module {
                 && (ModuleManager.autoCrystal.renderDamage + minDamageDelta.getValue()) < bestData.damage;
     }
 
-    public void calcPosition(float range, Vec3d center) {
-        if (mc.player == null || mc.world == null) return;
+    public void calcPosition(float range, Vec3 center) {
+        if (mc.player == null || mc.level == null) return;
 
         if (target == null) {
             bestData = null;
@@ -149,14 +149,14 @@ public class AutoCrystalBase extends Module {
         }
     }
 
-    private @NotNull List<ObbyData> getPossibleBlocks(PlayerEntity target, Vec3d center, float range) {
+    private @NotNull List<ObbyData> getPossibleBlocks(Player target, Vec3 center, float range) {
         List<ObbyData> blocks = new ArrayList<>();
-        BlockPos playerPos = BlockPos.ofFloored(center);
+        BlockPos playerPos = BlockPos.containing(center);
         for (int x = (int) Math.floor(playerPos.getX() - range); x <= Math.ceil(playerPos.getX() + range); x++) {
             for (int y = (int) Math.floor(playerPos.getY() - range); y <= Math.ceil(playerPos.getY() + range); y++) {
                 for (int z = (int) Math.floor(playerPos.getZ() - range); z <= Math.ceil(playerPos.getZ() + range); z++) {
                     BlockPos bp = new BlockPos(x, y, z);
-                    if (!mc.world.isAir(bp)) continue;
+                    if (!mc.level.isEmptyBlock(bp)) continue;
                     BlockHitResult placeResult = InteractionUtility.getPlaceResult(bp, interact.getValue(), false);
                     if (placeResult != null) {
                         AutoCrystal.PlaceData data = getPlaceData(bp, target);
@@ -192,23 +192,23 @@ public class AutoCrystalBase extends Module {
         return bestData;
     }
 
-    public @Nullable AutoCrystal.PlaceData getPlaceData(BlockPos bp, PlayerEntity target) {
-        if (mc.player == null || mc.world == null) return null;
+    public @Nullable AutoCrystal.PlaceData getPlaceData(BlockPos bp, Player target) {
+        if (mc.player == null || mc.level == null) return null;
 
-        if (!mc.world.isAir(bp.up()))
+        if (!mc.level.isEmptyBlock(bp.above()))
             return null;
 
         if (ModuleManager.autoCrystal.isPositionBlockedByEntity(bp, true)) return null;
 
-        Vec3d crystalVec = new Vec3d(0.5f + bp.getX(), 1f + bp.getY(), 0.5f + bp.getZ());
+        Vec3 crystalVec = new Vec3(0.5f + bp.getX(), 1f + bp.getY(), 0.5f + bp.getZ());
 
         float damage = target == null ? 10f : ExplosionUtility.getDamageOfGhostBlock(crystalVec, target, bp);
         float selfDamage = ExplosionUtility.getDamageOfGhostBlock(crystalVec, mc.player, bp);
         boolean overrideDamage = ModuleManager.autoCrystal.shouldOverrideMaxSelfDmg(damage, selfDamage);
 
         if (ModuleManager.autoCrystal.protectFriends.getValue()) {
-            List<PlayerEntity> players = Lists.newArrayList(mc.world.getPlayers());
-            for (PlayerEntity pl : players) {
+            List<Player> players = Lists.newArrayList(mc.level.players());
+            for (Player pl : players) {
                 if (!Managers.FRIEND.isFriend(pl)) continue;
                 float fdamage = ExplosionUtility.getDamageOfGhostBlock(crystalVec, target, bp);
                 if (fdamage > selfDamage) {

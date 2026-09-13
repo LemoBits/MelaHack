@@ -2,14 +2,14 @@ package thunder.hack.features.cmd.impl;
 
 import com.mojang.brigadier.arguments.FloatArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import net.minecraft.block.Blocks;
-import net.minecraft.command.CommandSource;
-import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.screen.slot.SlotActionType;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.ChatFormatting;
+import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
+import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Blocks;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.features.cmd.Command;
 import thunder.hack.utility.player.InventoryUtility;
@@ -22,7 +22,7 @@ public class EClipCommand extends Command {
     }
 
     @Override
-    public void executeBuild(@NotNull LiteralArgumentBuilder<CommandSource> builder) {
+    public void executeBuild(@NotNull LiteralArgumentBuilder<SharedSuggestionProvider> builder) {
         builder.then(literal("bedrock").executes(context -> {
             execute(-((float) mc.player.getY()) - 3.0f);
             return SINGLE_SUCCESS;
@@ -40,16 +40,16 @@ public class EClipCommand extends Command {
             float y = 0.0f;
 
             for (i = 1; i < 255; ++i) {
-                if (mc.world.getBlockState(BlockPos.ofFloored(mc.player.getPos()).add(0, -i, 0)) == Blocks.AIR.getDefaultState()) {
+                if (mc.level.getBlockState(BlockPos.containing(mc.player.position()).offset(0, -i, 0)) == Blocks.AIR.defaultBlockState()) {
                     y = -i - 1;
                     break;
                 }
 
-                if (mc.world.getBlockState(BlockPos.ofFloored(mc.player.getPos()).add(0, -i, 0)) != Blocks.BEDROCK.getDefaultState())
+                if (mc.level.getBlockState(BlockPos.containing(mc.player.position()).offset(0, -i, 0)) != Blocks.BEDROCK.defaultBlockState())
                     continue;
 
-                sendMessage(Formatting.RED + " можно телепортироваться только под бедрок");
-                sendMessage(Formatting.RED + " eclip bedrock");
+                sendMessage(ChatFormatting.RED + " можно телепортироваться только под бедрок");
+                sendMessage(ChatFormatting.RED + " eclip bedrock");
                 return SINGLE_SUCCESS;
             }
 
@@ -60,16 +60,16 @@ public class EClipCommand extends Command {
             float y = 0.0f;
 
             for (i = 1; i < 255; ++i) {
-                if (mc.world.getBlockState(BlockPos.ofFloored(mc.player.getPos()).add(0, -i, 0)) == Blocks.AIR.getDefaultState()) {
+                if (mc.level.getBlockState(BlockPos.containing(mc.player.position()).offset(0, -i, 0)) == Blocks.AIR.defaultBlockState()) {
                     y = -i - 1;
                     break;
                 }
 
-                if (mc.world.getBlockState(BlockPos.ofFloored(mc.player.getPos()).add(0, -i, 0)) != Blocks.BEDROCK.getDefaultState())
+                if (mc.level.getBlockState(BlockPos.containing(mc.player.position()).offset(0, -i, 0)) != Blocks.BEDROCK.defaultBlockState())
                     continue;
 
-                sendMessage(Formatting.RED + " можно телепортироваться только под бедрок");
-                sendMessage(Formatting.RED + " eclip bedrock");
+                sendMessage(ChatFormatting.RED + " можно телепортироваться только под бедрок");
+                sendMessage(ChatFormatting.RED + " eclip bedrock");
                 return SINGLE_SUCCESS;
             }
 
@@ -84,7 +84,7 @@ public class EClipCommand extends Command {
             float y = 0.0f;
 
             for (i = 4; i < 255; ++i) {
-                if (mc.world.getBlockState(BlockPos.ofFloored(mc.player.getPos()).add(0, i, 0)) != Blocks.AIR.getDefaultState())
+                if (mc.level.getBlockState(BlockPos.containing(mc.player.position()).offset(0, i, 0)) != Blocks.AIR.defaultBlockState())
                     continue;
                 y = i + 1;
                 break;
@@ -97,7 +97,7 @@ public class EClipCommand extends Command {
             float y = 0.0f;
 
             for (i = 4; i < 255; ++i) {
-                if (mc.world.getBlockState(BlockPos.ofFloored(mc.player.getPos()).add(0, i, 0)) != Blocks.AIR.getDefaultState())
+                if (mc.level.getBlockState(BlockPos.containing(mc.player.position()).offset(0, i, 0)) != Blocks.AIR.defaultBlockState())
                     continue;
                 y = i + 1;
                 break;
@@ -114,25 +114,25 @@ public class EClipCommand extends Command {
         int elytra;
 
         if ((elytra = InventoryUtility.findItemInInventory(Items.ELYTRA).slot()) == -1) {
-            sendMessage(Formatting.RED + "вам нужны элитры в инвентаре");
+            sendMessage(ChatFormatting.RED + "вам нужны элитры в инвентаре");
             return;
         }
         if (elytra != -2) {
-            mc.interactionManager.clickSlot(0, elytra, 1, SlotActionType.PICKUP, mc.player);
-            mc.interactionManager.clickSlot(0, 6, 1, SlotActionType.PICKUP, mc.player);
+            mc.gameMode.handleInventoryMouseClick(0, elytra, 1, ClickType.PICKUP, mc.player);
+            mc.gameMode.handleInventoryMouseClick(0, 6, 1, ClickType.PICKUP, mc.player);
         }
 
-        mc.player.networkHandler.sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(mc.player.getX(), mc.player.getY(), mc.player.getZ(), false, mc.player.horizontalCollision));
-        mc.player.networkHandler.sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(mc.player.getX(), mc.player.getY(), mc.player.getZ(), false, mc.player.horizontalCollision));
-        mc.player.networkHandler.sendPacket(new ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.START_FALL_FLYING));
-        mc.player.networkHandler.sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(mc.player.getX(), mc.player.getY() + (double) y, mc.player.getZ(), false, mc.player.horizontalCollision));
-        mc.player.networkHandler.sendPacket(new ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.START_FALL_FLYING));
+        mc.player.connection.send(new ServerboundMovePlayerPacket.Pos(mc.player.getX(), mc.player.getY(), mc.player.getZ(), false, mc.player.horizontalCollision));
+        mc.player.connection.send(new ServerboundMovePlayerPacket.Pos(mc.player.getX(), mc.player.getY(), mc.player.getZ(), false, mc.player.horizontalCollision));
+        mc.player.connection.send(new ServerboundPlayerCommandPacket(mc.player, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING));
+        mc.player.connection.send(new ServerboundMovePlayerPacket.Pos(mc.player.getX(), mc.player.getY() + (double) y, mc.player.getZ(), false, mc.player.horizontalCollision));
+        mc.player.connection.send(new ServerboundPlayerCommandPacket(mc.player, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING));
 
         if (elytra != -2) {
-            mc.interactionManager.clickSlot(0, 6, 1, SlotActionType.PICKUP, mc.player);
-            mc.interactionManager.clickSlot(0, elytra, 1, SlotActionType.PICKUP, mc.player);
+            mc.gameMode.handleInventoryMouseClick(0, 6, 1, ClickType.PICKUP, mc.player);
+            mc.gameMode.handleInventoryMouseClick(0, elytra, 1, ClickType.PICKUP, mc.player);
         }
 
-        mc.player.setPosition(mc.player.getX(), mc.player.getY() + (double) y, mc.player.getZ());
+        mc.player.setPos(mc.player.getX(), mc.player.getY() + (double) y, mc.player.getZ());
     }
 }

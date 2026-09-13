@@ -2,7 +2,6 @@ package thunder.hack.features.hud.impl;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import thunder.hack.utility.render.compat.RenderSystem;
-import net.minecraft.util.Identifier;
 import thunder.hack.utility.render.Render2DEngine;
 import thunder.hack.utility.render.TextureStorage;
 

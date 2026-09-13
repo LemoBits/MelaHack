@@ -1,8 +1,8 @@
 package thunder.hack.features.modules.movement;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.entity.Entity;
-import net.minecraft.network.packet.s2c.play.PlayerPositionS2CPacket;
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
+import net.minecraft.world.entity.Entity;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.ThunderHack;
 import thunder.hack.events.impl.EventPlayerTravel;
@@ -42,10 +42,10 @@ public class EntitySpeed extends Module {
         if (!ev.isPre()) return;
         if (fullNullCheck()) return;
 
-        Entity entity = mc.player.getControllingVehicle();
+        Entity entity = mc.player.getControlledVehicle();
 
         if (entity == null) return;
-        if ((!mc.world.isChunkLoaded((int) entity.getPos().getX() >> 4, (int) entity.getPos().getZ() >> 4) || entity.getPos().getY() < -60) && stopunloaded.getValue())
+        if ((!mc.level.hasChunk((int) entity.position().x() >> 4, (int) entity.position().z() >> 4) || entity.position().y() < -60) && stopunloaded.getValue())
             return;
 
         if (entity.horizontalCollision || mc.player.horizontalCollision)
@@ -58,11 +58,11 @@ public class EntitySpeed extends Module {
         double predictedX = entity.getX() + motion[0];
         double predictedZ = entity.getZ() + motion[1];
 
-        if ((!mc.world.isChunkLoaded((int) predictedX >> 4, (int) predictedZ >> 4) || entity.getPos().getY() < -60) && stopunloaded.getValue())
+        if ((!mc.level.hasChunk((int) predictedX >> 4, (int) predictedZ >> 4) || entity.position().y() < -60) && stopunloaded.getValue())
             return;
 
-        if (MovementUtility.isMoving()) entity.setVelocity(motion[0], entity.getVelocity().getY(), motion[1]);
-        else entity.setVelocity(0, entity.getVelocity().getY(), 0);
+        if (MovementUtility.isMoving()) entity.setDeltaMovement(motion[0], entity.getDeltaMovement().y(), motion[1]);
+        else entity.setDeltaMovement(0, entity.getDeltaMovement().y(), 0);
 
         if (ticks++ > 50)
             ticks = 0;
@@ -72,7 +72,7 @@ public class EntitySpeed extends Module {
 
     @EventHandler
     public void onPacketReceive(PacketEvent.Receive e) {
-        if (e.getPacket() instanceof PlayerPositionS2CPacket)
+        if (e.getPacket() instanceof ClientboundPlayerPositionPacket)
             acceleration = 0;
     }
 

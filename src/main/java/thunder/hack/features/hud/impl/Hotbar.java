@@ -1,9 +1,5 @@
 package thunder.hack.features.hud.impl;
 
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
 import thunder.hack.gui.font.FontRenderers;
 import thunder.hack.features.hud.HudElement;
 import thunder.hack.gui.windows.WindowsScreen;
@@ -12,6 +8,9 @@ import thunder.hack.setting.Setting;
 import thunder.hack.utility.render.Render2DEngine;
 
 import java.awt.*;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 
 public class Hotbar extends HudElement {
     public Hotbar() {
@@ -24,74 +23,74 @@ public class Hotbar extends HudElement {
         Merged, Separately
     }
 
-    public void onRender2D(DrawContext context) {
-        if (mc.currentScreen instanceof WindowsScreen)
+    public void onRender2D(GuiGraphics context) {
+        if (mc.screen instanceof WindowsScreen)
             return;
 
-        PlayerEntity playerEntity = mc.player;
+        Player playerEntity = mc.player;
         if (playerEntity != null) {
-            var matrices = context.getMatrices();
-            int i = mc.getWindow().getScaledWidth() / 2;
+            var matrices = context.pose();
+            int i = mc.getWindow().getGuiScaledWidth() / 2;
 
-            if (mc.player.getOffHandStack().isEmpty()) {
-                Render2DEngine.drawHudBase(matrices, i - 90, mc.getWindow().getScaledHeight() - 25, 180, 20, HudEditor.hudRound.getValue());
+            if (mc.player.getOffhandItem().isEmpty()) {
+                Render2DEngine.drawHudBase(matrices, i - 90, mc.getWindow().getGuiScaledHeight() - 25, 180, 20, HudEditor.hudRound.getValue());
             } else if (lmode.getValue() == Mode.Merged) {
-                Render2DEngine.drawHudBase(matrices, i - 111, mc.getWindow().getScaledHeight() - 25, 201, 20, HudEditor.hudRound.getValue());
+                Render2DEngine.drawHudBase(matrices, i - 111, mc.getWindow().getGuiScaledHeight() - 25, 201, 20, HudEditor.hudRound.getValue());
 
                 if (HudEditor.hudStyle.is(HudEditor.HudStyle.Blurry)) {
-                    Render2DEngine.drawRect(context.getMatrices(), i - 109 + 18, mc.getWindow().getScaledHeight() - 23, 0.5f, 15, new Color(0x44FFFFFF, true));
+                    Render2DEngine.drawRect(context.pose(), i - 109 + 18, mc.getWindow().getGuiScaledHeight() - 23, 0.5f, 15, new Color(0x44FFFFFF, true));
                 } else {
-                    Render2DEngine.verticalGradient(matrices, i - 109 + 18, mc.getWindow().getScaledHeight() - 22 + 1 - 4, i - 108 + 18 - 0.5f, mc.getWindow().getScaledHeight() - 11 + 1 - 4, Render2DEngine.injectAlpha(HudEditor.textColor.getValue().getColorObject(), 0), HudEditor.textColor.getValue().getColorObject());
-                    Render2DEngine.verticalGradient(matrices, i - 109 + 18, mc.getWindow().getScaledHeight() - 11 - 4, i - 108 + 18 - 0.5f, mc.getWindow().getScaledHeight() - 5, HudEditor.textColor.getValue().getColorObject(), Render2DEngine.injectAlpha(HudEditor.textColor.getValue().getColorObject(), 0));
+                    Render2DEngine.verticalGradient(matrices, i - 109 + 18, mc.getWindow().getGuiScaledHeight() - 22 + 1 - 4, i - 108 + 18 - 0.5f, mc.getWindow().getGuiScaledHeight() - 11 + 1 - 4, Render2DEngine.injectAlpha(HudEditor.textColor.getValue().getColorObject(), 0), HudEditor.textColor.getValue().getColorObject());
+                    Render2DEngine.verticalGradient(matrices, i - 109 + 18, mc.getWindow().getGuiScaledHeight() - 11 - 4, i - 108 + 18 - 0.5f, mc.getWindow().getGuiScaledHeight() - 5, HudEditor.textColor.getValue().getColorObject(), Render2DEngine.injectAlpha(HudEditor.textColor.getValue().getColorObject(), 0));
                 }
             } else {
-                Render2DEngine.drawHudBase(matrices, i - 90, mc.getWindow().getScaledHeight() - 25, 180, 20, HudEditor.hudRound.getValue());
-                Render2DEngine.drawHudBase(matrices, i - 112.5f, mc.getWindow().getScaledHeight() - 25, 20, 20, HudEditor.hudRound.getValue());
+                Render2DEngine.drawHudBase(matrices, i - 90, mc.getWindow().getGuiScaledHeight() - 25, 180, 20, HudEditor.hudRound.getValue());
+                Render2DEngine.drawHudBase(matrices, i - 112.5f, mc.getWindow().getGuiScaledHeight() - 25, 20, 20, HudEditor.hudRound.getValue());
             }
 
             Color c = HudEditor.hudStyle.is(HudEditor.HudStyle.Blurry) ? new Color(0x7C151515, true) : new Color(0x7C2F2F2F, true);
 
-            Render2DEngine.drawRect(matrices, i - 88 + playerEntity.getInventory().getSelectedSlot() * 19.8f, mc.getWindow().getScaledHeight() - 24, 17, 17, HudEditor.hudRound.getValue(), 0.7f, c, c, c, c);
+            Render2DEngine.drawRect(matrices, i - 88 + playerEntity.getInventory().getSelectedSlot() * 19.8f, mc.getWindow().getGuiScaledHeight() - 24, 17, 17, HudEditor.hudRound.getValue(), 0.7f, c, c, c, c);
         }
     }
 
     // Bake only items
-    public static void renderHotBarItems(float tickDelta, DrawContext context) {
-        if (mc.currentScreen instanceof WindowsScreen)
+    public static void renderHotBarItems(float tickDelta, GuiGraphics context) {
+        if (mc.screen instanceof WindowsScreen)
             return;
 
-        PlayerEntity playerEntity = mc.player;
+        Player playerEntity = mc.player;
         if (playerEntity != null) {
 
-            var matrices = context.getMatrices();
-            int i = mc.getWindow().getScaledWidth() / 2;
-            int o = mc.getWindow().getScaledHeight() - 16 - 3;
+            var matrices = context.pose();
+            int i = mc.getWindow().getGuiScaledWidth() / 2;
+            int o = mc.getWindow().getGuiScaledHeight() - 16 - 3;
 
-            if (mc.player.getOffHandStack().isEmpty()) {
+            if (mc.player.getOffhandItem().isEmpty()) {
             } else if (lmode.getValue() == Mode.Merged) {
-                renderHotbarItem(context, i - 109, o - 5, playerEntity.getOffHandStack());
+                renderHotbarItem(context, i - 109, o - 5, playerEntity.getOffhandItem());
             } else {
-                renderHotbarItem(context, i - 111, o - 5, playerEntity.getOffHandStack());
+                renderHotbarItem(context, i - 111, o - 5, playerEntity.getOffhandItem());
             }
 
             for (int m = 0; m < 9; ++m) {
                 int n = i - 90 + m * 20 + 2;
                 if (m == mc.player.getInventory().getSelectedSlot())
-                    renderHotbarItem(context, n, o - 7, playerEntity.getInventory().getStack(m));
-                else renderHotbarItem(context, n, o - 5, playerEntity.getInventory().getStack(m));
+                    renderHotbarItem(context, n, o - 7, playerEntity.getInventory().getItem(m));
+                else renderHotbarItem(context, n, o - 5, playerEntity.getInventory().getItem(m));
             }
         }
     }
 
-    private static void renderHotbarItem(DrawContext context, int i, int j, ItemStack itemStack) {
+    private static void renderHotbarItem(GuiGraphics context, int i, int j, ItemStack itemStack) {
         if (!itemStack.isEmpty()) {
-            context.getMatrices().pushMatrix();
-            context.getMatrices().translate((float) ((float) (i + 8)), (float) ((float) (j + 12)));
-            context.getMatrices().scale(0.9f, 0.9f);
-            context.getMatrices().translate((float) ((float) (-(i + 8))), (float) ((float) (-(j + 12))));
-            context.drawItem(itemStack, i, j);
-            context.drawStackOverlay(mc.textRenderer, itemStack, i, j);
-            context.getMatrices().popMatrix();
+            context.pose().pushMatrix();
+            context.pose().translate((float) ((float) (i + 8)), (float) ((float) (j + 12)));
+            context.pose().scale(0.9f, 0.9f);
+            context.pose().translate((float) ((float) (-(i + 8))), (float) ((float) (-(j + 12))));
+            context.renderItem(itemStack, i, j);
+            context.renderItemDecorations(mc.font, itemStack, i, j);
+            context.pose().popMatrix();
         }
     }
 
@@ -101,8 +100,8 @@ public class Hotbar extends HudElement {
 
         if (mc.player.experienceLevel > 0) {
             String string = "" + mc.player.experienceLevel;
-            k = (int) ((mc.getWindow().getScaledWidth() - FontRenderers.sf_bold_mini.getStringWidth(string)) / 2);
-            l = mc.getWindow().getScaledHeight() - 31 - 4;
+            k = (int) ((mc.getWindow().getGuiScaledWidth() - FontRenderers.sf_bold_mini.getStringWidth(string)) / 2);
+            l = mc.getWindow().getGuiScaledHeight() - 31 - 4;
             FontRenderers.sf_bold_mini.drawString(matrices, string, k, l, 8453920);
         }
     }

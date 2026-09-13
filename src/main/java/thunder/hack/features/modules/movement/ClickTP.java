@@ -1,13 +1,13 @@
 package thunder.hack.features.modules.movement;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 import thunder.hack.events.impl.EventSync;
 import thunder.hack.features.modules.Module;
 import thunder.hack.features.modules.client.HudEditor;
@@ -30,24 +30,24 @@ public class ClickTP extends Module {
         if (delay >= 0)
             delay--;
 
-        if (mc.options.pickItemKey.isPressed() && delay < 0) {
-            HitResult ray = mc.player.raycast(256, Render3DEngine.getTickDelta(), false);
-            if (ray instanceof BlockHitResult bhr && !mc.world.isAir(bhr.getBlockPos())) {
-                Vec3d pos = bhr.getBlockPos().toCenterPos();
+        if (mc.options.keyPickItem.isDown() && delay < 0) {
+            HitResult ray = mc.player.pick(256, Render3DEngine.getTickDelta(), false);
+            if (ray instanceof BlockHitResult bhr && !mc.level.isEmptyBlock(bhr.getBlockPos())) {
+                Vec3 pos = bhr.getBlockPos().getCenter();
                 for (int i = 0; i < spoofs.getValue(); ++i)
-                    sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(pos.getX(), pos.getY() + blockOffset.getValue(), pos.getZ(), ground.getValue(), mc.player.horizontalCollision));
-                mc.player.setPosition(pos.getX(), pos.getY() + blockOffset.getValue(), pos.getZ());
+                    sendPacket(new ServerboundMovePlayerPacket.Pos(pos.x(), pos.y() + blockOffset.getValue(), pos.z(), ground.getValue(), mc.player.horizontalCollision));
+                mc.player.setPos(pos.x(), pos.y() + blockOffset.getValue(), pos.z());
                 delay = 5;
             }
         }
     }
 
     @Override
-    public void onRender3D(MatrixStack stack) {
-        HitResult ray = mc.player.raycast(256, Render3DEngine.getTickDelta(), false);
-        if (ray instanceof BlockHitResult bhr && !mc.world.isAir(bhr.getBlockPos())) {
+    public void onRender3D(PoseStack stack) {
+        HitResult ray = mc.player.pick(256, Render3DEngine.getTickDelta(), false);
+        if (ray instanceof BlockHitResult bhr && !mc.level.isEmptyBlock(bhr.getBlockPos())) {
             BlockPos pos = bhr.getBlockPos();
-            Render3DEngine.OUTLINE_QUEUE.add(new Render3DEngine.OutlineAction(new Box(pos), HudEditor.getColor(1), 1));
+            Render3DEngine.OUTLINE_QUEUE.add(new Render3DEngine.OutlineAction(new AABB(pos), HudEditor.getColor(1), 1));
         }
     }
 }

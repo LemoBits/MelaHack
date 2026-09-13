@@ -1,11 +1,6 @@
 package thunder.hack.features.cmd.impl;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import net.minecraft.client.network.PlayerListEntry;
-import net.minecraft.command.CommandSource;
-import net.minecraft.scoreboard.Team;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
 import thunder.hack.features.cmd.Command;
 import thunder.hack.core.manager.client.ConfigManager;
 
@@ -19,6 +14,11 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.scores.PlayerTeam;
 
 import static com.mojang.brigadier.Command.SINGLE_SUCCESS;
 import static thunder.hack.features.modules.client.ClientSettings.isRu;
@@ -29,11 +29,11 @@ public class TabParseCommand extends Command {
     }
 
     @Override
-    public void executeBuild(LiteralArgumentBuilder<CommandSource> builder) {
+    public void executeBuild(LiteralArgumentBuilder<SharedSuggestionProvider> builder) {
         builder.executes(context -> {
             String serverIP = "unknown_server";
-            if (mc.getNetworkHandler().getServerInfo() != null && mc.getNetworkHandler().getServerInfo().address != null)
-                serverIP = mc.getNetworkHandler().getServerInfo().address.replace(':', '_');
+            if (mc.getConnection().getServerData() != null && mc.getConnection().getServerData().ip != null)
+                serverIP = mc.getConnection().getServerData().ip.replace(':', '_');
 
             String randomSuffix = generateRandomString(5);
 
@@ -48,22 +48,22 @@ public class TabParseCommand extends Command {
                 file.createNewFile();
                 OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8);
                 writer.write("========================\n\n");
-                writer.write("Server: " + mc.getNetworkHandler().getServerInfo().address + "\n");
+                writer.write("Server: " + mc.getConnection().getServerData().ip + "\n");
                 writer.write("Date: " + new SimpleDateFormat("dd.MM.yyyy").format(new Date()) + "\n\n");
                 writer.write("========================\n\n");
 
-                List<PlayerListEntry> sortedPlayers = new ArrayList<>(mc.getNetworkHandler().getPlayerList());
+                List<PlayerInfo> sortedPlayers = new ArrayList<>(mc.getConnection().getOnlinePlayers());
                 sortedPlayers.sort((player1, player2) -> {
-                    String prefix1 = player1.getScoreboardTeam().getPrefix().getString();
-                    String prefix2 = player2.getScoreboardTeam().getPrefix().getString();
+                    String prefix1 = player1.getTeam().getPlayerPrefix().getString();
+                    String prefix2 = player2.getTeam().getPlayerPrefix().getString();
                     return prefix2.compareTo(prefix1);
                 });
 
-                for (PlayerListEntry entry : sortedPlayers)
-                    writer.write(Team.decorateName(entry.getScoreboardTeam(), Text.literal(entry.getProfile().getName())).getString() + "\n");
+                for (PlayerInfo entry : sortedPlayers)
+                    writer.write(PlayerTeam.formatNameForTeam(entry.getTeam(), Component.literal(entry.getProfile().getName())).getString() + "\n");
 
                 writer.close();
-                sendMessage(isRu() ? Formatting.GREEN + "Таб успешно сохранен в " + file.getPath() : Formatting.GREEN + "Tab was successfully saved in " + file.getPath());
+                sendMessage(isRu() ? ChatFormatting.GREEN + "Таб успешно сохранен в " + file.getPath() : ChatFormatting.GREEN + "Tab was successfully saved in " + file.getPath());
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -83,7 +83,7 @@ public class TabParseCommand extends Command {
         return sb.toString();
     }
 
-    private String getPlayerPrefix(PlayerListEntry playerInfo) {
-        return playerInfo.getDisplayName() != null ? playerInfo.getDisplayName().getString() : "";
+    private String getPlayerPrefix(PlayerInfo playerInfo) {
+        return playerInfo.getTabListDisplayName() != null ? playerInfo.getTabListDisplayName().getString() : "";
     }
 }

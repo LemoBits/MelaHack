@@ -1,32 +1,31 @@
 package thunder.hack.injection.accesors;
 
+import net.minecraft.client.renderer.culling.Frustum;
 import org.joml.FrustumIntersection;
 import org.joml.Vector4f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-import net.minecraft.client.render.Frustum;
-
 @Mixin(Frustum.class)
 public interface IFrustum {
     @Accessor
-    FrustumIntersection getFrustumIntersection();
+    FrustumIntersection getIntersection();
 
-    @Accessor("x")
+    @Accessor("camX")
     double getX();
 
-    @Accessor("x")
+    @Accessor("camX")
     void setX(double x);
 
-    @Accessor("y")
+    @Accessor("camY")
     double getY();
 
-    @Accessor("y")
+    @Accessor("camY")
     void setY(double y);
 
-    @Accessor("z")
+    @Accessor("camZ")
     double getZ();
 
-    @Accessor("z")
+    @Accessor("camZ")
     void setZ(double z);
 }

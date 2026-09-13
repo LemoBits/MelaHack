@@ -17,11 +17,11 @@
  */
 package thunder.hack.utility.render.shaders.satin.api.managed;
 
+import com.mojang.blaze3d.opengl.GlProgram;
 import thunder.hack.utility.render.shaders.satin.api.managed.uniform.UniformFinder;
-import net.minecraft.client.gl.ShaderProgram;
 
 public interface ManagedCoreShader extends UniformFinder {
-    ShaderProgram getProgram();
+    GlProgram getProgram();
 
     void release();
 }

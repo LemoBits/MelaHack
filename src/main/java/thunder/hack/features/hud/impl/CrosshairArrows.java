@@ -1,9 +1,6 @@
 package thunder.hack.features.hud.impl;
 
 import com.google.common.collect.Lists;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.RotationAxis;
 import thunder.hack.core.Managers;
 import thunder.hack.core.manager.client.ModuleManager;
 import thunder.hack.features.hud.HudElement;
@@ -15,6 +12,8 @@ import thunder.hack.utility.render.Render2DEngine;
 import thunder.hack.utility.render.animation.AnimationUtility;
 
 import java.awt.*;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.world.entity.player.Player;
 
 import static thunder.hack.features.hud.impl.RadarRewrite.getRotations;
 
@@ -36,7 +35,7 @@ public class CrosshairArrows extends HudElement {
 
     private float smoothYaw = 0;
 
-    public void onRender2D(DrawContext context) {
+    public void onRender2D(GuiGraphics context) {
         super.onRender2D(context);
         if (fullNullCheck()) return;
 
@@ -45,20 +44,20 @@ public class CrosshairArrows extends HudElement {
 
         int color = 0;
 
-        context.getMatrices().pushMatrix();
-        context.getMatrices().translate((float) (middleW), (float) (middleH));
-        context.getMatrices().translate((float) (-middleW), (float) (-middleH));
+        context.pose().pushMatrix();
+        context.pose().translate((float) (middleW), (float) (middleH));
+        context.pose().translate((float) (-middleW), (float) (-middleH));
 
-        smoothYaw = AnimationUtility.fast(smoothYaw, mc.player.getYaw(), 13);
+        smoothYaw = AnimationUtility.fast(smoothYaw, mc.player.getYRot(), 13);
 
-        for (PlayerEntity e : Lists.newArrayList(mc.world.getPlayers())) {
+        for (Player e : Lists.newArrayList(mc.level.players())) {
             if (e != mc.player){
-                context.getMatrices().pushMatrix();
+                context.pose().pushMatrix();
 
                 float yaw = getRotations(e) - smoothYaw;
-                context.getMatrices().translate((float) (middleW), (float) (middleH));
-                context.getMatrices().rotate((float) Math.toRadians(yaw));
-                context.getMatrices().translate((float) (-middleW), (float) (-middleH));
+                context.pose().translate((float) (middleW), (float) (middleH));
+                context.pose().rotate((float) Math.toRadians(yaw));
+                context.pose().translate((float) (-middleW), (float) (-middleH));
 
                 if (Managers.FRIEND.isFriend(e))
                     color = colorf.getValue().getColor();
@@ -67,15 +66,15 @@ public class CrosshairArrows extends HudElement {
                     case Astolfo -> Render2DEngine.astolfo(false, 1).getRGB();
                 };
 
-                Render2DEngine.drawTracerPointer(context.getMatrices(), middleW, middleH - xOffset.getValue(), width.getValue() * 5F,tracerWidth.getValue(), downHeight.getValue(), down.getValue().isEnabled(), glow.getValue(), color);
+                Render2DEngine.drawTracerPointer(context.pose(), middleW, middleH - xOffset.getValue(), width.getValue() * 5F,tracerWidth.getValue(), downHeight.getValue(), down.getValue().isEnabled(), glow.getValue(), color);
 
-                context.getMatrices().translate((float) (middleW), (float) (middleH));
-                context.getMatrices().rotate((float) Math.toRadians(-yaw));
-                context.getMatrices().translate((float) (-middleW), (float) (-middleH));
-                context.getMatrices().popMatrix();
+                context.pose().translate((float) (middleW), (float) (middleH));
+                context.pose().rotate((float) Math.toRadians(-yaw));
+                context.pose().translate((float) (-middleW), (float) (-middleH));
+                context.pose().popMatrix();
             }
         }
-        context.getMatrices().popMatrix();
+        context.pose().popMatrix();
     }
 
     public enum triangleModeEn {

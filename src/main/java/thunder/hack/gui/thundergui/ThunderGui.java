@@ -1,8 +1,5 @@
 package thunder.hack.gui.thundergui;
 
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.text.Text;
 import org.lwjgl.glfw.GLFW;
 import thunder.hack.ThunderHack;
 import thunder.hack.core.Managers;
@@ -25,6 +22,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 
 import static thunder.hack.features.modules.Module.mc;
 import static thunder.hack.utility.render.animation.AnimationUtility.fast;
@@ -82,14 +82,14 @@ public class ThunderGui extends Screen {
     public static int mouse_y;
 
     public ThunderGui() {
-        super(Text.of("ThunderGui2"));
+        super(Component.nullToEmpty("ThunderGui2"));
         this.setInstance();
         this.load();
         CategoryY = getCategoryY(new_category);
     }
 
     @Override
-    public boolean shouldPause() {
+    public boolean isPauseScreen() {
         return false;
     }
 
@@ -160,10 +160,10 @@ public class ThunderGui extends Screen {
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
         if (Module.fullNullCheck())
-            context.fill(0, 0, mc.getWindow().getScaledWidth(), mc.getWindow().getScaledHeight(), 0xAA000000);
-        context.getMatrices().pushMatrix();
+            context.fill(0, 0, mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight(), 0xAA000000);
+        context.pose().pushMatrix();
         mouse_x = mouseX;
         mouse_y = mouseY;
         if (open_animation.getAnimationd() > 0) {
@@ -171,13 +171,13 @@ public class ThunderGui extends Screen {
         }
         if (open_animation.getAnimationd() <= 0.01 && !open_direction) {
             open_animation = new EaseOutBack();
-            mc.currentScreen = null;
+            mc.screen = null;
             mc.setScreen(null);
         }
-        context.getMatrices().popMatrix();
+        context.pose().popMatrix();
     }
 
-    public void renderGui(DrawContext context, int mouseX, int mouseY, float partialTicks) {
+    public void renderGui(GuiGraphics context, int mouseX, int mouseY, float partialTicks) {
         if (dragging) {
             float deltaX = (mouseX - drag_x) - main_posX;
             float deltaY = (mouseY - drag_y) - main_posY;
@@ -217,53 +217,53 @@ public class ThunderGui extends Screen {
         category_animation = fast(category_animation, 0, 15f);
 
         // Основная плита / Main GUI
-        Render2DEngine.drawRound(context.getMatrices(), main_posX, main_posY, main_width, main_height, 9f, ThunderHackGui.getColorByTheme(0));
+        Render2DEngine.drawRound(context.pose(), main_posX, main_posY, main_width, main_height, 9f, ThunderHackGui.getColorByTheme(0));
 
         // Плита с лого / Main GUI logo
-        Render2DEngine.drawRound(context.getMatrices(), main_posX + 5, main_posY + 5, 90, 30, 7f, ThunderHackGui.getColorByTheme(1));
+        Render2DEngine.drawRound(context.pose(), main_posX + 5, main_posY + 5, 90, 30, 7f, ThunderHackGui.getColorByTheme(1));
 
-        context.getMatrices().pushMatrix();
-        context.getMatrices().scale(0.85f, 0.85f);
-        context.getMatrices().translate((float) ((main_posX + 10) / 0.85), (float) ((main_posY + 15) / 0.85));
-        FontRenderers.thglitch.drawString(context.getMatrices(), "MELAHACK", 0, 0, ThunderHackGui.getColorByTheme(2).getRGB());
-        context.getMatrices().translate((float) (-(main_posX + 10) / 0.85), (float) (-(main_posY + 15) / 0.85));
-        context.getMatrices().scale(1, 1);
-        context.getMatrices().popMatrix();
+        context.pose().pushMatrix();
+        context.pose().scale(0.85f, 0.85f);
+        context.pose().translate((float) ((main_posX + 10) / 0.85), (float) ((main_posY + 15) / 0.85));
+        FontRenderers.thglitch.drawString(context.pose(), "MELAHACK", 0, 0, ThunderHackGui.getColorByTheme(2).getRGB());
+        context.pose().translate((float) (-(main_posX + 10) / 0.85), (float) (-(main_posY + 15) / 0.85));
+        context.pose().scale(1, 1);
+        context.pose().popMatrix();
 
-        FontRenderers.settings.drawString(context.getMatrices(), "recode v" + ThunderHack.VERSION, main_posX + 91 - (FontRenderers.settings.getStringWidth("recode v" + ThunderHack.VERSION)), main_posY + 30, ThunderHackGui.getColorByTheme(3).getRGB());
+        FontRenderers.settings.drawString(context.pose(), "recode v" + ThunderHack.VERSION, main_posX + 91 - (FontRenderers.settings.getStringWidth("recode v" + ThunderHack.VERSION)), main_posY + 30, ThunderHackGui.getColorByTheme(3).getRGB());
 
         // Левая плита под категриями
-        Render2DEngine.drawRound(context.getMatrices(), main_posX + 5, main_posY + 40, 90, 120, 7f, ThunderHackGui.getColorByTheme(4));
+        Render2DEngine.drawRound(context.pose(), main_posX + 5, main_posY + 40, 90, 120, 7f, ThunderHackGui.getColorByTheme(4));
 
         // Выбор между CfgManager и FriendManager
         if (currentMode == CurrentMode.Modules) {
-            Render2DEngine.drawRound(context.getMatrices(), main_posX + 20, main_posY + 195, 60, 20, 4f, ThunderHackGui.getColorByTheme(4));
+            Render2DEngine.drawRound(context.pose(), main_posX + 20, main_posY + 195, 60, 20, 4f, ThunderHackGui.getColorByTheme(4));
         } else if (currentMode == CurrentMode.CfgManager) {
-            Render2DEngine.drawGradientRound(context.getMatrices(), main_posX + 20, main_posY + 195, 60, 20, 4f, ThunderHackGui.getColorByTheme(4), ThunderHackGui.getColorByTheme(4), ThunderHackGui.getColorByTheme(5), ThunderHackGui.getColorByTheme(5));
+            Render2DEngine.drawGradientRound(context.pose(), main_posX + 20, main_posY + 195, 60, 20, 4f, ThunderHackGui.getColorByTheme(4), ThunderHackGui.getColorByTheme(4), ThunderHackGui.getColorByTheme(5), ThunderHackGui.getColorByTheme(5));
         } else {
-            Render2DEngine.drawGradientRound(context.getMatrices(), main_posX + 20, main_posY + 195, 60, 20, 4f, ThunderHackGui.getColorByTheme(5), ThunderHackGui.getColorByTheme(5), ThunderHackGui.getColorByTheme(4), ThunderHackGui.getColorByTheme(4));
+            Render2DEngine.drawGradientRound(context.pose(), main_posX + 20, main_posY + 195, 60, 20, 4f, ThunderHackGui.getColorByTheme(5), ThunderHackGui.getColorByTheme(5), ThunderHackGui.getColorByTheme(4), ThunderHackGui.getColorByTheme(4));
         }
 
-        Render2DEngine.drawRound(context.getMatrices(), main_posX + 49.5f, main_posY + 197, 1, 16, 0.5f, ThunderHackGui.getColorByTheme(6));
+        Render2DEngine.drawRound(context.pose(), main_posX + 49.5f, main_posY + 197, 1, 16, 0.5f, ThunderHackGui.getColorByTheme(6));
 
-        FontRenderers.mid_icons.drawString(context.getMatrices(), "u", main_posX + 20, main_posY + 196, currentMode == CurrentMode.CfgManager ? ThunderHackGui.getColorByTheme(2).getRGB() : new Color(0x8D8D8D).getRGB());
-        FontRenderers.mid_icons.drawString(context.getMatrices(), "v", main_posX + 54, main_posY + 197, currentMode == CurrentMode.FriendManager ? ThunderHackGui.getColorByTheme(2).getRGB() : new Color(0x8D8D8D).getRGB());
+        FontRenderers.mid_icons.drawString(context.pose(), "u", main_posX + 20, main_posY + 196, currentMode == CurrentMode.CfgManager ? ThunderHackGui.getColorByTheme(2).getRGB() : new Color(0x8D8D8D).getRGB());
+        FontRenderers.mid_icons.drawString(context.pose(), "v", main_posX + 54, main_posY + 197, currentMode == CurrentMode.FriendManager ? ThunderHackGui.getColorByTheme(2).getRGB() : new Color(0x8D8D8D).getRGB());
 
         if (isHoveringItem(main_posX + 20, main_posY + 195, 60, 20, mouseX, mouseY)) {
             //   Render2DEngine.drawRound(context.getMatrices(),main_posX + 20, main_posY + 195, 60, 20, 4f, new Color(76, 56, 93, 31));
 
-            Render2DEngine.addWindow(context.getMatrices(), main_posX + 20, main_posY + 195, main_posX + 20 + 60, main_posY + 195 + 20, 1);
-            Render2DEngine.drawBlurredShadow(context.getMatrices(), mouseX - 20, mouseY - 20, 40, 40, 60, new Color(0xC3555A7E, true));
+            Render2DEngine.addWindow(context.pose(), main_posX + 20, main_posY + 195, main_posX + 20 + 60, main_posY + 195 + 20, 1);
+            Render2DEngine.drawBlurredShadow(context.pose(), mouseX - 20, mouseY - 20, 40, 40, 60, new Color(0xC3555A7E, true));
             Render2DEngine.popWindow();
         }
 
         if (first_open) {
             category_animation = 1;
-            Render2DEngine.drawRound(context.getMatrices(), (float) (main_posX + 8), (float) CategoryY + slider_y, 84, 15, 2f, ThunderHackGui.getColorByTheme(7));
+            Render2DEngine.drawRound(context.pose(), (float) (main_posX + 8), (float) CategoryY + slider_y, 84, 15, 2f, ThunderHackGui.getColorByTheme(7));
             first_open = false;
         } else {
             if (currentMode == CurrentMode.Modules)
-                Render2DEngine.drawRound(context.getMatrices(), (float) (main_posX + 8), (float) (Render2DEngine.interpolate(CategoryY, prevCategoryY, category_animation)) + slider_y, 84, 15, 2f, ThunderHackGui.getColorByTheme(7));
+                Render2DEngine.drawRound(context.pose(), (float) (main_posX + 8), (float) (Render2DEngine.interpolate(CategoryY, prevCategoryY, category_animation)) + slider_y, 84, 15, 2f, ThunderHackGui.getColorByTheme(7));
         }
 
         if (selected_plate != prev_selected_plate) {
@@ -317,74 +317,74 @@ public class ThunderGui extends Screen {
 
         if (selected_plate != null) {
             if (currentMode == CurrentMode.Modules)
-                Render2DEngine.drawRound(context.getMatrices(), (float) Render2DEngine.interpolate(main_posX + 200, selected_plate.getPosX(), settings_animation), (float) Render2DEngine.interpolate(main_posY + 40, selected_plate.getPosY(), settings_animation), (float) Render2DEngine.interpolate(195, 90, settings_animation), (float) Render2DEngine.interpolate(main_height - 45, 30, settings_animation), 4f, ThunderHackGui.getColorByTheme(7));
+                Render2DEngine.drawRound(context.pose(), (float) Render2DEngine.interpolate(main_posX + 200, selected_plate.getPosX(), settings_animation), (float) Render2DEngine.interpolate(main_posY + 40, selected_plate.getPosY(), settings_animation), (float) Render2DEngine.interpolate(195, 90, settings_animation), (float) Render2DEngine.interpolate(main_height - 45, 30, settings_animation), 4f, ThunderHackGui.getColorByTheme(7));
         }
 
 
         if (currentMode != CurrentMode.Modules) {
             searching = false;
 
-            Render2DEngine.addWindow(context.getMatrices(), (float) Render2DEngine.interpolate(main_posX + 80, main_posX + 200, manager_animation), main_posY + 39, (float) Render2DEngine.interpolate(399, 195, manager_animation) + main_posX + 36, (float) main_height + main_posY - 3, 1d);
+            Render2DEngine.addWindow(context.pose(), (float) Render2DEngine.interpolate(main_posX + 80, main_posX + 200, manager_animation), main_posY + 39, (float) Render2DEngine.interpolate(399, 195, manager_animation) + main_posX + 36, (float) main_height + main_posY - 3, 1d);
 
-            Render2DEngine.drawRound(context.getMatrices(), main_posX + 100, (float) main_posY + 40, (float) 295, (float) main_height - 44, 4f, ThunderHackGui.getColorByTheme(7));
+            Render2DEngine.drawRound(context.pose(), main_posX + 100, (float) main_posY + 40, (float) 295, (float) main_height - 44, 4f, ThunderHackGui.getColorByTheme(7));
             this.configs.forEach(components -> components.render(context, mouseX, mouseY));
             this.friends.forEach(components -> components.render(context, mouseX, mouseY));
-            Render2DEngine.draw2DGradientRect(context.getMatrices(), main_posX + 102, main_posY + 34, main_posX + 393, main_posY + 60, new Color(25, 20, 30, 0), ThunderHackGui.getColorByTheme(7), new Color(25, 20, 30, 0), new Color(37, 27, 41, 245));
-            Render2DEngine.draw2DGradientRect(context.getMatrices(), main_posX + 102, main_posY + main_height - 35, main_posX + 393, main_posY + main_height, ThunderHackGui.getColorByTheme(7), new Color(25, 20, 30, 0), ThunderHackGui.getColorByTheme(7), new Color(37, 27, 41, 0));
+            Render2DEngine.draw2DGradientRect(context.pose(), main_posX + 102, main_posY + 34, main_posX + 393, main_posY + 60, new Color(25, 20, 30, 0), ThunderHackGui.getColorByTheme(7), new Color(25, 20, 30, 0), new Color(37, 27, 41, 245));
+            Render2DEngine.draw2DGradientRect(context.pose(), main_posX + 102, main_posY + main_height - 35, main_posX + 393, main_posY + main_height, ThunderHackGui.getColorByTheme(7), new Color(25, 20, 30, 0), ThunderHackGui.getColorByTheme(7), new Color(37, 27, 41, 0));
             Render2DEngine.popWindow();
         }
 
-        Render2DEngine.addWindow(context.getMatrices(), main_posX + 79, main_posY + 35, main_posX + 396 + 40, main_posY + main_height, 1d);
+        Render2DEngine.addWindow(context.pose(), main_posX + 79, main_posY + 35, main_posX + 396 + 40, main_posY + main_height, 1d);
 
-        this.components.forEach(components -> components.render(thunder.hack.utility.render.GuiMatrix.asMatrixStack(context.getMatrices()), mouseX, mouseY));
+        this.components.forEach(components -> components.render(thunder.hack.utility.render.GuiMatrix.asMatrixStack(context.pose()), mouseX, mouseY));
         Render2DEngine.popWindow();
-        this.categories.forEach(category -> category.render(thunder.hack.utility.render.GuiMatrix.asMatrixStack(context.getMatrices()), mouseX, mouseY));
+        this.categories.forEach(category -> category.render(thunder.hack.utility.render.GuiMatrix.asMatrixStack(context.pose()), mouseX, mouseY));
 
         if (currentMode == CurrentMode.Modules) {
-            Render2DEngine.draw2DGradientRect(context.getMatrices(), main_posX + 98, main_posY + 34, main_posX + 191, main_posY + 50, new Color(37, 27, 41, 0), new Color(37, 27, 41, 245), new Color(37, 27, 41, 0), new Color(37, 27, 41, 245));
-            Render2DEngine.draw2DGradientRect(context.getMatrices(), main_posX + 98, main_posY + main_height - 15, main_posX + 191, main_posY + main_height, new Color(37, 27, 41, 245), new Color(37, 27, 41, 0), new Color(37, 27, 41, 245), new Color(37, 27, 41, 0));
+            Render2DEngine.draw2DGradientRect(context.pose(), main_posX + 98, main_posY + 34, main_posX + 191, main_posY + 50, new Color(37, 27, 41, 0), new Color(37, 27, 41, 245), new Color(37, 27, 41, 0), new Color(37, 27, 41, 245));
+            Render2DEngine.draw2DGradientRect(context.pose(), main_posX + 98, main_posY + main_height - 15, main_posX + 191, main_posY + main_height, new Color(37, 27, 41, 245), new Color(37, 27, 41, 0), new Color(37, 27, 41, 245), new Color(37, 27, 41, 0));
         }
 
-        Render2DEngine.drawRound(context.getMatrices(), main_posX + 100, main_posY + 5, 295, 30, 7f, new Color(25, 20, 30, 250));
+        Render2DEngine.drawRound(context.pose(), main_posX + 100, main_posY + 5, 295, 30, 7f, new Color(25, 20, 30, 250));
 
         // Конфиг
         if (isHoveringItem(main_posX + 105, main_posY + 14, 11, 11, mouseX, mouseY)) {
-            Render2DEngine.drawRound(context.getMatrices(), main_posX + 105, main_posY + 14, 11, 11, 3f, new Color(68, 49, 75, 250));
+            Render2DEngine.drawRound(context.pose(), main_posX + 105, main_posY + 14, 11, 11, 3f, new Color(68, 49, 75, 250));
         } else {
-            Render2DEngine.drawRound(context.getMatrices(), main_posX + 105, main_posY + 14, 11, 11, 3f, new Color(52, 38, 58, 250));
+            Render2DEngine.drawRound(context.pose(), main_posX + 105, main_posY + 14, 11, 11, 3f, new Color(52, 38, 58, 250));
         }
-        FontRenderers.modules.drawString(context.getMatrices(), "current cfg: " + Managers.CONFIG.currentConfig.getName(), main_posX + 120, main_posY + 18, new Color(0xCDFFFFFF, true).getRGB());
-        FontRenderers.icons.drawString(context.getMatrices(), "t", main_posX + 106, main_posY + 17, new Color(0xC2FFFFFF, true).getRGB());
+        FontRenderers.modules.drawString(context.pose(), "current cfg: " + Managers.CONFIG.currentConfig.getName(), main_posX + 120, main_posY + 18, new Color(0xCDFFFFFF, true).getRGB());
+        FontRenderers.icons.drawString(context.pose(), "t", main_posX + 106, main_posY + 17, new Color(0xC2FFFFFF, true).getRGB());
 
         // Поиск
-        Render2DEngine.drawRound(context.getMatrices(), main_posX + 250, main_posY + 15, 140, 10, 3f, new Color(52, 38, 58, 250));
+        Render2DEngine.drawRound(context.pose(), main_posX + 250, main_posY + 15, 140, 10, 3f, new Color(52, 38, 58, 250));
         if (currentMode == CurrentMode.Modules)
-            FontRenderers.icons.drawString(context.getMatrices(), "s", main_posX + 378, main_posY + 18, searching ? new Color(0xCBFFFFFF, true).getRGB() : new Color(0x83FFFFFF, true).getRGB());
+            FontRenderers.icons.drawString(context.pose(), "s", main_posX + 378, main_posY + 18, searching ? new Color(0xCBFFFFFF, true).getRGB() : new Color(0x83FFFFFF, true).getRGB());
 
         if (isHoveringItem(main_posX + 250, main_posY + 15, 140, 20, mouseX, mouseY)) {
-            Render2DEngine.addWindow(context.getMatrices(), main_posX + 250, main_posY + 15, main_posX + 250 + 140, main_posY + 15 + 10, 1);
+            Render2DEngine.addWindow(context.pose(), main_posX + 250, main_posY + 15, main_posX + 250 + 140, main_posY + 15 + 10, 1);
             //   GL11.glPushMatrix();
-            Render2DEngine.drawRound(context.getMatrices(), main_posX + 250, main_posY + 15, 140, 10, 3f, new Color(84, 63, 94, 36));
+            Render2DEngine.drawRound(context.pose(), main_posX + 250, main_posY + 15, 140, 10, 3f, new Color(84, 63, 94, 36));
             // Stencil.write(false);
             // Particles.roundedRect(main_posX + 250, main_posY + 15, 140, 10, 6, new Color(0, 0, 0, 255));
             //  Stencil.erase(true);
-            Render2DEngine.drawBlurredShadow(context.getMatrices(), mouseX - 20, mouseY - 20, 40, 40, 60, new Color(0xC3555A7E, true));
+            Render2DEngine.drawBlurredShadow(context.pose(), mouseX - 20, mouseY - 20, 40, 40, 60, new Color(0xC3555A7E, true));
             // Stencil.dispose();
             // GL11.glPopMatrix();
             Render2DEngine.popWindow();
         }
 
         if (currentMode == CurrentMode.Modules)
-            FontRenderers.modules.drawString(context.getMatrices(), search_string, main_posX + 252, main_posY + 19, searching ? new Color(0xCBFFFFFF, true).getRGB() : new Color(0x83FFFFFF, true).getRGB());
+            FontRenderers.modules.drawString(context.pose(), search_string, main_posX + 252, main_posY + 19, searching ? new Color(0xCBFFFFFF, true).getRGB() : new Color(0x83FFFFFF, true).getRGB());
         if (currentMode == CurrentMode.CfgManager) {
-            FontRenderers.modules.drawString(context.getMatrices(), config_string, main_posX + 252, main_posY + 19, listening_config ? new Color(0xCBFFFFFF, true).getRGB() : new Color(0x83FFFFFF, true).getRGB());
-            Render2DEngine.drawRound(context.getMatrices(), main_posX + 368, main_posY + 17, 20, 6, 1f, isHoveringItem(main_posX + 368, main_posY + 17, 20, 6, mouseX, mouseY) ? new Color(59, 42, 63, 194) : new Color(33, 23, 35, 194));
-            FontRenderers.modules.drawCenteredString(context.getMatrices(), "+", main_posX + 378, main_posY + 16, ThunderHackGui.getColorByTheme(2).getRGB());
+            FontRenderers.modules.drawString(context.pose(), config_string, main_posX + 252, main_posY + 19, listening_config ? new Color(0xCBFFFFFF, true).getRGB() : new Color(0x83FFFFFF, true).getRGB());
+            Render2DEngine.drawRound(context.pose(), main_posX + 368, main_posY + 17, 20, 6, 1f, isHoveringItem(main_posX + 368, main_posY + 17, 20, 6, mouseX, mouseY) ? new Color(59, 42, 63, 194) : new Color(33, 23, 35, 194));
+            FontRenderers.modules.drawCenteredString(context.pose(), "+", main_posX + 378, main_posY + 16, ThunderHackGui.getColorByTheme(2).getRGB());
         }
         if (currentMode == CurrentMode.FriendManager) {
-            FontRenderers.modules.drawString(context.getMatrices(), friend_string, main_posX + 252, main_posY + 19, listening_friend ? new Color(0xCBFFFFFF, true).getRGB() : new Color(0x83FFFFFF, true).getRGB());
-            Render2DEngine.drawRound(context.getMatrices(), main_posX + 368, main_posY + 17, 20, 6, 1f, isHoveringItem(main_posX + 368, main_posY + 17, 20, 6, mouseX, mouseY) ? new Color(59, 42, 63, 194) : new Color(33, 23, 35, 194));
-            FontRenderers.modules.drawCenteredString(context.getMatrices(), "+", main_posX + 378, main_posY + 16, ThunderHackGui.getColorByTheme(2).getRGB());
+            FontRenderers.modules.drawString(context.pose(), friend_string, main_posX + 252, main_posY + 19, listening_friend ? new Color(0xCBFFFFFF, true).getRGB() : new Color(0x83FFFFFF, true).getRGB());
+            Render2DEngine.drawRound(context.pose(), main_posX + 368, main_posY + 17, 20, 6, 1f, isHoveringItem(main_posX + 368, main_posY + 17, 20, 6, mouseX, mouseY) ? new Color(59, 42, 63, 194) : new Color(33, 23, 35, 194));
+            FontRenderers.modules.drawCenteredString(context.pose(), "+", main_posX + 378, main_posY + 16, ThunderHackGui.getColorByTheme(2).getRGB());
         }
 
         if (selected_plate == null) return;
@@ -397,7 +397,7 @@ public class ThunderGui extends Screen {
         if (scissorX2 < scissorX1) scissorX2 = scissorX1;
         if (scissorY2 < scissorY1) scissorY2 = scissorY1;
 
-        Render2DEngine.addWindow(context.getMatrices(), scissorX1, scissorY1, scissorX2, scissorY2, 1d);
+        Render2DEngine.addWindow(context.pose(), scissorX1, scissorY1, scissorX2, scissorY2, 1d);
 
         if (!settings.isEmpty()) {
             float offsetY = 0;
@@ -426,7 +426,7 @@ public class ThunderGui extends Screen {
                         element.setHeight(15);
                     }
                 }
-                element.render(thunder.hack.utility.render.GuiMatrix.asMatrixStack(context.getMatrices()), mouseX, mouseY, partialTicks);
+                element.render(thunder.hack.utility.render.GuiMatrix.asMatrixStack(context.pose()), mouseX, mouseY, partialTicks);
                 offsetY += element.getHeight() + 3f;
             }
         }
@@ -474,7 +474,7 @@ public class ThunderGui extends Screen {
         }
         if (isHoveringItem(main_posX + 105, main_posY + 14, 11, 11, (float) mouseX, (float) mouseY)) {
             try {
-                net.minecraft.util.Util.getOperatingSystem().open(new File("ThunderHackRecode/configs/").toURI());
+                net.minecraft.Util.getPlatform().openUri(new File("ThunderHackRecode/configs/").toURI());
             } catch (Exception e) {
                 Command.sendMessage("Не удалось открыть проводник!");
             }

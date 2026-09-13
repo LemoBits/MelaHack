@@ -1,11 +1,8 @@
 package thunder.hack.gui.clickui;
 
 import com.google.common.collect.Lists;
+import com.mojang.blaze3d.platform.InputConstants;
 import thunder.hack.utility.render.compat.RenderSystem;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.util.InputUtil;
-import net.minecraft.text.Text;
 import org.lwjgl.glfw.GLFW;
 import thunder.hack.core.Managers;
 import thunder.hack.core.manager.client.ModuleManager;
@@ -20,6 +17,9 @@ import thunder.hack.utility.render.animation.EaseOutBack;
 
 import java.util.List;
 import java.util.Objects;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 
 import static thunder.hack.features.modules.Module.mc;
 import static thunder.hack.features.modules.client.ClientSettings.isRu;
@@ -36,7 +36,7 @@ public class ClickGUI extends Screen {
     public EaseOutBack imageAnimation = new EaseOutBack(6);
 
     public ClickGUI() {
-        super(Text.of("NewClickGUI"));
+        super(Component.nullToEmpty("NewClickGUI"));
         windows = Lists.newArrayList();
         firstOpen = true;
         this.setInstance();
@@ -69,7 +69,7 @@ public class ClickGUI extends Screen {
             float offset = 0;
             int windowHeight = 18;
 
-            int halfWidth = mc.getWindow().getScaledWidth() / 2;
+            int halfWidth = mc.getWindow().getGuiScaledWidth() / 2;
             int halfWidthCats = (int) ((((float) Module.Category.values().size() - 1) / 2f) * (ModuleManager.clickGui.moduleWidth.getValue() + 4f));
 
             for (final Module.Category category : Managers.MODULE.getCategories()) {
@@ -78,7 +78,7 @@ public class ClickGUI extends Screen {
                 window.setOpen(true);
                 windows.add(window);
                 offset += ModuleManager.clickGui.moduleWidth.getValue() + 2;
-                if (offset > mc.getWindow().getScaledWidth())
+                if (offset > mc.getWindow().getGuiScaledWidth())
                     offset = 0;
             }
             firstOpen = false;
@@ -86,14 +86,14 @@ public class ClickGUI extends Screen {
             if (windows.getFirst().getX() < 0 || windows.getFirst().getY() < 0) {
                 float offset = 0;
 
-                int halfWidth = mc.getWindow().getScaledWidth() / 2;
+                int halfWidth = mc.getWindow().getGuiScaledWidth() / 2;
                 int halfWidthCats = (int) (3 * (ModuleManager.clickGui.moduleWidth.getValue() + 4f));
 
                 for (AbstractCategory w : windows) {
                     w.setX((halfWidth - halfWidthCats) + offset);
                     w.setY(20);
                     offset += ModuleManager.clickGui.moduleWidth.getValue() + 2;
-                    if (offset > mc.getWindow().getScaledWidth())
+                    if (offset > mc.getWindow().getGuiScaledWidth())
                         offset = 0;
                 }
             }
@@ -102,7 +102,7 @@ public class ClickGUI extends Screen {
     }
 
     @Override
-    public boolean shouldPause() {
+    public boolean isPauseScreen() {
         return false;
     }
 
@@ -113,17 +113,17 @@ public class ClickGUI extends Screen {
 
         if (close) {
             if (mc.player != null) {
-                if (mc.player.getPitch() > prevPitch)
-                    closeDirectionY = (prevPitch - mc.player.getPitch()) * 300;
+                if (mc.player.getXRot() > prevPitch)
+                    closeDirectionY = (prevPitch - mc.player.getXRot()) * 300;
 
-                if (mc.player.getPitch() < prevPitch)
-                    closeDirectionY = (prevPitch - mc.player.getPitch()) * 300;
+                if (mc.player.getXRot() < prevPitch)
+                    closeDirectionY = (prevPitch - mc.player.getXRot()) * 300;
 
-                if (mc.player.getYaw() > prevYaw)
-                    closeDirectionX = (prevYaw - mc.player.getYaw()) * 300;
+                if (mc.player.getYRot() > prevYaw)
+                    closeDirectionX = (prevYaw - mc.player.getYRot()) * 300;
 
-                if (mc.player.getYaw() < prevYaw)
-                    closeDirectionX = (prevYaw - mc.player.getYaw()) * 300;
+                if (mc.player.getYRot() < prevYaw)
+                    closeDirectionX = (prevYaw - mc.player.getYRot()) * 300;
             }
 
             if (closeDirectionX < 1 && closeDirectionY < 1 && closeAnimation > 2)
@@ -133,19 +133,19 @@ public class ClickGUI extends Screen {
             if (closeAnimation > 6) {
                 close = false;
                 windows.forEach(AbstractCategory::restorePos);
-                close();
+                onClose();
             }
         }
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
         Render2DEngine.resetScissorStack();
 
         // 1.21.8 applies screen blur before custom screens render.
         // When blur is disabled, fill with an opaque backdrop to cover the vanilla blur.
         if (!ModuleManager.clickGui.blur.getValue()) {
-            context.fill(0, 0, mc.getWindow().getScaledWidth(), mc.getWindow().getScaledHeight(), 0xFF000000);
+            context.fill(0, 0, mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight(), 0xFF000000);
         }
 
         anyHovered = false;
@@ -155,10 +155,10 @@ public class ClickGUI extends Screen {
         if (image != ClickGui.Image.None) {
             RenderSystem.setShaderTexture(0, image.file);
 
-            Render2DEngine.renderTexture(context.getMatrices(),
+            Render2DEngine.renderTexture(context.pose(),
 
-                    mc.getWindow().getScaledWidth() - image.fileWidth * imageAnimation.getAnimationd(),
-                    mc.getWindow().getScaledHeight() - image.fileHeight,
+                    mc.getWindow().getGuiScaledWidth() - image.fileWidth * imageAnimation.getAnimationd(),
+                    mc.getWindow().getGuiScaledHeight() - image.fileHeight,
 
                     image.fileWidth,
                     image.fileHeight,
@@ -181,13 +181,13 @@ public class ClickGUI extends Screen {
 
         if (ModuleManager.clickGui.scrollMode.getValue() == ClickGui.scrollModeEn.Old) {
             for (AbstractCategory window : windows) {
-                if (InputUtil.isKeyPressed(mc.getWindow().getHandle(), 264))
+                if (InputConstants.isKeyDown(mc.getWindow().getWindow(), 264))
                     window.setY(window.getY() + 2);
-                if (InputUtil.isKeyPressed(mc.getWindow().getHandle(), 265))
+                if (InputConstants.isKeyDown(mc.getWindow().getWindow(), 265))
                     window.setY(window.getY() - 2);
-                if (InputUtil.isKeyPressed(mc.getWindow().getHandle(), 262))
+                if (InputConstants.isKeyDown(mc.getWindow().getWindow(), 262))
                     window.setX(window.getX() + 2);
-                if (InputUtil.isKeyPressed(mc.getWindow().getHandle(), 263))
+                if (InputConstants.isKeyDown(mc.getWindow().getWindow(), 263))
                     window.setX(window.getX() - 2);
                 if (scrollY != 0)
                     window.setY(window.getY() + scrollY);
@@ -200,13 +200,13 @@ public class ClickGUI extends Screen {
         windows.forEach(w -> w.render(context, mouseX, mouseY, delta));
 
         if (!Objects.equals(currentDescription, "") && ModuleManager.clickGui.descriptions.getValue()) {
-            Render2DEngine.drawHudBase(context.getMatrices(), mouseX + 7, mouseY + 5, FontRenderers.source_han_sans_normal.getStringWidth(currentDescription) + 6, 11, 1f, false);
-            FontRenderers.source_han_sans_normal.drawString(context.getMatrices(), currentDescription, mouseX + 10, mouseY + 7, HudEditor.getColor(0).getRGB());
+            Render2DEngine.drawHudBase(context.pose(), mouseX + 7, mouseY + 5, FontRenderers.source_han_sans_normal.getStringWidth(currentDescription) + 6, 11, 1f, false);
+            FontRenderers.source_han_sans_normal.drawString(context.pose(), currentDescription, mouseX + 10, mouseY + 7, HudEditor.getColor(0).getRGB());
             currentDescription = "";
         }
 
         if (ModuleManager.clickGui.tips.getValue() && !close)
-            FontRenderers.sf_medium.drawString(context.getMatrices(),
+            FontRenderers.sf_medium.drawString(context.pose(),
                     isRu() ? "Щелкните левой кнопкой мыши, чтобы включить модуль." +
                             "\nЩелкните правой кнопкой мыши, чтобы открыть настройки модуля." +
                             "\nЩелкните колёсиком мыши, чтобы привязать модуль" +
@@ -224,11 +224,11 @@ public class ClickGUI extends Screen {
                                     "\nShift + Left Mouse Click to change module visibility in Array list" +
                                     "\nMiddle Mouse Click on slider to enter value from keyboard" +
                                     "\nDelete + Left Mouse Click on module to reset",
-                    5, mc.getWindow().getScaledHeight() - 80, HudEditor.getColor(0).getRGB());
+                    5, mc.getWindow().getGuiScaledHeight() - 80, HudEditor.getColor(0).getRGB());
 
         if (!HudElement.anyHovered && !ClickGUI.anyHovered)
             if (GLFW.glfwGetPlatform() != GLFW.GLFW_PLATFORM_WAYLAND) {
-                GLFW.glfwSetCursor(mc.getWindow().getHandle(), GLFW.glfwCreateStandardCursor(GLFW.GLFW_ARROW_CURSOR));
+                GLFW.glfwSetCursor(mc.getWindow().getWindow(), GLFW.glfwCreateStandardCursor(GLFW.GLFW_ARROW_CURSOR));
             }
 
     }
@@ -286,12 +286,12 @@ public class ClickGUI extends Screen {
             closeDirectionY = 0;
 
             close = true;
-            mc.mouse.lockCursor();
+            mc.mouseHandler.grabMouse();
 
             closeAnimation = 0;
             if (mc.player != null) {
-                prevYaw = mc.player.getYaw();
-                prevPitch = mc.player.getPitch();
+                prevYaw = mc.player.getYRot();
+                prevPitch = mc.player.getXRot();
             }
             return true;
         }

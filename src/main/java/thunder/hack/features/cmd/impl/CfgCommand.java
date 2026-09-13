@@ -2,8 +2,6 @@ package thunder.hack.features.cmd.impl;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import net.minecraft.command.CommandSource;
-import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.ThunderHack;
 import thunder.hack.core.Managers;
@@ -15,6 +13,8 @@ import thunder.hack.features.modules.Module;
 
 import java.io.File;
 import java.util.Objects;
+import net.minecraft.ChatFormatting;
+import net.minecraft.commands.SharedSuggestionProvider;
 
 import static com.mojang.brigadier.Command.SINGLE_SUCCESS;
 
@@ -24,11 +24,11 @@ public class CfgCommand extends Command {
     }
 
     @Override
-    public void executeBuild(@NotNull LiteralArgumentBuilder<CommandSource> builder) {
+    public void executeBuild(@NotNull LiteralArgumentBuilder<SharedSuggestionProvider> builder) {
         builder.executes(context -> {
             StringBuilder configs = new StringBuilder("Configs: ");
             for (String str : Objects.requireNonNull(Managers.CONFIG.getConfigList())) {
-                configs.append("\n- " + (str.equals(Managers.CONFIG.getCurrentConfig().getName().replace(".th", "")) ? Formatting.GREEN : "")).append(str).append(Formatting.RESET);
+                configs.append("\n- " + (str.equals(Managers.CONFIG.getCurrentConfig().getName().replace(".th", "")) ? ChatFormatting.GREEN : "")).append(str).append(ChatFormatting.RESET);
             }
             sendMessage(configs.toString());
 
@@ -38,7 +38,7 @@ public class CfgCommand extends Command {
         builder.then(literal("list").executes(context -> {
             StringBuilder configs = new StringBuilder("Configs: ");
             for (String str : Objects.requireNonNull(Managers.CONFIG.getConfigList())) {
-                configs.append("\n- " + (str.equals(Managers.CONFIG.getCurrentConfig().getName().replace(".th", "")) ? Formatting.GREEN : "")).append(str).append(Formatting.RESET);
+                configs.append("\n- " + (str.equals(Managers.CONFIG.getCurrentConfig().getName().replace(".th", "")) ? ChatFormatting.GREEN : "")).append(str).append(ChatFormatting.RESET);
             }
             sendMessage(configs.toString());
 
@@ -47,7 +47,7 @@ public class CfgCommand extends Command {
 
         builder.then(literal("dir").executes(context -> {
             try {
-                net.minecraft.util.Util.getOperatingSystem().open(new File("ThunderHackRecode/configs/").toURI());
+                net.minecraft.Util.getPlatform().openUri(new File("ThunderHackRecode/configs/").toURI());
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -68,7 +68,7 @@ public class CfgCommand extends Command {
             StringBuilder configs = new StringBuilder("Cloud Configs: \n");
             for (String str : Objects.requireNonNull(Managers.CONFIG.getCloudConfigs())) {
                 String[] split = str.split(";");
-                configs.append("\n- " + Formatting.BOLD + split[0] + Formatting.RESET + Formatting.GRAY + " author: " + Formatting.RESET + split[1] + Formatting.GRAY + " last updated: " + Formatting.RESET + split[2]);
+                configs.append("\n- " + ChatFormatting.BOLD + split[0] + ChatFormatting.RESET + ChatFormatting.GRAY + " author: " + ChatFormatting.RESET + split[1] + ChatFormatting.GRAY + " last updated: " + ChatFormatting.RESET + split[2]);
             }
             sendMessage(configs.toString());
 

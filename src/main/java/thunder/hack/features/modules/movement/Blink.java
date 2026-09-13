@@ -1,15 +1,20 @@
 package thunder.hack.features.modules.movement;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.network.packet.Packet;
-import net.minecraft.network.packet.c2s.common.CommonPongC2SPacket;
-import net.minecraft.network.packet.c2s.common.KeepAliveC2SPacket;
-import net.minecraft.network.packet.c2s.play.*;
-import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.network.protocol.game.*;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.common.ServerboundKeepAlivePacket;
+import net.minecraft.network.protocol.common.ServerboundPongPacket;
+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
+import net.minecraft.network.protocol.game.ServerboundAcceptTeleportationPacket;
+import net.minecraft.network.protocol.game.ServerboundChatPacket;
+import net.minecraft.network.protocol.game.ServerboundClientCommandPacket;
+import net.minecraft.network.protocol.game.ServerboundInteractPacket;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.network.protocol.game.ServerboundSeenAdvancementsPacket;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import org.lwjgl.glfw.GLFW;
 import thunder.hack.events.impl.EventTick;
 import thunder.hack.events.impl.PacketEvent;
@@ -28,6 +33,8 @@ import java.util.Queue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static thunder.hack.features.modules.client.ClientSettings.isRu;
+
+import com.mojang.blaze3d.vertex.PoseStack;
 
 public class Blink extends Module {
     public Blink() {
@@ -54,8 +61,8 @@ public class Blink extends Module {
     }
 
     private PlayerEntityCopy blinkPlayer;
-    public static Vec3d lastPos = Vec3d.ZERO;
-    private Vec3d prevVelocity = Vec3d.ZERO;
+    public static Vec3 lastPos = Vec3.ZERO;
+    private Vec3 prevVelocity = Vec3.ZERO;
     private float prevYaw = 0;
     private boolean prevSprinting = false;
     private final Queue<Packet<?>> storedPackets = new LinkedList<>();
@@ -63,31 +70,31 @@ public class Blink extends Module {
     private final AtomicBoolean sending = new AtomicBoolean(false);
     private boolean need2SendBsAsap = false;
     private boolean need2CancelBsAsap = false;
-    private Box renderbox;
+    private AABB renderbox;
 
     @Override
     public void onEnable() {
         if (mc.player == null
-                || mc.world == null
-                || mc.isIntegratedServerRunning()
-                || mc.getNetworkHandler() == null) {
+                || mc.level == null
+                || mc.hasSingleplayerServer()
+                || mc.getConnection() == null) {
             disable();
             return;
         }
 
         storedTransactions.clear();
-        lastPos = mc.player.getPos();
-        prevVelocity = mc.player.getVelocity();
-        prevYaw = mc.player.getYaw();
+        lastPos = mc.player.position();
+        prevVelocity = mc.player.getDeltaMovement();
+        prevYaw = mc.player.getYRot();
         prevSprinting = mc.player.isSprinting();
-        mc.world.spawnEntity(new ClientPlayerEntity(mc, mc.world, mc.getNetworkHandler(), mc.player.getStatHandler(), mc.player.getRecipeBook(), mc.player.input.playerInput, mc.player.lastSprinting));
+        mc.level.addFreshEntity(new LocalPlayer(mc, mc.level, mc.getConnection(), mc.player.getStats(), mc.player.getRecipeBook(), mc.player.input.keyPresses, mc.player.wasSprinting));
         sending.set(false);
         storedPackets.clear();
     }
 
     @Override
     public void onDisable() {
-        if (mc.world == null || mc.player == null) return;
+        if (mc.level == null || mc.player == null) return;
 
         while (!storedPackets.isEmpty())
             sendPacket(storedPackets.poll());
@@ -105,7 +112,7 @@ public class Blink extends Module {
 
     @EventHandler
     public void onPacketReceive(PacketEvent.Receive event) {
-        if (event.getPacket() instanceof EntityVelocityUpdateS2CPacket vel && vel.getEntityId() == mc.player.getId() && disableOnVelocity.getValue())
+        if (event.getPacket() instanceof ClientboundSetEntityMotionPacket vel && vel.getId() == mc.player.getId() && disableOnVelocity.getValue())
             disable(isRu() ? "Выключенно из-за велосити!" : "Disabled due to velocity!");
     }
 
@@ -123,21 +130,21 @@ public class Blink extends Module {
             storedPackets.clear();
         }
 
-        if (packet instanceof CommonPongC2SPacket) {
+        if (packet instanceof ServerboundPongPacket) {
             storedTransactions.add(packet);
         }
 
         if (pulse.getValue()) {
-            if (packet instanceof PlayerMoveC2SPacket) {
+            if (packet instanceof ServerboundMovePlayerPacket) {
                 event.cancel();
                 storedPackets.add(packet);
             }
-        } else if (!(packet instanceof ChatMessageC2SPacket || packet instanceof TeleportConfirmC2SPacket || packet instanceof KeepAliveC2SPacket || packet instanceof AdvancementTabC2SPacket || packet instanceof ClientStatusC2SPacket)) {
+        } else if (!(packet instanceof ServerboundChatPacket || packet instanceof ServerboundAcceptTeleportationPacket || packet instanceof ServerboundKeepAlivePacket || packet instanceof ServerboundSeenAdvancementsPacket || packet instanceof ServerboundClientCommandPacket)) {
             event.cancel();
             storedPackets.add(packet);
         }
 
-        if (stopOnInteraction.getValue() && packet instanceof PlayerInteractEntityC2SPacket)
+        if (stopOnInteraction.getValue() && packet instanceof ServerboundInteractPacket)
             need2SendBsAsap = true;
     }
 
@@ -151,12 +158,12 @@ public class Blink extends Module {
 
         if (isKeyPressed(cancel)) {
             storedPackets.clear();
-            mc.player.setPos(lastPos.getX(), lastPos.getY(), lastPos.getZ());
-            mc.player.setVelocity(prevVelocity);
-            mc.player.setYaw(prevYaw);
+            mc.player.setPosRaw(lastPos.x(), lastPos.y(), lastPos.z());
+            mc.player.setDeltaMovement(prevVelocity);
+            mc.player.setYRot(prevYaw);
             mc.player.setSprinting(prevSprinting);
-            mc.player.setSneaking(false);
-            mc.options.sneakKey.setPressed(false);
+            mc.player.setShiftKeyDown(false);
+            mc.options.keyShift.setDown(false);
             sending.set(true);
             while (!storedTransactions.isEmpty())
                 sendPacket(storedTransactions.poll());
@@ -191,8 +198,8 @@ public class Blink extends Module {
         while (!storedPackets.isEmpty()) {
             Packet<?> packet = storedPackets.poll();
             sendPacket(packet);
-            if (packet instanceof PlayerMoveC2SPacket && !(packet instanceof PlayerMoveC2SPacket.LookAndOnGround)) {
-                lastPos = new Vec3d(((PlayerMoveC2SPacket) packet).getX(mc.player.getX()), ((PlayerMoveC2SPacket) packet).getY(mc.player.getY()), ((PlayerMoveC2SPacket) packet).getZ(mc.player.getZ()));
+            if (packet instanceof ServerboundMovePlayerPacket && !(packet instanceof ServerboundMovePlayerPacket.Rot)) {
+                lastPos = new Vec3(((ServerboundMovePlayerPacket) packet).getX(mc.player.getX()), ((ServerboundMovePlayerPacket) packet).getY(mc.player.getY()), ((ServerboundMovePlayerPacket) packet).getZ(mc.player.getZ()));
 
                 if (renderMode.getValue() == RenderMode.Model || renderMode.getValue() == RenderMode.CircleAndModel) {
                     blinkPlayer.deSpawn();
@@ -208,20 +215,20 @@ public class Blink extends Module {
         storedPackets.clear();
     }
 
-    public void onRender3D(MatrixStack stack) {
-        if (mc.player == null || mc.world == null) return;
+    public void onRender3D(PoseStack stack) {
+        if (mc.player == null || mc.level == null) return;
         if (render.getValue() && lastPos != null) {
             if (renderMode.getValue() == RenderMode.Circle || renderMode.getValue() == RenderMode.CircleAndModel) {
                 float[] hsb = Color.RGBtoHSB(circleColor.getValue().getRed(), circleColor.getValue().getGreen(), circleColor.getValue().getBlue(), null);
                 float hue = (float) (System.currentTimeMillis() % 7200L) / 7200F;
                 int rgb = Color.getHSBColor(hue, hsb[1], hsb[2]).getRGB();
-                ArrayList<Vec3d> vecs = new ArrayList<>();
+                ArrayList<Vec3> vecs = new ArrayList<>();
                 double x = lastPos.x;
                 double y = lastPos.y;
                 double z = lastPos.z;
 
                 for (int i = 0; i <= 360; ++i) {
-                    Vec3d vec = new Vec3d(x + Math.sin((double) i * Math.PI / 180.0) * 0.5D, y + 0.01, z + Math.cos((double) i * Math.PI / 180.0) * 0.5D);
+                    Vec3 vec = new Vec3(x + Math.sin((double) i * Math.PI / 180.0) * 0.5D, y + 0.01, z + Math.cos((double) i * Math.PI / 180.0) * 0.5D);
                     vecs.add(vec);
                 }
 

@@ -7,13 +7,13 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import net.minecraft.command.CommandSource;
-import net.minecraft.text.Text;
 import thunder.hack.core.Managers;
 import thunder.hack.core.manager.world.WayPointManager;
 
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
+import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.network.chat.Component;
 
 import static thunder.hack.features.modules.client.ClientSettings.isRu;
 
@@ -32,7 +32,7 @@ public class WayPointArgumentType implements ArgumentType<WayPointManager.WayPoi
         WayPointManager.WayPoint wp = Managers.WAYPOINT.getWayPointByName(reader.readString());
 
         if (wp == null) throw new DynamicCommandExceptionType(
-                name -> Text.literal(isRu() ? "Вейпоинта " + name.toString() + " не существует(" : "Waypoint " + name.toString() + " does not exist :(")
+                name -> Component.literal(isRu() ? "Вейпоинта " + name.toString() + " не существует(" : "Waypoint " + name.toString() + " does not exist :(")
         ).create(reader.readString());
 
         return wp;
@@ -40,7 +40,7 @@ public class WayPointArgumentType implements ArgumentType<WayPointManager.WayPoi
 
     @Override
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
-        return CommandSource.suggestMatching(Managers.WAYPOINT.getWayPoints().stream().map(WayPointManager.WayPoint::getName), builder);
+        return SharedSuggestionProvider.suggest(Managers.WAYPOINT.getWayPoints().stream().map(WayPointManager.WayPoint::getName), builder);
     }
 
     @Override

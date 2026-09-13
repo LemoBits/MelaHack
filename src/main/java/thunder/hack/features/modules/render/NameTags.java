@@ -1,43 +1,9 @@
 package thunder.hack.features.modules.render;
+import java.util.List;
 
 import com.google.common.collect.Ordering;
 import com.mojang.blaze3d.platform.GlStateManager;
 import thunder.hack.utility.render.compat.RenderSystem;
-import net.minecraft.block.ShulkerBoxBlock;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.block.entity.MobSpawnerBlockEntity;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.network.PlayerListEntry;
-import net.minecraft.client.render.DiffuseLighting;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.ContainerComponent;
-import net.minecraft.component.type.ItemEnchantmentsComponent;
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.enchantment.Enchantments;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.passive.HorseEntity;
-import net.minecraft.entity.passive.TameableEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.projectile.ProjectileEntity;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.scoreboard.ReadableScoreboardScore;
-import net.minecraft.scoreboard.ScoreboardDisplaySlot;
-import net.minecraft.scoreboard.ScoreboardObjective;
-import net.minecraft.scoreboard.number.StyledNumberFormat;
-import net.minecraft.text.MutableText;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.GameMode;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector4d;
 import org.lwjgl.opengl.GL11;
@@ -58,11 +24,43 @@ import thunder.hack.utility.render.TextureStorage;
 import java.awt.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.List;
 import java.util.*;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.numbers.StyledFormat;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.TamableAnimal;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.animal.horse.Horse;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.Projectile;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.ItemContainerContents;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
+import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.block.ShulkerBoxBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.SpawnerBlockEntity;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.scores.DisplaySlot;
+import net.minecraft.world.scores.Objective;
+import net.minecraft.world.scores.ReadOnlyScoreInfo;
 
 public class NameTags extends Module {
-    private final Map<RegistryKey<Enchantment>, String> encMap = new HashMap<>();
+    private final Map<ResourceKey<Enchantment>, String> encMap = new HashMap<>();
 
     public NameTags() {
         super("NameTags", Category.RENDER);
@@ -103,17 +101,17 @@ public class NameTags extends Module {
     private final Setting<Health> health = new Setting<>("Health", Health.Number);
 
 
-    public void onRender2D(DrawContext context) {
-        if (mc.options.hudHidden) return;
-        for (PlayerEntity ent : mc.world.getPlayers()) {
-            if (ent == mc.player && (mc.options.getPerspective().isFirstPerson() || !self.getValue())) continue;
+    public void onRender2D(GuiGraphics context) {
+        if (mc.options.hideGui) return;
+        for (Player ent : mc.level.players()) {
+            if (ent == mc.player && (mc.options.getCameraType().isFirstPerson() || !self.getValue())) continue;
             if (getEntityPing(ent) <= 0 && ignoreBots.getValue()) continue;
 
-            double x = ent.lastX + (ent.getX() - ent.lastX) * Render3DEngine.getTickDelta();
-            double y = ent.lastY + (ent.getY() - ent.lastY) * Render3DEngine.getTickDelta();
-            double z = ent.lastZ + (ent.getZ() - ent.lastZ) * Render3DEngine.getTickDelta();
+            double x = ent.xo + (ent.getX() - ent.xo) * Render3DEngine.getTickDelta();
+            double y = ent.yo + (ent.getY() - ent.yo) * Render3DEngine.getTickDelta();
+            double z = ent.zo + (ent.getZ() - ent.zo) * Render3DEngine.getTickDelta();
             float scale = resize.getValue() ? this.scale.getValue() / mc.player.distanceTo(ent) : this.scale.getValue();
-            Vec3d vector = new Vec3d(x, y + height.getValue(), z);
+            Vec3 vector = new Vec3(x, y + height.getValue(), z);
 
             Vector4d position = null;
 
@@ -127,7 +125,7 @@ public class NameTags extends Module {
 
             String final_string = "";
 
-            if (ping.getValue()) final_string += getPingColor(getEntityPing(ent)) + getEntityPing(ent) + "ms " + Formatting.WHITE;
+            if (ping.getValue()) final_string += getPingColor(getEntityPing(ent)) + getEntityPing(ent) + "ms " + ChatFormatting.WHITE;
             if (gamemode.getValue()) final_string += translateGamemode(getEntityGamemode(ent)) + " ";
 
             if (FriendManager.friends.stream().anyMatch(i -> i.contains(ent.getDisplayName().getString())) && NameProtect.hideFriends.getValue() && ModuleManager.nameProtect.isEnabled()) {
@@ -142,7 +140,7 @@ public class NameTags extends Module {
 
             if (distance.getValue()) final_string += String.format("%.1f", mc.player.distanceTo(ent)) + "m ";
             if (pops.getValue() && Managers.COMBAT.getPops(ent) != 0)
-                final_string += (Formatting.RESET + "" + Managers.COMBAT.getPops(ent));
+                final_string += (ChatFormatting.RESET + "" + Managers.COMBAT.getPops(ent));
 
             if (position != null) {
                 double posX = position.x;
@@ -154,39 +152,39 @@ public class NameTags extends Module {
                 float textWidth;
 
                 if (font.getValue() == Font.Fancy) textWidth = (FontRenderers.sf_bold.getStringWidth(final_string) * 1);
-                else textWidth = mc.textRenderer.getWidth(final_string);
+                else textWidth = mc.font.width(final_string);
 
                 float tagX = (float) ((posX + diff - textWidth / 2) * 1);
 
                 ArrayList<ItemStack> stacks = new ArrayList<>();
 
-                if (armorMode.getValue() != Armor.Durability) stacks.add(ent.getOffHandStack());
+                if (armorMode.getValue() != Armor.Durability) stacks.add(ent.getOffhandItem());
 
                 stacks.addAll(thunder.hack.utility.player.ArmorUtility.getArmorItems(ent));
 
-                if (armorMode.getValue() != Armor.Durability) stacks.add(ent.getMainHandStack());
+                if (armorMode.getValue() != Armor.Durability) stacks.add(ent.getMainHandItem());
 
-                context.getMatrices().pushMatrix();
-                context.getMatrices().translate((float) (tagX - 2 + (textWidth + 4) / 2f), (float) ((float) (posY - 13f) + 6.5f));
-                context.getMatrices().scale(scale, scale);
-                context.getMatrices().translate((float) (-(tagX - 2 + (textWidth + 4) / 2f)), (float) (-(float) ((posY - 13f) + 6.5f)));
+                context.pose().pushMatrix();
+                context.pose().translate((float) (tagX - 2 + (textWidth + 4) / 2f), (float) ((float) (posY - 13f) + 6.5f));
+                context.pose().scale(scale, scale);
+                context.pose().translate((float) (-(tagX - 2 + (textWidth + 4) / 2f)), (float) (-(float) ((posY - 13f) + 6.5f)));
 
                 float item_offset = 0;
                 if (armorMode.getValue() != Armor.None) for (ItemStack armorComponent : stacks) {
                     if (!armorComponent.isEmpty()) {
                         if (armorMode.getValue() == Armor.Full) {
-                            context.getMatrices().pushMatrix();
-                            context.getMatrices().translate((float) (posX - 55 + item_offset), (float) ((float) (posY - 33f)));
-                            context.getMatrices().scale(1.1f, 1.1f);
-                            context.drawItem(armorComponent, 0, 0);
-                            context.drawStackOverlay(mc.textRenderer, armorComponent, 0, 0);
-                            context.getMatrices().popMatrix();
+                            context.pose().pushMatrix();
+                            context.pose().translate((float) (posX - 55 + item_offset), (float) ((float) (posY - 33f)));
+                            context.pose().scale(1.1f, 1.1f);
+                            context.renderItem(armorComponent, 0, 0);
+                            context.renderItemDecorations(mc.font, armorComponent, 0, 0);
+                            context.pose().popMatrix();
                         } else {
-                            context.getMatrices().pushMatrix();
-                            context.getMatrices().translate((float) (posX - 35 + item_offset), (float) ((float) (posY - 20)));
-                            context.getMatrices().scale(0.7f, 0.7f);
+                            context.pose().pushMatrix();
+                            context.pose().translate((float) (posX - 35 + item_offset), (float) ((float) (posY - 20)));
+                            context.pose().scale(0.7f, 0.7f);
 
-                            float durability = armorComponent.getMaxDamage() - armorComponent.getDamage();
+                            float durability = armorComponent.getMaxDamage() - armorComponent.getDamageValue();
                             int percent = (int) ((durability / (float) armorComponent.getMaxDamage()) * 100F);
 
                             Color color;
@@ -197,31 +195,31 @@ public class NameTags extends Module {
                             } else {
                                 color = Color.GREEN;
                             }
-                            context.drawText(mc.textRenderer, percent + "%", 0, 0, color.getRGB(), false);
-                            context.getMatrices().popMatrix();
+                            context.drawString(mc.font, percent + "%", 0, 0, color.getRGB(), false);
+                            context.pose().popMatrix();
                         }
 
                         float enchantmentY = 0;
 
-                        ItemEnchantmentsComponent enchants = EnchantmentHelper.getEnchantments(armorComponent);
+                        ItemEnchantments enchants = EnchantmentHelper.getEnchantmentsForCrafting(armorComponent);
 
 
                         if (enchantss.getValue()) {
-                            if (!onlyHands.getValue() || (armorComponent == ent.getOffHandStack() || armorComponent == ent.getMainHandStack())) {
-                                var enchantments = mc.world.getRegistryManager().getOrThrow(RegistryKeys.ENCHANTMENT);
-                                for (RegistryKey<Enchantment> enchantment : encMap.keySet()) {
-                                    if (enchants.getEnchantments().contains(enchantments.getOrThrow(enchantment))) {
+                            if (!onlyHands.getValue() || (armorComponent == ent.getOffhandItem() || armorComponent == ent.getMainHandItem())) {
+                                var enchantments = mc.level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
+                                for (ResourceKey<Enchantment> enchantment : encMap.keySet()) {
+                                    if (enchants.keySet().contains(enchantments.getOrThrow(enchantment))) {
                                         String id = encMap.get(enchantment);
                                         int level = enchants.getLevel(enchantments.getOrThrow(enchantment));
                                         String encName = id + level;
 
                                         if (font.getValue() == Font.Fancy) {
-                                            FontRenderers.sf_bold.drawString(context.getMatrices(), encName, posX - 50 + item_offset, (float) posY - 45 + enchantmentY, -1);
+                                            FontRenderers.sf_bold.drawString(context.pose(), encName, posX - 50 + item_offset, (float) posY - 45 + enchantmentY, -1);
                                         } else {
-                                            context.getMatrices().pushMatrix();
-                                            context.getMatrices().translate((float) ((posX - 50f + item_offset)), (float) ((posY - 45f + enchantmentY)));
-                                            context.drawText(mc.textRenderer, encName, 0, 0, -1, false);
-                                            context.getMatrices().popMatrix();
+                                            context.pose().pushMatrix();
+                                            context.pose().translate((float) ((posX - 50f + item_offset)), (float) ((posY - 45f + enchantmentY)));
+                                            context.drawString(mc.font, encName, 0, 0, -1, false);
+                                            context.pose().popMatrix();
                                         }
                                         enchantmentY -= 8;
                                         if (maxEnchantY > enchantmentY)
@@ -239,18 +237,18 @@ public class NameTags extends Module {
                 OutlineColor cl = Managers.FRIEND.isFriend(ent) ? friendOutline.getValue() : outline.getValue();
 
                 if (cl == OutlineColor.New)
-                    Render2DEngine.drawRectWithOutline(context.getMatrices(), tagX - 2, (float) (posY - 13f), textWidth + 4, 11, color, outlineColor.getValue().getColorObject());
+                    Render2DEngine.drawRectWithOutline(context.pose(), tagX - 2, (float) (posY - 13f), textWidth + 4, 11, color, outlineColor.getValue().getColorObject());
                 else
-                    Render2DEngine.drawRect(context.getMatrices(), tagX - 2, (float) (posY - 13f), textWidth + 4, 11, color);
+                    Render2DEngine.drawRect(context.pose(), tagX - 2, (float) (posY - 13f), textWidth + 4, 11, color);
 
                 if (Managers.TELEMETRY.getOnlinePlayers().contains(ent.getGameProfile().getName())) {
-                    Render2DEngine.drawRect(context.getMatrices(), tagX - 14, (float) (posY - 13f), 12, 11, color.brighter().brighter());
+                    Render2DEngine.drawRect(context.pose(), tagX - 14, (float) (posY - 13f), 12, 11, color.brighter().brighter());
                     RenderSystem.enableBlend();
                     RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE);
                     Color lColor = HudEditor.getColor(0);
                     RenderSystem.setShaderColor(lColor.getRed() / 255f, lColor.getGreen() / 255f, lColor.getBlue() / 255f, 1f);
                     RenderSystem.setShaderTexture(0, TextureStorage.miniLogo);
-                    Render2DEngine.renderTexture(context.getMatrices(), tagX - 13, (float) (posY - 12.5f), 10, 10, 0, 0, 256, 256, 256, 256);
+                    Render2DEngine.renderTexture(context.pose(), tagX - 13, (float) (posY - 12.5f), 10, 10, 0, 0, 256, 256, 256, 256);
                     RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
                     RenderSystem.disableBlend();
                 }
@@ -260,48 +258,48 @@ public class NameTags extends Module {
 
                     }
                     case Sync -> {
-                        Render2DEngine.drawRect(context.getMatrices(), tagX - 3, (float) (posY - 14f), textWidth + 6, 1, HudEditor.getColor(270));
-                        Render2DEngine.drawRect(context.getMatrices(), tagX - 3, (float) (posY - 3f), textWidth + 6, 1, HudEditor.getColor(0));
-                        Render2DEngine.drawRect(context.getMatrices(), tagX - 3, (float) (posY - 14f), 1, 11, HudEditor.getColor(180));
-                        Render2DEngine.drawRect(context.getMatrices(), tagX + textWidth + 2, (float) (posY - 14f), 1, 11, HudEditor.getColor(90));
+                        Render2DEngine.drawRect(context.pose(), tagX - 3, (float) (posY - 14f), textWidth + 6, 1, HudEditor.getColor(270));
+                        Render2DEngine.drawRect(context.pose(), tagX - 3, (float) (posY - 3f), textWidth + 6, 1, HudEditor.getColor(0));
+                        Render2DEngine.drawRect(context.pose(), tagX - 3, (float) (posY - 14f), 1, 11, HudEditor.getColor(180));
+                        Render2DEngine.drawRect(context.pose(), tagX + textWidth + 2, (float) (posY - 14f), 1, 11, HudEditor.getColor(90));
                     }
                     case Custom -> {
-                        Render2DEngine.drawRect(context.getMatrices(), tagX - 3, (float) (posY - 14f), textWidth + 6, 1, Managers.FRIEND.isFriend(ent) ? friendOutlineColor.getValue().getColorObject() : outlineColor.getValue().getColorObject());
-                        Render2DEngine.drawRect(context.getMatrices(), tagX - 3, (float) (posY - 3f), textWidth + 6, 1, Managers.FRIEND.isFriend(ent) ? friendOutlineColor.getValue().getColorObject() : outlineColor.getValue().getColorObject());
-                        Render2DEngine.drawRect(context.getMatrices(), tagX - 3, (float) (posY - 14f), 1, 11, Managers.FRIEND.isFriend(ent) ? friendOutlineColor.getValue().getColorObject() : outlineColor.getValue().getColorObject());
-                        Render2DEngine.drawRect(context.getMatrices(), tagX + textWidth + 2, (float) (posY - 14f), 1, 11, Managers.FRIEND.isFriend(ent) ? friendOutlineColor.getValue().getColorObject() : outlineColor.getValue().getColorObject());
+                        Render2DEngine.drawRect(context.pose(), tagX - 3, (float) (posY - 14f), textWidth + 6, 1, Managers.FRIEND.isFriend(ent) ? friendOutlineColor.getValue().getColorObject() : outlineColor.getValue().getColorObject());
+                        Render2DEngine.drawRect(context.pose(), tagX - 3, (float) (posY - 3f), textWidth + 6, 1, Managers.FRIEND.isFriend(ent) ? friendOutlineColor.getValue().getColorObject() : outlineColor.getValue().getColorObject());
+                        Render2DEngine.drawRect(context.pose(), tagX - 3, (float) (posY - 14f), 1, 11, Managers.FRIEND.isFriend(ent) ? friendOutlineColor.getValue().getColorObject() : outlineColor.getValue().getColorObject());
+                        Render2DEngine.drawRect(context.pose(), tagX + textWidth + 2, (float) (posY - 14f), 1, 11, Managers.FRIEND.isFriend(ent) ? friendOutlineColor.getValue().getColorObject() : outlineColor.getValue().getColorObject());
                     }
                 }
 
 
                 if (font.getValue() == Font.Fancy) {
-                    FontRenderers.sf_bold.drawString(context.getMatrices(), final_string, tagX, (float) posY - 10, -1);
+                    FontRenderers.sf_bold.drawString(context.pose(), final_string, tagX, (float) posY - 10, -1);
                 } else {
-                    context.getMatrices().pushMatrix();
-                    context.getMatrices().translate((float) (tagX), (float) (((float) posY - 11)));
-                    context.drawText(mc.textRenderer, final_string, 0, 0, -1, false);
-                    context.getMatrices().popMatrix();
+                    context.pose().pushMatrix();
+                    context.pose().translate((float) (tagX), (float) (((float) posY - 11)));
+                    context.drawString(mc.font, final_string, 0, 0, -1, false);
+                    context.pose().popMatrix();
                 }
 
                 if (!health.is(Health.Number)) {
-                    int i = MathHelper.ceil(ent.getHealth());
-                    float f = (float) ent.getAttributeValue(EntityAttributes.MAX_HEALTH);
-                    int p = MathHelper.ceil(ent.getAbsorptionAmount());
-                    context.getMatrices().pushMatrix();
-                    context.getMatrices().translate((float) (posX - 44), (float) (posY));
-                    context.getMatrices().scale(1.1f, 1.1f);
+                    int i = Mth.ceil(ent.getHealth());
+                    float f = (float) ent.getAttributeValue(Attributes.MAX_HEALTH);
+                    int p = Mth.ceil(ent.getAbsorptionAmount());
+                    context.pose().pushMatrix();
+                    context.pose().translate((float) (posX - 44), (float) (posY));
+                    context.pose().scale(1.1f, 1.1f);
                     renderHealthBar(context, ent, f, i, p);
-                    context.getMatrices().popMatrix();
+                    context.pose().popMatrix();
                 }
 
                 if (potions.getValue())
                     renderStatusEffectOverlay(context, (float) posX, (float) (posY + maxEnchantY - 60), ent);
 
-                Item handItem = ent.getMainHandStack().getItem();
+                Item handItem = ent.getMainHandItem().getItem();
 
                 if (shulkers.getValue())
-                    renderShulkerToolTip(context, (int) posX - 90, (int) posY - 120, (handItem instanceof BlockItem bi) && (bi.getBlock() instanceof ShulkerBoxBlock) ? ent.getMainHandStack() : ent.getOffHandStack());
-                context.getMatrices().popMatrix();
+                    renderShulkerToolTip(context, (int) posX - 90, (int) posY - 120, (handItem instanceof BlockItem bi) && (bi.getBlock() instanceof ShulkerBoxBlock) ? ent.getMainHandItem() : ent.getOffhandItem());
+                context.pose().popMatrix();
             }
         }
 
@@ -309,24 +307,24 @@ public class NameTags extends Module {
         if (entityOwner.getValue()) drawEntityOwner(context);
     }
 
-    private void drawSpawnerNameTag(DrawContext context) {
+    private void drawSpawnerNameTag(GuiGraphics context) {
         for (BlockEntity blockEntity : StorageEsp.getBlockEntities()) {
-            if (blockEntity instanceof MobSpawnerBlockEntity spawner) {
-                Vec3d vector = new Vec3d(spawner.getPos().getX() + 0.5, spawner.getPos().getY() + 1.5, spawner.getPos().getZ() + 0.5);
+            if (blockEntity instanceof SpawnerBlockEntity spawner) {
+                Vec3 vector = new Vec3(spawner.getBlockPos().getX() + 0.5, spawner.getBlockPos().getY() + 1.5, spawner.getBlockPos().getZ() + 0.5);
                 Vector4d position = null;
-                vector = Render3DEngine.worldSpaceToScreenSpace(new Vec3d(vector.x, vector.y, vector.z));
+                vector = Render3DEngine.worldSpaceToScreenSpace(new Vec3(vector.x, vector.y, vector.z));
                 if (vector.z > 0 && vector.z < 1) {
                     position = new Vector4d(vector.x, vector.y, vector.z, 0);
                     position.x = Math.min(vector.x, position.x);
                     position.y = Math.min(vector.y, position.y);
                     position.z = Math.max(vector.x, position.z);
                 }
-                if (spawner.getLogic() == null || spawner.getLogic().getRenderedEntity(mc.world, spawner.getPos()) == null)
+                if (spawner.getSpawner() == null || spawner.getSpawner().getOrCreateDisplayEntity(mc.level, spawner.getBlockPos()) == null)
                     continue;
-                String final_string = spawner.getLogic().getRenderedEntity(mc.world, spawner.getPos()).getName().getString() + " " + String.format("%.1f", ((float) spawner.getLogic().spawnDelay / 20f)) + "s";
+                String final_string = spawner.getSpawner().getOrCreateDisplayEntity(mc.level, spawner.getBlockPos()).getName().getString() + " " + String.format("%.1f", ((float) spawner.getSpawner().spawnDelay / 20f)) + "s";
 
-                if (spawner.getLogic().getRotation() == spawner.getLogic().getLastRotation() && spawner.getLogic().getRotation() == 0f && (float) spawner.getLogic().spawnDelay / 20f == 1f)
-                    final_string = spawner.getLogic().getRenderedEntity(mc.world, spawner.getPos()).getName().getString() + " loot!";
+                if (spawner.getSpawner().getSpin() == spawner.getSpawner().getoSpin() && spawner.getSpawner().getSpin() == 0f && (float) spawner.getSpawner().spawnDelay / 20f == 1f)
+                    final_string = spawner.getSpawner().getOrCreateDisplayEntity(mc.level, spawner.getBlockPos()).getName().getString() + " loot!";
 
 
                 if (position != null) {
@@ -338,51 +336,51 @@ public class NameTags extends Module {
                     float textWidth = (FontRenderers.sf_bold.getStringWidth(final_string) * 1);
                     float tagX = (float) ((posX + diff - textWidth / 2) * 1);
 
-                    Render2DEngine.drawRect(context.getMatrices(), tagX - 2, (float) (posY - 13f), textWidth + 4, 11, fillColorA.getValue().getColorObject());
+                    Render2DEngine.drawRect(context.pose(), tagX - 2, (float) (posY - 13f), textWidth + 4, 11, fillColorA.getValue().getColorObject());
 
                     switch (outline.getValue()) {
                         case None -> {
 
                         }
                         case Sync -> {
-                            Render2DEngine.drawRect(context.getMatrices(), tagX - 3, (float) (posY - 14f), textWidth + 6, 1, HudEditor.getColor(270));
-                            Render2DEngine.drawRect(context.getMatrices(), tagX - 3, (float) (posY - 3f), textWidth + 6, 1, HudEditor.getColor(0));
-                            Render2DEngine.drawRect(context.getMatrices(), tagX - 3, (float) (posY - 14f), 1, 11, HudEditor.getColor(180));
-                            Render2DEngine.drawRect(context.getMatrices(), tagX + textWidth + 2, (float) (posY - 14f), 1, 11, HudEditor.getColor(90));
+                            Render2DEngine.drawRect(context.pose(), tagX - 3, (float) (posY - 14f), textWidth + 6, 1, HudEditor.getColor(270));
+                            Render2DEngine.drawRect(context.pose(), tagX - 3, (float) (posY - 3f), textWidth + 6, 1, HudEditor.getColor(0));
+                            Render2DEngine.drawRect(context.pose(), tagX - 3, (float) (posY - 14f), 1, 11, HudEditor.getColor(180));
+                            Render2DEngine.drawRect(context.pose(), tagX + textWidth + 2, (float) (posY - 14f), 1, 11, HudEditor.getColor(90));
                         }
                         case Custom -> {
-                            Render2DEngine.drawRect(context.getMatrices(), tagX - 3, (float) (posY - 14f), textWidth + 6, 1, outlineColor.getValue().getColorObject());
-                            Render2DEngine.drawRect(context.getMatrices(), tagX - 3, (float) (posY - 3f), textWidth + 6, 1, outlineColor.getValue().getColorObject());
-                            Render2DEngine.drawRect(context.getMatrices(), tagX - 3, (float) (posY - 14f), 1, 11, outlineColor.getValue().getColorObject());
-                            Render2DEngine.drawRect(context.getMatrices(), tagX + textWidth + 2, (float) (posY - 14f), 1, 11, outlineColor.getValue().getColorObject());
+                            Render2DEngine.drawRect(context.pose(), tagX - 3, (float) (posY - 14f), textWidth + 6, 1, outlineColor.getValue().getColorObject());
+                            Render2DEngine.drawRect(context.pose(), tagX - 3, (float) (posY - 3f), textWidth + 6, 1, outlineColor.getValue().getColorObject());
+                            Render2DEngine.drawRect(context.pose(), tagX - 3, (float) (posY - 14f), 1, 11, outlineColor.getValue().getColorObject());
+                            Render2DEngine.drawRect(context.pose(), tagX + textWidth + 2, (float) (posY - 14f), 1, 11, outlineColor.getValue().getColorObject());
                         }
                     }
 
 
-                    FontRenderers.sf_bold.drawString(context.getMatrices(), final_string, tagX, (float) posY - 10, -1);
+                    FontRenderers.sf_bold.drawString(context.pose(), final_string, tagX, (float) posY - 10, -1);
                 }
             }
         }
     }
 
-    public void drawEntityOwner(DrawContext context) {
-        for (Entity ent : mc.world.getEntities()) {
+    public void drawEntityOwner(GuiGraphics context) {
+        for (Entity ent : mc.level.entitiesForRendering()) {
             String ownerName = "";
-            if (ent instanceof ProjectileEntity pe) {
+            if (ent instanceof Projectile pe) {
                 if (pe.getOwner() != null) ownerName = pe.getOwner().getDisplayName().getString();
-            } else if (ent instanceof HorseEntity he) {
+            } else if (ent instanceof Horse he) {
                 if (he.getOwner() != null) ownerName = he.getOwner().getDisplayName().getString();
-            } else if (ent instanceof TameableEntity te && te.isTamed() && te.getOwner() != null) {
+            } else if (ent instanceof TamableAnimal te && te.isTame() && te.getOwner() != null) {
                 ownerName = te.getOwner().getDisplayName().getString();
             } else continue;
 
             String final_string = "Owned by " + ownerName;
-            double x = ent.lastX + (ent.getX() - ent.lastX) * Render3DEngine.getTickDelta();
-            double y = ent.lastY + (ent.getY() - ent.lastY) * Render3DEngine.getTickDelta();
-            double z = ent.lastZ + (ent.getZ() - ent.lastZ) * Render3DEngine.getTickDelta();
-            Vec3d vector = new Vec3d(x, y + 2, z);
+            double x = ent.xo + (ent.getX() - ent.xo) * Render3DEngine.getTickDelta();
+            double y = ent.yo + (ent.getY() - ent.yo) * Render3DEngine.getTickDelta();
+            double z = ent.zo + (ent.getZ() - ent.zo) * Render3DEngine.getTickDelta();
+            Vec3 vector = new Vec3(x, y + 2, z);
             Vector4d position = null;
-            vector = Render3DEngine.worldSpaceToScreenSpace(new Vec3d(vector.x, vector.y, vector.z));
+            vector = Render3DEngine.worldSpaceToScreenSpace(new Vec3(vector.x, vector.y, vector.z));
             if (vector.z > 0 && vector.z < 1) {
                 position = new Vector4d(vector.x, vector.y, vector.z, 0);
                 position.x = Math.min(vector.x, position.x);
@@ -399,44 +397,44 @@ public class NameTags extends Module {
                 float textWidth = (FontRenderers.sf_bold.getStringWidth(final_string) * 1);
                 float tagX = (float) ((posX + diff - textWidth / 2) * 1);
 
-                Render2DEngine.drawRect(context.getMatrices(), tagX - 2, (float) (posY - 13f), textWidth + 4, 11, fillColorA.getValue().getColorObject());
+                Render2DEngine.drawRect(context.pose(), tagX - 2, (float) (posY - 13f), textWidth + 4, 11, fillColorA.getValue().getColorObject());
 
                 switch (outline.getValue()) {
                     case None -> {
 
                     }
                     case Sync -> {
-                        Render2DEngine.drawRect(context.getMatrices(), tagX - 3, (float) (posY - 14f), textWidth + 6, 1, HudEditor.getColor(270));
-                        Render2DEngine.drawRect(context.getMatrices(), tagX - 3, (float) (posY - 3f), textWidth + 6, 1, HudEditor.getColor(0));
-                        Render2DEngine.drawRect(context.getMatrices(), tagX - 3, (float) (posY - 14f), 1, 11, HudEditor.getColor(180));
-                        Render2DEngine.drawRect(context.getMatrices(), tagX + textWidth + 2, (float) (posY - 14f), 1, 11, HudEditor.getColor(90));
+                        Render2DEngine.drawRect(context.pose(), tagX - 3, (float) (posY - 14f), textWidth + 6, 1, HudEditor.getColor(270));
+                        Render2DEngine.drawRect(context.pose(), tagX - 3, (float) (posY - 3f), textWidth + 6, 1, HudEditor.getColor(0));
+                        Render2DEngine.drawRect(context.pose(), tagX - 3, (float) (posY - 14f), 1, 11, HudEditor.getColor(180));
+                        Render2DEngine.drawRect(context.pose(), tagX + textWidth + 2, (float) (posY - 14f), 1, 11, HudEditor.getColor(90));
                     }
                     case Custom -> {
-                        Render2DEngine.drawRect(context.getMatrices(), tagX - 3, (float) (posY - 14f), textWidth + 6, 1, outlineColor.getValue().getColorObject());
-                        Render2DEngine.drawRect(context.getMatrices(), tagX - 3, (float) (posY - 3f), textWidth + 6, 1, outlineColor.getValue().getColorObject());
-                        Render2DEngine.drawRect(context.getMatrices(), tagX - 3, (float) (posY - 14f), 1, 11, outlineColor.getValue().getColorObject());
-                        Render2DEngine.drawRect(context.getMatrices(), tagX + textWidth + 2, (float) (posY - 14f), 1, 11, outlineColor.getValue().getColorObject());
+                        Render2DEngine.drawRect(context.pose(), tagX - 3, (float) (posY - 14f), textWidth + 6, 1, outlineColor.getValue().getColorObject());
+                        Render2DEngine.drawRect(context.pose(), tagX - 3, (float) (posY - 3f), textWidth + 6, 1, outlineColor.getValue().getColorObject());
+                        Render2DEngine.drawRect(context.pose(), tagX - 3, (float) (posY - 14f), 1, 11, outlineColor.getValue().getColorObject());
+                        Render2DEngine.drawRect(context.pose(), tagX + textWidth + 2, (float) (posY - 14f), 1, 11, outlineColor.getValue().getColorObject());
                     }
                 }
-                FontRenderers.sf_bold.drawString(context.getMatrices(), final_string, tagX, (float) posY - 10, -1);
+                FontRenderers.sf_bold.drawString(context.pose(), final_string, tagX, (float) posY - 10, -1);
             }
         }
     }
 
-    public static int getEntityPing(PlayerEntity entity) {
-        if (mc.getNetworkHandler() == null) return 0;
-        PlayerListEntry playerListEntry = mc.getNetworkHandler().getPlayerListEntry(entity.getUuid());
+    public static int getEntityPing(Player entity) {
+        if (mc.getConnection() == null) return 0;
+        PlayerInfo playerListEntry = mc.getConnection().getPlayerInfo(entity.getUUID());
         if (playerListEntry == null) return 0;
         return playerListEntry.getLatency();
     }
 
-    public static GameMode getEntityGamemode(PlayerEntity entity) {
+    public static GameType getEntityGamemode(Player entity) {
         if (entity == null) return null;
-        PlayerListEntry playerListEntry = mc.getNetworkHandler().getPlayerListEntry(entity.getUuid());
+        PlayerInfo playerListEntry = mc.getConnection().getPlayerInfo(entity.getUUID());
         return playerListEntry == null ? null : playerListEntry.getGameMode();
     }
 
-    private String translateGamemode(GameMode gamemode) {
+    private String translateGamemode(GameType gamemode) {
         if (gamemode == null) return "[BOT]";
         return switch (gamemode) {
             case SURVIVAL -> "[S]";
@@ -446,16 +444,16 @@ public class NameTags extends Module {
         };
     }
 
-    public float getHealth(PlayerEntity ent) {
+    public float getHealth(Player ent) {
         // Первый в комьюнити хп резольвер. Правда, еж?
-        if ((mc.getNetworkHandler() != null && mc.getNetworkHandler().getServerInfo() != null && mc.getNetworkHandler().getServerInfo().address.contains("funtime") || funtimeHp.getValue())) {
-            ScoreboardObjective scoreBoard = null;
+        if ((mc.getConnection() != null && mc.getConnection().getServerData() != null && mc.getConnection().getServerData().ip.contains("funtime") || funtimeHp.getValue())) {
+            Objective scoreBoard = null;
             String resolvedHp = "";
-            if ((ent.getScoreboard()).getObjectiveForSlot(ScoreboardDisplaySlot.BELOW_NAME) != null) {
-                scoreBoard = (ent.getScoreboard()).getObjectiveForSlot(ScoreboardDisplaySlot.BELOW_NAME);
+            if ((ent.getScoreboard()).getDisplayObjective(DisplaySlot.BELOW_NAME) != null) {
+                scoreBoard = (ent.getScoreboard()).getDisplayObjective(DisplaySlot.BELOW_NAME);
                 if (scoreBoard != null) {
-                    ReadableScoreboardScore readableScoreboardScore = ent.getScoreboard().getScore(ent, scoreBoard);
-                    MutableText text2 = ReadableScoreboardScore.getFormattedScore(readableScoreboardScore, scoreBoard.getNumberFormatOr(StyledNumberFormat.EMPTY));
+                    ReadOnlyScoreInfo readableScoreboardScore = ent.getScoreboard().getPlayerScoreInfo(ent, scoreBoard);
+                    MutableComponent text2 = ReadOnlyScoreInfo.safeFormatValue(readableScoreboardScore, scoreBoard.numberFormatOrDefault(StyledFormat.NO_STYLE));
                     resolvedHp = text2.getString();
                 }
             }
@@ -468,9 +466,9 @@ public class NameTags extends Module {
         } else return ent.getHealth() + ent.getAbsorptionAmount();
     }
 
-    private void renderHealthBar(DrawContext context, PlayerEntity player, float maxHealth, int lastHealth, int absorption) {
-        int i = MathHelper.ceil((double) maxHealth / 2.0);
-        int j = MathHelper.ceil((double) absorption / 2.0);
+    private void renderHealthBar(GuiGraphics context, Player player, float maxHealth, int lastHealth, int absorption) {
+        int i = Mth.ceil((double) maxHealth / 2.0);
+        int j = Mth.ceil((double) absorption / 2.0);
         int k = i * 2;
         int cont = 0;
 
@@ -491,59 +489,59 @@ public class NameTags extends Module {
             if (l >= i) {
                 int r = q - k;
                 if (q - k < absorption) {
-                    context.getMatrices().pushMatrix();
-                    context.getMatrices().translate((float) (0), (float) (0));
+                    context.pose().pushMatrix();
+                    context.pose().translate((float) (0), (float) (0));
                     drawHeart(context, HeartType.ABSORBING, o, r + 1 == absorption, player);
-                    context.getMatrices().popMatrix();
+                    context.pose().popMatrix();
                 }
             }
         }
 
     }
 
-    private void drawHeart(DrawContext context, HeartType type, int x, boolean half, PlayerEntity player) {
+    private void drawHeart(GuiGraphics context, HeartType type, int x, boolean half, Player player) {
         if (health.is(Health.Dots)) {
 
             Color color = Managers.FRIEND.isFriend(player) ? fillColorF.getValue().getColorObject() : fillColorA.getValue().getColorObject();
             if (type == HeartType.CONTAINER) {
-                Render2DEngine.drawRect(context.getMatrices(), x, 0, 7, 3, color);
+                Render2DEngine.drawRect(context.pose(), x, 0, 7, 3, color);
             } else if (type == HeartType.NORMAL) {
                 if (half) {
-                    Render2DEngine.drawRect(context.getMatrices(), x, 0, 3, 3, getHealthColor2(player.getHealth() + player.getAbsorptionAmount()));
-                    Render2DEngine.drawRect(context.getMatrices(), x + 3, 0, 4, 3, color);
+                    Render2DEngine.drawRect(context.pose(), x, 0, 3, 3, getHealthColor2(player.getHealth() + player.getAbsorptionAmount()));
+                    Render2DEngine.drawRect(context.pose(), x + 3, 0, 4, 3, color);
                 } else {
-                    Render2DEngine.drawRect(context.getMatrices(), x, 0, 7, 3, getHealthColor2(player.getHealth() + player.getAbsorptionAmount()));
+                    Render2DEngine.drawRect(context.pose(), x, 0, 7, 3, getHealthColor2(player.getHealth() + player.getAbsorptionAmount()));
                 }
             }
-        } else context.drawGuiTexture(net.minecraft.client.render.RenderPipelines.GUI_TEXTURED, type.getTexture(half), x, 0, 9, 9);
+        } else context.blitSprite(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, type.getTexture(half), x, 0, 9, 9);
     }
 
     private enum HeartType {
-        CONTAINER(Identifier.of("hud/heart/container"), Identifier.of("hud/heart/container")), NORMAL(Identifier.of("hud/heart/full"), Identifier.of("hud/heart/half")), ABSORBING(Identifier.of("hud/heart/absorbing_full"), Identifier.of("hud/heart/absorbing_half"));
+        CONTAINER(ResourceLocation.parse("hud/heart/container"), ResourceLocation.parse("hud/heart/container")), NORMAL(ResourceLocation.parse("hud/heart/full"), ResourceLocation.parse("hud/heart/half")), ABSORBING(ResourceLocation.parse("hud/heart/absorbing_full"), ResourceLocation.parse("hud/heart/absorbing_half"));
 
-        private final Identifier fullTexture;
-        private final Identifier halfTexture;
+        private final ResourceLocation fullTexture;
+        private final ResourceLocation halfTexture;
 
-        HeartType(Identifier fullTexture, Identifier halfTexture) {
+        HeartType(ResourceLocation fullTexture, ResourceLocation halfTexture) {
             this.fullTexture = fullTexture;
             this.halfTexture = halfTexture;
         }
 
-        public Identifier getTexture(boolean half) {
+        public ResourceLocation getTexture(boolean half) {
             return half ? halfTexture : fullTexture;
         }
     }
 
     public @NotNull String getHealthColor(float health) {
-        if (health <= 15 && health > 7) return Formatting.YELLOW + "";
-        if (health > 15) return Formatting.GREEN + "";
-        return Formatting.RED + "";
+        if (health <= 15 && health > 7) return ChatFormatting.YELLOW + "";
+        if (health > 15) return ChatFormatting.GREEN + "";
+        return ChatFormatting.RED + "";
     }
 
     public @NotNull String getPingColor(int ping) {
-        if (ping <= 60) return Formatting.GREEN + "";
-        if (ping > 60 && ping < 120) return Formatting.YELLOW + "";
-        return Formatting.RED + "";
+        if (ping <= 60) return ChatFormatting.GREEN + "";
+        if (ping > 60 && ping < 120) return ChatFormatting.YELLOW + "";
+        return ChatFormatting.RED + "";
     }
 
     private @NotNull Color getHealthColor2(float health) {
@@ -559,13 +557,13 @@ public class NameTags extends Module {
         return bd.floatValue();
     }
 
-    private void renderStatusEffectOverlay(DrawContext context, float x, float y, PlayerEntity player) {
-        ArrayList<StatusEffectInstance> effects = new ArrayList<>(player.getStatusEffects());
+    private void renderStatusEffectOverlay(GuiGraphics context, float x, float y, Player player) {
+        ArrayList<MobEffectInstance> effects = new ArrayList<>(player.getActiveEffects());
         if (effects.isEmpty()) return;
         x += effects.size() * 12.5f;
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        for (StatusEffectInstance statusEffectInstance : Ordering.natural().reverse().sortedCopy(effects)) {
+        for (MobEffectInstance statusEffectInstance : Ordering.natural().reverse().sortedCopy(effects)) {
             x -= 25;
             String power = "";
             switch (statusEffectInstance.getAmplifier()) {
@@ -576,27 +574,27 @@ public class NameTags extends Module {
                 case 4 -> power = "V";
             }
 
-            context.getMatrices().pushMatrix();
-            context.getMatrices().translate((float) (x), (float) (y));
-            context.drawGuiTexture(net.minecraft.client.render.RenderPipelines.GUI_TEXTURED, net.minecraft.client.gui.hud.InGameHud.getEffectTexture(statusEffectInstance.getEffectType()), 0, 0, 18, 18);
-            FontRenderers.sf_bold_mini.drawCenteredString(context.getMatrices(), PotionHud.getDuration(statusEffectInstance), 9, -8, -1);
-            FontRenderers.categories.drawCenteredString(context.getMatrices(), power, 9, -16, -1);
-            context.getMatrices().popMatrix();
+            context.pose().pushMatrix();
+            context.pose().translate((float) (x), (float) (y));
+            context.blitSprite(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, net.minecraft.client.gui.Gui.getMobEffectSprite(statusEffectInstance.getEffect()), 0, 0, 18, 18);
+            FontRenderers.sf_bold_mini.drawCenteredString(context.pose(), PotionHud.getDuration(statusEffectInstance), 9, -8, -1);
+            FontRenderers.categories.drawCenteredString(context.pose(), power, 9, -16, -1);
+            context.pose().popMatrix();
 
         }
         RenderSystem.disableBlend();
     }
 
-    public boolean renderShulkerToolTip(DrawContext context, int offsetX, int offsetY, ItemStack stack) {
+    public boolean renderShulkerToolTip(GuiGraphics context, int offsetX, int offsetY, ItemStack stack) {
         try {
-            ContainerComponent compoundTag = stack.get(DataComponentTypes.CONTAINER);
+            ItemContainerContents compoundTag = stack.get(DataComponents.CONTAINER);
             if (compoundTag == null) return false;
 
             float[] colors = new float[]{1F, 1F, 1F};
             Item focusedItem = stack.getItem();
             if (focusedItem instanceof BlockItem bi && bi.getBlock() instanceof ShulkerBoxBlock) {
                 try {
-                    Color c = new Color(Objects.requireNonNull(((ShulkerBoxBlock) bi.getBlock()).getColor()).getEntityColor());
+                    Color c = new Color(Objects.requireNonNull(((ShulkerBoxBlock) bi.getBlock()).getColor()).getTextureDiffuseColor());
                     colors = new float[]{c.getRed() / 255f, c.getGreen() / 255f, c.getRed() / 255f, c.getAlpha() / 255f};
                 } catch (NullPointerException npe) {
                     colors = new float[]{1F, 1F, 1F};
@@ -611,7 +609,7 @@ public class NameTags extends Module {
         return true;
     }
 
-    private void draw(DrawContext context, List<ItemStack> itemStacks, int offsetX, int offsetY, float[] colors) {
+    private void draw(GuiGraphics context, List<ItemStack> itemStacks, int offsetX, int offsetY, float[] colors) {
         RenderSystem.disableDepthTest();
         GL11.glClear(GL11.GL_DEPTH_BUFFER_BIT);
 
@@ -624,8 +622,8 @@ public class NameTags extends Module {
         int row = 0;
         int i = 0;
         for (ItemStack itemStack : itemStacks) {
-            context.drawItem(itemStack, offsetX + 8 + i * 18, offsetY + 7 + row * 18);
-            context.drawStackOverlay(mc.textRenderer, itemStack, offsetX + 8 + i * 18, offsetY + 7 + row * 18);
+            context.renderItem(itemStack, offsetX + 8 + i * 18, offsetY + 7 + row * 18);
+            context.renderItemDecorations(mc.font, itemStack, offsetX + 8 + i * 18, offsetY + 7 + row * 18);
             i++;
             if (i >= 9) {
                 i = 0;
@@ -635,12 +633,12 @@ public class NameTags extends Module {
         RenderSystem.enableDepthTest();
     }
 
-    private void drawBackground(DrawContext context, int x, int y, float[] colors) {
+    private void drawBackground(GuiGraphics context, int x, int y, float[] colors) {
         RenderSystem.disableBlend();
         RenderSystem.setShaderColor(colors[0], colors[1], colors[2], 1F);
         RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
         RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR_MIPMAP_LINEAR);
-        context.drawTexture(net.minecraft.client.render.RenderPipelines.GUI_TEXTURED, TextureStorage.container, x, y, 0, 0, 176, 67, 176, 67);
+        context.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, TextureStorage.container, x, y, 0, 0, 176, 67, 176, 67);
         RenderSystem.enableBlend();
     }
 

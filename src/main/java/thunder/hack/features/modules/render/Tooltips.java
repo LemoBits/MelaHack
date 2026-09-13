@@ -1,8 +1,8 @@
 package thunder.hack.features.modules.render;
 
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.ContainerComponent;
-import net.minecraft.item.ItemStack;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.ItemContainerContents;
 import thunder.hack.features.modules.Module;
 import thunder.hack.setting.Setting;
 
@@ -18,7 +18,7 @@ public class Tooltips extends Module {
     public final Setting<Boolean> shulkerRegearShiftMode = new Setting<>("RegearShift", true);
 
     public static boolean hasItems(ItemStack itemStack) {
-        ContainerComponent compoundTag = itemStack.get(DataComponentTypes.CONTAINER);
+        ItemContainerContents compoundTag = itemStack.get(DataComponents.CONTAINER);
         return compoundTag != null && !compoundTag.stream().toList().isEmpty();
     }
 }

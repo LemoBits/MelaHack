@@ -1,15 +1,15 @@
 package thunder.hack.injection.accesors;
 
-import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.player.LocalPlayer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
-@Mixin(ClientPlayerEntity.class)
+@Mixin(LocalPlayer.class)
 public interface IClientPlayerEntity {
-    @Invoker(value = "sendMovementPackets")
+    @Invoker(value = "sendPosition")
     void iSendMovementPackets();
 
-    @Accessor(value = "mountJumpStrength")
+    @Accessor(value = "jumpRidingScale")
     void setMountJumpStrength(float v);
 }

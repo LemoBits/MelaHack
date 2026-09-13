@@ -2,25 +2,21 @@ package thunder.hack.core;
 
 import thunder.hack.utility.render.compat.RenderSystem;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.util.InputUtil;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.network.packet.Packet;
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.network.packet.s2c.play.GameJoinS2CPacket;
-import net.minecraft.network.packet.s2c.play.GameMessageS2CPacket;
-import net.minecraft.network.packet.s2c.play.PlayerPositionS2CPacket;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.RotationAxis;
-import net.minecraft.util.math.Vec2f;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientboundLoginPacket;
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
+import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec2;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.ThunderHack;
 import thunder.hack.features.cmd.Command;
@@ -46,9 +42,13 @@ import static thunder.hack.features.modules.Module.fullNullCheck;
 import static thunder.hack.features.modules.Module.mc;
 import static thunder.hack.features.modules.client.ClientSettings.isRu;
 
+import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
+
 public final class Core {
     public static boolean lockSprint, serverSprint, hold_mouse0, showSkull;
-    public static final Map<String, Identifier> HEADS = new ConcurrentHashMap<>();
+    public static final Map<String, ResourceLocation> HEADS = new ConcurrentHashMap<>();
     public ArrayList<Packet<?>> silentPackets = new ArrayList<>();
     private final Timer skullTimer = new Timer();
     private final Timer lastPacket = new Timer();
@@ -67,13 +67,13 @@ public final class Core {
         ThunderGui.getInstance().onTick();
 
         if (ModuleManager.clickGui.getBind().getKey() == -1) {
-            Command.sendMessage(Formatting.RED + (isRu() ? "Привязка клавиш Clickgui по умолчанию -> P" : "Default clickgui keybind --> P"));
-            Command.sendMessage(Formatting.RED + (isRu() ? "Вы можете получить готовую конфигурацию, выполнив следующую команду -> @cfg cloudlist." : "You can obtain a pre-built configuration by executing the following command -> @cfg cloudlist."));
-            ModuleManager.clickGui.setBind(InputUtil.fromTranslationKey("key.keyboard.p").getCode(), false, false);
+            Command.sendMessage(ChatFormatting.RED + (isRu() ? "Привязка клавиш Clickgui по умолчанию -> P" : "Default clickgui keybind --> P"));
+            Command.sendMessage(ChatFormatting.RED + (isRu() ? "Вы можете получить готовую конфигурацию, выполнив следующую команду -> @cfg cloudlist." : "You can obtain a pre-built configuration by executing the following command -> @cfg cloudlist."));
+            ModuleManager.clickGui.setBind(InputConstants.getKey("key.keyboard.p").getValue(), false, false);
         }
 
-        for (PlayerEntity p : mc.world.getPlayers()) {
-            if (p.isDead() || p.getHealth() == 0)
+        for (Player p : mc.level.players()) {
+            if (p.isDeadOrDying() || p.getHealth() == 0)
                 ThunderHack.EVENT_BUS.post(new EventDeath(p));
         }
 
@@ -94,22 +94,22 @@ public final class Core {
         }
 
         prevHorizontalSpeed = horizontalSpeed;
-        horizontalSpeed = (float) mc.player.getVelocity().horizontalLength();
+        horizontalSpeed = (float) mc.player.getDeltaMovement().horizontalDistance();
     }
 
     @EventHandler
     public void onPacketSend(PacketEvent.@NotNull Send e) {
-        if (e.getPacket() instanceof PlayerMoveC2SPacket && !(e.getPacket() instanceof PlayerMoveC2SPacket.OnGroundOnly))
+        if (e.getPacket() instanceof ServerboundMovePlayerPacket && !(e.getPacket() instanceof ServerboundMovePlayerPacket.StatusOnly))
             lastPacket.reset();
 
-        if (e.getPacket() instanceof ClientCommandC2SPacket c) {
-            if (c.getMode() == ClientCommandC2SPacket.Mode.START_SPRINTING || c.getMode() == ClientCommandC2SPacket.Mode.STOP_SPRINTING) {
+        if (e.getPacket() instanceof ServerboundPlayerCommandPacket c) {
+            if (c.getAction() == ServerboundPlayerCommandPacket.Action.START_SPRINTING || c.getAction() == ServerboundPlayerCommandPacket.Action.STOP_SPRINTING) {
                 if (lockSprint) {
                     e.cancel();
                     return;
                 }
 
-                switch (c.getMode()) {
+                switch (c.getAction()) {
                     case START_SPRINTING -> serverSprint = true;
                     case STOP_SPRINTING -> serverSprint = false;
                 }
@@ -125,7 +125,7 @@ public final class Core {
         Render3DEngine.updateTargetESP();
     }
 
-    public void onRender2D(DrawContext e) {
+    public void onRender2D(GuiGraphics e) {
         drawGps(e);
         drawSkull(e);
     }
@@ -134,19 +134,19 @@ public final class Core {
     public void onPacketReceive(PacketEvent.Receive e) {
         if (fullNullCheck()) return;
 
-        if (e.getPacket() instanceof GameMessageS2CPacket) {
-            final GameMessageS2CPacket packet = e.getPacket();
+        if (e.getPacket() instanceof ClientboundSystemChatPacket) {
+            final ClientboundSystemChatPacket packet = e.getPacket();
             if (packet.content().getString().contains("skull")) {
                 showSkull = true;
                 skullTimer.reset();
-                mc.world.playSound(mc.player, mc.player.getBlockPos(), SoundEvents.ENTITY_SKELETON_DEATH, SoundCategory.BLOCKS, 1f, 1f);
+                mc.level.playSound(mc.player, mc.player.blockPosition(), SoundEvents.SKELETON_DEATH, SoundSource.BLOCKS, 1f, 1f);
             }
         }
 
-        if (e.getPacket() instanceof GameJoinS2CPacket)
+        if (e.getPacket() instanceof ClientboundLoginPacket)
             Managers.MODULE.onLogin();
 
-        if (e.getPacket() instanceof PlayerPositionS2CPacket) {
+        if (e.getPacket() instanceof ClientboundPlayerPositionPacket) {
             setBackTimer.reset();
         }
     }
@@ -161,32 +161,32 @@ public final class Core {
         });
     }*/
 
-    public void drawSkull(DrawContext e) {
+    public void drawSkull(GuiGraphics e) {
         if (showSkull && !skullTimer.passedMs(3000) && ClientSettings.skullEmoji.getValue()) {
-            int xPos = (int) (mc.getWindow().getScaledWidth() / 2f - 150);
-            int yPos = (int) (mc.getWindow().getScaledHeight() / 2f - 150);
+            int xPos = (int) (mc.getWindow().getGuiScaledWidth() / 2f - 150);
+            int yPos = (int) (mc.getWindow().getGuiScaledHeight() / 2f - 150);
             float alpha = (1f - (skullTimer.getPassedTimeMs() / 3000f));
             RenderSystem.setShaderColor(1f, 1f, 1f, alpha);
-            e.drawTexture(net.minecraft.client.render.RenderPipelines.GUI_TEXTURED, TextureStorage.skull, xPos, yPos, 0, 0, 300, 300, 300, 300);
+            e.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, TextureStorage.skull, xPos, yPos, 0, 0, 300, 300, 300, 300);
             RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
         } else showSkull = false;
     }
 
-    public void drawGps(DrawContext e) {
+    public void drawGps(GuiGraphics e) {
         if (ThunderHack.gps_position != null) {
             float dst = getDistance(ThunderHack.gps_position);
-            float xOffset = mc.getWindow().getScaledWidth() / 2f;
-            float yOffset = mc.getWindow().getScaledHeight() / 2f;
-            float yaw = getRotations(new Vec2f(ThunderHack.gps_position.getX(), ThunderHack.gps_position.getZ())) - mc.player.getYaw();
-            e.getMatrices().translate((float) (xOffset), (float) (yOffset));
-            e.getMatrices().rotate((float) Math.toRadians(yaw));
-            e.getMatrices().translate((float) (-xOffset), (float) (-yOffset));
-            Render2DEngine.drawTracerPointer(e.getMatrices(), xOffset, yOffset - 50, 12.5f, 0.5f, 3.63f, true, true, HudEditor.getColor(1).getRGB());
-            e.getMatrices().translate((float) (xOffset), (float) (yOffset));
-            e.getMatrices().rotate((float) Math.toRadians(-yaw));
-            e.getMatrices().translate((float) (-xOffset), (float) (-yOffset));
+            float xOffset = mc.getWindow().getGuiScaledWidth() / 2f;
+            float yOffset = mc.getWindow().getGuiScaledHeight() / 2f;
+            float yaw = getRotations(new Vec2(ThunderHack.gps_position.getX(), ThunderHack.gps_position.getZ())) - mc.player.getYRot();
+            e.pose().translate((float) (xOffset), (float) (yOffset));
+            e.pose().rotate((float) Math.toRadians(yaw));
+            e.pose().translate((float) (-xOffset), (float) (-yOffset));
+            Render2DEngine.drawTracerPointer(e.pose(), xOffset, yOffset - 50, 12.5f, 0.5f, 3.63f, true, true, HudEditor.getColor(1).getRGB());
+            e.pose().translate((float) (xOffset), (float) (yOffset));
+            e.pose().rotate((float) Math.toRadians(-yaw));
+            e.pose().translate((float) (-xOffset), (float) (-yOffset));
             RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
-            FontRenderers.modules.drawCenteredString(e.getMatrices(), "gps (" + dst + "m)", (float) (Math.sin(Math.toRadians(yaw)) * 50f) + xOffset, (float) (yOffset - (Math.cos(Math.toRadians(yaw)) * 50f)) - 23, -1);
+            FontRenderers.modules.drawCenteredString(e.pose(), "gps (" + dst + "m)", (float) (Math.sin(Math.toRadians(yaw)) * 50f) + xOffset, (float) (yOffset - (Math.cos(Math.toRadians(yaw)) * 50f)) - 23, -1);
 
             if (dst < 10)
                 ThunderHack.gps_position = null;
@@ -210,29 +210,29 @@ public final class Core {
     public int getDistance(BlockPos bp) {
         double d0 = mc.player.getX() - bp.getX();
         double d2 = mc.player.getZ() - bp.getZ();
-        return (int) (MathHelper.sqrt((float) (d0 * d0 + d2 * d2)));
+        return (int) (Mth.sqrt((float) (d0 * d0 + d2 * d2)));
     }
 
     public long getSetBackTime() {
         return setBackTimer.getPassedTimeMs();
     }
 
-    public static float getRotations(Vec2f vec) {
+    public static float getRotations(Vec2 vec) {
         if (mc.player == null) return 0;
-        double x = vec.x - mc.player.getPos().x;
-        double z = vec.y - mc.player.getPos().z;
+        double x = vec.x - mc.player.position().x;
+        double z = vec.y - mc.player.position().z;
         return (float) -(Math.atan2(x, z) * (180 / Math.PI));
     }
 
-    public void bobView(MatrixStack matrices, float tickDelta) {
-        if (!(mc.getCameraEntity() instanceof PlayerEntity playerEntity)) {
+    public void bobView(PoseStack matrices, float tickDelta) {
+        if (!(mc.getCameraEntity() instanceof Player playerEntity)) {
             return;
         }
 
-        float g = -MathHelper.lerp(tickDelta, prevHorizontalSpeed, horizontalSpeed);
-        float h = MathHelper.lerp(tickDelta, ((thunder.hack.injection.accesors.IPlayerEntity) playerEntity).getLastStrideDistance(), playerEntity.strideDistance);
-        matrices.translate(MathHelper.sin(g * (float) Math.PI) * h * 0.1f, -Math.abs(MathHelper.cos(g * (float) Math.PI) * h) * 0.3, 0.0f);
-        matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(MathHelper.sin(g * (float) Math.PI) * h * 3.0f));
-        matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(Math.abs(MathHelper.cos(g * (float) Math.PI - 0.2f) * h) * 0.3f));
+        float g = -Mth.lerp(tickDelta, prevHorizontalSpeed, horizontalSpeed);
+        float h = Mth.lerp(tickDelta, ((thunder.hack.injection.accesors.IPlayerEntity) playerEntity).getLastStrideDistance(), playerEntity.bob);
+        matrices.translate(Mth.sin(g * (float) Math.PI) * h * 0.1f, -Math.abs(Mth.cos(g * (float) Math.PI) * h) * 0.3, 0.0f);
+        matrices.mulPose(Axis.ZP.rotationDegrees(Mth.sin(g * (float) Math.PI) * h * 3.0f));
+        matrices.mulPose(Axis.XP.rotationDegrees(Math.abs(Mth.cos(g * (float) Math.PI - 0.2f) * h) * 0.3f));
     }
 }

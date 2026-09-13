@@ -5,9 +5,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import net.minecraft.client.resource.language.I18n;
-import net.minecraft.command.CommandSource;
-import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.core.Managers;
 import thunder.hack.features.cmd.Command;
@@ -21,6 +18,9 @@ import thunder.hack.setting.impl.EnumConverter;
 import thunder.hack.setting.impl.PositionSetting;
 
 import java.util.Objects;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.commands.SharedSuggestionProvider;
 
 import static com.mojang.brigadier.Command.SINGLE_SUCCESS;
 import static thunder.hack.features.modules.client.ClientSettings.isRu;
@@ -31,10 +31,10 @@ public class ModuleCommand extends Command {
     }
 
     @Override
-    public void executeBuild(@NotNull LiteralArgumentBuilder<CommandSource> builder) {
+    public void executeBuild(@NotNull LiteralArgumentBuilder<SharedSuggestionProvider> builder) {
         builder.then(arg("module", ModuleArgumentType.create()).executes(context -> {
             Module module = context.getArgument("module", Module.class);
-            sendMessage(module.getDisplayName() + " : " + I18n.translate(module.getDescription()));
+            sendMessage(module.getDisplayName() + " : " + I18n.get(module.getDescription()));
 
             for (Setting<?> setting2 : module.getSettings()) {
                 sendMessage(setting2.getName() + " : " + setting2.getValue());
@@ -74,7 +74,7 @@ public class ModuleCommand extends Command {
 
                             if (setting.getValue().getClass().getSimpleName().equalsIgnoreCase("String")) {
                                 setting.setValue(settingValue);
-                                sendMessage(Formatting.DARK_GRAY + module.getName() + " " + setting.getName() + (isRu() ? " был выставлен " : " has been set to ") + settingValue);
+                                sendMessage(ChatFormatting.DARK_GRAY + module.getName() + " " + setting.getName() + (isRu() ? " был выставлен " : " has been set to ") + settingValue);
                                 return SINGLE_SUCCESS;
                             }
 
@@ -94,9 +94,9 @@ public class ModuleCommand extends Command {
                             }
 
                             if(settingValue.contains("toggle"))
-                                sendMessage(Formatting.GRAY + module.getName() + " " + setting.getName() + (isRu() ? " был переключен" : " has been toggled"));
+                                sendMessage(ChatFormatting.GRAY + module.getName() + " " + setting.getName() + (isRu() ? " был переключен" : " has been toggled"));
                             else
-                                sendMessage(Formatting.GRAY + module.getName() + " " + setting.getName() + (isRu() ? " был выставлен " : " has been set to ") + settingValue);
+                                sendMessage(ChatFormatting.GRAY + module.getName() + " " + setting.getName() + (isRu() ? " был выставлен " : " has been set to ") + settingValue);
 
                             return SINGLE_SUCCESS;
                         }))));
@@ -108,7 +108,7 @@ public class ModuleCommand extends Command {
                 StringBuilder modules = new StringBuilder(category.getName() + ": ");
 
                 for (Module module1 : Managers.MODULE.getModulesByCategory(category)) {
-                    modules.append(module1.isEnabled() ? Formatting.GREEN : Formatting.RED).append(module1.getName()).append(Formatting.WHITE).append(", ");
+                    modules.append(module1.isEnabled() ? ChatFormatting.GREEN : ChatFormatting.RED).append(module1.getName()).append(ChatFormatting.WHITE).append(", ");
                 }
 
                 sendMessage(modules.toString());

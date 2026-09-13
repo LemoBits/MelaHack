@@ -1,16 +1,16 @@
 package thunder.hack.features.modules.misc;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.network.PlayerListEntry;
-import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket;
-import net.minecraft.network.packet.s2c.play.GameMessageS2CPacket;
-import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket;
-import net.minecraft.network.packet.s2c.play.PlayerRemoveS2CPacket;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket;
+import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket;
+import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
+import net.minecraft.network.protocol.game.ServerboundChatPacket;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.core.Managers;
 import thunder.hack.events.impl.PacketEvent;
@@ -131,7 +131,7 @@ public class ChatUtils extends Module {
     @Override
     public void onUpdate() {
         if (timer.passedMs(15000)) {
-            for (PlayerListEntry b : mc.player.networkHandler.getPlayerList()) {
+            for (PlayerInfo b : mc.player.connection.getOnlinePlayers()) {
                 if (!nameMap.containsKey(b.getProfile().getId())) {
                     nameMap.put(b.getProfile().getId(), b.getProfile().getName());
                 }
@@ -143,18 +143,18 @@ public class ChatUtils extends Module {
     @EventHandler
     public void onPacketReceive(PacketEvent.Receive event) {
         if (welcomer.getValue() != Welcomer.Off && antiSpam.passedMs(3000)) {
-            if (event.getPacket() instanceof PlayerListS2CPacket pck) {
+            if (event.getPacket() instanceof ClientboundPlayerInfoUpdatePacket pck) {
                 int n2 = (int) Math.floor(Math.random() * qq.length);
                 String string1;
-                if (mc.player.networkHandler.getServerInfo() != null) {
-                    string1 = qq[n2].replace("SERVERIP1D5A9E", mc.player.networkHandler.getServerInfo().address);
+                if (mc.player.connection.getServerData() != null) {
+                    string1 = qq[n2].replace("SERVERIP1D5A9E", mc.player.connection.getServerData().ip);
                 } else string1 = "server";
-                if (pck.getActions().contains(PlayerListS2CPacket.Action.ADD_PLAYER)) {
-                    for (PlayerListS2CPacket.Entry ple : pck.getPlayerAdditionEntries()) {
+                if (pck.actions().contains(ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER)) {
+                    for (ClientboundPlayerInfoUpdatePacket.Entry ple : pck.newEntries()) {
                         if (antiBot(ple.profile().getName())) return;
                         if (Objects.equals(ple.profile().getName(), mc.player.getName().getString())) return;
                         if (welcomer.getValue() == Welcomer.Server) {
-                            mc.player.networkHandler.sendChatMessage(getPrefix() + string1 + ple.profile().getName());
+                            mc.player.connection.sendChat(getPrefix() + string1 + ple.profile().getName());
                             antiSpam.reset();
                         } else sendMessage(string1 + ple.profile().getName());
                         nameMap.put(ple.profile().getId(), ple.profile().getName());
@@ -162,30 +162,30 @@ public class ChatUtils extends Module {
                 }
             }
 
-            if (event.getPacket() instanceof PlayerRemoveS2CPacket pac) {
+            if (event.getPacket() instanceof ClientboundPlayerInfoRemovePacket pac) {
                 for (UUID uuid2 : pac.profileIds) {
                     if (!nameMap.containsKey(uuid2)) return;
                     if (antiBot(nameMap.get(uuid2))) return;
                     if (Objects.equals(nameMap.get(uuid2), mc.player.getName().getString())) return;
                     int n = (int) Math.floor(Math.random() * bb.length);
                     if (welcomer.getValue() == Welcomer.Server) {
-                        mc.player.networkHandler.sendChatMessage(getPrefix() + bb[n] + nameMap.get(uuid2));
+                        mc.player.connection.sendChat(getPrefix() + bb[n] + nameMap.get(uuid2));
                         antiSpam.reset();
                     } else sendMessage(bb[n] + nameMap.get(uuid2));
                     nameMap.remove(uuid2);
                 }
             }
         }
-        if (event.getPacket() instanceof GameMessageS2CPacket pac) {
+        if (event.getPacket() instanceof ClientboundSystemChatPacket pac) {
             if (time.getValue()) {
                 IGameMessageS2CPacket pac2 = event.getPacket();
-                pac2.setContent(Text.of("[" + Formatting.GRAY + new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()) + Formatting.RESET + "] ").copy().append(pac.content));
+                pac2.setContent(Component.nullToEmpty("[" + ChatFormatting.GRAY + new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()) + ChatFormatting.RESET + "] ").copy().append(pac.content));
             }
 
             if (mention.getValue()) {
                 if (pac.content.getString().contains(mc.player.getName().getString()) && messageTimer.passedMs(1000)) {
                     Managers.NOTIFICATION.publicity("ChatUtils", isRu() ? "Тебя помянули в чате!" : "You were mentioned in the chat!", 4, Notification.Type.WARNING);
-                    mc.world.playSound(mc.player, mc.player.getBlockPos(), SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.BLOCKS, 5f, 1f);
+                    mc.level.playSound(mc.player, mc.player.blockPosition(), SoundEvents.PLAYER_LEVELUP, SoundSource.BLOCKS, 5f, 1f);
                 }
             }
 
@@ -201,7 +201,7 @@ public class ChatUtils extends Module {
         if (totems.getValue() && antiSpam.passedMs(3000) && e.getEntity() != mc.player) {
             int n = (int) Math.floor(Math.random() * popMessages.length);
             String s = popMessages[n].replace("<pop>", e.getPops() + "");
-            mc.player.networkHandler.sendChatMessage(getPrefix() + e.getEntity().getName().getString() + s);
+            mc.player.connection.sendChat(getPrefix() + e.getEntity().getName().getString() + s);
             antiSpam.reset();
         }
     }
@@ -228,8 +228,8 @@ public class ChatUtils extends Module {
 
     @EventHandler
     public void onPacketSend(PacketEvent.@NotNull Send e) {
-        if (e.getPacket() instanceof ChatMessageC2SPacket pac) {
-            if (antiCoordLeak.getValue() && pac.chatMessage.replaceAll("\\D", "").length() >= 6) {
+        if (e.getPacket() instanceof ServerboundChatPacket pac) {
+            if (antiCoordLeak.getValue() && pac.message.replaceAll("\\D", "").length() >= 6) {
                 sendMessage("[ChatUtils] " + (isRu() ? "В сообщении содержатся координаты!" : "The message contains coordinates!"));
                 e.cancel();
             }
@@ -238,19 +238,19 @@ public class ChatUtils extends Module {
         }
 
         if (fullNullCheck()) return;
-        if (e.getPacket() instanceof ChatMessageC2SPacket pac && (zov.getValue() || wavy.getValue() || translit.getValue())) {
+        if (e.getPacket() instanceof ServerboundChatPacket pac && (zov.getValue() || wavy.getValue() || translit.getValue())) {
 
-            if (Objects.equals(pac.chatMessage(), skip)) {
+            if (Objects.equals(pac.message(), skip)) {
                 return;
             }
 
-            if (mc.player.getMainHandStack().getItem() == Items.FILLED_MAP || mc.player.getOffHandStack().getItem() == Items.FILLED_MAP)
+            if (mc.player.getMainHandItem().getItem() == Items.FILLED_MAP || mc.player.getOffhandItem().getItem() == Items.FILLED_MAP)
                 return;
 
-            if (pac.chatMessage().startsWith("/") || pac.chatMessage().startsWith(Managers.COMMAND.getPrefix()))
+            if (pac.message().startsWith("/") || pac.message().startsWith(Managers.COMMAND.getPrefix()))
                 return;
 
-            String message = pac.chatMessage();
+            String message = pac.message();
             if (zov.getValue()) {
                 StringBuilder builder = new StringBuilder();
                 for (char Z : message.toCharArray()) {
@@ -280,7 +280,7 @@ public class ChatUtils extends Module {
             if (translit.getValue())
                 message = transliterate(message);
             skip = message;
-            mc.player.networkHandler.sendChatMessage(skip);
+            mc.player.connection.sendChat(skip);
             e.cancel();
         }
     }

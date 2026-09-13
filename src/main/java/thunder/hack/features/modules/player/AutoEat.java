@@ -1,12 +1,12 @@
 package thunder.hack.features.modules.player;
 
 import baritone.api.BaritoneAPI;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
-import net.minecraft.util.Hand;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import thunder.hack.ThunderHack;
 import thunder.hack.injection.accesors.IMinecraftClient;
 import thunder.hack.features.modules.Module;
@@ -31,11 +31,11 @@ public class AutoEat extends Module {
 
     @Override
     public void onUpdate() {
-        if (mc.player.getHungerManager().getFoodLevel() <= hunger.getValue()) {
+        if (mc.player.getFoodData().getFoodLevel() <= hunger.getValue()) {
 
             boolean found;
 
-            if(!isHandGood(Hand.MAIN_HAND) && !isHandGood(Hand.OFF_HAND)) {
+            if(!isHandGood(InteractionHand.MAIN_HAND) && !isHandGood(InteractionHand.OFF_HAND)) {
                 found = switchToFood();
             } else found = true;
 
@@ -53,19 +53,19 @@ public class AutoEat extends Module {
     public void startEating() {
         eating = true;
 
-        if (mc.currentScreen != null && !mc.player.isUsingItem())
+        if (mc.screen != null && !mc.player.isUsingItem())
             ((IMinecraftClient) mc).idoItemUse();
         else {
             if(pauseBaritone.getValue() && ThunderHack.baritone)
                 BaritoneAPI.getProvider().getPrimaryBaritone().getCommandManager().execute("pause");
 
-            mc.options.useKey.setPressed(true);
+            mc.options.keyUse.setDown(true);
         }
     }
 
     public void stopEating() {
         eating = false;
-        mc.options.useKey.setPressed(false);
+        mc.options.keyUse.setDown(false);
         if (swapBack.getValue())
             mc.player.getInventory().setSelectedSlot(prevSlot);
 
@@ -75,8 +75,8 @@ public class AutoEat extends Module {
 
     public boolean switchToFood() {
         for (int i = 0; i < 9; i++) {
-            ItemStack stack = mc.player.getInventory().getStack(i);
-            if (stack.getComponents().contains(DataComponentTypes.FOOD)) {
+            ItemStack stack = mc.player.getInventory().getItem(i);
+            if (stack.getComponents().has(DataComponents.FOOD)) {
                 if (!gapple.getValue() && (stack.getItem() == Items.GOLDEN_APPLE || stack.getItem() == Items.ENCHANTED_GOLDEN_APPLE))
                     continue;
                 if (!chorus.getValue() && (stack.getItem() == Items.CHORUS_FRUIT))
@@ -89,7 +89,7 @@ public class AutoEat extends Module {
                     continue;
                 prevSlot = mc.player.getInventory().getSelectedSlot();
                 mc.player.getInventory().setSelectedSlot(i);
-                sendPacket(new UpdateSelectedSlotC2SPacket(i));
+                sendPacket(new ServerboundSetCarriedItemPacket(i));
                 return true;
             }
         }
@@ -97,11 +97,11 @@ public class AutoEat extends Module {
     }
 
 
-    private boolean isHandGood(Hand hand) {
-        ItemStack stack = hand == Hand.MAIN_HAND ? mc.player.getMainHandStack() : mc.player.getOffHandStack();
+    private boolean isHandGood(InteractionHand hand) {
+        ItemStack stack = hand == InteractionHand.MAIN_HAND ? mc.player.getMainHandItem() : mc.player.getOffhandItem();
 
         Item item = stack.getItem();
-        return stack.getComponents().contains(DataComponentTypes.FOOD)
+        return stack.getComponents().has(DataComponents.FOOD)
                 && (gapple.getValue() || (item != Items.GOLDEN_APPLE && item != Items.ENCHANTED_GOLDEN_APPLE))
                 && (chorus.getValue() || item != Items.CHORUS_FRUIT)
                 && (rottenFlesh.getValue() || item != Items.ROTTEN_FLESH)

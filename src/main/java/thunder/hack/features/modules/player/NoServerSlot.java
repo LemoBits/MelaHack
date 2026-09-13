@@ -1,10 +1,10 @@
 package thunder.hack.features.modules.player;
 
 import meteordevelopment.orbit.EventHandler;
+import net.minecraft.network.protocol.game.ClientboundSetHeldSlotPacket;
+import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
 import thunder.hack.events.impl.PacketEvent;
 import thunder.hack.features.modules.Module;
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
-import net.minecraft.network.packet.s2c.play.UpdateSelectedSlotS2CPacket;
 
 public class NoServerSlot extends Module {
     public NoServerSlot() {
@@ -13,9 +13,9 @@ public class NoServerSlot extends Module {
 
     @EventHandler
     public void onPacketReceive(PacketEvent.Receive event) {
-        if (event.getPacket() instanceof UpdateSelectedSlotS2CPacket) {
+        if (event.getPacket() instanceof ClientboundSetHeldSlotPacket) {
             event.cancel();
-            sendPacket(new UpdateSelectedSlotC2SPacket(mc.player.getInventory().getSelectedSlot()));
+            sendPacket(new ServerboundSetCarriedItemPacket(mc.player.getInventory().getSelectedSlot()));
         }
     }
 }

@@ -2,10 +2,9 @@ package thunder.hack.features.modules.misc;
 
 import thunder.hack.utility.render.compat.RenderSystem;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.network.packet.s2c.play.PlayerPositionS2CPacket;
-import net.minecraft.network.packet.s2c.play.WorldTimeUpdateS2CPacket;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
+import net.minecraft.network.protocol.game.ClientboundSetTimePacket;
 import thunder.hack.core.Managers;
 import thunder.hack.core.manager.client.ModuleManager;
 import thunder.hack.events.impl.PacketEvent;
@@ -52,25 +51,25 @@ public class LagNotifier extends Module {
     public void onPacketReceive(PacketEvent.Receive e) {
         if (fullNullCheck()) return;
 
-        if (e.getPacket() instanceof PlayerPositionS2CPacket) rubberbandTimer.reset();
-        if (e.getPacket() instanceof WorldTimeUpdateS2CPacket) packetTimer.reset();
+        if (e.getPacket() instanceof ClientboundPlayerPositionPacket) rubberbandTimer.reset();
+        if (e.getPacket() instanceof ClientboundSetTimePacket) packetTimer.reset();
     }
 
-    public void onRender2D(DrawContext context) {
+    public void onRender2D(GuiGraphics context) {
         Render2DEngine.setupRender();
         RenderSystem.defaultBlendFunc();
 
         if (!rubberbandTimer.passedMs(5000) && rubberbandNotify.getValue()) {
             DecimalFormat decimalFormat = new DecimalFormat("#.#");
-            FontRenderers.modules.drawCenteredString(context.getMatrices(), (isRu() ? "Обнаружен руббербенд! " : "Rubberband detected! ") + decimalFormat.format((5000f - (float) rubberbandTimer.getTimeMs()) / 1000f), (float) mc.getWindow().getScaledWidth() / 2f, (float) mc.getWindow().getScaledHeight() / 3f, new Color(0xFFDF00).getRGB());
+            FontRenderers.modules.drawCenteredString(context.pose(), (isRu() ? "Обнаружен руббербенд! " : "Rubberband detected! ") + decimalFormat.format((5000f - (float) rubberbandTimer.getTimeMs()) / 1000f), (float) mc.getWindow().getGuiScaledWidth() / 2f, (float) mc.getWindow().getGuiScaledHeight() / 3f, new Color(0xFFDF00).getRGB());
         }
 
         if (packetTimer.passedMs(responseTreshold.getValue() * 1000L) && serverResponseNotify.getValue()) {
             DecimalFormat decimalFormat = new DecimalFormat("#.#");
-            FontRenderers.modules.drawCenteredString(context.getMatrices(), (isRu() ? "Сервер перестал отвечать! " : "The server stopped responding! ") + decimalFormat.format((float) packetTimer.getTimeMs() / 1000f), (float) mc.getWindow().getScaledWidth() / 2f, (float) mc.getWindow().getScaledHeight() / 3f, new Color(0xFFDF00).getRGB());
+            FontRenderers.modules.drawCenteredString(context.pose(), (isRu() ? "Сервер перестал отвечать! " : "The server stopped responding! ") + decimalFormat.format((float) packetTimer.getTimeMs() / 1000f), (float) mc.getWindow().getGuiScaledWidth() / 2f, (float) mc.getWindow().getGuiScaledHeight() / 3f, new Color(0xFFDF00).getRGB());
 
             RenderSystem.setShaderColor(1f, 0.87f, 0f, 1f);
-            context.drawTexture(net.minecraft.client.render.RenderPipelines.GUI_TEXTURED, TextureStorage.lagIcon, (int) ((float) mc.getWindow().getScaledWidth() / 2f - 40), (int) ((float) mc.getWindow().getScaledHeight() / 3f - 120), 0, 0, 80, 80, 80, 80);
+            context.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, TextureStorage.lagIcon, (int) ((float) mc.getWindow().getGuiScaledWidth() / 2f - 40), (int) ((float) mc.getWindow().getGuiScaledHeight() / 3f - 120), 0, 0, 80, 80, 80, 80);
             RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
         }
 

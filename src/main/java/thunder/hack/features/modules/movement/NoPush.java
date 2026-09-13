@@ -1,8 +1,8 @@
 package thunder.hack.features.modules.movement;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.entity.projectile.FishingBobberEntity;
-import net.minecraft.network.packet.s2c.play.EntityStatusS2CPacket;
+import net.minecraft.network.protocol.game.ClientboundEntityEventPacket;
+import net.minecraft.world.entity.projectile.FishingHook;
 import thunder.hack.events.impl.PacketEvent;
 import thunder.hack.features.modules.Module;
 import thunder.hack.setting.Setting;
@@ -19,7 +19,7 @@ public class NoPush extends Module {
 
     @EventHandler
     public void onPacketReceive(PacketEvent.Receive e) {
-        if (e.getPacket() instanceof EntityStatusS2CPacket pac && pac.getStatus() == 31 && pac.getEntity(mc.world) instanceof FishingBobberEntity hook && fishingHook.getValue())
-            if (hook.getHookedEntity() == mc.player) e.cancel();
+        if (e.getPacket() instanceof ClientboundEntityEventPacket pac && pac.getEventId() == 31 && pac.getEntity(mc.level) instanceof FishingHook hook && fishingHook.getValue())
+            if (hook.getHookedIn() == mc.player) e.cancel();
     }
 }

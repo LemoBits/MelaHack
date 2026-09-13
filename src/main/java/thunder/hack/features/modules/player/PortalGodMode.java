@@ -1,9 +1,9 @@
 package thunder.hack.features.modules.player;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.block.Blocks;
-import net.minecraft.network.packet.c2s.play.TeleportConfirmC2SPacket;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.protocol.game.ServerboundAcceptTeleportationPacket;
+import net.minecraft.world.level.block.Blocks;
 import thunder.hack.events.impl.PacketEvent;
 import thunder.hack.features.modules.Module;
 import thunder.hack.utility.Timer;
@@ -19,7 +19,7 @@ public class PortalGodMode extends Module {
 
     @EventHandler
     public void onPacketSend(PacketEvent.Send e) {
-        if (e.getPacket() instanceof TeleportConfirmC2SPacket && confirmTimer.getPassedTimeMs() < 5000) {
+        if (e.getPacket() instanceof ServerboundAcceptTeleportationPacket && confirmTimer.getPassedTimeMs() < 5000) {
             teleported = true;
             e.cancel();
         }
@@ -35,7 +35,7 @@ public class PortalGodMode extends Module {
         for(int x = (int) (mc.player.getX() - 2); x < mc.player.getX() + 2; x++)
             for(int z = (int) (mc.player.getZ() - 2); z < mc.player.getZ() + 2; z++)
                 for(int y = (int) (mc.player.getY() - 2); y < mc.player.getY() + 2; y++)
-                    if(mc.world.getBlockState(BlockPos.ofFloored(x,y,z)).getBlock() == Blocks.NETHER_PORTAL)
+                    if(mc.level.getBlockState(BlockPos.containing(x,y,z)).getBlock() == Blocks.NETHER_PORTAL)
                         confirmTimer.reset();
     }
 

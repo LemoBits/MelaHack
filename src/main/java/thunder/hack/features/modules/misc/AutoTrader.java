@@ -1,15 +1,6 @@
 package thunder.hack.features.modules.misc;
 
 import com.google.common.collect.Lists;
-import net.minecraft.client.gui.screen.ingame.MerchantScreen;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.passive.VillagerEntity;
-import net.minecraft.network.packet.c2s.play.SelectMerchantTradeC2SPacket;
-import net.minecraft.screen.MerchantScreenHandler;
-import net.minecraft.screen.slot.SlotActionType;
-import net.minecraft.util.Hand;
-import net.minecraft.village.TradeOffer;
-import net.minecraft.village.TradeOfferList;
 import thunder.hack.features.modules.Module;
 import thunder.hack.gui.clickui.ClickGUI;
 import thunder.hack.setting.Setting;
@@ -20,6 +11,15 @@ import thunder.hack.utility.player.InventoryUtility;
 
 import java.util.Comparator;
 import java.util.HashMap;
+import net.minecraft.client.gui.screens.inventory.MerchantScreen;
+import net.minecraft.network.protocol.game.ServerboundSelectTradePacket;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.MerchantMenu;
+import net.minecraft.world.item.trading.MerchantOffer;
+import net.minecraft.world.item.trading.MerchantOffers;
 
 import static thunder.hack.features.modules.client.ClientSettings.isRu;
 
@@ -55,48 +55,48 @@ public class AutoTrader extends Module {
 
         HashMap<Integer, Integer> cacheVillagers = new HashMap<>(villagers);
         cacheVillagers.forEach((id, time) -> {
-            if (mc.player.age - time > 160)
+            if (mc.player.tickCount - time > 160)
                 villagers.remove(id);
         });
 
-        if (mc.currentScreen instanceof MerchantScreen merch) {
-            MerchantScreenHandler msh = merch.getScreenHandler();
-            TradeOfferList offers = msh.getRecipes();
+        if (mc.screen instanceof MerchantScreen merch) {
+            MerchantMenu msh = merch.getMenu();
+            MerchantOffers offers = msh.getOffers();
 
             for (int i = 0; i < offers.size(); i++) {
-                TradeOffer offer = offers.get(i);
+                MerchantOffer offer = offers.get(i);
                 if (goodDeal(offer)) {
-                    msh.switchTo(i);
-                    msh.setRecipeIndex(i);
-                    sendPacket(new SelectMerchantTradeC2SPacket(i));
-                    clickSlot(2, SlotActionType.QUICK_MOVE);
+                    msh.tryMoveItems(i);
+                    msh.setSelectionHint(i);
+                    sendPacket(new ServerboundSelectTradePacket(i));
+                    clickSlot(2, ClickType.QUICK_MOVE);
                     cooldown = 3;
                     return;
-                } else if (!msh.getSlot(0).getStack().isEmpty()) {
-                    clickSlot(0, SlotActionType.QUICK_MOVE);
+                } else if (!msh.getSlot(0).getItem().isEmpty()) {
+                    clickSlot(0, ClickType.QUICK_MOVE);
                     cooldown = 3;
                     return;
-                } else if (!msh.getSlot(1).getStack().isEmpty()) {
-                    clickSlot(1, SlotActionType.QUICK_MOVE);
+                } else if (!msh.getSlot(1).getItem().isEmpty()) {
+                    clickSlot(1, ClickType.QUICK_MOVE);
                     cooldown = 3;
                     return;
-                } else if (offer.isDisabled()) {
-                    villagers.put(lastVillager, mc.player.age);
+                } else if (offer.isOutOfStock()) {
+                    villagers.put(lastVillager, mc.player.tickCount);
                 }
             }
-            mc.player.closeHandledScreen();
-        } else if (interactTicks <= 0 && !(mc.currentScreen instanceof ClickGUI)) {
-            Entity ent = Lists.newArrayList(mc.world.getEntities()).stream()
-                    .filter(e -> (e instanceof VillagerEntity))
-                    .filter(e -> mc.player.squaredDistanceTo(e) < 4f * 4f)
+            mc.player.closeContainer();
+        } else if (interactTicks <= 0 && !(mc.screen instanceof ClickGUI)) {
+            Entity ent = Lists.newArrayList(mc.level.entitiesForRendering()).stream()
+                    .filter(e -> (e instanceof Villager))
+                    .filter(e -> mc.player.distanceToSqr(e) < 4f * 4f)
                     .filter(e -> !villagers.containsKey(e.getId()))
                     .min(Comparator.comparing(e -> mc.player.distanceTo(e))).orElse(null);
 
             if (ent != null) {
-                float[] angles = InteractionUtility.calculateAngle(ent.getEyePos().add(Math.random() * 0.2, 0, Math.random() * 0.2));
-                mc.player.setYaw(angles[0]);
-                mc.player.setPitch(angles[1]);
-                mc.interactionManager.interactEntity(mc.player, ent, Hand.MAIN_HAND);
+                float[] angles = InteractionUtility.calculateAngle(ent.getEyePosition().add(Math.random() * 0.2, 0, Math.random() * 0.2));
+                mc.player.setYRot(angles[0]);
+                mc.player.setXRot(angles[1]);
+                mc.gameMode.interact(mc.player, ent, InteractionHand.MAIN_HAND);
                 lastVillager = ent.getId();
                 interactTicks = 12;
             } else if (noVillagers.getValue())
@@ -104,18 +104,18 @@ public class AutoTrader extends Module {
         }
     }
 
-    private boolean goodDeal(TradeOffer offer) {
-        boolean selectedBuyItem = (offer.getSellItem().getItem().getTranslationKey().equals("item.minecraft." + buyItem.getValue())
-                || offer.getSellItem().getItem().getTranslationKey().equals("block.minecraft." + buyItem.getValue()));
+    private boolean goodDeal(MerchantOffer offer) {
+        boolean selectedBuyItem = (offer.getResult().getItem().getDescriptionId().equals("item.minecraft." + buyItem.getValue())
+                || offer.getResult().getItem().getDescriptionId().equals("block.minecraft." + buyItem.getValue()));
 
-        boolean selectedSellItem = (offer.getDisplayedFirstBuyItem().getItem().getTranslationKey().equals("item.minecraft." + sellItem.getValue())
-                || offer.getDisplayedFirstBuyItem().getItem().getTranslationKey().equals("block.minecraft." + sellItem.getValue()));
+        boolean selectedSellItem = (offer.getCostA().getItem().getDescriptionId().equals("item.minecraft." + sellItem.getValue())
+                || offer.getCostA().getItem().getDescriptionId().equals("block.minecraft." + sellItem.getValue()));
 
-        boolean haveItems = offer.getDisplayedFirstBuyItem().getCount() <= InventoryUtility.getItemCount(offer.getDisplayedFirstBuyItem().getItem());
+        boolean haveItems = offer.getCostA().getCount() <= InventoryUtility.getItemCount(offer.getCostA().getItem());
 
-        boolean canBuy = selectedBuyItem && !offer.isDisabled() && buy.getValue().isEnabled();
+        boolean canBuy = selectedBuyItem && !offer.isOutOfStock() && buy.getValue().isEnabled();
 
-        boolean canSell = selectedSellItem && !offer.isDisabled() && sell.getValue().isEnabled();
+        boolean canSell = selectedSellItem && !offer.isOutOfStock() && sell.getValue().isEnabled();
 
         if ((canBuy || canSell) && !haveItems) {
             if (noItems.getValue())

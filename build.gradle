@@ -11,8 +11,6 @@ base {
 }
 
 loom {
-	useIntermediateMappings = true
-	intermediaryUrl = 'https://repo.codemc.io/repository/relativitymc/org/relativitymc/intermediary/%1$s/intermediary-%1$s-v2.jar'
 	accessWidenerPath = file("src/main/resources/thunderhack.accesswidener")
 
 	mods {
@@ -30,10 +28,6 @@ tasks.named("runClient").configure {
 }
 
 repositories {
-	maven {
-		name = "relativitymc"
-		url = "https://repo.codemc.io/repository/relativitymc/"
-	}
 	maven {
 		name = "jitpack.io"
 		url = "https://jitpack.io"
@@ -61,7 +55,7 @@ configurations {
 
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	mappings "org.relativitymc:modern-yarn:${project.yarn_mappings}:v2"
+	mappings loom.officialMojangMappings()
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
@@ -93,13 +87,13 @@ processResources {
 }
 
 tasks.withType(JavaCompile).configureEach {
-	it.options.release = 25
+	it.options.release = 21
 }
 
 java {
 	withSourcesJar()
-	sourceCompatibility = JavaVersion.VERSION_25
-	targetCompatibility = JavaVersion.VERSION_25
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
 }
 
 jar {

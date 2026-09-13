@@ -1,14 +1,14 @@
 package thunder.hack.injection;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.passive.AbstractHorseEntity;
-import net.minecraft.entity.passive.AnimalEntity;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.animal.Animal;
+import net.minecraft.world.entity.animal.horse.AbstractHorse;
+import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
 
-@Mixin(AbstractHorseEntity.class)
-public abstract class MixinAbstractHorseEntity extends AnimalEntity {
-    protected MixinAbstractHorseEntity(EntityType<? extends AnimalEntity> entityType, World world) {
+@Mixin(AbstractHorse.class)
+public abstract class MixinAbstractHorseEntity extends Animal {
+    protected MixinAbstractHorseEntity(EntityType<? extends Animal> entityType, Level world) {
         super(entityType, world);
     }
 

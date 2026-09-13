@@ -1,9 +1,5 @@
 package thunder.hack.gui.clickui.impl;
 
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.RotationAxis;
 import thunder.hack.core.Managers;
 import thunder.hack.gui.clickui.AbstractElement;
 import thunder.hack.gui.font.FontRenderers;
@@ -12,6 +8,7 @@ import thunder.hack.setting.impl.SettingGroup;
 import thunder.hack.utility.render.TextureStorage;
 
 import java.awt.*;
+import net.minecraft.client.gui.GuiGraphics;
 
 import static thunder.hack.utility.render.animation.AnimationUtility.fast;
 
@@ -25,10 +22,10 @@ public class ParentElement extends AbstractElement {
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
 
-        var matrixStack = context.getMatrices();
+        var matrixStack = context.pose();
 
         float tx = x + width - 11;
         float ty = y + 7.5f;
@@ -40,7 +37,7 @@ public class ParentElement extends AbstractElement {
         matrixStack.rotate((float) Math.toRadians(-180f * animation));
         matrixStack.translate(-tx, -ty);
         matrixStack.translate((x + width - 14), (y + 4.5f));
-        context.drawTexture(net.minecraft.client.render.RenderPipelines.GUI_TEXTURED, TextureStorage.guiArrow, 0, 0, 0, 0, 6, 6, 6, 6);
+        context.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, TextureStorage.guiArrow, 0, 0, 0, 0, 6, 6, 6, 6);
         matrixStack.translate(-(x + width - 14), -(y + 4.5f));
         matrixStack.popMatrix();
 

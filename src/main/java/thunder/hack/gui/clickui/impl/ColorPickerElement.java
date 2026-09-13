@@ -1,6 +1,5 @@
 package thunder.hack.gui.clickui.impl;
 
-import net.minecraft.client.gui.DrawContext;
 import thunder.hack.ThunderHack;
 import thunder.hack.gui.clickui.AbstractElement;
 import thunder.hack.gui.font.FontRenderers;
@@ -10,6 +9,7 @@ import thunder.hack.utility.math.MathUtility;
 import thunder.hack.utility.render.Render2DEngine;
 
 import java.awt.*;
+import net.minecraft.client.gui.GuiGraphics;
 
 public class ColorPickerElement extends AbstractElement {
     private float hue;
@@ -42,9 +42,9 @@ public class ColorPickerElement extends AbstractElement {
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
 
-        var matrixStack = context.getMatrices();
+        var matrixStack = context.pose();
 
         boolean colorHovered = Render2DEngine.isHovered(mouseX, mouseY, x, y + 5f, 90, 7);
 

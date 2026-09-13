@@ -1,13 +1,7 @@
 package thunder.hack.features.hud.impl;
+import java.util.List;
 
 import com.mojang.authlib.GameProfile;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.network.PlayerListEntry;
-import net.minecraft.scoreboard.Team;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
-import net.minecraft.world.GameMode;
 import thunder.hack.features.cmd.impl.StaffCommand;
 import thunder.hack.gui.font.FontRenderers;
 import thunder.hack.features.hud.HudElement;
@@ -16,16 +10,21 @@ import thunder.hack.utility.render.Render2DEngine;
 import thunder.hack.utility.render.animation.AnimationUtility;
 
 import java.awt.*;
-import java.util.List;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.GameType;
+import net.minecraft.world.scores.PlayerTeam;
 
 public class StaffBoard extends HudElement {
     private static final Pattern validUserPattern = Pattern.compile("^\\w{3,16}$");
     private List<String> players = new ArrayList<>();
     private List<String> notSpec = new ArrayList<>();
-    private Map<String, Identifier> skinMap = new HashMap<>();
+    private Map<String, ResourceLocation> skinMap = new HashMap<>();
 
     private float vAnimation, hAnimation;
 
@@ -34,8 +33,8 @@ public class StaffBoard extends HudElement {
     }
 
     public static List<String> getOnlinePlayer() {
-        return mc.player.networkHandler.getPlayerList().stream()
-                .map(PlayerListEntry::getProfile)
+        return mc.player.connection.getOnlinePlayers().stream()
+                .map(PlayerInfo::getProfile)
                 .map(GameProfile::getName)
                 .filter(profileName -> validUserPattern.matcher(profileName).matches())
                 .collect(Collectors.toList());
@@ -43,25 +42,25 @@ public class StaffBoard extends HudElement {
 
     public static List<String> getOnlinePlayerD() {
         List<String> S = new ArrayList<>();
-        for (PlayerListEntry player : mc.player.networkHandler.getPlayerList()) {
-            if (mc.isInSingleplayer() || player.getScoreboardTeam() == null) break;
-            String prefix = player.getScoreboardTeam().getPrefix().getString();
-            if (check(Formatting.strip(prefix).toLowerCase())
+        for (PlayerInfo player : mc.player.connection.getOnlinePlayers()) {
+            if (mc.isLocalServer() || player.getTeam() == null) break;
+            String prefix = player.getTeam().getPlayerPrefix().getString();
+            if (check(ChatFormatting.stripFormatting(prefix).toLowerCase())
                     || StaffCommand.staffNames.toString().toLowerCase().contains(player.getProfile().getName().toLowerCase())
                     || player.getProfile().getName().toLowerCase().contains("1danil_mansoru1")
                     || player.getProfile().getName().toLowerCase().contains("barslan_")
                     || player.getProfile().getName().toLowerCase().contains("timmings")
                     || player.getProfile().getName().toLowerCase().contains("timings")
                     || player.getProfile().getName().toLowerCase().contains("ruthless")
-                    || player.getScoreboardTeam().getPrefix().getString().contains("YT")
-                    || (player.getScoreboardTeam().getPrefix().getString().contains("Y") && player.getScoreboardTeam().getPrefix().getString().contains("T"))) {
-                String name = Arrays.asList(player.getScoreboardTeam().getPlayerList().toArray()).toString().replace("[", "").replace("]", "");
+                    || player.getTeam().getPlayerPrefix().getString().contains("YT")
+                    || (player.getTeam().getPlayerPrefix().getString().contains("Y") && player.getTeam().getPlayerPrefix().getString().contains("T"))) {
+                String name = Arrays.asList(player.getTeam().getPlayers().toArray()).toString().replace("[", "").replace("]", "");
 
-                if (player.getGameMode() == GameMode.SPECTATOR) {
-                    S.add(player.getScoreboardTeam().getPrefix().getString() + name + ":gm3");
+                if (player.getGameMode() == GameType.SPECTATOR) {
+                    S.add(player.getTeam().getPlayerPrefix().getString() + name + ":gm3");
                     continue;
                 }
-                S.add(player.getScoreboardTeam().getPrefix().getString() + name + ":active");
+                S.add(player.getTeam().getPlayerPrefix().getString() + name + ":active");
             }
         }
         return S;
@@ -69,36 +68,36 @@ public class StaffBoard extends HudElement {
 
     public List<String> getVanish() {
         List<String> list = new ArrayList<>();
-        for (Team s : mc.world.getScoreboard().getTeams()) {
-            if (s.getPrefix().getString().isEmpty() || mc.isInSingleplayer()) continue;
-            String name = Arrays.asList(s.getPlayerList().toArray()).toString().replace("[", "").replace("]", "");
+        for (PlayerTeam s : mc.level.getScoreboard().getPlayerTeams()) {
+            if (s.getPlayerPrefix().getString().isEmpty() || mc.isLocalServer()) continue;
+            String name = Arrays.asList(s.getPlayers().toArray()).toString().replace("[", "").replace("]", "");
 
             if (getOnlinePlayer().contains(name) || name.isEmpty())
                 continue;
             if (StaffCommand.staffNames.toString().toLowerCase().contains(name.toLowerCase())
-                    && check(s.getPrefix().getString().toLowerCase())
-                    || check(s.getPrefix().getString().toLowerCase())
+                    && check(s.getPlayerPrefix().getString().toLowerCase())
+                    || check(s.getPlayerPrefix().getString().toLowerCase())
                     || name.toLowerCase().contains("1danil_mansoru1")
                     || name.toLowerCase().contains("barslan_")
                     || name.toLowerCase().contains("timmings")
                     || name.toLowerCase().contains("timings")
                     || name.toLowerCase().contains("ruthless")
-                    || s.getPrefix().getString().contains("YT")
-                    || (s.getPrefix().getString().contains("Y") && s.getPrefix().getString().contains("T"))
+                    || s.getPlayerPrefix().getString().contains("YT")
+                    || (s.getPlayerPrefix().getString().contains("Y") && s.getPlayerPrefix().getString().contains("T"))
             )
-                list.add(s.getPrefix().getString() + name + ":vanish");
+                list.add(s.getPlayerPrefix().getString() + name + ":vanish");
         }
         return list;
     }
 
     public static boolean check(String name) {
-        if (mc.getCurrentServerEntry() != null && mc.getCurrentServerEntry().address.contains("mcfunny")) {
+        if (mc.getCurrentServer() != null && mc.getCurrentServer().ip.contains("mcfunny")) {
             return name.contains("helper") || name.contains("moder") || name.contains("модер") || name.contains("хелпер");
         }
         return name.contains("helper") || name.contains("moder") || name.contains("admin") || name.contains("owner") || name.contains("curator") || name.contains("куратор") || name.contains("модер") || name.contains("админ") || name.contains("хелпер") || name.contains("поддержка") || name.contains("сотрудник") || name.contains("зам") || name.contains("стажёр");
     }
 
-    public void onRender2D(DrawContext context) {
+    public void onRender2D(GuiGraphics context) {
         super.onRender2D(context);
         List<String> all = new java.util.ArrayList<>();
         all.addAll(players);
@@ -115,7 +114,7 @@ public class StaffBoard extends HudElement {
             y_offset1 += 9;
 
             float nameWidth = FontRenderers.sf_bold_mini.getStringWidth(player.split(":")[0]);
-            float timeWidth = FontRenderers.sf_bold_mini.getStringWidth((player.split(":")[1].equalsIgnoreCase("vanish") ? Formatting.RED + "V" : player.split(":")[1].equalsIgnoreCase("gm3") ? Formatting.RED + "V " + Formatting.YELLOW + "(GM3)" : Formatting.GREEN + "Z"));
+            float timeWidth = FontRenderers.sf_bold_mini.getStringWidth((player.split(":")[1].equalsIgnoreCase("vanish") ? ChatFormatting.RED + "V" : player.split(":")[1].equalsIgnoreCase("gm3") ? ChatFormatting.RED + "V " + ChatFormatting.YELLOW + "(GM3)" : ChatFormatting.GREEN + "Z"));
 
             float width = (nameWidth + timeWidth) * 1.4f;
 
@@ -129,40 +128,40 @@ public class StaffBoard extends HudElement {
         vAnimation = AnimationUtility.fast(vAnimation, 14 + y_offset1, 15);
         hAnimation = AnimationUtility.fast(hAnimation, max_width, 15);
 
-        Render2DEngine.drawHudBase(context.getMatrices(), getPosX(), getPosY(), hAnimation, vAnimation, HudEditor.hudRound.getValue());
+        Render2DEngine.drawHudBase(context.pose(), getPosX(), getPosY(), hAnimation, vAnimation, HudEditor.hudRound.getValue());
 
         if (HudEditor.hudStyle.is(HudEditor.HudStyle.Glowing)) {
-            FontRenderers.sf_bold.drawCenteredString(context.getMatrices(), "Staff", getPosX() + hAnimation / 2, getPosY() + 4, HudEditor.textColor.getValue().getColorObject());
+            FontRenderers.sf_bold.drawCenteredString(context.pose(), "Staff", getPosX() + hAnimation / 2, getPosY() + 4, HudEditor.textColor.getValue().getColorObject());
         } else {
-            FontRenderers.sf_bold.drawGradientCenteredString(context.getMatrices(), "Staff", getPosX() + hAnimation / 2, getPosY() + 4, 10);
+            FontRenderers.sf_bold.drawGradientCenteredString(context.pose(), "Staff", getPosX() + hAnimation / 2, getPosY() + 4, 10);
         }
 
         if (y_offset1 > 0) {
             if (HudEditor.hudStyle.is(HudEditor.HudStyle.Blurry)) {
-                Render2DEngine.drawRectDumbWay(context.getMatrices(), getPosX() + 4, getPosY() + 13, getPosX() + getWidth() - 8, getPosY() + 14, new Color(0x54FFFFFF, true));
+                Render2DEngine.drawRectDumbWay(context.pose(), getPosX() + 4, getPosY() + 13, getPosX() + getWidth() - 8, getPosY() + 14, new Color(0x54FFFFFF, true));
             } else {
-                Render2DEngine.horizontalGradient(context.getMatrices(), getPosX() + 2, getPosY() + 13.7f, getPosX() + 2 + hAnimation / 2f - 2, getPosY() + 13.5f, Render2DEngine.injectAlpha(HudEditor.textColor.getValue().getColorObject(), 0), HudEditor.textColor.getValue().getColorObject());
-                Render2DEngine.horizontalGradient(context.getMatrices(), getPosX() + 2 + hAnimation / 2f - 2, getPosY() + 13.7f, getPosX() + 2 + hAnimation - 4, getPosY() + 14, HudEditor.textColor.getValue().getColorObject(), Render2DEngine.injectAlpha(HudEditor.textColor.getValue().getColorObject(), 0));
+                Render2DEngine.horizontalGradient(context.pose(), getPosX() + 2, getPosY() + 13.7f, getPosX() + 2 + hAnimation / 2f - 2, getPosY() + 13.5f, Render2DEngine.injectAlpha(HudEditor.textColor.getValue().getColorObject(), 0), HudEditor.textColor.getValue().getColorObject());
+                Render2DEngine.horizontalGradient(context.pose(), getPosX() + 2 + hAnimation / 2f - 2, getPosY() + 13.7f, getPosX() + 2 + hAnimation - 4, getPosY() + 14, HudEditor.textColor.getValue().getColorObject(), Render2DEngine.injectAlpha(HudEditor.textColor.getValue().getColorObject(), 0));
             }
         }
 
 
-        Render2DEngine.addWindow(context.getMatrices(), getPosX(), getPosY(), getPosX() + hAnimation, getPosY() + vAnimation, 1f);
+        Render2DEngine.addWindow(context.pose(), getPosX(), getPosY(), getPosX() + hAnimation, getPosY() + vAnimation, 1f);
         int y_offset = 0;
 
         for (String player : all) {
             float px = getPosX() + (max_width - pointerX - 10);
 
-            Identifier tex = getTexture(player);
+            ResourceLocation tex = getTexture(player);
             if (tex != null) {
-                context.drawTexture(net.minecraft.client.render.RenderPipelines.GUI_TEXTURED, tex, (int) (getPosX() + 3), (int) (getPosY() + 16 + y_offset), 8, 8, 8, 8, 8, 8, 64, 64);
-                context.drawTexture(net.minecraft.client.render.RenderPipelines.GUI_TEXTURED, tex, (int) (getPosX() + 3), (int) (getPosY() + 16 + y_offset), 8, 8, 40, 8, 8, 8, 64, 64);
+                context.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, tex, (int) (getPosX() + 3), (int) (getPosY() + 16 + y_offset), 8, 8, 8, 8, 8, 8, 64, 64);
+                context.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, tex, (int) (getPosX() + 3), (int) (getPosY() + 16 + y_offset), 8, 8, 40, 8, 8, 8, 64, 64);
             }
 
-            FontRenderers.sf_bold_mini.drawString(context.getMatrices(), player.split(":")[0], getPosX() + 13, getPosY() + 19 + y_offset, HudEditor.textColor.getValue().getColor());
-            FontRenderers.sf_bold_mini.drawCenteredString(context.getMatrices(), (player.split(":")[1].equalsIgnoreCase("vanish") ? Formatting.RED + "O" : player.split(":")[1].equalsIgnoreCase("gm3") ? Formatting.YELLOW + "O" : Formatting.GREEN + "O"),
+            FontRenderers.sf_bold_mini.drawString(context.pose(), player.split(":")[0], getPosX() + 13, getPosY() + 19 + y_offset, HudEditor.textColor.getValue().getColor());
+            FontRenderers.sf_bold_mini.drawCenteredString(context.pose(), (player.split(":")[1].equalsIgnoreCase("vanish") ? ChatFormatting.RED + "O" : player.split(":")[1].equalsIgnoreCase("gm3") ? ChatFormatting.YELLOW + "O" : ChatFormatting.GREEN + "O"),
                     px + (getPosX() + max_width - px) / 2f, getPosY() + 19 + y_offset, HudEditor.textColor.getValue().getColor());
-            Render2DEngine.drawRect(context.getMatrices(), px, getPosY() + 17 + y_offset, 0.5f, 8, new Color(0x44FFFFFF, true));
+            Render2DEngine.drawRect(context.pose(), px, getPosY() + 17 + y_offset, 0.5f, 8, new Color(0x44FFFFFF, true));
             y_offset += 9;
         }
         Render2DEngine.popWindow();
@@ -171,7 +170,7 @@ public class StaffBoard extends HudElement {
 
     @Override
     public void onUpdate() {
-        if (mc.player != null && mc.player.age % 10 == 0) {
+        if (mc.player != null && mc.player.tickCount % 10 == 0) {
             players = getVanish();
             notSpec = getOnlinePlayerD();
             players.sort(String::compareTo);
@@ -179,14 +178,14 @@ public class StaffBoard extends HudElement {
         }
     }
 
-    private Identifier getTexture(String n) {
-        Identifier id = null;
+    private ResourceLocation getTexture(String n) {
+        ResourceLocation id = null;
         if (skinMap.containsKey(n))
             id = skinMap.get(n);
 
-        for (PlayerListEntry ple : mc.getNetworkHandler().getPlayerList())
+        for (PlayerInfo ple : mc.getConnection().getOnlinePlayers())
             if (n.contains(ple.getProfile().getName())) {
-                id = ple.getSkinTextures().texture();
+                id = ple.getSkin().texture();
                 if (!skinMap.containsKey(n))
                     skinMap.put(n, id);
                 break;

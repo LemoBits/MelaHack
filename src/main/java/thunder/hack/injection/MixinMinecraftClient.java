@@ -1,16 +1,5 @@
 package thunder.hack.injection;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.RunArgs;
-import net.minecraft.client.gui.screen.Overlay;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen;
-import net.minecraft.client.network.ServerInfo;
-import net.minecraft.client.texture.NativeImage;
-import net.minecraft.client.util.Icons;
-import net.minecraft.client.util.MacWindowUtil;
-import net.minecraft.client.window.Window;
-import net.minecraft.resource.ResourcePack;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWImage;
@@ -38,10 +27,22 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Overlay;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
+import net.minecraft.client.main.GameConfig;
+import net.minecraft.client.multiplayer.ServerData;
+import net.minecraft.server.packs.PackResources;
 
 import static thunder.hack.features.modules.Module.mc;
 
-@Mixin(MinecraftClient.class)
+import com.mojang.blaze3d.platform.IconSet;
+import com.mojang.blaze3d.platform.MacosUtil;
+import com.mojang.blaze3d.platform.NativeImage;
+import com.mojang.blaze3d.platform.Window;
+
+@Mixin(Minecraft.class)
 public abstract class MixinMinecraftClient {
 
     @Shadow
@@ -63,7 +64,7 @@ public abstract class MixinMinecraftClient {
     };
 
     @Inject(method = "<init>", at = @At("TAIL"))
-    void postWindowInit(RunArgs args, CallbackInfo ci) {
+    void postWindowInit(GameConfig args, CallbackInfo ci) {
         try {
             FontRenderers.settings = FontRenderers.create(12f, "comfortaa");
             FontRenderers.modules = FontRenderers.create(15f, "comfortaa");
@@ -97,13 +98,13 @@ public abstract class MixinMinecraftClient {
         if (!Module.fullNullCheck()) ThunderHack.EVENT_BUS.post(new EventPostTick());
     }
 
-    @Inject(method = "onResolutionChanged", at = @At("TAIL"))
+    @Inject(method = "resizeDisplay", at = @At("TAIL"))
     private void captureResize(CallbackInfo ci) {
-        WindowResizeCallback.EVENT.invoker().onResized((MinecraftClient) (Object) this, this.window);
+        WindowResizeCallback.EVENT.invoker().onResized((Minecraft) (Object) this, this.window);
     }
 
 
-    @Inject(method = "doItemPick", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "pickBlock", at = @At("HEAD"), cancellable = true)
     private void doItemPickHook(CallbackInfo ci) {
         if (ModuleManager.middleClick.isEnabled() && ModuleManager.middleClick.antiPickUp.getValue())
             ci.cancel();
@@ -126,13 +127,13 @@ public abstract class MixinMinecraftClient {
     @Inject(method = "setScreen", at = @At("RETURN"))
     public void setScreenHookPost(Screen screen, CallbackInfo ci) {
         if (Module.fullNullCheck()) return;
-        if (screen instanceof MultiplayerScreen mScreen && ModuleManager.antiServerAdd.isEnabled() && mScreen.getServerList() != null) {
-            for (int i = 0; i < mScreen.getServerList().size(); i++) {
-                ServerInfo info = mScreen.getServerList().get(i);
+        if (screen instanceof JoinMultiplayerScreen mScreen && ModuleManager.antiServerAdd.isEnabled() && mScreen.getServers() != null) {
+            for (int i = 0; i < mScreen.getServers().size(); i++) {
+                ServerData info = mScreen.getServers().get(i);
                 for (String server : shittyServers) {
-                    if (info != null && info.address != null && info.address.toLowerCase().contains(server.toLowerCase())) {
-                        mScreen.getServerList().remove(info);
-                        mScreen.getServerList().saveFile();
+                    if (info != null && info.ip != null && info.ip.toLowerCase().contains(server.toLowerCase())) {
+                        mScreen.getServers().remove(info);
+                        mScreen.getServers().save();
                         setScreen(screen);
                         break;
                     }
@@ -141,12 +142,12 @@ public abstract class MixinMinecraftClient {
         }
     }
 
-    @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/Window;setIcon(Lnet/minecraft/resource/ResourcePack;Lnet/minecraft/client/util/Icons;)V"))
-    private void onChangeIcon(Window instance, ResourcePack resourcePack, Icons icons) throws IOException {
+    @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/Window;setIcon(Lnet/minecraft/server/packs/PackResources;Lcom/mojang/blaze3d/platform/IconSet;)V"))
+    private void onChangeIcon(Window instance, PackResources resourcePack, IconSet icons) throws IOException {
         // RenderSystem.assertInInitPhase();
 
         if (GLFW.glfwGetPlatform() == 393218) {
-            MacWindowUtil.setApplicationIconImage(icons.getMacIcon(resourcePack));
+            MacosUtil.loadIcon(icons.getMacIcon(resourcePack));
             return;
         }
 
@@ -163,7 +164,7 @@ public abstract class MixinMinecraftClient {
                 NativeImage nativeImage = NativeImage.read(imgList.get(i));
                 ByteBuffer bytebuffer = MemoryUtil.memAlloc(nativeImage.getWidth() * nativeImage.getHeight() * 4);
 
-                bytebuffer.asIntBuffer().put(nativeImage.copyPixelsArgb());
+                bytebuffer.asIntBuffer().put(nativeImage.getPixels());
                 buffer.position(i);
                 buffer.width(nativeImage.getWidth());
                 buffer.height(nativeImage.getHeight());
@@ -174,7 +175,7 @@ public abstract class MixinMinecraftClient {
 
             try {
                 if (GLFW.glfwGetPlatform() != GLFW.GLFW_PLATFORM_WAYLAND) {
-                    GLFW.glfwSetWindowIcon(mc.getWindow().getHandle(), buffer);
+                    GLFW.glfwSetWindowIcon(mc.getWindow().getWindow(), buffer);
                 }
             } catch (Exception ignored) {
             }
@@ -183,7 +184,7 @@ public abstract class MixinMinecraftClient {
         }
     }
 
-    @Inject(method = "doAttack", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "startAttack", at = @At("HEAD"), cancellable = true)
     private void doAttackHook(CallbackInfoReturnable<Boolean> cir) {
         final EventAttack event = new EventAttack(null, true);
         ThunderHack.EVENT_BUS.post(event);
@@ -192,7 +193,7 @@ public abstract class MixinMinecraftClient {
         }
     }
 
-    @Inject(method = "handleBlockBreaking", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "continueAttack", at = @At("HEAD"), cancellable = true)
     private void handleBlockBreakingHook(boolean breaking, CallbackInfo ci) {
         EventHandleBlockBreaking event = new EventHandleBlockBreaking();
         ThunderHack.EVENT_BUS.post(event);

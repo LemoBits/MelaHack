@@ -1,13 +1,13 @@
 package thunder.hack.features.modules.player;
 
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.enchantment.Enchantments;
-import net.minecraft.entity.passive.HorseEntity;
-import net.minecraft.item.BowItem;
-import net.minecraft.item.CrossbowItem;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.TridentItem;
-import net.minecraft.registry.RegistryKeys;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.world.entity.animal.horse.Horse;
+import net.minecraft.world.item.BowItem;
+import net.minecraft.world.item.CrossbowItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TridentItem;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.Enchantments;
 import thunder.hack.core.manager.client.ModuleManager;
 import thunder.hack.injection.accesors.IClientPlayerEntity;
 import thunder.hack.features.modules.Module;
@@ -24,32 +24,32 @@ public class PerfectDelay extends Module {
     private final Setting<Boolean> trident = new Setting<>("Trident", true);
 
     private float getEnchantLevel(ItemStack stack) {
-        return EnchantmentHelper.getLevel(mc.world.getRegistryManager().getOrThrow(RegistryKeys.ENCHANTMENT).getOrThrow(Enchantments.QUICK_CHARGE), stack);
+        return EnchantmentHelper.getItemEnchantmentLevel(mc.level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.QUICK_CHARGE), stack);
     }
 
     @Override
     public void onUpdate() {
-        if (mc.player.getActiveItem().getItem() instanceof TridentItem && trident.getValue()) {
-            if (mc.player.getItemUseTime() > (ModuleManager.tridentBoost.isEnabled() ? ModuleManager.tridentBoost.cooldown.getValue() : 9))
-                mc.interactionManager.stopUsingItem(mc.player);
+        if (mc.player.getUseItem().getItem() instanceof TridentItem && trident.getValue()) {
+            if (mc.player.getTicksUsingItem() > (ModuleManager.tridentBoost.isEnabled() ? ModuleManager.tridentBoost.cooldown.getValue() : 9))
+                mc.gameMode.releaseUsingItem(mc.player);
         }
 
-        if (mc.player.getActiveItem().getItem() instanceof CrossbowItem && crossbow.getValue()) {
-            if (mc.player.getItemUseTime() >= 25 - (0.25 * getEnchantLevel(mc.player.getActiveItem()) * 20))
-                mc.interactionManager.stopUsingItem(mc.player);
+        if (mc.player.getUseItem().getItem() instanceof CrossbowItem && crossbow.getValue()) {
+            if (mc.player.getTicksUsingItem() >= 25 - (0.25 * getEnchantLevel(mc.player.getUseItem()) * 20))
+                mc.gameMode.releaseUsingItem(mc.player);
         }
 
-        if (mc.player.getActiveItem().getItem() instanceof BowItem && bow.getValue()) {
-            if (mc.player.getItemUseTime() > 19)
-                mc.interactionManager.stopUsingItem(mc.player);
+        if (mc.player.getUseItem().getItem() instanceof BowItem && bow.getValue()) {
+            if (mc.player.getTicksUsingItem() > 19)
+                mc.gameMode.releaseUsingItem(mc.player);
         }
 
-        if (mc.player.getControllingVehicle() != null && mc.player.getControllingVehicle() instanceof HorseEntity && horse.is(HorseJump.Rage)) {
+        if (mc.player.getControlledVehicle() != null && mc.player.getControlledVehicle() instanceof Horse && horse.is(HorseJump.Rage)) {
             ((IClientPlayerEntity) mc.player).setMountJumpStrength(1f);
         }
 
-        if (mc.player.getControllingVehicle() != null && mc.player.getControllingVehicle() instanceof HorseEntity && horse.is(HorseJump.Legit) && mc.player.getMountJumpStrength() >= 1) {
-            mc.options.jumpKey.setPressed(false);
+        if (mc.player.getControlledVehicle() != null && mc.player.getControlledVehicle() instanceof Horse && horse.is(HorseJump.Legit) && mc.player.getJumpRidingScale() >= 1) {
+            mc.options.keyJump.setDown(false);
         }
     }
 

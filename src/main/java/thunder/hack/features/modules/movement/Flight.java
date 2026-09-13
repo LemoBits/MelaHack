@@ -1,11 +1,11 @@
 package thunder.hack.features.modules.movement;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket;
-import net.minecraft.network.packet.s2c.play.PlayerPositionS2CPacket;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
 import thunder.hack.events.impl.EventSync;
 import thunder.hack.events.impl.PacketEvent;
 import thunder.hack.features.modules.Module;
@@ -38,71 +38,71 @@ public class Flight extends Module {
             case Vanilla -> {
                 if (MovementUtility.isMoving()) {
                     final double[] dir = MovementUtility.forward(hSpeed.getValue());
-                    mc.player.setVelocity(dir[0], 0, dir[1]);
-                } else mc.player.setVelocity(0, 0, 0);
+                    mc.player.setDeltaMovement(dir[0], 0, dir[1]);
+                } else mc.player.setDeltaMovement(0, 0, 0);
 
-                if (mc.options.jumpKey.isPressed())
-                    mc.player.setVelocity(mc.player.getVelocity().add(0, vSpeed.getValue(), 0));
-                if (mc.options.sneakKey.isPressed())
-                    mc.player.setVelocity(mc.player.getVelocity().add(0, -vSpeed.getValue(), 0));
+                if (mc.options.keyJump.isDown())
+                    mc.player.setDeltaMovement(mc.player.getDeltaMovement().add(0, vSpeed.getValue(), 0));
+                if (mc.options.keyShift.isDown())
+                    mc.player.setDeltaMovement(mc.player.getDeltaMovement().add(0, -vSpeed.getValue(), 0));
             }
 
             case AirJump -> {
-                if (MovementUtility.isMoving() && mc.world.getBlockCollisions(mc.player, mc.player.getBoundingBox().expand(0.5, 0.0, 0.5).offset(0.0, -1.0, 0.0)).iterator().hasNext()) {
+                if (MovementUtility.isMoving() && mc.level.getBlockCollisions(mc.player, mc.player.getBoundingBox().inflate(0.5, 0.0, 0.5).move(0.0, -1.0, 0.0)).iterator().hasNext()) {
                     mc.player.setOnGround(true);
-                    mc.player.jump();
+                    mc.player.jumpFromGround();
                 }
             }
 
             case MatrixGlide -> {
-                if (mc.player.isOnGround()) {
-                    mc.player.jump();
+                if (mc.player.onGround()) {
+                    mc.player.jumpFromGround();
                     flyTicks = 5;
                 } else if (flyTicks > 0) {
                     if (MovementUtility.isMoving()) {
                         final double[] dir = MovementUtility.forward(hSpeed.getValue());
-                        mc.player.setVelocity(dir[0], -0.04, dir[1]);
-                    } else mc.player.setVelocity(0, -0.04, 0);
+                        mc.player.setDeltaMovement(dir[0], -0.04, dir[1]);
+                    } else mc.player.setDeltaMovement(0, -0.04, 0);
                     flyTicks--;
                 }
             }
 
             case StormBreak -> {
-                if (mc.player.age % 60 == 0)
-                    sendMessage(Formatting.RED + (isRu() ? "В этом режиме нужно ломать блоки!" : "In this mode you need to break blocks!"));
+                if (mc.player.tickCount % 60 == 0)
+                    sendMessage(ChatFormatting.RED + (isRu() ? "В этом режиме нужно ломать блоки!" : "In this mode you need to break blocks!"));
             }
         }
 
         if (antiKick.getValue() && (mode.is(Mode.Creative) || mode.is(Mode.Vanilla)))
-            mc.player.setVelocity(mc.player.getVelocity().add(0, -0.08, 0));
+            mc.player.setDeltaMovement(mc.player.getDeltaMovement().add(0, -0.08, 0));
     }
 
     @Override
     public void onUpdate() {
         if (mode.is(Mode.Damage))
             if (flyTicks-- > boostTicks.getValue())
-                mc.player.setVelocity(mc.player.getVelocity().x, velocityMotion, mc.player.getVelocity().getZ());
+                mc.player.setDeltaMovement(mc.player.getDeltaMovement().x, velocityMotion, mc.player.getDeltaMovement().z());
 
         if (mode.is(Mode.MatrixJump)) {
             if (mc.player.fallDistance == 0)
                 return;
 
             mc.player.getAbilities().flying = false;
-            mc.player.setVelocity(0.0, 0.0, 0.0);
+            mc.player.setDeltaMovement(0.0, 0.0, 0.0);
 
-            if (mc.options.jumpKey.isPressed())
-                mc.player.setVelocity(mc.player.getVelocity().add(0, vSpeed.getValue(), 0));
+            if (mc.options.keyJump.isDown())
+                mc.player.setDeltaMovement(mc.player.getDeltaMovement().add(0, vSpeed.getValue(), 0));
 
-            if (mc.options.sneakKey.isPressed())
-                mc.player.setVelocity(mc.player.getVelocity().add(0, -vSpeed.getValue(), 0));
+            if (mc.options.keyShift.isDown())
+                mc.player.setDeltaMovement(mc.player.getDeltaMovement().add(0, -vSpeed.getValue(), 0));
 
             final double[] dir = MovementUtility.forward(hSpeed.getValue());
-            mc.player.setVelocity(dir[0], mc.player.getVelocity().getY(), dir[1]);
+            mc.player.setDeltaMovement(dir[0], mc.player.getDeltaMovement().y(), dir[1]);
         }
 
         if (mode.is(Mode.Creative)) {
             mc.player.getAbilities().flying = true;
-            mc.player.getAbilities().setFlySpeed(hSpeed.getValue() / 10f);
+            mc.player.getAbilities().setFlyingSpeed(hSpeed.getValue() / 10f);
         }
     }
 
@@ -110,18 +110,18 @@ public class Flight extends Module {
     public void onPacketReceive(PacketEvent.Receive e) {
         if (mode.is(Mode.MatrixJump)) {
             if (fullNullCheck()) return;
-            if (e.getPacket() instanceof PlayerPositionS2CPacket) {
+            if (e.getPacket() instanceof ClientboundPlayerPositionPacket) {
                 onPosLook = true;
-                prevX = mc.player.getVelocity().getX();
-                prevY = mc.player.getVelocity().getY();
-                prevZ = mc.player.getVelocity().getZ();
+                prevX = mc.player.getDeltaMovement().x();
+                prevY = mc.player.getDeltaMovement().y();
+                prevZ = mc.player.getDeltaMovement().z();
             }
         }
 
         if (mode.is(Mode.Damage))
-            if (e.getPacket() instanceof EntityVelocityUpdateS2CPacket v)
-                if (v.getVelocityY() / 8000.0 > 0.2) {
-                    velocityMotion = v.getVelocityY() / 8000.0;
+            if (e.getPacket() instanceof ClientboundSetEntityMotionPacket v)
+                if (v.getYa() / 8000.0 > 0.2) {
+                    velocityMotion = v.getYa() / 8000.0;
                     flyTicks = boostTicks.getValue();
                 }
     }
@@ -129,26 +129,26 @@ public class Flight extends Module {
     @EventHandler
     public void onPacketSend(PacketEvent.Send e) {
         if (mode.is(Mode.MatrixJump)) {
-            if (e.getPacket() instanceof PlayerMoveC2SPacket.Full) {
+            if (e.getPacket() instanceof ServerboundMovePlayerPacket.PosRot) {
                 if (onPosLook) {
-                    mc.player.setVelocity(prevX, prevY, prevZ);
+                    mc.player.setDeltaMovement(prevX, prevY, prevZ);
                     onPosLook = false;
                     if (autoToggle.getValue()) disable();
                 }
             }
         }
 
-        if (mode.is(Mode.StormBreak) && e.getPacket() instanceof PlayerActionC2SPacket pac && (pac.getAction() == PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK
-                || pac.getAction() == PlayerActionC2SPacket.Action.START_DESTROY_BLOCK && mc.world.getBlockState(pac.getPos()).isReplaceable())) {
+        if (mode.is(Mode.StormBreak) && e.getPacket() instanceof ServerboundPlayerActionPacket pac && (pac.getAction() == ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK
+                || pac.getAction() == ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK && mc.level.getBlockState(pac.getPos()).canBeReplaced())) {
             final double[] dir = MovementUtility.forward(2.0f * boostValue.getValue());
-            mc.player.setVelocity(dir[0], 3f * boostValue.getValue(), dir[1]);
+            mc.player.setDeltaMovement(dir[0], 3f * boostValue.getValue(), dir[1]);
         }
     }
 
     @Override
     public void onDisable() {
         mc.player.getAbilities().flying = false;
-        mc.player.getAbilities().setFlySpeed(0.05f);
+        mc.player.getAbilities().setFlyingSpeed(0.05f);
     }
 
     private enum Mode {

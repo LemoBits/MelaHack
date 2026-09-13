@@ -2,7 +2,7 @@ package thunder.hack.features.cmd.impl;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import net.minecraft.command.CommandSource;
+import net.minecraft.commands.SharedSuggestionProvider;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.features.cmd.Command;
 
@@ -14,7 +14,7 @@ public class CalcCommand extends Command {
     }
 
     @Override
-    public void executeBuild(@NotNull LiteralArgumentBuilder<CommandSource> builder) {
+    public void executeBuild(@NotNull LiteralArgumentBuilder<SharedSuggestionProvider> builder) {
         builder.then(arg("count", StringArgumentType.string()).executes(context -> {
             String expression = context.getArgument("count", String.class);
             try {

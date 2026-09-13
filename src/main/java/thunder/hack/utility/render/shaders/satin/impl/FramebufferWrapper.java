@@ -17,21 +17,21 @@
  */
 package thunder.hack.utility.render.shaders.satin.impl;
 
+import com.mojang.blaze3d.pipeline.RenderTarget;
+import com.mojang.blaze3d.platform.Window;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.PostChain;
 import thunder.hack.utility.render.shaders.satin.api.managed.ManagedFramebuffer;
-import net.minecraft.client.MinecraftClient;
-import com.mojang.blaze3d.textures.Framebuffer;
-import net.minecraft.client.render.effect.PostEffectProcessor;
-import net.minecraft.client.window.Window;
 
 public final class FramebufferWrapper implements ManagedFramebuffer {
     private final String name;
-    private Framebuffer wrapped;
+    private RenderTarget wrapped;
 
     FramebufferWrapper(String name) {
         this.name = name;
     }
 
-    void findTarget(PostEffectProcessor shaderEffect) {
+    void findTarget(PostChain shaderEffect) {
         this.wrapped = null;
     }
 
@@ -40,7 +40,7 @@ public final class FramebufferWrapper implements ManagedFramebuffer {
     }
 
     @Override
-    public Framebuffer getFramebuffer() {
+    public RenderTarget getFramebuffer() {
         return wrapped;
     }
 
@@ -50,8 +50,8 @@ public final class FramebufferWrapper implements ManagedFramebuffer {
 
     @Override
     public void draw() {
-        Window window = MinecraftClient.getInstance().getWindow();
-        this.draw(window.getFramebufferWidth(), window.getFramebufferHeight(), true);
+        Window window = Minecraft.getInstance().getWindow();
+        this.draw(window.getWidth(), window.getHeight(), true);
     }
 
     @Override

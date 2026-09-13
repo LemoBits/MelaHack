@@ -1,29 +1,29 @@
 package thunder.hack.injection.accesors;
 
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.world.entity.LivingEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(LivingEntity.class)
 public interface ILivingEntity {
-    @Accessor("lastAttackedTicks")
+    @Accessor("attackStrengthTicker")
     int getLastAttackedTicks();
 
-    @Accessor("lastBodyYaw")
+    @Accessor("yBodyRotO")
     float getLastBodyYaw();
 
-    @Accessor("lastBodyYaw")
+    @Accessor("yBodyRotO")
     void setLastBodyYaw(float bodyYaw);
 
-    @Accessor("lastHeadYaw")
+    @Accessor("yHeadRotO")
     float getLastHeadYaw();
 
-    @Accessor("lastHeadYaw")
+    @Accessor("yHeadRotO")
     void setLastHeadYaw(float headYaw);
 
-    @Accessor("jumpingCooldown")
+    @Accessor("noJumpDelay")
     int getLastJumpCooldown();
 
-    @Accessor("jumpingCooldown")
+    @Accessor("noJumpDelay")
     void setLastJumpCooldown(int val);
 }

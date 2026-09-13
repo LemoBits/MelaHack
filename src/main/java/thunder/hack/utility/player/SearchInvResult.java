@@ -1,9 +1,10 @@
 package thunder.hack.utility.player;
 
-import net.minecraft.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import static thunder.hack.features.modules.Module.mc;
+
+import net.minecraft.world.item.ItemStack;
 
 public record SearchInvResult(int slot, boolean found, ItemStack stack) {
     private static final SearchInvResult NOT_FOUND_RESULT = new SearchInvResult(-1, false, null);

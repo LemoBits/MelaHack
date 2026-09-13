@@ -1,14 +1,14 @@
 package thunder.hack.features.modules.combat;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.ConcretePowderBlock;
-import net.minecraft.block.PressurePlateBlock;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.Items;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.ConcretePowderBlock;
+import net.minecraft.world.level.block.PressurePlateBlock;
 import thunder.hack.core.Managers;
 import thunder.hack.core.manager.player.CombatManager;
 import thunder.hack.events.impl.EventTick;
@@ -38,7 +38,7 @@ public class AutoAnvil extends Module {
     private final Setting<Boolean> concrete = new Setting<>("Сoncrete", false);
     private final Setting<Boolean> anvils = new Setting<>("Anvils", true);
 
-    private PlayerEntity target;
+    private Player target;
 
     public AutoAnvil() {
         super("AutoAnvil", Category.COMBAT);
@@ -47,7 +47,7 @@ public class AutoAnvil extends Module {
     @EventHandler
     private void onTick(EventTick event) {
         if (mc.player == null) return;
-        if (target == null || target.isDead()) {
+        if (target == null || target.isDeadOrDying()) {
             target = Managers.COMBAT.getTarget(range.getValue(), targetBy.getValue());
             return;
         }
@@ -55,24 +55,24 @@ public class AutoAnvil extends Module {
         final SearchInvResult result = getBlockResult();
         final SearchInvResult plateResult = InventoryUtility.findItemInHotBar(Items.STONE_PRESSURE_PLATE, Items.BIRCH_PRESSURE_PLATE, Items.HEAVY_WEIGHTED_PRESSURE_PLATE, Items.LIGHT_WEIGHTED_PRESSURE_PLATE, Items.OAK_PRESSURE_PLATE);
 
-        final BlockPos anvilPos = BlockPos.ofFloored(target.getPos()).up(2);
+        final BlockPos anvilPos = BlockPos.containing(target.position()).above(2);
 
         if (!result.found() || (!plateResult.found() && placePlates.getValue()))
             return;
 
-        Block targetBlock = mc.world.getBlockState(BlockPos.ofFloored(target.getPos())).getBlock();
+        Block targetBlock = mc.level.getBlockState(BlockPos.containing(target.position())).getBlock();
 
         if (!(targetBlock instanceof PressurePlateBlock) && targetBlock != Blocks.HEAVY_WEIGHTED_PRESSURE_PLATE && targetBlock != Blocks.LIGHT_WEIGHTED_PRESSURE_PLATE && placePlates.getValue()) {
-            InteractionUtility.placeBlock(BlockPos.ofFloored(target.getPos()), rotate.getValue(), interact.getValue(), placeMode.getValue(), plateResult, true, true);
+            InteractionUtility.placeBlock(BlockPos.containing(target.position()), rotate.getValue(), interact.getValue(), placeMode.getValue(), plateResult, true, true);
             return;
         }
 
         if (!InteractionUtility.canPlaceBlock(anvilPos, interact.getValue(), false)) {
             if (needObsidian(anvilPos)) {
                 final BlockPos obsidianPos = Arrays.stream(HoleUtility.VECTOR_PATTERN).parallel()
-                        .map(anvilPos::add)
+                        .map(anvilPos::offset)
                         .filter(pos -> InteractionUtility.canPlaceBlock(pos, interact.getValue(), false))
-                        .filter(pos -> pos.getSquaredDistance(mc.player.getPos()) <= range.getPow2Value())
+                        .filter(pos -> pos.distToCenterSqr(mc.player.position()) <= range.getPow2Value())
                         .findFirst()
                         .orElse(null);
                 final SearchInvResult obbyResult = InventoryUtility.findBlockInHotBar(Blocks.OBSIDIAN);
@@ -90,11 +90,11 @@ public class AutoAnvil extends Module {
     }
 
     private boolean needObsidian(BlockPos anvilPos) {
-        if (mc.world == null) return false;
+        if (mc.level == null) return false;
 
         return Arrays.stream(HoleUtility.VECTOR_PATTERN)
-                .map(anvilPos::add)
-                .filter(pos -> !mc.world.getBlockState(pos).isReplaceable())
+                .map(anvilPos::offset)
+                .filter(pos -> !mc.level.getBlockState(pos).canBeReplaced())
                 .toList()
                 .isEmpty();
     }

@@ -20,13 +20,13 @@ public class AutoWalk extends Module {
     @Override
     public void onEnable() {
         if (mode.getValue() == Mode.Baritone)
-            mc.player.networkHandler.sendChatMessage("#goto " + 3000000 * Math.cos(Math.toRadians(mc.player.getYaw() + 90f)) + " " + 3000000 * Math.sin(Math.toRadians(mc.player.getYaw() + 90f)));
+            mc.player.connection.sendChat("#goto " + 3000000 * Math.cos(Math.toRadians(mc.player.getYRot() + 90f)) + " " + 3000000 * Math.sin(Math.toRadians(mc.player.getYRot() + 90f)));
     }
 
     @Override
     public void onDisable() {
         if (mode.getValue() == AutoWalk.Mode.Baritone) {
-            mc.player.networkHandler.sendChatMessage("#stop");
+            mc.player.connection.sendChat("#stop");
         }
     }
 

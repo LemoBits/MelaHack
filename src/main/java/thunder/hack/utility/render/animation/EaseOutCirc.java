@@ -1,6 +1,6 @@
 package thunder.hack.utility.render.animation;
 
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.Mth;
 import thunder.hack.utility.render.Render3DEngine;
 
 public class EaseOutCirc {
@@ -18,7 +18,7 @@ public class EaseOutCirc {
 
     public void update() {
         prevStep = step;
-        step = MathHelper.clamp(step + 1, 0, maxTicks);
+        step = Mth.clamp(step + 1, 0, maxTicks);
     }
 
     public static double createAnimation(double value) {

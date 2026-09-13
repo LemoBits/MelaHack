@@ -1,14 +1,13 @@
 package thunder.hack.features.modules.combat;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.block.Blocks;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.AABB;
 import thunder.hack.core.Managers;
 import thunder.hack.events.impl.EventPostSync;
 import thunder.hack.events.impl.EventSync;
@@ -24,7 +23,7 @@ import thunder.hack.utility.player.SearchInvResult;
 import thunder.hack.utility.render.Render2DEngine;
 import thunder.hack.utility.render.Render3DEngine;
 import thunder.hack.utility.world.HoleUtility;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.awt.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -46,7 +45,7 @@ public final class PistonPush extends Module {
     private final Setting<ColorSetting> lineColor = new Setting<>("Line Color", new ColorSetting(new Color(255, 0, 0, 200))).addToGroup(render);
     private final Setting<Integer> lineWidth = new Setting<>("Line Width", 2, 1, 5).addToGroup(render);
 
-    private PlayerEntity target;
+    private Player target;
     private BlockPos pistonPos;
     private BlockPos chargePos;
     private boolean firstPlace;
@@ -111,16 +110,16 @@ public final class PistonPush extends Module {
         else placeCharge(onSync);
     }
 
-    public void onRender3D(MatrixStack stack) {
+    public void onRender3D(PoseStack stack) {
         renderPoses.forEach((pos, time) -> {
             if (System.currentTimeMillis() - time > 500) {
                 renderPoses.remove(pos);
             } else {
                 Render3DEngine.FILLED_QUEUE.add(
-                        new Render3DEngine.FillAction(new Box(pos), Render2DEngine.injectAlpha(fillColor.getValue().getColorObject(), (int) (fillColor.getValue().getAlpha() * (1f - ((System.currentTimeMillis() - time) / 500f)))))
+                        new Render3DEngine.FillAction(new AABB(pos), Render2DEngine.injectAlpha(fillColor.getValue().getColorObject(), (int) (fillColor.getValue().getAlpha() * (1f - ((System.currentTimeMillis() - time) / 500f)))))
                 );
                 Render3DEngine.OUTLINE_QUEUE.add(
-                        new Render3DEngine.OutlineAction(new Box(pos), lineColor.getValue().getColorObject(), lineWidth.getValue())
+                        new Render3DEngine.OutlineAction(new AABB(pos), lineColor.getValue().getColorObject(), lineWidth.getValue())
                 );
             }
         });
@@ -140,21 +139,21 @@ public final class PistonPush extends Module {
                 return;
             }
             if (onSync) {
-                sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(angle[0], angle[1], mc.player.isOnGround(), mc.player.horizontalCollision));
+                sendPacket(new ServerboundMovePlayerPacket.Rot(angle[0], angle[1], mc.player.onGround(), mc.player.horizontalCollision));
             } else {
-                mc.player.setYaw(angle[0]);
-                mc.player.setPitch(angle[1]);
+                mc.player.setYRot(angle[0]);
+                mc.player.setXRot(angle[1]);
             }
         }
 
         placeRunnable = () -> {
             int prevSlot = mc.player.getInventory().getSelectedSlot();
             InteractionUtility.placeBlock(chargePos, InteractionUtility.Rotate.None, interact.getValue(), placeMode.getValue(), getChargeSlot(), true, false);
-            sendPacket(new UpdateSelectedSlotC2SPacket(prevSlot));
+            sendPacket(new ServerboundSetCarriedItemPacket(prevSlot));
             mc.player.getInventory().setSelectedSlot(prevSlot);
             firstPlace = true;
             if (swing.getValue())
-                mc.player.swingHand(Hand.MAIN_HAND);
+                mc.player.swing(InteractionHand.MAIN_HAND);
             renderPoses.put(chargePos, System.currentTimeMillis());
         };
     }
@@ -171,28 +170,28 @@ public final class PistonPush extends Module {
             if (angle == null)
                 return;
 
-            if (extra) sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(angle[0], angle[1], mc.player.isOnGround(), mc.player.horizontalCollision));
+            if (extra) sendPacket(new ServerboundMovePlayerPacket.Rot(angle[0], angle[1], mc.player.onGround(), mc.player.horizontalCollision));
             else {
-                mc.player.setYaw(angle[0]);
-                mc.player.setPitch(angle[1]);
+                mc.player.setYRot(angle[0]);
+                mc.player.setXRot(angle[1]);
             }
         }
 
         placeRunnable = () -> {
-            final float angle = InteractionUtility.calculateAngle(target.getEyePos(), pistonPos.toCenterPos())[0];
-            sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(angle, 0, mc.player.isOnGround(), mc.player.horizontalCollision));
-            float prevYaw = mc.player.getYaw();
-            mc.player.setYaw(angle);
+            final float angle = InteractionUtility.calculateAngle(target.getEyePosition(), pistonPos.getCenter())[0];
+            sendPacket(new ServerboundMovePlayerPacket.Rot(angle, 0, mc.player.onGround(), mc.player.horizontalCollision));
+            float prevYaw = mc.player.getYRot();
+            mc.player.setYRot(angle);
             ((thunder.hack.injection.accesors.IEntity) mc.player).setLastYaw(angle);
             ((IEntity) mc.player).setLastYaw(angle);
             int prevSlot = mc.player.getInventory().getSelectedSlot();
             InteractionUtility.placeBlock(pistonPos, InteractionUtility.Rotate.None, interact.getValue(), placeMode.getValue(), getPistonSlot(), true, false);
-            sendPacket(new UpdateSelectedSlotC2SPacket(prevSlot));
+            sendPacket(new ServerboundSetCarriedItemPacket(prevSlot));
             mc.player.getInventory().setSelectedSlot(prevSlot);
-            mc.player.setYaw(prevYaw);
+            mc.player.setYRot(prevYaw);
             firstPlace = false;
             if (swing.getValue())
-                mc.player.swingHand(Hand.MAIN_HAND);
+                mc.player.swing(InteractionHand.MAIN_HAND);
             renderPoses.put(pistonPos, System.currentTimeMillis());
         };
     }
@@ -226,31 +225,31 @@ public final class PistonPush extends Module {
     }
 
     private void findPlacePoses() {
-        BlockPos targetBP = BlockPos.ofFloored(target.getPos());
+        BlockPos targetBP = BlockPos.containing(target.position());
 
         BlockPos[] surroundPoses = {
-                targetBP.add(1, 1, 0),
-                targetBP.add(-1, 1, 0),
-                targetBP.add(0, 1, 1),
-                targetBP.add(0, 1, -1)
+                targetBP.offset(1, 1, 0),
+                targetBP.offset(-1, 1, 0),
+                targetBP.offset(0, 1, 1),
+                targetBP.offset(0, 1, -1)
         };
 
         for (BlockPos pos : surroundPoses) {
             if (!InteractionUtility.canPlaceBlock(pos, interact.getValue(), false)) continue;
 
             BlockPos[] chargePoses = {
-                    pos.add(0, 1, 0),
-                    pos.add(0, -1, 0),
-                    pos.add(1, 0, 0),
-                    pos.add(-1, 0, 0),
-                    pos.add(0, 0, 1),
-                    pos.add(0, 0, -1)
+                    pos.offset(0, 1, 0),
+                    pos.offset(0, -1, 0),
+                    pos.offset(1, 0, 0),
+                    pos.offset(-1, 0, 0),
+                    pos.offset(0, 0, 1),
+                    pos.offset(0, 0, -1)
             };
 
             for (BlockPos chPos : chargePoses) {
                 if (chPos == targetBP) continue;
-                if (mc.world.getBlockState(chPos).isReplaceable()) {
-                    if (chargeType.getValue() == ChargeType.Torch && chPos.equals(pos.up())) {
+                if (mc.level.getBlockState(chPos).canBeReplaced()) {
+                    if (chargeType.getValue() == ChargeType.Torch && chPos.equals(pos.above())) {
                         continue;
                     }
                     if (InteractionUtility.canPlaceBlock(chPos, interact.getValue(), false)) {
@@ -265,19 +264,19 @@ public final class PistonPush extends Module {
     }
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-    private boolean isPlayerTargetCorrect(PlayerEntity player) {
+    private boolean isPlayerTargetCorrect(Player player) {
         if (player == null) return false;
 
         return !Managers.FRIEND.isFriend(player)
                 && player != mc.player
                 && player.distanceTo(((mc.player))) <= range.getValue()
-                && !player.isDead()
+                && !player.isDeadOrDying()
                 && player.getHealth() + player.getAbsorptionAmount() > 0
-                && HoleUtility.isHole(player.getBlockPos());
+                && HoleUtility.isHole(player.blockPosition());
     }
 
     private void findTarget() {
-        for (PlayerEntity player : Managers.ASYNC.getAsyncPlayers()) {
+        for (Player player : Managers.ASYNC.getAsyncPlayers()) {
             if (!isPlayerTargetCorrect(player)) continue;
 
             target = player;

@@ -1,15 +1,15 @@
 package thunder.hack.features.modules.combat;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
-import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket;
-import net.minecraft.network.packet.s2c.play.PlayerPositionS2CPacket;
-import net.minecraft.screen.slot.SlotActionType;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Direction;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
+import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.AABB;
 import thunder.hack.core.Core;
 import thunder.hack.core.manager.client.ModuleManager;
 import thunder.hack.events.impl.*;
@@ -47,22 +47,22 @@ public class TargetStrafe extends Module {
     @Override
     public void onEnable() {
         oldSpeed = 0;
-        fovval = mc.options.getFovEffectScale().getValue();
-        mc.options.getFovEffectScale().setValue(0d);
+        fovval = mc.options.fovEffectScale().get();
+        mc.options.fovEffectScale().set(0d);
         skip = true;
     }
 
     public boolean canStrafe() {
-        if (mc.player.isSneaking()) return false;
+        if (mc.player.isShiftKeyDown()) return false;
         if (mc.player.isInLava()) return false;
         if (ModuleManager.scaffold.isEnabled()) return false;
         if (ModuleManager.speed.isEnabled()) return false;
-        if (mc.player.isSubmergedInWater() || waterTicks > 0) return false;
+        if (mc.player.isUnderWater() || waterTicks > 0) return false;
         return !mc.player.getAbilities().flying;
     }
 
     public boolean needToSwitch(double x, double z) {
-        if (mc.player.horizontalCollision || ((mc.options.leftKey.isPressed() || mc.options.rightKey.isPressed()) && jumpTicks <= 0)) {
+        if (mc.player.horizontalCollision || ((mc.options.keyLeft.isDown() || mc.options.keyRight.isDown()) && jumpTicks <= 0)) {
             jumpTicks = 10;
             return true;
         }
@@ -72,14 +72,14 @@ public class TargetStrafe extends Module {
             {
                 blockLAVA:
                 {
-                    if (mc.world.getBlockState(playerPos).getBlock().equals(Blocks.LAVA))
+                    if (mc.level.getBlockState(playerPos).getBlock().equals(Blocks.LAVA))
                         break blockLAVA;
-                    if (!mc.world.getBlockState(playerPos).getBlock().equals(Blocks.FIRE))
+                    if (!mc.level.getBlockState(playerPos).getBlock().equals(Blocks.FIRE))
                         break blockFIRE;
                 }
                 return true;
             }
-            if (mc.world.isAir(playerPos)) continue;
+            if (mc.level.isEmptyBlock(playerPos)) continue;
             return false;
         }
         return false;
@@ -87,20 +87,20 @@ public class TargetStrafe extends Module {
 
     @Override
     public void onDisable() {
-        mc.options.getFovEffectScale().setValue(fovval);
+        mc.options.fovEffectScale().set(fovval);
     }
 
     public double calculateSpeed(EventMove move) {
         jumpTicks--;
         float speedAttributes = getAIMoveSpeed();
-        final float frictionFactor = mc.world.getBlockState(new BlockPos.Mutable().set(mc.player.getX(), getBoundingBox().getMin(Direction.Axis.Y) - move.getY(), mc.player.getZ())).getBlock().getSlipperiness() * 0.91F;
-        float n6 = mc.player.hasStatusEffect(StatusEffects.JUMP_BOOST) && mc.player.isUsingItem() ? 0.88f : (float) (oldSpeed > 0.32 && mc.player.isUsingItem() ? 0.88 : 0.91F);
-        if (mc.player.isOnGround()) {
+        final float frictionFactor = mc.level.getBlockState(new BlockPos.MutableBlockPos().set(mc.player.getX(), getBoundingBox().min(Direction.Axis.Y) - move.getY(), mc.player.getZ())).getBlock().getFriction() * 0.91F;
+        float n6 = mc.player.hasEffect(MobEffects.JUMP_BOOST) && mc.player.isUsingItem() ? 0.88f : (float) (oldSpeed > 0.32 && mc.player.isUsingItem() ? 0.88 : 0.91F);
+        if (mc.player.onGround()) {
             n6 = frictionFactor;
         }
         float n7 = (float) (0.1631f / Math.pow(n6, 3.0f));
         float n8;
-        if (mc.player.isOnGround()) {
+        if (mc.player.onGround()) {
             n8 = speedAttributes * n7;
             if (move.getY() > 0) {
                 n8 += boost.getValue() == Boost.Elytra && InventoryUtility.getElytra() != -1 && disabled ? 0.65f : 0.2f;
@@ -124,24 +124,24 @@ public class TargetStrafe extends Module {
             } else noSlowTicks = Math.max(noSlowTicks - 1, 0);
         } else noSlowTicks = 0;
         if (noSlowTicks > 3) max2 = max - 0.019;
-        else max2 = Math.max(noslow ? 0 : 0.25, max2) - (mc.player.age % 2 == 0 ? 0.001 : 0.002);
+        else max2 = Math.max(noslow ? 0 : 0.25, max2) - (mc.player.tickCount % 2 == 0 ? 0.001 : 0.002);
 
         contextFriction = n6;
-        if (!mc.player.isOnGround()) {
-            needSprintState = !mc.player.lastSprinting;
+        if (!mc.player.onGround()) {
+            needSprintState = !mc.player.wasSprinting;
             needSwap = true;
         } else needSprintState = false;
         return max2;
     }
 
-    public Box getBoundingBox() {
-        return new Box(mc.player.getX() - 0.1, mc.player.getY(), mc.player.getZ() - 0.1, mc.player.getX() + 0.1, mc.player.getY() + 1, mc.player.getZ() + 0.1);
+    public AABB getBoundingBox() {
+        return new AABB(mc.player.getX() - 0.1, mc.player.getY(), mc.player.getZ() - 0.1, mc.player.getX() + 0.1, mc.player.getY() + 1, mc.player.getZ() + 0.1);
     }
 
     public float getAIMoveSpeed() {
         boolean prevSprinting = mc.player.isSprinting();
         mc.player.setSprinting(false);
-        float speed = mc.player.getMovementSpeed() * 1.3f;
+        float speed = mc.player.getSpeed() * 1.3f;
         mc.player.setSprinting(prevSprinting);
         return speed;
     }
@@ -150,16 +150,16 @@ public class TargetStrafe extends Module {
         if (elytra == -1) return;
         if (System.currentTimeMillis() - disableTime > 190L) {
             if (elytra != -2) {
-                mc.interactionManager.clickSlot(0, elytra, 1, SlotActionType.PICKUP, mc.player);
-                mc.interactionManager.clickSlot(0, 6, 1, SlotActionType.PICKUP, mc.player);
+                mc.gameMode.handleInventoryMouseClick(0, elytra, 1, ClickType.PICKUP, mc.player);
+                mc.gameMode.handleInventoryMouseClick(0, 6, 1, ClickType.PICKUP, mc.player);
             }
 
-            mc.player.networkHandler.sendPacket(new ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.START_FALL_FLYING));
-            mc.player.networkHandler.sendPacket(new ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.START_FALL_FLYING));
+            mc.player.connection.send(new ServerboundPlayerCommandPacket(mc.player, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING));
+            mc.player.connection.send(new ServerboundPlayerCommandPacket(mc.player, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING));
 
             if (elytra != -2) {
-                mc.interactionManager.clickSlot(0, 6, 1, SlotActionType.PICKUP, mc.player);
-                mc.interactionManager.clickSlot(0, elytra, 1, SlotActionType.PICKUP, mc.player);
+                mc.gameMode.handleInventoryMouseClick(0, 6, 1, ClickType.PICKUP, mc.player);
+                mc.gameMode.handleInventoryMouseClick(0, elytra, 1, ClickType.PICKUP, mc.player);
             }
             disableTime = System.currentTimeMillis();
         }
@@ -177,7 +177,7 @@ public class TargetStrafe extends Module {
         int elytraSlot = InventoryUtility.getElytra();
 
         if (boost.getValue() == Boost.Elytra && elytraSlot != -1) {
-            if (isMoving() && !mc.player.isOnGround() && mc.world.getBlockCollisions(mc.player, mc.player.getBoundingBox().offset(0.0, event.getY(), 0.0f)).iterator().hasNext() && disabled) {
+            if (isMoving() && !mc.player.onGround() && mc.level.getBlockCollisions(mc.player, mc.player.getBoundingBox().move(0.0, event.getY(), 0.0f)).iterator().hasNext() && disabled) {
                 oldSpeed = setSpeed.getValue();
             }
         }
@@ -187,14 +187,14 @@ public class TargetStrafe extends Module {
                 double speed = calculateSpeed(event);
 
                 double wrap = Math.atan2(mc.player.getZ() - Aura.target.getZ(), mc.player.getX() - Aura.target.getX());
-                wrap += switchDir ? speed / Math.sqrt(mc.player.squaredDistanceTo(Aura.target)) : -(speed / Math.sqrt(mc.player.squaredDistanceTo(Aura.target)));
+                wrap += switchDir ? speed / Math.sqrt(mc.player.distanceToSqr(Aura.target)) : -(speed / Math.sqrt(mc.player.distanceToSqr(Aura.target)));
 
                 double x = Aura.target.getX() + distance.getValue() * Math.cos(wrap);
                 double z = Aura.target.getZ() + distance.getValue() * Math.sin(wrap);
 
                 if (needToSwitch(x, z)) {
                     switchDir = !switchDir;
-                    wrap += 2 * (switchDir ? speed / Math.sqrt(mc.player.squaredDistanceTo(Aura.target)) : -(speed / Math.sqrt(mc.player.squaredDistanceTo(Aura.target))));
+                    wrap += 2 * (switchDir ? speed / Math.sqrt(mc.player.distanceToSqr(Aura.target)) : -(speed / Math.sqrt(mc.player.distanceToSqr(Aura.target))));
                     x = Aura.target.getX() + distance.getValue() * Math.cos(wrap);
                     z = Aura.target.getZ() + distance.getValue() * Math.sin(wrap);
                 }
@@ -211,13 +211,13 @@ public class TargetStrafe extends Module {
 
     @EventHandler
     public void updateValues(EventSync e) {
-        oldSpeed = Math.hypot(mc.player.getX() - mc.player.lastX, mc.player.getZ() - mc.player.lastZ) * contextFriction;
+        oldSpeed = Math.hypot(mc.player.getX() - mc.player.xo, mc.player.getZ() - mc.player.zo) * contextFriction;
 
-        if (mc.player.isOnGround() && jump.getValue() && Aura.target != null) {
-            mc.player.jump();
+        if (mc.player.onGround() && jump.getValue() && Aura.target != null) {
+            mc.player.jumpFromGround();
         }
 
-        if (mc.player.isSubmergedInWater()) {
+        if (mc.player.isUnderWater()) {
             waterTicks = 10;
         } else {
             waterTicks--;
@@ -226,7 +226,7 @@ public class TargetStrafe extends Module {
 
     @EventHandler
     public void onUpdate(PlayerUpdateEvent event) {
-        if ((boost.getValue() == Boost.Elytra && InventoryUtility.getElytra() != -1 && !mc.player.isOnGround() && mc.player.fallDistance > 0 && !disabled)) {
+        if ((boost.getValue() == Boost.Elytra && InventoryUtility.getElytra() != -1 && !mc.player.onGround() && mc.player.fallDistance > 0 && !disabled)) {
             disabler(InventoryUtility.getElytra());
         }
     }
@@ -234,15 +234,15 @@ public class TargetStrafe extends Module {
 
     @EventHandler
     public void onPacketReceive(PacketEvent.Receive e) {
-        if (e.getPacket() instanceof PlayerPositionS2CPacket) {
+        if (e.getPacket() instanceof ClientboundPlayerPositionPacket) {
             oldSpeed = 0;
         }
-        EntityVelocityUpdateS2CPacket velocity;
-        if (e.getPacket() instanceof EntityVelocityUpdateS2CPacket && (velocity = e.getPacket()).getEntityId() == mc.player.getId() && boost.getValue() == Boost.Damage) {
-            if (mc.player.isOnGround()) return;
+        ClientboundSetEntityMotionPacket velocity;
+        if (e.getPacket() instanceof ClientboundSetEntityMotionPacket && (velocity = e.getPacket()).getId() == mc.player.getId() && boost.getValue() == Boost.Damage) {
+            if (mc.player.onGround()) return;
 
-            double vX = velocity.getVelocityX();
-            double vZ = velocity.getVelocityZ();
+            double vX = velocity.getXa();
+            double vZ = velocity.getZa();
 
             if (vX < 0) vX *= -1;
             if (vZ < 0) vZ *= -1;
@@ -265,7 +265,7 @@ public class TargetStrafe extends Module {
             }
         }
         if (needSwap) {
-            eventAction.setSprintState(!mc.player.lastSprinting);
+            eventAction.setSprintState(!mc.player.wasSprinting);
             needSwap = false;
         }
     }

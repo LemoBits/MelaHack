@@ -12,7 +12,6 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.flow.FlowControlHandler;
 import io.netty.handler.proxy.Socks5ProxyHandler;
 import io.netty.handler.timeout.ReadTimeoutHandler;
-import net.minecraft.network.handler.NetworkStateTransitions;
 import thunder.hack.core.manager.IManager;
 
 import java.io.*;
@@ -20,6 +19,7 @@ import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import net.minecraft.network.UnconfiguredPipelineHandler;
 
 public class ProxyManager implements IManager {
     private final List<ThProxy> proxies = new ArrayList<>();
@@ -114,8 +114,8 @@ public class ProxyManager implements IManager {
                             protected void initChannel(SocketChannel ch) {
                                 ch.pipeline().addLast(new FlowControlHandler())
                                         .addLast("timeout_proxy_checker", new ReadTimeoutHandler(8))
-                                        .addLast("inbound_proxy_checker", new NetworkStateTransitions.InboundConfigurer())
-                                        .addLast("outbound_proxy_checker", new NetworkStateTransitions.OutboundConfigurer())
+                                        .addLast("inbound_proxy_checker", new UnconfiguredPipelineHandler.Inbound())
+                                        .addLast("outbound_proxy_checker", new UnconfiguredPipelineHandler.Outbound())
                                         .addLast(new Socks5ProxyHandler(new InetSocketAddress(proxy.getIp(), proxy.getPort()), proxy.getL(), proxy.getP()))
                                         .addLast(new ProxyHandler());
                             }

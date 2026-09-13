@@ -1,10 +1,8 @@
 package thunder.hack.features.cmd.impl;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import net.minecraft.client.util.InputUtil;
-import net.minecraft.command.CommandSource;
-import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.ThunderHack;
 import thunder.hack.core.Managers;
@@ -14,6 +12,8 @@ import thunder.hack.features.modules.Module;
 import thunder.hack.setting.impl.Bind;
 
 import java.util.Objects;
+import net.minecraft.ChatFormatting;
+import net.minecraft.commands.SharedSuggestionProvider;
 
 import static com.mojang.brigadier.Command.SINGLE_SUCCESS;
 import static thunder.hack.features.hud.impl.KeyBinds.getShortKeyName;
@@ -25,14 +25,14 @@ public class BindCommand extends Command {
     }
 
     @Override
-    public void executeBuild(@NotNull LiteralArgumentBuilder<CommandSource> builder) {
+    public void executeBuild(@NotNull LiteralArgumentBuilder<SharedSuggestionProvider> builder) {
         builder.then(arg("module", ModuleArgumentType.create())
                 .then(arg("key", StringArgumentType.word()).executes(context -> {
                     final Module module = context.getArgument("module", Module.class);
                     final String stringKey = context.getArgument("key", String.class);
 
                     if (stringKey == null) {
-                        sendMessage(module.getName() + " is bound to " + Formatting.GRAY + module.getBind().getBind());
+                        sendMessage(module.getName() + " is bound to " + ChatFormatting.GRAY + module.getBind().getBind());
                         return SINGLE_SUCCESS;
                     }
 
@@ -41,7 +41,7 @@ public class BindCommand extends Command {
                         key = -1;
                     } else {
                         try {
-                            key = InputUtil.fromTranslationKey("key.keyboard." + stringKey.toLowerCase()).getCode();
+                            key = InputConstants.getKey("key.keyboard." + stringKey.toLowerCase()).getValue();
                         } catch (NumberFormatException e) {
                             sendMessage(isRu() ? "Такой кнопки не существует!" : "There is no such button");
                             return SINGLE_SUCCESS;
@@ -54,7 +54,7 @@ public class BindCommand extends Command {
                     }
                     module.setBind(key, !stringKey.equals("M") && stringKey.contains("M"), false);
 
-                    sendMessage("Bind for " + Formatting.GREEN + module.getName() + Formatting.WHITE + " set to " + Formatting.GRAY + stringKey.toUpperCase());
+                    sendMessage("Bind for " + ChatFormatting.GREEN + module.getName() + ChatFormatting.WHITE + " set to " + ChatFormatting.GRAY + stringKey.toUpperCase());
 
                     return SINGLE_SUCCESS;
                 }))

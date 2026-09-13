@@ -1,9 +1,9 @@
 package thunder.hack.features.modules.movement;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.network.packet.s2c.play.PlayerPositionS2CPacket;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.phys.Vec3;
 import thunder.hack.ThunderHack;
 import thunder.hack.events.impl.EventMove;
 import thunder.hack.events.impl.EventSync;
@@ -27,11 +27,11 @@ public class LongJump extends Module {
 
     private float plannedSpeed, realSpeed;
     private int stage = 0;
-    private Vec3d prevPosition;
+    private Vec3 prevPosition;
 
     @EventHandler
     public void onMove(EventMove e) {
-        if (prevPosition != null && mc.player.getPos().squaredDistanceTo(prevPosition) > maxDistance.getPow2Value())
+        if (prevPosition != null && mc.player.position().distanceToSqr(prevPosition) > maxDistance.getPow2Value())
             disable(isRu() ? "Прыжок выполнен! Отключаю.." : "Jump complete! Disabling..");
 
         if (MovementUtility.isMoving()) {
@@ -45,7 +45,7 @@ public class LongJump extends Module {
                     ++stage;
                 }
                 case 1 -> {
-                    mc.player.setVelocity(mc.player.getVelocity().getX(), 0.42 + isJumpBoost(), mc.player.getVelocity().getZ());
+                    mc.player.setDeltaMovement(mc.player.getDeltaMovement().x(), 0.42 + isJumpBoost(), mc.player.getDeltaMovement().z());
                     e.setY(0.42 + isJumpBoost());
                     plannedSpeed *= 2.149f;
                     ++stage;
@@ -56,7 +56,7 @@ public class LongJump extends Module {
                     ++stage;
                 }
                 case 3 -> {
-                    if (mc.player.verticalCollision || mc.world.getBlockCollisions(mc.player, mc.player.getBoundingBox().expand(-0.2, 0.0, -0.2).offset(0.0, mc.player.getVelocity().getY(), 0.0)).iterator().hasNext()) {
+                    if (mc.player.verticalCollision || mc.level.getBlockCollisions(mc.player, mc.player.getBoundingBox().inflate(-0.2, 0.0, -0.2).move(0.0, mc.player.getDeltaMovement().y(), 0.0)).iterator().hasNext()) {
                         if (jumpDisable.getValue())
                             disable(isRu() ? "Прыжок выполнен! Отключаю.." : "Jump complete! Disabling..");
                         stage = 0;
@@ -74,7 +74,7 @@ public class LongJump extends Module {
 
     @EventHandler
     public void onPacketReceive(PacketEvent.Receive e) {
-        if (e.getPacket() instanceof PlayerPositionS2CPacket)
+        if (e.getPacket() instanceof ClientboundPlayerPositionPacket)
             disable(isRu() ? "Тебя флагнуло! Отключаю.." : "You've been flagged! Disabling..");
     }
 
@@ -89,7 +89,7 @@ public class LongJump extends Module {
     }
 
     public void resetValues() {
-        prevPosition = mc.player.getPos();
+        prevPosition = mc.player.position();
         ThunderHack.TICK_TIMER = 1f;
         plannedSpeed = 0;
         realSpeed = 0;
@@ -97,14 +97,14 @@ public class LongJump extends Module {
     }
 
     public float isJumpBoost() {
-        if (mc.player.hasStatusEffect(StatusEffects.JUMP_BOOST)) return 0.2f;
+        if (mc.player.hasEffect(MobEffects.JUMP_BOOST)) return 0.2f;
         else return 0f;
     }
 
     @EventHandler
     public void onEntitySync(EventSync eventSync) {
         if (MovementUtility.isMoving())
-            realSpeed = (float) Math.hypot(mc.player.getX() - mc.player.lastX, mc.player.getZ() - mc.player.lastZ);
+            realSpeed = (float) Math.hypot(mc.player.getX() - mc.player.xo, mc.player.getZ() - mc.player.zo);
         else resetValues();
     }
 }

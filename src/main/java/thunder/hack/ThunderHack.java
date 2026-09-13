@@ -8,11 +8,11 @@ import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.metadata.ModMetadata;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.resource.ResourceManager;
-import net.minecraft.resource.ResourceType;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.resources.ResourceManager;
 import org.slf4j.Logger;
 import thunder.hack.core.Core;
 import thunder.hack.core.Managers;
@@ -47,7 +47,7 @@ public class ThunderHack implements ModInitializer {
     public static boolean isOutdated = false;
     public static BlockPos gps_position;
     public static float TICK_TIMER = 1f;
-    public static MinecraftClient mc;
+    public static Minecraft mc;
     public static long initTime;
 
     public static Core core = new Core();
@@ -58,7 +58,7 @@ public class ThunderHack implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        mc = MinecraftClient.getInstance();
+        mc = Minecraft.getInstance();
         initTime = System.currentTimeMillis();
 
         BUILD_DATE = ThunderUtility.readManifestField("Build-Timestamp");
@@ -72,14 +72,14 @@ public class ThunderHack implements ModInitializer {
         Managers.init();
         Managers.subscribe();
 
-        ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
+        ResourceManagerHelper.get(PackType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
             @Override
-            public Identifier getFabricId() {
-                return Identifier.of(MOD_ID, "satin_shaders");
+            public ResourceLocation getFabricId() {
+                return ResourceLocation.fromNamespaceAndPath(MOD_ID, "satin_shaders");
             }
 
             @Override
-            public void reload(ResourceManager manager) {
+            public void onResourceManagerReload(ResourceManager manager) {
                 ReloadableShaderEffectManager.INSTANCE.reload(manager);
             }
         });

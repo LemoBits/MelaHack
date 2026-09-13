@@ -1,10 +1,6 @@
 package thunder.hack.core.manager.client;
 
 import com.mojang.brigadier.CommandDispatcher;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientCommandSource;
-import net.minecraft.command.CommandSource;
-import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.features.cmd.Command;
 import thunder.hack.features.cmd.impl.*;
@@ -12,12 +8,16 @@ import thunder.hack.core.manager.IManager;
 
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientSuggestionProvider;
+import net.minecraft.commands.SharedSuggestionProvider;
 
 public class CommandManager implements IManager {
     private String prefix = "@";
 
-    private final CommandDispatcher<CommandSource> dispatcher = new CommandDispatcher<>();
-    private final CommandSource source = new ClientCommandSource(null, MinecraftClient.getInstance(), false);
+    private final CommandDispatcher<SharedSuggestionProvider> dispatcher = new CommandDispatcher<>();
+    private final SharedSuggestionProvider source = new ClientSuggestionProvider(null, Minecraft.getInstance(), false);
     private final List<Command> commands = new ArrayList<>();
 
     public CommandManager() {
@@ -79,18 +79,18 @@ public class CommandManager implements IManager {
     }
 
     public static @NotNull String getClientMessage() {
-        return Formatting.WHITE + "⌊" + Formatting.GOLD + "⚡" + Formatting.WHITE + "⌉" + Formatting.RESET;
+        return ChatFormatting.WHITE + "⌊" + ChatFormatting.GOLD + "⚡" + ChatFormatting.WHITE + "⌉" + ChatFormatting.RESET;
     }
 
     public List<Command> getCommands() {
         return commands;
     }
 
-    public CommandSource getSource() {
+    public SharedSuggestionProvider getSource() {
         return source;
     }
 
-    public CommandDispatcher<CommandSource> getDispatcher() {
+    public CommandDispatcher<SharedSuggestionProvider> getDispatcher() {
         return dispatcher;
     }
 

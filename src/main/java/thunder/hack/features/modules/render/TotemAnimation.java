@@ -1,13 +1,13 @@
 package thunder.hack.features.modules.render;
 
 import thunder.hack.utility.render.compat.RenderSystem;
-import net.minecraft.client.render.OverlayTexture;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.item.ItemDisplayContext;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.RotationAxis;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.util.Mth;
+import net.minecraft.world.item.ItemDisplayContext;
+import net.minecraft.world.item.ItemStack;
 import thunder.hack.features.modules.Module;
 import thunder.hack.setting.Setting;
 
@@ -39,8 +39,8 @@ public class TotemAnimation extends Module {
 
     public void renderFloatingItem(float tickDelta) {
         if (floatingItem != null && floatingItemTimeLeft > 0 && !mode.is(Mode.Off)) {
-            int scaledWidth = mc.getWindow().getScaledWidth();
-            int scaledHeight = mc.getWindow().getScaledHeight();
+            int scaledWidth = mc.getWindow().getGuiScaledWidth();
+            int scaledHeight = mc.getWindow().getGuiScaledHeight();
 
             int elapsedTime = getTime() - floatingItemTimeLeft;
             float animationProgress = ((float) elapsedTime + tickDelta) / (float) getTime();
@@ -52,10 +52,10 @@ public class TotemAnimation extends Module {
             RenderSystem.disableCull();
             RenderSystem.enableBlend();
             RenderSystem.defaultBlendFunc();
-            MatrixStack matrixStack = new MatrixStack();
-            matrixStack.push();
+            PoseStack matrixStack = new PoseStack();
+            matrixStack.pushPose();
             float adjustedProgress = ((float) elapsedTime + tickDelta);
-            float scale = 50.0F + 175.0F * MathHelper.sin(oscillationRadians);
+            float scale = 50.0F + 175.0F * Mth.sin(oscillationRadians);
 
             switch (mode.getValue()) {
                 case FadeOut -> {
@@ -72,44 +72,44 @@ public class TotemAnimation extends Module {
 
                 case Otkisuli -> {
                     matrixStack.translate((float) (scaledWidth / 2), (float) (scaledHeight / 2), -50.0F);
-                    matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(adjustedProgress * 2));
-                    matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(adjustedProgress * 2));
+                    matrixStack.mulPose(Axis.XP.rotationDegrees(adjustedProgress * 2));
+                    matrixStack.mulPose(Axis.ZP.rotationDegrees(adjustedProgress * 2));
                     matrixStack.scale(200 - adjustedProgress * 1.5f, -200 + adjustedProgress * 1.5f, 200 - adjustedProgress * 1.5f);
                 }
 
                 case Insert -> {
                     matrixStack.translate((float) (scaledWidth / 2), (float) (scaledHeight / 2), -50.0F);
-                    matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(adjustedProgress * 3));
+                    matrixStack.mulPose(Axis.XP.rotationDegrees(adjustedProgress * 3));
                     matrixStack.scale(200 - adjustedProgress * 1.5f, -200 + adjustedProgress * 1.5f, 200 - adjustedProgress * 1.5f);
                 }
 
                 case Fall -> {
                     float downFactor = (float) (Math.pow(adjustedProgress, 3) * 0.2f);
                     matrixStack.translate((float) (scaledWidth / 2), (float) (scaledHeight / 2) + downFactor, -50.0F);
-                    matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(adjustedProgress * 5));
+                    matrixStack.mulPose(Axis.ZP.rotationDegrees(adjustedProgress * 5));
                     matrixStack.scale(200 - adjustedProgress * 1.5f, -200 + adjustedProgress * 1.5f, 200 - adjustedProgress * 1.5f);
                 }
 
                 case Rocket -> {
                     float downFactor = (float) (Math.pow(adjustedProgress, 3) * 0.2f) - 20;
                     matrixStack.translate((float) (scaledWidth / 2), (float) (scaledHeight / 2) - downFactor, -50.0F);
-                    matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(adjustedProgress * floatingItemTimeLeft * 2));
+                    matrixStack.mulPose(Axis.YP.rotationDegrees(adjustedProgress * floatingItemTimeLeft * 2));
                     matrixStack.scale(200 - adjustedProgress * 1.5f, -200 + adjustedProgress * 1.5f, 200 - adjustedProgress * 1.5f);
                 }
 
                 case Roll -> {
                     float rightFactor = (float) (Math.pow(adjustedProgress, 2) * 4.5f);
                     matrixStack.translate((float) (scaledWidth / 2) + rightFactor, (float) (scaledHeight / 2), -50.0F);
-                    matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(adjustedProgress * 40));
+                    matrixStack.mulPose(Axis.ZP.rotationDegrees(adjustedProgress * 40));
                     matrixStack.scale(200 - adjustedProgress * 1.5f, -200 + adjustedProgress * 1.5f, 200 - adjustedProgress * 1.5f);
                 }
             }
 
-            VertexConsumerProvider.Immediate immediate = mc.getBufferBuilders().getEntityVertexConsumers();
+            MultiBufferSource.BufferSource immediate = mc.renderBuffers().bufferSource();
             RenderSystem.setShaderColor(1f, 1f, 1f, 1f - animationProgress);
-            mc.getItemRenderer().renderItem(floatingItem, ItemDisplayContext.FIXED, 15728880, OverlayTexture.DEFAULT_UV, matrixStack, immediate, mc.world, 0);
-            matrixStack.pop();
-            immediate.draw();
+            mc.getItemRenderer().renderStatic(floatingItem, ItemDisplayContext.FIXED, 15728880, OverlayTexture.NO_OVERLAY, matrixStack, immediate, mc.level, 0);
+            matrixStack.popPose();
+            immediate.endBatch();
             RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
 
             RenderSystem.disableBlend();

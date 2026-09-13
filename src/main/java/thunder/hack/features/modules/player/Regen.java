@@ -1,7 +1,7 @@
 package thunder.hack.features.modules.player;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import org.lwjgl.glfw.GLFW;
 import thunder.hack.events.impl.EventSync;
 import thunder.hack.features.modules.Module;
@@ -19,6 +19,6 @@ public class Regen extends Module {
     public void onSync(EventSync e) {
         if (mc.player.getHealth() + mc.player.getAbsorptionAmount() <= health.getValue())
             for (int i = 0; i < packetsPerTick.getValue(); i++)
-                sendPacket(new PlayerMoveC2SPacket.Full(mc.player.getX(), mc.player.getY(), mc.player.getZ(), mc.player.getYaw(), mc.player.getPitch(), mc.player.isOnGround(), mc.player.horizontalCollision));
+                sendPacket(new ServerboundMovePlayerPacket.PosRot(mc.player.getX(), mc.player.getY(), mc.player.getZ(), mc.player.getYRot(), mc.player.getXRot(), mc.player.onGround(), mc.player.horizontalCollision));
     }
 }

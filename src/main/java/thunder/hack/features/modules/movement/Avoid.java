@@ -1,15 +1,15 @@
 package thunder.hack.features.modules.movement;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.PressurePlateBlock;
-import net.minecraft.block.TripwireBlock;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.PressurePlateBlock;
+import net.minecraft.world.level.block.TripWireBlock;
 import thunder.hack.events.impl.EventCollision;
 import thunder.hack.features.modules.Module;
 import thunder.hack.setting.Setting;
 
-import static net.minecraft.block.TripwireHookBlock.ATTACHED;
+import static net.minecraft.world.level.block.TripWireHookBlock.ATTACHED;
 
 public class Avoid extends Module {
     public Avoid() {
@@ -31,17 +31,17 @@ public class Avoid extends Module {
         if (fullNullCheck()) return;
         Block b = e.getState().getBlock();
 
-        boolean avoidUnloaded = !mc.world.isChunkLoaded(e.getPos().getX() >> 4, e.getPos().getZ() >> 4) && unloaded.getValue();
-        boolean avoidVoid = e.getPos().getY() < mc.world.getBottomY() && voidAir.getValue();
+        boolean avoidUnloaded = !mc.level.hasChunk(e.getPos().getX() >> 4, e.getPos().getZ() >> 4) && unloaded.getValue();
+        boolean avoidVoid = e.getPos().getY() < mc.level.getMinY() && voidAir.getValue();
         boolean avoidCactus = b == Blocks.CACTUS && cactus.getValue();
         boolean avoidFire = (b == Blocks.FIRE || b == Blocks.SOUL_FIRE) && fire.getValue();
         boolean avoidBerryBush = (b == Blocks.SWEET_BERRY_BUSH) && berryBush.getValue();
         boolean avoidSusSnow = (b == Blocks.POWDER_SNOW) && powderSnow.getValue();
         boolean avoidLava = (b == Blocks.LAVA) && lava.getValue();
         boolean avoidPlate = (b instanceof PressurePlateBlock || b == Blocks.LIGHT_WEIGHTED_PRESSURE_PLATE || b == Blocks.HEAVY_WEIGHTED_PRESSURE_PLATE) && plate.getValue();
-        boolean avoidTrapString = (b instanceof TripwireBlock) && e.getState().get(ATTACHED) && trapString.getValue();
+        boolean avoidTrapString = (b instanceof TripWireBlock) && e.getState().getValue(ATTACHED) && trapString.getValue();
 
         if (avoidUnloaded || avoidFire || avoidCactus || avoidLava || avoidBerryBush || avoidSusSnow || avoidPlate || avoidTrapString || avoidVoid)
-            e.setState(Blocks.DIRT.getDefaultState());
+            e.setState(Blocks.DIRT.defaultBlockState());
     }
 }

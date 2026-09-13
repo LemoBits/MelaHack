@@ -1,15 +1,20 @@
 package thunder.hack.features.modules.movement;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.block.Blocks;
-import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.*;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Direction;
-import net.minecraft.world.RaycastContext;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.protocol.game.*;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
+import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
+import net.minecraft.network.protocol.game.ServerboundSwingPacket;
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.HitResult;
 import thunder.hack.core.manager.client.ModuleManager;
 import thunder.hack.events.impl.EventBreakBlock;
 import thunder.hack.events.impl.EventCollision;
@@ -49,11 +54,11 @@ public class Phase extends Module {
     public void onCollide(EventCollision e) {
         if (fullNullCheck())
             return;
-        BlockPos playerPos = BlockPos.ofFloored(mc.player.getPos());
+        BlockPos playerPos = BlockPos.containing(mc.player.position());
 
         if (!mode.is(Mode.CCClip) && !mode.is(Mode.Pearl) && !mode.is(Mode.ForceMine) && canNoClip() || afterPearlTime > 0) {
-            if (!e.getPos().equals(playerPos.down()) || mc.options.sneakKey.isPressed())
-                e.setState(Blocks.AIR.getDefaultState());
+            if (!e.getPos().equals(playerPos.below()) || mc.options.keyShift.isDown())
+                e.setState(Blocks.AIR.defaultBlockState());
         }
 
         if (mode.is(Mode.ForceMine)) {
@@ -63,8 +68,8 @@ public class Phase extends Module {
             if (xDelta != 0 && zDelta != 0 && strict.getValue())
                   return;
 
-            if (!e.getPos().equals(playerPos.down()) || mc.options.sneakKey.isPressed())
-                e.setState(Blocks.AIR.getDefaultState());
+            if (!e.getPos().equals(playerPos.below()) || mc.options.keyShift.isDown())
+                e.setState(Blocks.AIR.defaultBlockState());
         }
     }
 
@@ -73,45 +78,45 @@ public class Phase extends Module {
         afterPearlTime = 0;
         clipTimer = 0;
 
-        if (mc.player.isOnGround() && mode.is(Mode.CCClip)) {
+        if (mc.player.onGround() && mode.is(Mode.CCClip)) {
             double[] diagonalOffset = MovementUtility.forwardWithoutStrafe(0.44);
-            boolean diagonal = mc.player.getYaw() % 90 > 35 && mc.player.getYaw() % 90 < 55;
+            boolean diagonal = mc.player.getYRot() % 90 > 35 && mc.player.getYRot() % 90 < 55;
 
-            sendPacket(new ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.START_SPRINTING));
+            sendPacket(new ServerboundPlayerCommandPacket(mc.player, ServerboundPlayerCommandPacket.Action.START_SPRINTING));
 
             if (diagonal) {
                 double[] directionVec = MovementUtility.forwardWithoutStrafe(0.51);
 
-                int height = mc.world.raycast(
-                        new RaycastContext(mc.player.getEyePos(), mc.player.getEyePos().add(diagonalOffset[0],0, diagonalOffset[1]), RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, mc.player)
+                int height = mc.level.clip(
+                        new ClipContext(mc.player.getEyePosition(), mc.player.getEyePosition().add(diagonalOffset[0],0, diagonalOffset[1]), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player)
                 ).getType().equals(HitResult.Type.MISS) ? 1 : 2;
 
-                mc.player.setPosition(mc.player.getX() + directionVec[0], mc.player.getY() + height, mc.player.getZ() + directionVec[1]);
-                sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(mc.player.getX(), mc.player.getY(), mc.player.getZ(), true, mc.player.horizontalCollision));
+                mc.player.setPos(mc.player.getX() + directionVec[0], mc.player.getY() + height, mc.player.getZ() + directionVec[1]);
+                sendPacket(new ServerboundMovePlayerPacket.Pos(mc.player.getX(), mc.player.getY(), mc.player.getZ(), true, mc.player.horizontalCollision));
 
-                height = mc.world.isAir(BlockPos.ofFloored(mc.player.getPos().add(diagonalOffset[0], -2, diagonalOffset[1]))) ? 2 : 1;
+                height = mc.level.isEmptyBlock(BlockPos.containing(mc.player.position().add(diagonalOffset[0], -2, diagonalOffset[1]))) ? 2 : 1;
 
-                mc.player.setPosition(mc.player.getX() + directionVec[0], mc.player.getY() - height, mc.player.getZ() + directionVec[1]);
-                sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(mc.player.getX(), mc.player.getY(), mc.player.getZ(), true, mc.player.horizontalCollision));
+                mc.player.setPos(mc.player.getX() + directionVec[0], mc.player.getY() - height, mc.player.getZ() + directionVec[1]);
+                sendPacket(new ServerboundMovePlayerPacket.Pos(mc.player.getX(), mc.player.getY(), mc.player.getZ(), true, mc.player.horizontalCollision));
                 disable("diagonal");
 
             } else {
                 double[] directionVec = MovementUtility.forwardWithoutStrafe(0.57);
 
-                int height = mc.world.raycast(
-                        new RaycastContext(mc.player.getEyePos(), mc.player.getEyePos().add(diagonalOffset[0],0, diagonalOffset[1]), RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, mc.player)
+                int height = mc.level.clip(
+                        new ClipContext(mc.player.getEyePosition(), mc.player.getEyePosition().add(diagonalOffset[0],0, diagonalOffset[1]), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player)
                 ).getType().equals(HitResult.Type.MISS) ? 1 : 2;
 
-                mc.player.setPosition(mc.player.getX() + directionVec[0], mc.player.getY() + height, mc.player.getZ() + directionVec[1]);
-                sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(mc.player.getX(), mc.player.getY(), mc.player.getZ(), true, mc.player.horizontalCollision));
+                mc.player.setPos(mc.player.getX() + directionVec[0], mc.player.getY() + height, mc.player.getZ() + directionVec[1]);
+                sendPacket(new ServerboundMovePlayerPacket.Pos(mc.player.getX(), mc.player.getY(), mc.player.getZ(), true, mc.player.horizontalCollision));
 
-                mc.player.setPosition(mc.player.getX() + directionVec[0], mc.player.getY(), mc.player.getZ() + directionVec[1]);
-                sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(mc.player.getX(), mc.player.getY(), mc.player.getZ(), true, mc.player.horizontalCollision));
+                mc.player.setPos(mc.player.getX() + directionVec[0], mc.player.getY(), mc.player.getZ() + directionVec[1]);
+                sendPacket(new ServerboundMovePlayerPacket.Pos(mc.player.getX(), mc.player.getY(), mc.player.getZ(), true, mc.player.horizontalCollision));
 
-                height = mc.world.isAir(BlockPos.ofFloored(mc.player.getPos().add(diagonalOffset[0], -2, diagonalOffset[1]))) ? 2 : 1;
+                height = mc.level.isEmptyBlock(BlockPos.containing(mc.player.position().add(diagonalOffset[0], -2, diagonalOffset[1]))) ? 2 : 1;
 
-                mc.player.setPosition(mc.player.getX() + directionVec[0], mc.player.getY() - height, mc.player.getZ() + directionVec[1]);
-                sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(mc.player.getX(), mc.player.getY(), mc.player.getZ(), true, mc.player.horizontalCollision));
+                mc.player.setPos(mc.player.getX() + directionVec[0], mc.player.getY() - height, mc.player.getZ() + directionVec[1]);
+                sendPacket(new ServerboundMovePlayerPacket.Pos(mc.player.getX(), mc.player.getY(), mc.player.getZ(), true, mc.player.horizontalCollision));
                 disable("normal");
             }
         }
@@ -123,17 +128,17 @@ public class Phase extends Module {
         if (clipTimer > 0) clipTimer--;
         if (afterPearlTime > 0) afterPearlTime--;
 
-        if (mode.getValue() == Mode.Sunrise && (mc.player.horizontalCollision || playerInsideBlock()) && !mc.player.isSubmergedInWater() && !mc.player.isInLava() && clipTimer <= 0) {
+        if (mode.getValue() == Mode.Sunrise && (mc.player.horizontalCollision || playerInsideBlock()) && !mc.player.isUnderWater() && !mc.player.isInLava() && clipTimer <= 0) {
             double[] dir = MovementUtility.forward(0.5);
 
             BlockPos blockToBreak = null;
 
-            if (mc.options.jumpKey.isPressed()) {
-                blockToBreak = BlockPos.ofFloored(mc.player.getX() + dir[0], mc.player.getY() + 2, mc.player.getZ() + dir[1]);
-            } else if (mc.options.sneakKey.isPressed()) {
-                blockToBreak = BlockPos.ofFloored(mc.player.getX() + dir[0], mc.player.getY() - 1, mc.player.getZ() + dir[1]);
+            if (mc.options.keyJump.isDown()) {
+                blockToBreak = BlockPos.containing(mc.player.getX() + dir[0], mc.player.getY() + 2, mc.player.getZ() + dir[1]);
+            } else if (mc.options.keyShift.isDown()) {
+                blockToBreak = BlockPos.containing(mc.player.getX() + dir[0], mc.player.getY() - 1, mc.player.getZ() + dir[1]);
             } else if (MovementUtility.isMoving()) {
-                blockToBreak = BlockPos.ofFloored(mc.player.getX() + dir[0], mc.player.getY(), mc.player.getZ() + dir[1]);
+                blockToBreak = BlockPos.containing(mc.player.getX() + dir[0], mc.player.getY(), mc.player.getZ() + dir[1]);
             }
 
             if (blockToBreak == null) return;
@@ -143,42 +148,42 @@ public class Phase extends Module {
             int prevItem = mc.player.getInventory().getSelectedSlot();
 
             InventoryUtility.switchTo(best_tool);
-            mc.interactionManager.updateBlockBreakingProgress(blockToBreak, mc.player.getHorizontalFacing());
-            mc.player.swingHand(Hand.MAIN_HAND);
+            mc.gameMode.continueDestroyBlock(blockToBreak, mc.player.getDirection());
+            mc.player.swing(InteractionHand.MAIN_HAND);
             if (silent.getValue())
                 InventoryUtility.switchTo(prevItem);
         }
 
-        if (mode.getValue() == Mode.ForceMine && (mc.player.horizontalCollision || playerInsideBlock()) && !mc.player.isSubmergedInWater() && !mc.player.isInLava())
+        if (mode.getValue() == Mode.ForceMine && (mc.player.horizontalCollision || playerInsideBlock()) && !mc.player.isUnderWater() && !mc.player.isInLava())
             for (int x = -2; x < 2; x++)
                 for (int y = -1; y < 3; y++)
                     for (int z = -2; z < 2; z++) {
-                        if (((x == 0 && y == 0 && z == 0) || (x == 0 && y == 1 && z == 0)) && !mc.options.sneakKey.isPressed())
+                        if (((x == 0 && y == 0 && z == 0) || (x == 0 && y == 1 && z == 0)) && !mc.options.keyShift.isDown())
                             continue;
 
-                        BlockPos bp = BlockPos.ofFloored(mc.player.getPos()).add(x, y, z);
-                        if (mc.player.getBoundingBox().intersects(new Box(bp)) && !mc.world.isAir(bp))
-                            sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, bp, Direction.UP));
+                        BlockPos bp = BlockPos.containing(mc.player.position()).offset(x, y, z);
+                        if (mc.player.getBoundingBox().intersects(new AABB(bp)) && !mc.level.isEmptyBlock(bp))
+                            sendPacket(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, bp, Direction.UP));
                     }
 
 
 
-        if (mode.getValue() == Mode.Pearl && (mc.player.isOnGround() || !onlyOnGround.getValue())) {
-            if (mc.player.horizontalCollision && !playerInsideBlock() && clipTimer <= 0 && mc.player.age > 60) {
+        if (mode.getValue() == Mode.Pearl && (mc.player.onGround() || !onlyOnGround.getValue())) {
+            if (mc.player.horizontalCollision && !playerInsideBlock() && clipTimer <= 0 && mc.player.tickCount > 60) {
                 double[] dir = MovementUtility.forward(0.5);
-                BlockPos block = BlockPos.ofFloored(mc.player.getX() + dir[0], mc.player.getY(), mc.player.getZ() + dir[1]);
+                BlockPos block = BlockPos.containing(mc.player.getX() + dir[0], mc.player.getY(), mc.player.getZ() + dir[1]);
 
-                if (mc.options.sneakKey.isPressed())
+                if (mc.options.keyShift.isDown())
                     return;
 
-                float[] angle = InteractionUtility.calculateAngle(block.toCenterPos());
+                float[] angle = InteractionUtility.calculateAngle(block.getCenter());
                 int epSlot = findEPSlot();
 
                 if (epSlot != -1) {
                     ModuleManager.autoCrystal.pause();
                     ModuleManager.aura.pause();
-                    mc.player.setYaw(angle[0]);
-                    mc.player.setPitch(pitch.getValue());
+                    mc.player.setYRot(angle[0]);
+                    mc.player.setXRot(pitch.getValue());
                 }
             }
         }
@@ -186,9 +191,9 @@ public class Phase extends Module {
 
     @EventHandler
     public void onPostSync(EventPostSync e) {
-        if (mode.getValue() == Mode.Pearl && (mc.player.isOnGround() || !onlyOnGround.getValue())) {
-            if (mc.player.horizontalCollision && !playerInsideBlock() && clipTimer <= 0 && mc.player.age > 60) {
-                if (mc.options.sneakKey.isPressed())
+        if (mode.getValue() == Mode.Pearl && (mc.player.onGround() || !onlyOnGround.getValue())) {
+            if (mc.player.horizontalCollision && !playerInsideBlock() && clipTimer <= 0 && mc.player.tickCount > 60) {
+                if (mc.options.keyShift.isDown())
                     return;
 
                 int epSlot = findEPSlot();
@@ -196,8 +201,8 @@ public class Phase extends Module {
 
                 if (epSlot != -1) {
                     InventoryUtility.switchTo(epSlot);
-                    sendSequencedPacket(id -> new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, id, mc.player.getYaw(), mc.player.getPitch()));
-                    sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
+                    sendSequencedPacket(id -> new ServerboundUseItemPacket(InteractionHand.MAIN_HAND, id, mc.player.getYRot(), mc.player.getXRot()));
+                    sendPacket(new ServerboundSwingPacket(InteractionHand.MAIN_HAND));
                     InventoryUtility.switchTo(prevItem);
                     if (autoDisable.getValue())
                         disable();
@@ -210,12 +215,12 @@ public class Phase extends Module {
 
     private int findEPSlot() {
         int epSlot = -1;
-        if (mc.player.getMainHandStack().getItem() == Items.ENDER_PEARL) {
+        if (mc.player.getMainHandItem().getItem() == Items.ENDER_PEARL) {
             epSlot = mc.player.getInventory().getSelectedSlot();
         }
         if (epSlot == -1) {
             for (int l = 0; l < 9; ++l) {
-                if (mc.player.getInventory().getStack(l).getItem() == Items.ENDER_PEARL) {
+                if (mc.player.getInventory().getItem(l).getItem() == Items.ENDER_PEARL) {
                     epSlot = l;
                     break;
                 }
@@ -231,7 +236,7 @@ public class Phase extends Module {
     }
 
     public boolean playerInsideBlock() {
-        return !mc.world.isAir(BlockPos.ofFloored(mc.player.getPos()));
+        return !mc.level.isEmptyBlock(BlockPos.containing(mc.player.position()));
     }
 
     @EventHandler

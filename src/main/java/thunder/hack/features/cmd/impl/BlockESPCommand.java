@@ -1,10 +1,10 @@
 package thunder.hack.features.cmd.impl;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import net.minecraft.block.Block;
-import net.minecraft.command.CommandSource;
-import net.minecraft.registry.Registries;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.NotNull;
 import thunder.hack.features.cmd.Command;
 import thunder.hack.features.cmd.args.SearchArgumentType;
@@ -19,11 +19,11 @@ public class BlockESPCommand extends Command {
     }
 
     @Override
-    public void executeBuild(@NotNull LiteralArgumentBuilder<CommandSource> builder) {
+    public void executeBuild(@NotNull LiteralArgumentBuilder<SharedSuggestionProvider> builder) {
         builder.then(literal("reset").executes(context -> {
             ModuleManager.blockESP.selectedBlocks.getValue().clear();
             sendMessage(isRu() ? "BlockESP был очищен!" : "BlockESP got reset.");
-            mc.worldRenderer.reload();
+            mc.levelRenderer.allChanged();
             return SINGLE_SUCCESS;
         }));
 
@@ -33,12 +33,12 @@ public class BlockESPCommand extends Command {
             Block result = getRegisteredBlock(blockName);
             if(result != null){
                 ModuleManager.blockESP.selectedBlocks.getValue().add(result);
-                sendMessage(Formatting.GREEN + blockName + (isRu() ? " добавлен в BlockESP" : " added to BlockESP"));
+                sendMessage(ChatFormatting.GREEN + blockName + (isRu() ? " добавлен в BlockESP" : " added to BlockESP"));
             } else {
-                sendMessage(Formatting.RED + (isRu() ? "Такого блока нет!" : "There is no such block!"));
+                sendMessage(ChatFormatting.RED + (isRu() ? "Такого блока нет!" : "There is no such block!"));
             }
 
-            mc.worldRenderer.reload();
+            mc.levelRenderer.allChanged();
 
             return SINGLE_SUCCESS;
         })));
@@ -49,12 +49,12 @@ public class BlockESPCommand extends Command {
             Block result = getRegisteredBlock(blockName);
             if(result != null){
                 ModuleManager.blockESP.selectedBlocks.getValue().remove(result);
-                sendMessage(Formatting.GREEN + blockName + (isRu() ? " удален из BlockESP" : " removed from BlockESP"));
+                sendMessage(ChatFormatting.GREEN + blockName + (isRu() ? " удален из BlockESP" : " removed from BlockESP"));
             } else {
-                sendMessage(Formatting.RED + (isRu() ? "Такого блока нет!" : "There is no such block!"));
+                sendMessage(ChatFormatting.RED + (isRu() ? "Такого блока нет!" : "There is no such block!"));
             }
 
-            mc.worldRenderer.reload();
+            mc.levelRenderer.allChanged();
 
             return SINGLE_SUCCESS;
         })));
@@ -79,8 +79,8 @@ public class BlockESPCommand extends Command {
     }
 
     public static Block getRegisteredBlock(String blockName) {
-        for (Block block : Registries.BLOCK) {
-            if (block.getTranslationKey().replace("block.minecraft.","").equalsIgnoreCase(blockName.replace("block.minecraft.",""))) {
+        for (Block block : BuiltInRegistries.BLOCK) {
+            if (block.getDescriptionId().replace("block.minecraft.","").equalsIgnoreCase(blockName.replace("block.minecraft.",""))) {
                 return block;
             }
         }

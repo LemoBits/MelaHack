@@ -17,8 +17,8 @@
  */
 package thunder.hack.utility.render.shaders.satin.impl;
 
-import com.mojang.blaze3d.textures.Framebuffer;
-import net.minecraft.client.texture.AbstractTexture;
+import com.mojang.blaze3d.pipeline.RenderTarget;
+import net.minecraft.client.renderer.texture.AbstractTexture;
 
 public final class ManagedSamplerUniformV1 extends ManagedSamplerUniformBase {
     public ManagedSamplerUniformV1(String name) {
@@ -31,7 +31,7 @@ public final class ManagedSamplerUniformV1 extends ManagedSamplerUniformBase {
     }
 
     @Override
-    public void set(Framebuffer textureFbo) {
+    public void set(RenderTarget textureFbo) {
         this.set((Object)textureFbo);
     }
 
