@@ -11,11 +11,11 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 public interface IEntity {
     @Mutable
     @Accessor("position")
-    void setPos(Vec3 pos);
+    void thunderHack$setPosition(Vec3 pos);
 
     @Mutable
     @Accessor("blockPosition")
-    void setBlockPos(BlockPos blockPos);
+    void thunderHack$setBlockPosition(BlockPos blockPos);
 
     @Accessor("yRotO")
     float getLastYaw();

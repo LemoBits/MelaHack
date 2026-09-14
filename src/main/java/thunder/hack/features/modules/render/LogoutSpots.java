@@ -173,7 +173,7 @@ public class LogoutSpots extends Module {
         double x = entity.getX() - mc.getEntityRenderDispatcher().camera.position().x;
         double y = entity.getY() - mc.getEntityRenderDispatcher().camera.position().y;
         double z = entity.getZ() - mc.getEntityRenderDispatcher().camera.position().z;
-        ((IEntity) entity).setPos(entity.position());
+        ((IEntity) entity).thunderHack$setPosition(entity.position());
         matrices.pushPose();
         matrices.translate((float) x, (float) y, (float) z);
         matrices.mulPose(Axis.YP.rotation(MathUtility.rad(180 - entity.yBodyRot)));

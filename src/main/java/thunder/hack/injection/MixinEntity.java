@@ -109,10 +109,17 @@ public abstract class MixinEntity implements IEntity, IEntityLiving {
     public void updateVelocityHook(float speed, Vec3 movementInput, CallbackInfo ci) {
         if(Module.fullNullCheck()) return;
         if ((Object) this == mc.player) {
-            ci.cancel();
-            EventFixVelocity event = new EventFixVelocity(movementInput, speed, mc.player.getYRot(), movementInputToVelocityC(movementInput, speed, mc.player.getYRot()));
+            Vec3 vanillaVelocity = movementInputToVelocityC(movementInput, speed, mc.player.getYRot());
+            EventFixVelocity event = new EventFixVelocity(movementInput, speed, mc.player.getYRot(), vanillaVelocity);
             ThunderHack.EVENT_BUS.post(event);
-            mc.player.setDeltaMovement(mc.player.getDeltaMovement().add(event.getVelocity()));
+
+            // Keep Minecraft's own movement path unless a module actually changed the
+            // velocity. Reimplementing moveRelative globally makes vanilla movement
+            // sensitive to mapping and behavior changes between game versions.
+            if (!event.getVelocity().equals(vanillaVelocity)) {
+                ci.cancel();
+                mc.player.setDeltaMovement(mc.player.getDeltaMovement().add(event.getVelocity()));
+            }
         }
     }
 

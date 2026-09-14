@@ -62,6 +62,10 @@ public class PacketFly extends Module {
     @Override
     public void onDisable() {
         ThunderHack.TICK_TIMER = 1.0f;
+        movePackets.clear();
+        teleports.clear();
+        if (mc.player != null)
+            mc.player.noPhysics = false;
     }
 
     public boolean getTickCounter(int n) {

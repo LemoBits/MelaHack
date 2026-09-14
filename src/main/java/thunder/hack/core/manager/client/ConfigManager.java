@@ -142,6 +142,8 @@ public class ConfigManager implements IManager {
         if (module.isEnabled()) {
             ThunderHack.EVENT_BUS.unsubscribe(module);
             module.setEnabled(false);
+            if (!Module.fullNullCheck())
+                module.onDisable();
         }
 
         loadModuleOnly(file, module);

@@ -368,6 +368,11 @@ public class ModuleManager implements IManager {
             if (module.isEnabled() && (module.getCategory().getName().equalsIgnoreCase(category) || category.equals("none"))) {
                 ThunderHack.EVENT_BUS.unsubscribe(module);
                 module.setEnabled(false);
+
+                // Config changes must run the same cleanup as a normal toggle. Movement
+                // modules restore player abilities, gravity and collision state here.
+                if (!Module.fullNullCheck())
+                    module.onDisable();
             }
         });
         modules.forEach(Module::onUnload);

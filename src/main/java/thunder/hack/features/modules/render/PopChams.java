@@ -103,7 +103,7 @@ public final class PopChams extends Module {
         double x = entity.getX() - mc.getEntityRenderDispatcher().camera.position().x;
         double y = entity.getY() - mc.getEntityRenderDispatcher().camera.position().y;
         double z = entity.getZ() - mc.getEntityRenderDispatcher().camera.position().z;
-        ((IEntity) entity).setPos(entity.position().add(0, (double) ySpeed.getValue() / 50., 0));
+        ((IEntity) entity).thunderHack$setPosition(entity.position().add(0, (double) ySpeed.getValue() / 50., 0));
 
         matrices.pushPose();
         matrices.translate((float) x, (float) y, (float) z);
