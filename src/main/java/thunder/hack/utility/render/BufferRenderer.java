@@ -73,6 +73,7 @@ public final class BufferRenderer {
             float[] uniforms,
             GpuTextureView[] textures,
             GpuSampler[] samplers,
+            Vector4f shaderColor,
             boolean scissored,
             int scissorX,
             int scissorY,
@@ -103,6 +104,7 @@ public final class BufferRenderer {
                     custom ? snapshotUniforms() : null,
                     new GpuTextureView[]{RenderSystem.getShaderTexture(0), RenderSystem.getShaderTexture(1), RenderSystem.getShaderTexture(2)},
                     new GpuSampler[]{RenderSystem.getShaderSampler(0), RenderSystem.getShaderSampler(1), RenderSystem.getShaderSampler(2)},
+                    shaderColor(),
                     RenderSystem.isScissorEnabled(),
                     RenderSystem.getScissorX(),
                     RenderSystem.getScissorY(),
@@ -157,7 +159,7 @@ public final class BufferRenderer {
 
         GpuBufferSlice projection = projectionBuffer(encoder);
         GpuBufferSlice transforms = RenderSystem.getDynamicUniforms()
-                .writeTransform(new Matrix4f(), shaderColor());
+                .writeTransform(new Matrix4f(), draw.shaderColor());
 
         GpuBufferSlice custom = null;
         if (draw.customUniforms()) {
