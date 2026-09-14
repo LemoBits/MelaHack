@@ -272,7 +272,7 @@ public class ClickGUI extends LegacyInputScreen {
             if (mc.player == null || !ModuleManager.clickGui.closeAnimation.getValue()) {
                 imageDirection = false;
                 imageAnimation.reset();
-                super.keyPressed(keyCode, scanCode, modifiers);
+                onClose();
                 return true;
             }
 
