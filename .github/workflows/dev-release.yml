@@ -79,8 +79,3 @@ jobs:
           body: ${{ steps.notes.outputs.body }}
           artifacts: ./build/libs/*.jar
           artifactContentType: application/java-archive
-
-      - name: Pin Dev Release
-        run: |
-          release_id=$(gh api "repos/${{ github.repository }}/releases/tags/dev" --jq .node_id)
-          gh api graphql -f query='mutation($id:ID!){pinRelease(input:{releaseId:$id}){clientMutationId}}' -f id="$release_id"
