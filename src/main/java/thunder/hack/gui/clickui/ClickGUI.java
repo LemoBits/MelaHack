@@ -177,9 +177,6 @@ public class ClickGUI extends LegacyInputScreen {
         }
 
 
-        if (Module.fullNullCheck())
-            extractBackground(context, mouseX, mouseY, delta);
-
         if (ModuleManager.clickGui.scrollMode.getValue() == ClickGui.scrollModeEn.Old) {
             for (AbstractCategory window : windows) {
                 if (InputConstants.isKeyDown(mc.getWindow(), 264))

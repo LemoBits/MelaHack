@@ -191,7 +191,22 @@ public final class BufferRenderer {
             }
 
             if (draw.scissored()) {
-                pass.enableScissor(draw.scissorX(), draw.scissorY(), draw.scissorWidth(), draw.scissorHeight());
+                // GUI coordinates can round past the framebuffer edge when its dimensions are not
+                // evenly divisible by the GUI scale. RenderPass validates scissors strictly in
+                // 26.2, and opening a module also briefly produces a zero-height animated clip.
+                // Intersect with the framebuffer and discard draws whose clip is empty.
+                int framebufferWidth = client.getWindow().getWidth();
+                int framebufferHeight = client.getWindow().getHeight();
+                int left = (int) Math.clamp((long) draw.scissorX(), 0L, framebufferWidth);
+                int bottom = (int) Math.clamp((long) draw.scissorY(), 0L, framebufferHeight);
+                int right = (int) Math.clamp((long) draw.scissorX() + draw.scissorWidth(), 0L, framebufferWidth);
+                int top = (int) Math.clamp((long) draw.scissorY() + draw.scissorHeight(), 0L, framebufferHeight);
+
+                if (right <= left || top <= bottom) {
+                    return;
+                }
+
+                pass.enableScissor(left, bottom, right - left, top - bottom);
             } else {
                 pass.disableScissor();
             }
